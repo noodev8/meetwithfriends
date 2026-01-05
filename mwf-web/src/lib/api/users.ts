@@ -1,92 +1,86 @@
 /*
 =======================================================================================================================================
-Auth API Functions
+Users API Functions
 =======================================================================================================================================
-API client functions for authentication.
+API client functions for user profile management.
 Following API-Rules: never throw on API errors, return structured objects.
 =======================================================================================================================================
 */
 
-import { apiCall } from '../apiClient';
-import { ApiResult, AuthResponse, User } from '@/types';
+import { apiCall, apiGet } from '../apiClient';
+import { ApiResult, User } from '@/types';
 
 /*
 =======================================================================================================================================
-register
+getProfile
 =======================================================================================================================================
-Creates a new user account.
+Fetches the authenticated user's profile.
 =======================================================================================================================================
 */
-export async function register(
-    email: string,
-    password: string,
-    name: string
-): Promise<ApiResult<AuthResponse>> {
-    const response = await apiCall('/api/auth/register', {
-        email,
-        password,
-        name,
-    });
+export async function getProfile(token: string): Promise<ApiResult<User>> {
+    const response = await apiGet('/api/users/profile', token);
 
-    if (response.return_code === 'SUCCESS' && response.token && response.user) {
+    if (response.return_code === 'SUCCESS' && response.user) {
         return {
             success: true,
-            data: {
-                token: response.token as string,
-                user: response.user as unknown as User,
-            },
+            data: response.user as unknown as User,
         };
     }
 
     return {
         success: false,
-        error: (response.message as string) || 'Registration failed',
+        error: (response.message as string) || 'Failed to get profile',
         return_code: response.return_code,
     };
 }
 
 /*
 =======================================================================================================================================
-login
+updateProfile
 =======================================================================================================================================
-Authenticates a user and returns a token.
+Updates the authenticated user's profile.
 =======================================================================================================================================
 */
-export async function login(
-    email: string,
-    password: string
-): Promise<ApiResult<AuthResponse>> {
-    const response = await apiCall('/api/auth/login', {
-        email,
-        password,
-    });
+export async function updateProfile(
+    token: string,
+    updates: { name?: string; bio?: string; avatar_url?: string }
+): Promise<ApiResult<User>> {
+    const response = await apiCall('/api/users/update_profile', updates, token);
 
-    if (response.return_code === 'SUCCESS' && response.token && response.user) {
+    if (response.return_code === 'SUCCESS' && response.user) {
         return {
             success: true,
-            data: {
-                token: response.token as string,
-                user: response.user as unknown as User,
-            },
+            data: response.user as unknown as User,
         };
     }
 
     return {
         success: false,
-        error: (response.message as string) || 'Login failed',
+        error: (response.message as string) || 'Failed to update profile',
         return_code: response.return_code,
     };
 }
 
 /*
 =======================================================================================================================================
-forgotPassword
+changePassword
 =======================================================================================================================================
-Sends a password reset email.
+Changes the authenticated user's password.
 =======================================================================================================================================
 */
-export async function forgotPassword(email: string): Promise<ApiResult> {
-    const response = await apiCall('/api/auth/forgot_password', { email });
+export async function changePassword(
+    token: string,
+    currentPassword: string,
+    newPassword: string
+): Promise<ApiResult> {
+    const response = await apiCall(
+        '/api/users/change_password',
+        {
+            current_password: currentPassword,
+            new_password: newPassword,
+        },
+        token
+    );
 
     if (response.return_code === 'SUCCESS') {
         return { success: true };
@@ -94,26 +88,27 @@ export async function forgotPassword(email: string): Promise<ApiResult> {
 
     return {
         success: false,
-        error: (response.message as string) || 'Failed to send reset email',
+        error: (response.message as string) || 'Failed to change password',
         return_code: response.return_code,
     };
 }
 
 /*
 =======================================================================================================================================
-resetPassword
+deleteAccount
 =======================================================================================================================================
-Resets password using a reset token.
+Deletes the authenticated user's account. Requires password confirmation.
 =======================================================================================================================================
 */
-export async function resetPassword(
+export async function deleteAccount(
     token: string,
     password: string
 ): Promise<ApiResult> {
-    const response = await apiCall('/api/auth/reset_password', {
-        token,
-        password,
-    });
+    const response = await apiCall(
+        '/api/users/delete_account',
+        { password },
+        token
+    );
 
     if (response.return_code === 'SUCCESS') {
         return { success: true };
@@ -121,7 +116,7 @@ export async function resetPassword(
 
     return {
         success: false,
-        error: (response.message as string) || 'Failed to reset password',
+        error: (response.message as string) || 'Failed to delete account',
         return_code: response.return_code,
     };
 }

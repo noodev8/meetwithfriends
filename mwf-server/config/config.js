@@ -22,5 +22,15 @@ module.exports = {
 
     // JWT
     jwtSecret: process.env.JWT_SECRET,
-    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d'
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
+
+    // Email (Resend)
+    email: {
+        resendApiKey: process.env.RESEND_API_KEY,
+        from: process.env.EMAIL_FROM || 'noreply@example.com',
+        fromName: process.env.EMAIL_FROM_NAME || 'Meet With Friends'
+    },
+
+    // Frontend URL (for email links)
+    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000'
 };

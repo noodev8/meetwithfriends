@@ -1,98 +1,117 @@
 /*
 =======================================================================================================================================
-API Route: forgot_password
+API Route: change_password
 =======================================================================================================================================
 Method: POST
-Purpose: Sends a password reset email to the user. Creates a reset token valid for 1 hour.
+Purpose: Changes the authenticated user's password. Requires current password for verification.
 =======================================================================================================================================
+Request Headers:
+Authorization: Bearer <token>          // Required JWT token
+
 Request Payload:
 {
-  "email": "user@example.com"          // string, required
+  "current_password": "oldPassword",   // string, required
+  "new_password": "newPassword123"     // string, required (min 8 chars)
 }
 
 Success Response:
 {
   "return_code": "SUCCESS",
-  "message": "If an account exists with this email, a reset link has been sent"
+  "message": "Password changed successfully"
 }
 =======================================================================================================================================
 Return Codes:
-"SUCCESS" - Always returns success to avoid revealing which emails exist
+"SUCCESS"
+"UNAUTHORIZED"
 "MISSING_FIELDS"
+"INVALID_PASSWORD" - Current password is incorrect
+"INVALID_NEW_PASSWORD" - New password doesn't meet requirements
+"USER_NOT_FOUND"
 "SERVER_ERROR"
 =======================================================================================================================================
 */
 
 const express = require('express');
 const router = express.Router();
-const crypto = require('crypto');
+const bcrypt = require('bcrypt');
 const { query } = require('../../database');
-const { sendPasswordResetEmail } = require('../../services/email');
+const { verifyToken } = require('../../middleware/auth');
 
-router.post('/', async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
     try {
-        const { email } = req.body;
+        const userId = req.user.id;
+        const { current_password, new_password } = req.body;
 
         // =======================================================================
         // Validate required fields
         // =======================================================================
-        if (!email) {
+        if (!current_password || !new_password) {
             return res.json({
                 return_code: 'MISSING_FIELDS',
-                message: 'Email is required'
+                message: 'Current password and new password are required'
             });
         }
 
         // =======================================================================
-        // Find user by email
+        // Validate new password meets requirements (min 8 chars)
+        // =======================================================================
+        if (new_password.length < 8) {
+            return res.json({
+                return_code: 'INVALID_NEW_PASSWORD',
+                message: 'New password must be at least 8 characters'
+            });
+        }
+
+        // =======================================================================
+        // Fetch user's current password hash
         // =======================================================================
         const result = await query(
-            'SELECT id FROM app_user WHERE LOWER(email) = LOWER($1)',
-            [email]
+            `SELECT id, password_hash FROM app_user WHERE id = $1`,
+            [userId]
         );
 
-        // Always return success to avoid revealing which emails exist
         if (result.rows.length === 0) {
             return res.json({
-                return_code: 'SUCCESS',
-                message: 'If an account exists with this email, a reset link has been sent'
+                return_code: 'USER_NOT_FOUND',
+                message: 'User not found'
             });
         }
 
         const user = result.rows[0];
 
         // =======================================================================
-        // Generate reset token
+        // Verify current password
         // =======================================================================
-        const token = crypto.randomBytes(32).toString('hex');
-        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+        const passwordValid = await bcrypt.compare(current_password, user.password_hash);
+
+        if (!passwordValid) {
+            return res.json({
+                return_code: 'INVALID_PASSWORD',
+                message: 'Current password is incorrect'
+            });
+        }
 
         // =======================================================================
-        // Store reset token
+        // Hash new password and update in database
         // =======================================================================
+        const saltRounds = 10;
+        const newPasswordHash = await bcrypt.hash(new_password, saltRounds);
+
         await query(
-            `INSERT INTO password_reset_token (user_id, token, expires_at)
-             VALUES ($1, $2, $3)`,
-            [user.id, token, expiresAt]
+            `UPDATE app_user SET password_hash = $1 WHERE id = $2`,
+            [newPasswordHash, userId]
         );
 
         // =======================================================================
-        // Send password reset email via Resend
+        // Return success response
         // =======================================================================
-        const emailResult = await sendPasswordResetEmail(email, token);
-
-        if (!emailResult.success) {
-            // Log error but still return success to user (don't reveal email issues)
-            console.error('Failed to send password reset email:', emailResult.error);
-        }
-
         return res.json({
             return_code: 'SUCCESS',
-            message: 'If an account exists with this email, a reset link has been sent'
+            message: 'Password changed successfully'
         });
 
     } catch (error) {
-        console.error('Forgot password error:', error);
+        console.error('Change password error:', error);
         return res.json({
             return_code: 'SERVER_ERROR',
             message: 'An unexpected error occurred'

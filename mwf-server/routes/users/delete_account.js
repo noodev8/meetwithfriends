@@ -1,98 +1,112 @@
 /*
 =======================================================================================================================================
-API Route: forgot_password
+API Route: delete_account
 =======================================================================================================================================
 Method: POST
-Purpose: Sends a password reset email to the user. Creates a reset token valid for 1 hour.
+Purpose: Permanently deletes the authenticated user's account. Requires password confirmation.
 =======================================================================================================================================
+Request Headers:
+Authorization: Bearer <token>          // Required JWT token
+
 Request Payload:
 {
-  "email": "user@example.com"          // string, required
+  "password": "currentPassword"        // string, required - for confirmation
 }
 
 Success Response:
 {
   "return_code": "SUCCESS",
-  "message": "If an account exists with this email, a reset link has been sent"
+  "message": "Account deleted successfully"
 }
 =======================================================================================================================================
 Return Codes:
-"SUCCESS" - Always returns success to avoid revealing which emails exist
+"SUCCESS"
+"UNAUTHORIZED"
 "MISSING_FIELDS"
+"INVALID_PASSWORD" - Password confirmation failed
+"USER_NOT_FOUND"
 "SERVER_ERROR"
+=======================================================================================================================================
+Notes:
+- This action is irreversible
+- All user data will be deleted (cascades to related tables via foreign keys)
+- Groups where user is the only organiser will remain but lose their organiser
 =======================================================================================================================================
 */
 
 const express = require('express');
 const router = express.Router();
-const crypto = require('crypto');
+const bcrypt = require('bcrypt');
 const { query } = require('../../database');
-const { sendPasswordResetEmail } = require('../../services/email');
+const { verifyToken } = require('../../middleware/auth');
 
-router.post('/', async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
     try {
-        const { email } = req.body;
+        const userId = req.user.id;
+        const { password } = req.body;
 
         // =======================================================================
-        // Validate required fields
+        // Validate required field - password is required for confirmation
         // =======================================================================
-        if (!email) {
+        if (!password) {
             return res.json({
                 return_code: 'MISSING_FIELDS',
-                message: 'Email is required'
+                message: 'Password is required to confirm account deletion'
             });
         }
 
         // =======================================================================
-        // Find user by email
+        // Fetch user's password hash
         // =======================================================================
         const result = await query(
-            'SELECT id FROM app_user WHERE LOWER(email) = LOWER($1)',
-            [email]
+            `SELECT id, password_hash FROM app_user WHERE id = $1`,
+            [userId]
         );
 
-        // Always return success to avoid revealing which emails exist
         if (result.rows.length === 0) {
             return res.json({
-                return_code: 'SUCCESS',
-                message: 'If an account exists with this email, a reset link has been sent'
+                return_code: 'USER_NOT_FOUND',
+                message: 'User not found'
             });
         }
 
         const user = result.rows[0];
 
         // =======================================================================
-        // Generate reset token
+        // Verify password before deletion
         // =======================================================================
-        const token = crypto.randomBytes(32).toString('hex');
-        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+        const passwordValid = await bcrypt.compare(password, user.password_hash);
+
+        if (!passwordValid) {
+            return res.json({
+                return_code: 'INVALID_PASSWORD',
+                message: 'Incorrect password'
+            });
+        }
 
         // =======================================================================
-        // Store reset token
+        // Delete user account
+        // Foreign key cascades will clean up:
+        // - password_reset_token
+        // - group_member
+        // - event_rsvp
+        // - event_comment
         // =======================================================================
         await query(
-            `INSERT INTO password_reset_token (user_id, token, expires_at)
-             VALUES ($1, $2, $3)`,
-            [user.id, token, expiresAt]
+            `DELETE FROM app_user WHERE id = $1`,
+            [userId]
         );
 
         // =======================================================================
-        // Send password reset email via Resend
+        // Return success response
         // =======================================================================
-        const emailResult = await sendPasswordResetEmail(email, token);
-
-        if (!emailResult.success) {
-            // Log error but still return success to user (don't reveal email issues)
-            console.error('Failed to send password reset email:', emailResult.error);
-        }
-
         return res.json({
             return_code: 'SUCCESS',
-            message: 'If an account exists with this email, a reset link has been sent'
+            message: 'Account deleted successfully'
         });
 
     } catch (error) {
-        console.error('Forgot password error:', error);
+        console.error('Delete account error:', error);
         return res.json({
             return_code: 'SERVER_ERROR',
             message: 'An unexpected error occurred'

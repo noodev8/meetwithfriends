@@ -43,7 +43,7 @@ const verifyToken = (req, res, next) => {
         };
 
         next();
-    } catch (error) {
+    } catch (_error) {
         // Token is invalid or expired
         return res.json({
             return_code: 'UNAUTHORIZED',
@@ -81,7 +81,7 @@ const optionalAuth = (req, res, next) => {
         };
 
         next();
-    } catch (error) {
+    } catch (_error) {
         // Invalid token - continue without user (don't fail)
         next();
     }

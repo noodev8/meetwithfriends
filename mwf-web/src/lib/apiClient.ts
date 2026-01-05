@@ -12,7 +12,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3018';
 interface ApiResponse {
     return_code: string;
     message?: string;
-    [key: string]: any;
+    token?: string;
+    user?: Record<string, unknown>;
+    [key: string]: string | Record<string, unknown> | undefined;
 }
 
 /*
