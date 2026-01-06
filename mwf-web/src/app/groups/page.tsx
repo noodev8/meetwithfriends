@@ -40,9 +40,9 @@ export default function GroupsPage() {
         <main className="min-h-screen flex flex-col bg-gray-50">
             <Header />
 
-            <div className="flex-1 px-8 py-8 max-w-6xl mx-auto w-full">
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">All Groups</h1>
+            <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto w-full">
+                <div className="flex justify-between items-center mb-6 sm:mb-8">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">All Groups</h1>
                 </div>
 
                 {loadingData ? (
@@ -63,7 +63,7 @@ export default function GroupsPage() {
                         )}
                     </div>
                 ) : (
-                    <div className="grid md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                         {groups.map((group) => (
                             <Link
                                 key={group.id}

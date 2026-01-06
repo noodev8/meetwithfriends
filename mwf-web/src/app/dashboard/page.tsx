@@ -79,7 +79,7 @@ export default function Dashboard() {
         <main className="min-h-screen flex flex-col bg-gray-50">
             <Header />
 
-            <div className="flex-1 px-8 py-8 max-w-6xl mx-auto w-full">
+            <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto w-full">
                 {/* Groups Section */}
                 <section className="mb-12">
                     <div className="flex justify-between items-center mb-6">
@@ -105,7 +105,7 @@ export default function Dashboard() {
                             </Link>
                         </div>
                     ) : (
-                        <div className="grid md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                             {groups.slice(0, 6).map((group) => (
                                 <Link
                                     key={group.id}
@@ -162,7 +162,7 @@ export default function Dashboard() {
                             </p>
                         </div>
                     ) : (
-                        <div className="grid md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                             {events.slice(0, 6).map((event) => (
                                 <Link
                                     key={event.id}

@@ -83,7 +83,7 @@ router.post('/', verifyToken, async (req, res) => {
         // Create the group
         // =======================================================================
         const groupResult = await query(
-            `INSERT INTO user_group (name, description, image_url, join_policy)
+            `INSERT INTO group_list (name, description, image_url, join_policy)
              VALUES ($1, $2, $3, $4)
              RETURNING id, name, description, image_url, join_policy, created_at`,
             [name.trim(), description || null, image_url || null, finalJoinPolicy]

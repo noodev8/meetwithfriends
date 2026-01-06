@@ -50,7 +50,7 @@ router.get('/', async (req, res) => {
                 g.join_policy,
                 g.created_at,
                 COUNT(gm.id) FILTER (WHERE gm.status = 'active') AS member_count
-             FROM user_group g
+             FROM group_list g
              LEFT JOIN group_member gm ON g.id = gm.group_id
              GROUP BY g.id
              ORDER BY g.created_at DESC`

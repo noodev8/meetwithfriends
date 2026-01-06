@@ -199,7 +199,7 @@ Target: 8 months maximum (phased delivery)
 └─────────────────┘
 
 ┌─────────────────┐
-│   user_group    │
+│   group_list    │
 ├─────────────────┤
 │ id              │  PK
 │ name            │
@@ -214,7 +214,7 @@ Target: 8 months maximum (phased delivery)
 │  group_member   │
 ├─────────────────┤
 │ id              │  PK
-│ group_id        │  FK → user_group
+│ group_id        │  FK → group_list
 │ user_id         │  FK → app_user
 │ role            │  (organiser/host/member)
 │ status          │  (active/pending)
@@ -222,10 +222,10 @@ Target: 8 months maximum (phased delivery)
 └─────────────────┘
 
 ┌─────────────────┐
-│     event       │
+│   event_list    │
 ├─────────────────┤
 │ id              │  PK
-│ group_id        │  FK → user_group
+│ group_id        │  FK → group_list
 │ created_by      │  FK → app_user
 │ title           │
 │ description     │
@@ -241,7 +241,7 @@ Target: 8 months maximum (phased delivery)
 │   event_rsvp    │
 ├─────────────────┤
 │ id              │  PK
-│ event_id        │  FK → event
+│ event_id        │  FK → event_list
 │ user_id         │  FK → app_user
 │ status          │  (attending/waitlist)
 │ waitlist_position│  (null if attending)
@@ -252,7 +252,7 @@ Target: 8 months maximum (phased delivery)
 │  event_comment  │
 ├─────────────────┤
 │ id              │  PK
-│ event_id        │  FK → event
+│ event_id        │  FK → event_list
 │ user_id         │  FK → app_user
 │ content         │
 │ created_at      │
@@ -266,7 +266,7 @@ Target: 8 months maximum (phased delivery)
 │ stripe_account  │
 ├─────────────────┤
 │ id              │  PK
-│ group_id        │  FK → user_group (UNIQUE)
+│ group_id        │  FK → group_list (UNIQUE)
 │ stripe_acc_id   │
 │ connected_at    │
 └─────────────────┘
@@ -285,11 +285,11 @@ Target: 8 months maximum (phased delivery)
 ```
 
 ## Key Relationships
-- app_user ↔ user_group: Many-to-many via group_member
-- user_group → event: One-to-many
-- event ↔ app_user: Many-to-many via event_rsvp
-- event → event_comment: One-to-many
-- user_group → stripe_account: One-to-one (Phase 2)
+- app_user ↔ group_list: Many-to-many via group_member
+- group_list → event_list: One-to-many
+- event_list ↔ app_user: Many-to-many via event_rsvp
+- event_list → event_comment: One-to-many
+- group_list → stripe_account: One-to-one (Phase 2)
 - event_rsvp → payment: One-to-one (Phase 2)
 
 ---
@@ -418,7 +418,7 @@ Target: 8 months maximum (phased delivery)
 | 2026-01-04 | Capacity handling | Waitlist when full. Auto-promote when spot opens. |
 | 2026-01-04 | Waitlist payments | Phase 2: Waitlist members pay deposit, refunded if not promoted. |
 | 2026-01-04 | Host RSVP control | Host can remove any RSVP. |
-| 2026-01-04 | Data model approved | 6 MVP tables: app_user, user_group, group_member, event, event_rsvp, event_comment |
+| 2026-01-04 | Data model approved | 6 MVP tables: app_user, group_list, group_member, event_list, event_rsvp, event_comment |
 | 2026-01-04 | User table naming | Use app_user (project convention) |
 | 2026-01-04 | Folder structure | Monorepo: /docs, /mwf-server, /mwf-web, /mwf-flutter |
 | 2026-01-04 | CSS framework | Tailwind CSS |
@@ -429,7 +429,7 @@ Target: 8 months maximum (phased delivery)
 | 2026-01-04 | Attendee visibility | Non-members see count only. Members see full attendee list. |
 | 2026-01-04 | Password management | Full suite: forgot password, reset, change password, delete account |
 | 2026-01-04 | Logout approach | Client-side only (delete token). No server-side logout endpoint. |
-| 2026-01-04 | Group table naming | Use user_group (avoid PostgreSQL reserved word) |
+| 2026-01-04 | Group table naming | Use group_list (avoid PostgreSQL reserved word) |
 | 2026-01-04 | Decision to build | Proceeding with full platform build. Deposits are the forcing function for migration. |
 | 2026-01-06 | Broader positioning | Platform not limited to food groups. Works for any community: dining, coffee, hobbies. Restaurant marketplace remains long-term vision but messaging is generic. |
 | 2026-01-04 | Strategic intent | Short-term: Replace Meetup. Medium-term: Deposits/pre-orders. Long-term: Restaurant group-booking business. |

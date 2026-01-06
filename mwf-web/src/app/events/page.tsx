@@ -40,8 +40,8 @@ export default function EventsPage() {
         <main className="min-h-screen flex flex-col bg-gray-50">
             <Header />
 
-            <div className="flex-1 px-8 py-8 max-w-6xl mx-auto w-full">
-                <h1 className="text-3xl font-bold text-gray-900 mb-8">Upcoming Events</h1>
+            <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto w-full">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">Upcoming Events</h1>
 
                 {loadingData ? (
                     <p className="text-gray-500">Loading events...</p>
@@ -53,7 +53,7 @@ export default function EventsPage() {
                         </p>
                     </div>
                 ) : (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                         {events.map((event) => (
                             <Link
                                 key={event.id}

@@ -43,18 +43,18 @@ export default function Home() {
     return (
         <main className="min-h-screen flex flex-col">
             {/* Header */}
-            <header className="flex justify-between items-center px-8 py-4 border-b">
+            <header className="flex justify-between items-center px-4 sm:px-8 py-4 border-b">
                 <h1 className="text-xl font-bold text-blue-600">Meet With Friends</h1>
-                <div className="flex gap-4">
+                <div className="flex gap-2 sm:gap-4">
                     <Link
                         href="/login"
-                        className="px-4 py-2 text-gray-700 hover:text-gray-900 transition"
+                        className="px-3 sm:px-4 py-2 text-gray-700 hover:text-gray-900 transition"
                     >
                         Log in
                     </Link>
                     <Link
                         href="/register"
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                        className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                     >
                         Sign up
                     </Link>
@@ -62,24 +62,24 @@ export default function Home() {
             </header>
 
             {/* Hero Section */}
-            <section className="flex-1 flex flex-col items-center justify-center px-8 py-16 bg-gradient-to-b from-blue-50 to-white">
-                <h2 className="text-5xl font-bold text-center mb-6 text-gray-900">
+            <section className="flex-1 flex flex-col items-center justify-center px-4 sm:px-8 py-12 sm:py-16 bg-gradient-to-b from-blue-50 to-white">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-4 sm:mb-6 text-gray-900">
                     Bring your group together
                 </h2>
-                <p className="text-xl text-gray-600 text-center mb-8 max-w-2xl">
+                <p className="text-lg sm:text-xl text-gray-600 text-center mb-6 sm:mb-8 max-w-2xl">
                     The simple way to organise group events. Create your community,
                     manage RSVPs, and collect deposits when needed.
                 </p>
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
                     <Link
                         href="/register"
-                        className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition"
+                        className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition text-center"
                     >
                         Get Started
                     </Link>
                     <Link
                         href="/login"
-                        className="px-8 py-4 border border-gray-300 text-lg font-semibold rounded-lg hover:bg-gray-50 transition"
+                        className="px-8 py-4 border border-gray-300 text-lg font-semibold rounded-lg hover:bg-gray-50 transition text-center"
                     >
                         Log in
                     </Link>
@@ -87,9 +87,9 @@ export default function Home() {
             </section>
 
             {/* How it works */}
-            <section className="px-8 py-16 bg-white">
-                <h3 className="text-2xl font-bold text-center mb-12 text-gray-900">How it works</h3>
-                <div className="max-w-4xl mx-auto grid md:grid-cols-3 gap-8">
+            <section className="px-4 sm:px-8 py-12 sm:py-16 bg-white">
+                <h3 className="text-2xl font-bold text-center mb-8 sm:mb-12 text-gray-900">How it works</h3>
+                <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div className="text-center">
                         <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">1</div>
                         <h4 className="font-semibold mb-2">Create a Group</h4>
@@ -109,7 +109,7 @@ export default function Home() {
             </section>
 
             {/* Footer */}
-            <footer className="px-8 py-6 border-t text-center text-gray-500 text-sm">
+            <footer className="px-4 sm:px-8 py-6 border-t text-center text-gray-500 text-sm">
                 Meet With Friends
             </footer>
         </main>

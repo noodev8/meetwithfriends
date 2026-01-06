@@ -49,6 +49,20 @@ meetwithfriends/
 - Auth state via `context/AuthContext.tsx` (localStorage persistence)
 - API client: `lib/apiClient.ts` with `apiCall()` and `apiGet()`
 
+### Responsive Design
+Mobile-first approach using Tailwind breakpoints: `sm` (640px), `md` (768px), `lg` (1024px).
+
+**Common patterns:**
+```
+Padding:        px-4 sm:px-8
+Spacing:        gap-4 sm:gap-6, py-6 sm:py-8
+Headings:       text-2xl sm:text-3xl
+Card grids:     grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
+Stacked→Row:    flex-col sm:flex-row
+```
+
+**Header:** Uses hamburger menu below `md` breakpoint. See `components/layout/Header.tsx`.
+
 ## Critical API Conventions (from API-RULES.md)
 
 ### Backend Response Pattern
@@ -77,9 +91,10 @@ Every route file must include structured header documentation with Method, Purpo
 
 ## Database
 
-- **PostgreSQL** with tables: `app_user`, `password_reset_token`, `user_group`, `group_member`, `event`, `event_rsvp`, `event_comment`
+- **PostgreSQL** with tables: `app_user`, `password_reset_token`, `group_list`, `group_member`, `event_list`, `event_rsvp`, `event_comment`
 - Schema in `/docs/DB-Schema.sql`
-- Use `user_group` (not `group`) to avoid PostgreSQL reserved word
+- Use `group_list` (not `group`) to avoid PostgreSQL reserved word
+- Use `event_list` (not `event`) for consistency
 - Use `app_user` (not `user`) per project convention
 
 ## Role Hierarchy

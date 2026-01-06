@@ -83,7 +83,7 @@ export default function EventDetailPage() {
             <Header />
 
             {/* Event Content */}
-            <div className="flex-1 px-8 py-8 max-w-4xl mx-auto w-full">
+            <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-4xl mx-auto w-full">
                 {/* Status badges */}
                 {(isCancelled || isPast) && (
                     <div className="mb-4">
@@ -101,8 +101,8 @@ export default function EventDetailPage() {
                 )}
 
                 {/* Event header */}
-                <div className="bg-white rounded-lg border p-6 mb-6">
-                    <p className="text-blue-600 font-medium mb-2">
+                <div className="bg-white rounded-lg border p-4 sm:p-6 mb-6">
+                    <p className="text-blue-600 font-medium mb-2 text-sm sm:text-base">
                         {eventDate.toLocaleDateString('en-GB', {
                             weekday: 'long',
                             day: 'numeric',
@@ -115,7 +115,7 @@ export default function EventDetailPage() {
                             minute: '2-digit'
                         })}
                     </p>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">{event.title}</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{event.title}</h1>
                     <Link
                         href={`/groups/${event.group_id}`}
                         className="text-gray-600 hover:text-blue-600 transition"
@@ -125,29 +125,29 @@ export default function EventDetailPage() {
                 </div>
 
                 {/* Event details */}
-                <div className="grid md:grid-cols-3 gap-6">
-                    <div className="md:col-span-2 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                    <div className="md:col-span-2 space-y-4 sm:space-y-6">
                         {/* Description */}
                         {event.description && (
-                            <div className="bg-white rounded-lg border p-6">
-                                <h2 className="text-lg font-semibold text-gray-900 mb-4">Details</h2>
+                            <div className="bg-white rounded-lg border p-4 sm:p-6">
+                                <h2 className="text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Details</h2>
                                 <p className="text-gray-700 whitespace-pre-wrap">{event.description}</p>
                             </div>
                         )}
 
                         {/* Location */}
                         {event.location && (
-                            <div className="bg-white rounded-lg border p-6">
-                                <h2 className="text-lg font-semibold text-gray-900 mb-4">Location</h2>
+                            <div className="bg-white rounded-lg border p-4 sm:p-6">
+                                <h2 className="text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Location</h2>
                                 <p className="text-gray-700">{event.location}</p>
                             </div>
                         )}
                     </div>
 
                     {/* Sidebar */}
-                    <div className="space-y-6">
+                    <div className="space-y-4 sm:space-y-6">
                         {/* Attendees */}
-                        <div className="bg-white rounded-lg border p-6">
+                        <div className="bg-white rounded-lg border p-4 sm:p-6">
                             <h2 className="text-lg font-semibold text-gray-900 mb-4">Attendees</h2>
                             <p className="text-gray-700 mb-2">
                                 {event.attendee_count} attending

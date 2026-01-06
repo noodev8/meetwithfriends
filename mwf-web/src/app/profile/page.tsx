@@ -184,14 +184,14 @@ export default function ProfilePage() {
         <main className="min-h-screen flex flex-col bg-gray-50">
             <Header />
 
-            <div className="flex-1 py-8 px-4">
-                <div className="max-w-2xl mx-auto space-y-6">
-                    <h1 className="text-2xl font-bold">Profile Settings</h1>
+            <div className="flex-1 py-6 sm:py-8 px-4 sm:px-8">
+                <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+                    <h1 className="text-xl sm:text-2xl font-bold">Profile Settings</h1>
 
                     {/* ================================================================
                         Profile Information Section
                     ================================================================ */}
-                <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
                     <h2 className="text-lg font-semibold mb-4">Profile Information</h2>
 
                     {profileError && (
@@ -262,7 +262,7 @@ export default function ProfilePage() {
                 {/* ================================================================
                     Change Password Section
                 ================================================================ */}
-                <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
                     <h2 className="text-lg font-semibold mb-4">Change Password</h2>
 
                     {passwordError && (
@@ -333,7 +333,7 @@ export default function ProfilePage() {
                 {/* ================================================================
                     Delete Account Section
                 ================================================================ */}
-                <div className="bg-white rounded-lg shadow-md p-6 border border-red-200">
+                <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 border border-red-200">
                     <h2 className="text-lg font-semibold text-red-600 mb-4">Danger Zone</h2>
 
                     {!showDeleteConfirm ? (

@@ -235,10 +235,10 @@ export default function GroupDetailPage() {
 
             {/* Group Header */}
             <div className="bg-white border-b">
-                <div className="max-w-6xl mx-auto px-8 py-8">
-                    <div className="flex gap-6">
+                <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                         {group.image_url ? (
-                            <div className="w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg overflow-hidden flex-shrink-0 mx-auto sm:mx-0">
                                 <img
                                     src={group.image_url}
                                     alt={group.name}
@@ -246,22 +246,22 @@ export default function GroupDetailPage() {
                                 />
                             </div>
                         ) : (
-                            <div className="w-32 h-32 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0">
-                                <span className="text-4xl text-blue-400">
+                            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0">
+                                <span className="text-3xl sm:text-4xl text-blue-400">
                                     {group.name.charAt(0).toUpperCase()}
                                 </span>
                             </div>
                         )}
-                        <div className="flex-1">
-                            <h1 className="text-3xl font-bold text-gray-900 mb-2">{group.name}</h1>
+                        <div className="flex-1 text-center sm:text-left">
+                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{group.name}</h1>
                             {group.description && (
                                 <p className="text-gray-600 mb-4">{group.description}</p>
                             )}
-                            <p className="text-gray-500">
+                            <p className="text-gray-500 mb-4 sm:mb-0">
                                 {group.member_count} {group.member_count === 1 ? 'member' : 'members'}
                             </p>
                         </div>
-                        <div className="flex-shrink-0">
+                        <div className="flex-shrink-0 flex justify-center sm:justify-start">
                             {renderMembershipAction()}
                         </div>
                     </div>
@@ -269,52 +269,54 @@ export default function GroupDetailPage() {
             </div>
 
             {/* Content */}
-            <div className="flex-1 px-8 py-8 max-w-6xl mx-auto w-full">
+            <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto w-full">
                 {/* Pending Members Section - Only visible to organisers/hosts */}
                 {canManageMembers && pendingMembers.length > 0 && (
                     <div className="mb-8">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
                             Pending Requests ({pendingMembers.length})
                         </h2>
                         <div className="bg-white rounded-lg border divide-y">
                             {pendingMembers.map(member => (
-                                <div key={member.id} className="p-4 flex items-center gap-4">
-                                    {/* Avatar */}
-                                    {member.avatar_url ? (
-                                        <img
-                                            src={member.avatar_url}
-                                            alt={member.name}
-                                            className="w-12 h-12 rounded-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
-                                            <span className="text-lg text-blue-400">
-                                                {member.name.charAt(0).toUpperCase()}
-                                            </span>
-                                        </div>
-                                    )}
+                                <div key={member.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+                                    <div className="flex items-center gap-4 flex-1">
+                                        {/* Avatar */}
+                                        {member.avatar_url ? (
+                                            <img
+                                                src={member.avatar_url}
+                                                alt={member.name}
+                                                className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                                            />
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0">
+                                                <span className="text-lg text-blue-400">
+                                                    {member.name.charAt(0).toUpperCase()}
+                                                </span>
+                                            </div>
+                                        )}
 
-                                    {/* Name */}
-                                    <div className="flex-1">
-                                        <p className="font-medium text-gray-900">{member.name}</p>
-                                        <p className="text-sm text-gray-500">
-                                            Requested {new Date(member.joined_at).toLocaleDateString()}
-                                        </p>
+                                        {/* Name */}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-gray-900 truncate">{member.name}</p>
+                                            <p className="text-sm text-gray-500">
+                                                Requested {new Date(member.joined_at).toLocaleDateString()}
+                                            </p>
+                                        </div>
                                     </div>
 
                                     {/* Actions */}
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-2 sm:flex-shrink-0">
                                         <button
                                             onClick={() => handleApproveMember(member.id)}
                                             disabled={processingMember === member.id}
-                                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="flex-1 sm:flex-none px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {processingMember === member.id ? '...' : 'Approve'}
                                         </button>
                                         <button
                                             onClick={() => handleRejectMember(member.id)}
                                             disabled={processingMember === member.id}
-                                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="flex-1 sm:flex-none px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {processingMember === member.id ? '...' : 'Reject'}
                                         </button>
@@ -326,8 +328,8 @@ export default function GroupDetailPage() {
                 )}
 
                 {/* Upcoming Events Section */}
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Upcoming Events</h2>
-                <div className="bg-white rounded-lg border p-8 text-center">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Upcoming Events</h2>
+                <div className="bg-white rounded-lg border p-6 sm:p-8 text-center">
                     <p className="text-gray-600">No upcoming events in this group.</p>
                 </div>
             </div>

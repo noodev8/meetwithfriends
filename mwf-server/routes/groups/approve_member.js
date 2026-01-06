@@ -62,7 +62,7 @@ router.post('/:id/members/approve', verifyToken, async (req, res) => {
         // Check if group exists
         // =======================================================================
         const groupResult = await query(
-            'SELECT id FROM user_group WHERE id = $1',
+            'SELECT id FROM group_list WHERE id = $1',
             [id]
         );
 

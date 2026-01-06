@@ -84,8 +84,8 @@ export default function CreateGroupPage() {
         <main className="min-h-screen flex flex-col bg-gray-50">
             <Header />
 
-            <div className="flex-1 px-8 py-8 max-w-2xl mx-auto w-full">
-                <h1 className="text-3xl font-bold text-gray-900 mb-8">Create a Group</h1>
+            <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">Create a Group</h1>
 
                 <form onSubmit={handleSubmit} className="bg-white rounded-lg border p-6">
                     {error && (
@@ -160,7 +160,7 @@ export default function CreateGroupPage() {
                         </div>
                     </div>
 
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                         <button
                             type="submit"
                             disabled={submitting}
@@ -170,7 +170,7 @@ export default function CreateGroupPage() {
                         </button>
                         <Link
                             href="/dashboard"
-                            className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                            className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-center"
                         >
                             Cancel
                         </Link>

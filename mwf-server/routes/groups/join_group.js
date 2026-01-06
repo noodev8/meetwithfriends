@@ -61,7 +61,7 @@ router.post('/', verifyToken, async (req, res) => {
         // Check if group exists and get join_policy
         // =======================================================================
         const groupResult = await query(
-            'SELECT id, join_policy FROM user_group WHERE id = $1',
+            'SELECT id, join_policy FROM group_list WHERE id = $1',
             [group_id]
         );
 
