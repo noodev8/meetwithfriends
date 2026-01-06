@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { createGroup } from '@/lib/api/groups';
+import Header from '@/components/layout/Header';
 
 export default function CreateGroupPage() {
     const { user, token, isLoading } = useAuth();
@@ -81,20 +82,7 @@ export default function CreateGroupPage() {
     // =======================================================================
     return (
         <main className="min-h-screen flex flex-col bg-gray-50">
-            {/* Header */}
-            <header className="flex justify-between items-center px-8 py-4 bg-white border-b">
-                <Link href="/dashboard" className="text-xl font-bold text-blue-600">
-                    Meet With Friends
-                </Link>
-                <div className="flex items-center gap-4">
-                    <Link
-                        href="/profile"
-                        className="text-gray-700 hover:text-gray-900 transition"
-                    >
-                        {user.name}
-                    </Link>
-                </div>
-            </header>
+            <Header />
 
             <div className="flex-1 px-8 py-8 max-w-2xl mx-auto w-full">
                 <h1 className="text-3xl font-bold text-gray-900 mb-8">Create a Group</h1>

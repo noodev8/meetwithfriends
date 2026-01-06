@@ -15,9 +15,10 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getAllGroups, GroupWithCount } from '@/lib/api/groups';
 import { getAllEvents, EventWithDetails } from '@/lib/api/events';
+import Header from '@/components/layout/Header';
 
 export default function Dashboard() {
-    const { user, token, isLoading, logout } = useAuth();
+    const { user, token, isLoading } = useAuth();
     const router = useRouter();
     const [groups, setGroups] = useState<GroupWithCount[]>([]);
     const [events, setEvents] = useState<EventWithDetails[]>([]);
@@ -76,32 +77,7 @@ export default function Dashboard() {
     // =======================================================================
     return (
         <main className="min-h-screen flex flex-col bg-gray-50">
-            {/* Header */}
-            <header className="flex justify-between items-center px-8 py-4 bg-white border-b">
-                <Link href="/dashboard" className="text-xl font-bold text-blue-600">
-                    Meet With Friends
-                </Link>
-                <div className="flex items-center gap-4">
-                    <Link
-                        href="/groups/create"
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                    >
-                        Create Group
-                    </Link>
-                    <Link
-                        href="/profile"
-                        className="text-gray-700 hover:text-gray-900 transition"
-                    >
-                        {user.name}
-                    </Link>
-                    <button
-                        onClick={logout}
-                        className="text-gray-500 hover:text-gray-700 transition"
-                    >
-                        Log out
-                    </button>
-                </div>
-            </header>
+            <Header />
 
             <div className="flex-1 px-8 py-8 max-w-6xl mx-auto w-full">
                 {/* Groups Section */}

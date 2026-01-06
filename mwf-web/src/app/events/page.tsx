@@ -12,9 +12,10 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getAllEvents, EventWithDetails } from '@/lib/api/events';
+import Header from '@/components/layout/Header';
 
 export default function EventsPage() {
-    const { user, token, logout } = useAuth();
+    const { token } = useAuth();
     const [events, setEvents] = useState<EventWithDetails[]>([]);
     const [loadingData, setLoadingData] = useState(true);
 
@@ -37,45 +38,7 @@ export default function EventsPage() {
     // =======================================================================
     return (
         <main className="min-h-screen flex flex-col bg-gray-50">
-            {/* Header */}
-            <header className="flex justify-between items-center px-8 py-4 bg-white border-b">
-                <Link href={user ? '/dashboard' : '/'} className="text-xl font-bold text-blue-600">
-                    Meet With Friends
-                </Link>
-                <div className="flex items-center gap-4">
-                    {user ? (
-                        <>
-                            <Link
-                                href="/profile"
-                                className="text-gray-700 hover:text-gray-900 transition"
-                            >
-                                {user.name}
-                            </Link>
-                            <button
-                                onClick={logout}
-                                className="text-gray-500 hover:text-gray-700 transition"
-                            >
-                                Log out
-                            </button>
-                        </>
-                    ) : (
-                        <>
-                            <Link
-                                href="/login"
-                                className="px-4 py-2 text-gray-700 hover:text-gray-900 transition"
-                            >
-                                Log in
-                            </Link>
-                            <Link
-                                href="/register"
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                            >
-                                Sign up
-                            </Link>
-                        </>
-                    )}
-                </div>
-            </header>
+            <Header />
 
             <div className="flex-1 px-8 py-8 max-w-6xl mx-auto w-full">
                 <h1 className="text-3xl font-bold text-gray-900 mb-8">Upcoming Events</h1>

@@ -5,21 +5,55 @@
 Group Detail Page
 =======================================================================================================================================
 Displays a single group's details. Accessible to both logged-in and non-logged-in users.
+Shows join button for non-members, pending status for those awaiting approval, and role for active members.
 =======================================================================================================================================
 */
 
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getGroup, GroupWithCount } from '@/lib/api/groups';
+import {
+    getGroup,
+    joinGroup,
+    getGroupMembers,
+    approveMember,
+    rejectMember,
+    GroupWithCount,
+    GroupMembership,
+    GroupMember,
+} from '@/lib/api/groups';
+import Header from '@/components/layout/Header';
 
 export default function GroupDetailPage() {
-    const { user, token, logout } = useAuth();
+    const { user, token } = useAuth();
     const params = useParams();
+    const router = useRouter();
     const [group, setGroup] = useState<GroupWithCount | null>(null);
+    const [membership, setMembership] = useState<GroupMembership | null>(null);
+    const [pendingMembers, setPendingMembers] = useState<GroupMember[]>([]);
     const [loading, setLoading] = useState(true);
+    const [joining, setJoining] = useState(false);
+    const [processingMember, setProcessingMember] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    // =======================================================================
+    // Check if user can manage members (organiser or host)
+    // =======================================================================
+    const canManageMembers = membership?.status === 'active' &&
+        (membership?.role === 'organiser' || membership?.role === 'host');
+
+    // =======================================================================
+    // Fetch pending members (for organisers/hosts)
+    // =======================================================================
+    const fetchPendingMembers = useCallback(async () => {
+        if (!params.id || !token) return;
+
+        const result = await getGroupMembers(Number(params.id), token, 'pending');
+        if (result.success && result.data) {
+            setPendingMembers(result.data);
+        }
+    }, [params.id, token]);
 
     // =======================================================================
     // Fetch group details
@@ -30,7 +64,8 @@ export default function GroupDetailPage() {
 
             const result = await getGroup(Number(params.id), token || undefined);
             if (result.success && result.data) {
-                setGroup(result.data);
+                setGroup(result.data.group);
+                setMembership(result.data.membership);
             } else {
                 setError(result.error || 'Group not found');
             }
@@ -38,6 +73,130 @@ export default function GroupDetailPage() {
         }
         fetchGroup();
     }, [params.id, token]);
+
+    // =======================================================================
+    // Fetch pending members when user is organiser/host
+    // =======================================================================
+    useEffect(() => {
+        if (canManageMembers) {
+            fetchPendingMembers();
+        }
+    }, [canManageMembers, fetchPendingMembers]);
+
+    // =======================================================================
+    // Handle join group
+    // =======================================================================
+    const handleJoinGroup = async () => {
+        if (!token || !group) return;
+
+        setJoining(true);
+        const result = await joinGroup(token, group.id);
+        setJoining(false);
+
+        if (result.success && result.data) {
+            // Update membership state based on response
+            setMembership({
+                status: result.data.status,
+                role: 'member',
+            });
+            // Update member count if they joined immediately
+            if (result.data.status === 'active') {
+                setGroup(prev => prev ? { ...prev, member_count: prev.member_count + 1 } : null);
+            }
+        } else {
+            // Show error - could be ALREADY_MEMBER, ALREADY_PENDING, etc.
+            alert(result.error || 'Failed to join group');
+        }
+    };
+
+    // =======================================================================
+    // Handle approve member
+    // =======================================================================
+    const handleApproveMember = async (membershipId: number) => {
+        if (!token || !group) return;
+
+        setProcessingMember(membershipId);
+        const result = await approveMember(token, group.id, membershipId);
+        setProcessingMember(null);
+
+        if (result.success) {
+            // Remove from pending list
+            setPendingMembers(prev => prev.filter(m => m.id !== membershipId));
+            // Update member count
+            setGroup(prev => prev ? { ...prev, member_count: prev.member_count + 1 } : null);
+        } else {
+            alert(result.error || 'Failed to approve member');
+        }
+    };
+
+    // =======================================================================
+    // Handle reject member
+    // =======================================================================
+    const handleRejectMember = async (membershipId: number) => {
+        if (!token || !group) return;
+
+        setProcessingMember(membershipId);
+        const result = await rejectMember(token, group.id, membershipId);
+        setProcessingMember(null);
+
+        if (result.success) {
+            // Remove from pending list
+            setPendingMembers(prev => prev.filter(m => m.id !== membershipId));
+        } else {
+            alert(result.error || 'Failed to reject member');
+        }
+    };
+
+    // =======================================================================
+    // Render membership button/badge
+    // =======================================================================
+    const renderMembershipAction = () => {
+        // Not logged in - show login prompt
+        if (!user) {
+            return (
+                <button
+                    onClick={() => router.push('/login')}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                    Log in to join
+                </button>
+            );
+        }
+
+        // Has membership
+        if (membership) {
+            if (membership.status === 'pending') {
+                return (
+                    <span className="px-6 py-3 bg-yellow-100 text-yellow-800 rounded-lg">
+                        Request Pending
+                    </span>
+                );
+            }
+
+            // Active member - show role
+            const roleLabels: Record<string, string> = {
+                organiser: 'Organiser',
+                host: 'Host',
+                member: 'Member',
+            };
+            return (
+                <span className="px-6 py-3 bg-green-100 text-green-800 rounded-lg">
+                    {roleLabels[membership.role] || 'Member'}
+                </span>
+            );
+        }
+
+        // No membership - show join button
+        return (
+            <button
+                onClick={handleJoinGroup}
+                disabled={joining}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                {joining ? 'Joining...' : 'Join Group'}
+            </button>
+        );
+    };
 
     // =======================================================================
     // Loading state
@@ -56,11 +215,7 @@ export default function GroupDetailPage() {
     if (error || !group) {
         return (
             <main className="min-h-screen flex flex-col bg-gray-50">
-                <header className="flex justify-between items-center px-8 py-4 bg-white border-b">
-                    <Link href={user ? '/dashboard' : '/'} className="text-xl font-bold text-blue-600">
-                        Meet With Friends
-                    </Link>
-                </header>
+                <Header />
                 <div className="flex-1 flex flex-col items-center justify-center p-8">
                     <p className="text-gray-600 mb-4">{error || 'Group not found'}</p>
                     <Link href="/groups" className="text-blue-600 hover:text-blue-700">
@@ -76,45 +231,7 @@ export default function GroupDetailPage() {
     // =======================================================================
     return (
         <main className="min-h-screen flex flex-col bg-gray-50">
-            {/* Header */}
-            <header className="flex justify-between items-center px-8 py-4 bg-white border-b">
-                <Link href={user ? '/dashboard' : '/'} className="text-xl font-bold text-blue-600">
-                    Meet With Friends
-                </Link>
-                <div className="flex items-center gap-4">
-                    {user ? (
-                        <>
-                            <Link
-                                href="/profile"
-                                className="text-gray-700 hover:text-gray-900 transition"
-                            >
-                                {user.name}
-                            </Link>
-                            <button
-                                onClick={logout}
-                                className="text-gray-500 hover:text-gray-700 transition"
-                            >
-                                Log out
-                            </button>
-                        </>
-                    ) : (
-                        <>
-                            <Link
-                                href="/login"
-                                className="px-4 py-2 text-gray-700 hover:text-gray-900 transition"
-                            >
-                                Log in
-                            </Link>
-                            <Link
-                                href="/register"
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                            >
-                                Sign up
-                            </Link>
-                        </>
-                    )}
-                </div>
-            </header>
+            <Header />
 
             {/* Group Header */}
             <div className="bg-white border-b">
@@ -145,17 +262,7 @@ export default function GroupDetailPage() {
                             </p>
                         </div>
                         <div className="flex-shrink-0">
-                            {user && (
-                                <button
-                                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                                    onClick={() => {
-                                        // TODO: Implement join group functionality
-                                        alert('Join group functionality coming soon!');
-                                    }}
-                                >
-                                    Join Group
-                                </button>
-                            )}
+                            {renderMembershipAction()}
                         </div>
                     </div>
                 </div>
@@ -163,6 +270,62 @@ export default function GroupDetailPage() {
 
             {/* Content */}
             <div className="flex-1 px-8 py-8 max-w-6xl mx-auto w-full">
+                {/* Pending Members Section - Only visible to organisers/hosts */}
+                {canManageMembers && pendingMembers.length > 0 && (
+                    <div className="mb-8">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                            Pending Requests ({pendingMembers.length})
+                        </h2>
+                        <div className="bg-white rounded-lg border divide-y">
+                            {pendingMembers.map(member => (
+                                <div key={member.id} className="p-4 flex items-center gap-4">
+                                    {/* Avatar */}
+                                    {member.avatar_url ? (
+                                        <img
+                                            src={member.avatar_url}
+                                            alt={member.name}
+                                            className="w-12 h-12 rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                                            <span className="text-lg text-blue-400">
+                                                {member.name.charAt(0).toUpperCase()}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Name */}
+                                    <div className="flex-1">
+                                        <p className="font-medium text-gray-900">{member.name}</p>
+                                        <p className="text-sm text-gray-500">
+                                            Requested {new Date(member.joined_at).toLocaleDateString()}
+                                        </p>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleApproveMember(member.id)}
+                                            disabled={processingMember === member.id}
+                                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {processingMember === member.id ? '...' : 'Approve'}
+                                        </button>
+                                        <button
+                                            onClick={() => handleRejectMember(member.id)}
+                                            disabled={processingMember === member.id}
+                                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {processingMember === member.id ? '...' : 'Reject'}
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Upcoming Events Section */}
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Upcoming Events</h2>
                 <div className="bg-white rounded-lg border p-8 text-center">
                     <p className="text-gray-600">No upcoming events in this group.</p>

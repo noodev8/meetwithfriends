@@ -16,10 +16,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { updateProfile, changePassword, deleteAccount } from '@/lib/api/users';
+import Header from '@/components/layout/Header';
 
 export default function ProfilePage() {
     const router = useRouter();
-    const { user, token, isLoading, logout, updateUser } = useAuth();
+    const { user, token, isLoading, updateUser } = useAuth();
 
     // =======================================================================
     // Profile edit state
@@ -165,14 +166,6 @@ export default function ProfilePage() {
     };
 
     // =======================================================================
-    // Handle logout
-    // =======================================================================
-    const handleLogout = () => {
-        logout();
-        router.push('/');
-    };
-
-    // =======================================================================
     // Loading state
     // =======================================================================
     if (isLoading) {
@@ -188,24 +181,16 @@ export default function ProfilePage() {
     }
 
     return (
-        <main className="min-h-screen bg-gray-50 py-8 px-4">
-            <div className="max-w-2xl mx-auto space-y-6">
-                {/* ================================================================
-                    Header with Logout
-                ================================================================ */}
-                <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold">Profile Settings</h1>
-                    <button
-                        onClick={handleLogout}
-                        className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-lg transition"
-                    >
-                        Logout
-                    </button>
-                </div>
+        <main className="min-h-screen flex flex-col bg-gray-50">
+            <Header />
 
-                {/* ================================================================
-                    Profile Information Section
-                ================================================================ */}
+            <div className="flex-1 py-8 px-4">
+                <div className="max-w-2xl mx-auto space-y-6">
+                    <h1 className="text-2xl font-bold">Profile Settings</h1>
+
+                    {/* ================================================================
+                        Profile Information Section
+                    ================================================================ */}
                 <div className="bg-white rounded-lg shadow-md p-6">
                     <h2 className="text-lg font-semibold mb-4">Profile Information</h2>
 
@@ -406,6 +391,7 @@ export default function ProfilePage() {
                             </div>
                         </div>
                     )}
+                </div>
                 </div>
             </div>
         </main>

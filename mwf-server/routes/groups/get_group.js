@@ -3,7 +3,7 @@
 API Route: get_group
 =======================================================================================================================================
 Method: GET
-Purpose: Retrieves a single group by ID with member count. No authentication required - public viewing.
+Purpose: Retrieves a single group by ID with member count. Uses optional auth to include user's membership status.
 =======================================================================================================================================
 Request Payload:
 None (GET request with :id URL parameter)
@@ -19,6 +19,10 @@ Success Response:
     "join_policy": "approval",
     "member_count": 42,
     "created_at": "2026-01-01T00:00:00.000Z"
+  },
+  "membership": {                    // Only included if user is logged in
+    "status": "active",              // "active", "pending", or null if not a member
+    "role": "organiser"              // "organiser", "host", "member", or null
   }
 }
 =======================================================================================================================================
@@ -32,10 +36,12 @@ Return Codes:
 const express = require('express');
 const router = express.Router();
 const { query } = require('../../database');
+const { optionalAuth } = require('../../middleware/auth');
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalAuth, async (req, res) => {
     try {
         const { id } = req.params;
+        const userId = req.user?.id || null;
 
         // =======================================================================
         // Validate ID is a number
@@ -85,11 +91,32 @@ router.get('/:id', async (req, res) => {
         };
 
         // =======================================================================
+        // Get user's membership status if logged in
+        // =======================================================================
+        let membership = null;
+
+        if (userId) {
+            const memberResult = await query(
+                `SELECT status, role FROM group_member
+                 WHERE group_id = $1 AND user_id = $2`,
+                [id, userId]
+            );
+
+            if (memberResult.rows.length > 0) {
+                membership = {
+                    status: memberResult.rows[0].status,
+                    role: memberResult.rows[0].role
+                };
+            }
+        }
+
+        // =======================================================================
         // Return success response
         // =======================================================================
         return res.json({
             return_code: 'SUCCESS',
-            group
+            group,
+            membership
         });
 
     } catch (error) {

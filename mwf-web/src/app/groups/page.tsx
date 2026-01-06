@@ -12,9 +12,10 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getAllGroups, GroupWithCount } from '@/lib/api/groups';
+import Header from '@/components/layout/Header';
 
 export default function GroupsPage() {
-    const { user, token, logout } = useAuth();
+    const { user, token } = useAuth();
     const [groups, setGroups] = useState<GroupWithCount[]>([]);
     const [loadingData, setLoadingData] = useState(true);
 
@@ -37,51 +38,7 @@ export default function GroupsPage() {
     // =======================================================================
     return (
         <main className="min-h-screen flex flex-col bg-gray-50">
-            {/* Header */}
-            <header className="flex justify-between items-center px-8 py-4 bg-white border-b">
-                <Link href={user ? '/dashboard' : '/'} className="text-xl font-bold text-blue-600">
-                    Meet With Friends
-                </Link>
-                <div className="flex items-center gap-4">
-                    {user ? (
-                        <>
-                            <Link
-                                href="/groups/create"
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                            >
-                                Create Group
-                            </Link>
-                            <Link
-                                href="/profile"
-                                className="text-gray-700 hover:text-gray-900 transition"
-                            >
-                                {user.name}
-                            </Link>
-                            <button
-                                onClick={logout}
-                                className="text-gray-500 hover:text-gray-700 transition"
-                            >
-                                Log out
-                            </button>
-                        </>
-                    ) : (
-                        <>
-                            <Link
-                                href="/login"
-                                className="px-4 py-2 text-gray-700 hover:text-gray-900 transition"
-                            >
-                                Log in
-                            </Link>
-                            <Link
-                                href="/register"
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                            >
-                                Sign up
-                            </Link>
-                        </>
-                    )}
-                </div>
-            </header>
+            <Header />
 
             <div className="flex-1 px-8 py-8 max-w-6xl mx-auto w-full">
                 <div className="flex justify-between items-center mb-8">
