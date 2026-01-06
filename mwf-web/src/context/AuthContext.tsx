@@ -9,8 +9,9 @@ Stores user and token in localStorage for persistence.
 =======================================================================================================================================
 */
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { User } from '@/types';
+import { getProfile } from '@/lib/api/users';
 
 interface AuthContextType {
     user: User | null;
@@ -32,19 +33,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
 
     // =======================================================================
-    // Load auth state from localStorage on mount
+    // Helper to clear auth state (used by logout and invalid token handling)
     // =======================================================================
+    const clearAuth = useCallback(() => {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+        setToken(null);
+        setUser(null);
+    }, []);
+
+    // =======================================================================
+    // Load auth state from localStorage on mount, then refresh from DB
+    // =======================================================================
+    // This ensures user data is always fresh (e.g., if profile was updated on another device)
+    // and also validates that the token is still valid
     useEffect(() => {
         const storedToken = localStorage.getItem(TOKEN_KEY);
-        const storedUser = localStorage.getItem(USER_KEY);
 
-        if (storedToken && storedUser) {
-            setToken(storedToken);
-            setUser(JSON.parse(storedUser));
+        if (storedToken) {
+            // Fetch fresh profile from DB to ensure data is current
+            getProfile(storedToken).then(result => {
+                if (result.success && result.data) {
+                    // Token is valid, update with fresh user data
+                    setToken(storedToken);
+                    setUser(result.data);
+                    localStorage.setItem(USER_KEY, JSON.stringify(result.data));
+                } else {
+                    // Token is invalid or expired - clear everything
+                    clearAuth();
+                }
+                setIsLoading(false);
+            });
+        } else {
+            // No token stored
+            setIsLoading(false);
         }
-
-        setIsLoading(false);
-    }, []);
+    }, [clearAuth]);
 
     // =======================================================================
     // Login - store token and user
@@ -60,10 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Logout - clear token and user (client-side only per our decision)
     // =======================================================================
     const logout = () => {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
-        setToken(null);
-        setUser(null);
+        clearAuth();
     };
 
     // =======================================================================

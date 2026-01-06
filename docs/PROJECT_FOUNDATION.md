@@ -1,11 +1,11 @@
 # Meet With Friends - Project Foundation
 
 ## Vision Statement
-A group event management platform that simplifies hosting food-focused social events by handling deposits, menu pre-orders, and centralized payments - removing friction for both hosts and guests.
+A group event management platform that simplifies hosting social gatherings by handling RSVPs, deposits, and coordination - removing friction for both hosts and guests. Works for any type of group: dining clubs, coffee meetups, hobby groups, and more.
 
 ## Strategic Intent
-**Short-term:** Replace Meetup for existing food group with a focused, noise-free experience.
-**Medium-term:** Add deposits and pre-orders to solve the no-show and restaurant coordination problems.
+**Short-term:** Replace Meetup for existing groups with a focused, noise-free experience.
+**Medium-term:** Add deposits and pre-orders to solve the no-show problem (especially for restaurant bookings).
 **Long-term:** Build a three-sided marketplace connecting Guests, Hosts, and Restaurants.
 
 ## The Bigger Vision (Future)
@@ -45,11 +45,12 @@ Future:    Guest ↔ Host ↔ Restaurant (integrated marketplace)
 **Build the demand side first. Supply (restaurants) will follow.**
 
 ## Problem Statement
-Meetup works for basic event coordination but falls short for food events requiring:
-- Deposit collection to reduce no-shows
+Meetup works for basic event coordination but falls short for groups requiring:
+- Deposit collection to reduce no-shows (especially for restaurant bookings)
 - Menu pre-ordering for restaurant coordination
-- Centralized payment handling (guests → host → restaurant)
+- Centralized payment handling
 - Simpler interface for less tech-savvy users
+- A focused experience without the noise of a discovery platform
 
 ## Target Users
 
@@ -108,8 +109,8 @@ Target: 8 months maximum (phased delivery)
 # Feature Phases (Draft)
 
 ## Phase 1: Foundation (MVP)
-*Goal: Replace basic Meetup functionality for your existing group*
-*Value proposition: "This is where we host now. It's simpler and focused on what we do."*
+*Goal: Replace basic Meetup functionality for existing groups*
+*Value proposition: "Bring your group together. The simple way to organise group events."*
 
 ### Accounts & Profiles
 - [ ] User accounts (email/password)
@@ -392,7 +393,7 @@ Target: 8 months maximum (phased delivery)
 | 2026-01-04 | One Stripe per group | Organiser connects Stripe, hosts use it for events |
 | 2026-01-04 | Group join settings | Organiser chooses: auto-approve or manual approval |
 | 2026-01-04 | MVP without payments | Phase 1 matches Meetup basics. Payments/menus in Phase 2. Run parallel with Meetup initially. |
-| 2026-01-04 | MVP value proposition | "This is where we host now. It's simpler and focused on what we do." |
+| 2026-01-04 | MVP value proposition | "Bring your group together. The simple way to organise group events." |
 | 2026-01-04 | Discussion section | Event-level only, flat comments, visible to anyone, members can post |
 | 2026-01-04 | Platform philosophy | Platform is a tool, not a rule-maker. Organisers own all policies. |
 | 2026-01-04 | Refund policy | Organiser decides for their group. Host can refund anytime without member request. |
@@ -430,6 +431,7 @@ Target: 8 months maximum (phased delivery)
 | 2026-01-04 | Logout approach | Client-side only (delete token). No server-side logout endpoint. |
 | 2026-01-04 | Group table naming | Use user_group (avoid PostgreSQL reserved word) |
 | 2026-01-04 | Decision to build | Proceeding with full platform build. Deposits are the forcing function for migration. |
+| 2026-01-06 | Broader positioning | Platform not limited to food groups. Works for any community: dining, coffee, hobbies. Restaurant marketplace remains long-term vision but messaging is generic. |
 | 2026-01-04 | Strategic intent | Short-term: Replace Meetup. Medium-term: Deposits/pre-orders. Long-term: Restaurant group-booking business. |
 | 2026-01-04 | Migration strategy | Staged approach: soft launch → dual running → deposits force move → full migration |
 | 2026-01-04 | Long-term vision | Three-sided marketplace: Guests ↔ Hosts ↔ Restaurants. Build demand (hosts/guests) first. |
@@ -679,7 +681,7 @@ Once Phase 2 is live, deposits become your migration lever:
 | "What if I don't?" | For deposit events: you can't attend. Natural consequence. |
 
 ## The Pitch to Members
-> "We're launching a new home for our restaurant nights. It's simpler than Meetup - just our group, just our meals. Soon you'll be able to pay deposits online instead of bank transfers, and choose your food in advance. Give it a try at [link]."
+> "We're launching a new home for our group. It's simpler than Meetup - just us, just our events. Soon you'll be able to pay deposits online instead of bank transfers. For restaurant nights, you'll even be able to choose your food in advance. Give it a try at [link]."
 
 ## Success Metrics
 - Stage 1: 10+ beta testers actively using, no critical bugs

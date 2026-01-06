@@ -22,6 +22,7 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isRedirecting, setIsRedirecting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -48,15 +49,30 @@ export default function LoginPage() {
         const result = await apiLogin(email, password);
 
         if (result.success && result.data) {
-            // Log the user in and redirect to home
+            // Log the user in and show redirecting state
             login(result.data.token, result.data.user);
-            router.push('/');
+            setIsLoading(false);
+            setIsRedirecting(true);
+            router.push('/dashboard');
         } else {
             setError(result.error || 'Login failed');
+            setIsLoading(false);
         }
-
-        setIsLoading(false);
     };
+
+    // =======================================================================
+    // Show loading state while redirecting after successful login
+    // =======================================================================
+    if (isRedirecting) {
+        return (
+            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50">
+                <div className="text-center">
+                    <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-600">Signing you in...</p>
+                </div>
+            </main>
+        );
+    }
 
     return (
         <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50">
