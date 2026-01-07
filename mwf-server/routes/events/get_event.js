@@ -32,7 +32,8 @@ Success Response:
     "waitlist_position": null            // position if on waitlist
   },
   "is_group_member": true,               // false if not logged in or not a member
-  "can_manage_attendees": true           // true if organiser or event creator
+  "can_manage_attendees": true,          // true if organiser or event creator
+  "can_edit": true                       // true if can manage AND event not cancelled
 }
 =======================================================================================================================================
 Return Codes:
@@ -142,11 +143,14 @@ router.get('/:id', optionalAuth, async (req, res) => {
 
             isGroupMember = membershipResult.rows.length > 0;
 
-            // Can manage if organiser or event creator
+            // Can manage/edit if organiser or event creator
             const isOrganiser = membershipResult.rows[0]?.role === 'organiser';
             const isEventCreator = event.created_by === userId;
             canManageAttendees = isOrganiser || isEventCreator;
         }
+
+        // Can edit if can manage AND event not cancelled
+        const canEdit = canManageAttendees && event.status !== 'cancelled';
 
         // =======================================================================
         // Return success response
@@ -156,7 +160,8 @@ router.get('/:id', optionalAuth, async (req, res) => {
             event,
             rsvp,
             is_group_member: isGroupMember,
-            can_manage_attendees: canManageAttendees
+            can_manage_attendees: canManageAttendees,
+            can_edit: canEdit
         });
 
     } catch (error) {

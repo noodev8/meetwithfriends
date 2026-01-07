@@ -17,6 +17,8 @@ import {
     getAttendees,
     rsvpEvent,
     manageAttendee,
+    cancelEvent,
+    restoreEvent,
     EventWithDetails,
     RsvpStatus,
     Attendee,
@@ -31,11 +33,14 @@ export default function EventDetailPage() {
     const [rsvp, setRsvp] = useState<RsvpStatus | null>(null);
     const [isGroupMember, setIsGroupMember] = useState(false);
     const [canManageAttendees, setCanManageAttendees] = useState(false);
+    const [canEdit, setCanEdit] = useState(false);
     const [attending, setAttending] = useState<Attendee[]>([]);
     const [waitlist, setWaitlist] = useState<Attendee[]>([]);
     const [loading, setLoading] = useState(true);
     const [rsvpLoading, setRsvpLoading] = useState(false);
     const [managingUser, setManagingUser] = useState<number | null>(null);
+    const [cancelLoading, setCancelLoading] = useState(false);
+    const [restoreLoading, setRestoreLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     // =======================================================================
@@ -58,6 +63,7 @@ export default function EventDetailPage() {
                 setRsvp(eventResult.data.rsvp);
                 setIsGroupMember(eventResult.data.is_group_member);
                 setCanManageAttendees(eventResult.data.can_manage_attendees);
+                setCanEdit(eventResult.data.can_edit);
             } else {
                 setError(eventResult.error || 'Event not found');
             }
@@ -124,6 +130,62 @@ export default function EventDetailPage() {
             }
         } else {
             alert(result.error || 'Failed to manage attendee');
+        }
+    };
+
+    // =======================================================================
+    // Handle cancel event
+    // =======================================================================
+    const handleCancelEvent = async () => {
+        if (!token || !event) return;
+
+        const confirmed = window.confirm(
+            'Are you sure you want to cancel this event? This action cannot be undone.'
+        );
+
+        if (!confirmed) return;
+
+        setCancelLoading(true);
+        const result = await cancelEvent(token, event.id);
+        setCancelLoading(false);
+
+        if (result.success) {
+            // Refresh event to show cancelled status
+            const eventResult = await getEvent(event.id, token);
+            if (eventResult.success && eventResult.data) {
+                setEvent(eventResult.data.event);
+                setCanEdit(eventResult.data.can_edit);
+            }
+        } else {
+            alert(result.error || 'Failed to cancel event');
+        }
+    };
+
+    // =======================================================================
+    // Handle restore event
+    // =======================================================================
+    const handleRestoreEvent = async () => {
+        if (!token || !event) return;
+
+        const confirmed = window.confirm(
+            'Are you sure you want to restore this event? It will be visible and open for RSVPs again.'
+        );
+
+        if (!confirmed) return;
+
+        setRestoreLoading(true);
+        const result = await restoreEvent(token, event.id);
+        setRestoreLoading(false);
+
+        if (result.success) {
+            // Refresh event to show restored status
+            const eventResult = await getEvent(event.id, token);
+            if (eventResult.success && eventResult.data) {
+                setEvent(eventResult.data.event);
+                setCanEdit(eventResult.data.can_edit);
+            }
+        } else {
+            alert(result.error || 'Failed to restore event');
         }
     };
 
@@ -215,13 +277,42 @@ export default function EventDetailPage() {
                         </div>
                     )}
 
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                        {event.title}
-                    </h1>
-
-                    <p className="text-gray-500">
-                        Hosted by {event.creator_name}
-                    </p>
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                        <div>
+                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                                {event.title}
+                            </h1>
+                            <p className="text-gray-500">
+                                Hosted by {event.creator_name}
+                            </p>
+                        </div>
+                        {canEdit && (
+                            <div className="flex gap-2 sm:flex-shrink-0">
+                                <Link
+                                    href={`/events/${event.id}/edit`}
+                                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-center"
+                                >
+                                    Edit Event
+                                </Link>
+                                <button
+                                    onClick={handleCancelEvent}
+                                    disabled={cancelLoading}
+                                    className="px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition disabled:opacity-50"
+                                >
+                                    {cancelLoading ? 'Cancelling...' : 'Cancel Event'}
+                                </button>
+                            </div>
+                        )}
+                        {event.status === 'cancelled' && canManageAttendees && (
+                            <button
+                                onClick={handleRestoreEvent}
+                                disabled={restoreLoading}
+                                className="px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition disabled:opacity-50 sm:flex-shrink-0"
+                            >
+                                {restoreLoading ? 'Restoring...' : 'Restore Event'}
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 

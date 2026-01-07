@@ -67,8 +67,7 @@ router.get('/', async (req, res) => {
              FROM event_list e
              JOIN group_list g ON e.group_id = g.id
              LEFT JOIN event_rsvp r ON e.id = r.event_id
-             WHERE e.status = 'published'
-               AND e.date_time >= NOW()`;
+             WHERE e.date_time >= NOW()`;
 
         const queryParams = [];
 

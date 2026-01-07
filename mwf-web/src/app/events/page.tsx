@@ -61,16 +61,23 @@ export default function EventsPage() {
                                 className="bg-white rounded-lg border hover:shadow-md transition overflow-hidden"
                             >
                                 <div className="p-6">
-                                    <p className="text-sm text-blue-600 font-medium">
-                                        {new Date(event.date_time).toLocaleDateString('en-GB', {
-                                            weekday: 'short',
-                                            day: 'numeric',
-                                            month: 'short',
-                                            year: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                        })}
-                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-sm text-blue-600 font-medium">
+                                            {new Date(event.date_time).toLocaleDateString('en-GB', {
+                                                weekday: 'short',
+                                                day: 'numeric',
+                                                month: 'short',
+                                                year: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </p>
+                                        {event.status === 'cancelled' && (
+                                            <span className="px-2 py-0.5 text-xs font-medium text-red-700 bg-red-100 rounded-full">
+                                                Cancelled
+                                            </span>
+                                        )}
+                                    </div>
                                     <h3 className="font-semibold text-gray-900 text-lg mt-2">
                                         {event.title}
                                     </h3>

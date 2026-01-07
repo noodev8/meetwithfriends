@@ -29,6 +29,16 @@ export interface EventWithRsvp {
     rsvp: RsvpStatus | null;
     is_group_member: boolean;
     can_manage_attendees: boolean;
+    can_edit: boolean;
+}
+
+// Update event payload
+export interface UpdateEventPayload {
+    title?: string;
+    description?: string;
+    location?: string;
+    date_time?: string;
+    capacity?: number | null;
 }
 
 // Attendee type
@@ -94,6 +104,7 @@ export async function getEvent(id: number, token?: string): Promise<ApiResult<Ev
                 rsvp: response.rsvp as unknown as RsvpStatus | null,
                 is_group_member: Boolean(response.is_group_member),
                 can_manage_attendees: Boolean(response.can_manage_attendees),
+                can_edit: Boolean(response.can_edit),
             },
         };
     }
@@ -219,6 +230,92 @@ export async function manageAttendee(
     return {
         success: false,
         error: (response.message as string) || 'Failed to manage attendee',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+updateEvent
+=======================================================================================================================================
+Updates an existing event. Only event creator or group organiser can update.
+=======================================================================================================================================
+*/
+export async function updateEvent(
+    token: string,
+    eventId: number,
+    payload: UpdateEventPayload
+): Promise<ApiResult<Event>> {
+    const response = await apiCall(`/api/events/${eventId}/update`, payload, token);
+
+    if (response.return_code === 'SUCCESS' && response.event) {
+        return {
+            success: true,
+            data: response.event as unknown as Event,
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to update event',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+cancelEvent
+=======================================================================================================================================
+Cancels an event. Only event creator or group organiser can cancel.
+=======================================================================================================================================
+*/
+export async function cancelEvent(
+    token: string,
+    eventId: number
+): Promise<ApiResult<{ message: string }>> {
+    const response = await apiCall(`/api/events/${eventId}/cancel`, {}, token);
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: {
+                message: response.message as string,
+            },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to cancel event',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+restoreEvent
+=======================================================================================================================================
+Restores a cancelled event. Only event creator or group organiser can restore.
+=======================================================================================================================================
+*/
+export async function restoreEvent(
+    token: string,
+    eventId: number
+): Promise<ApiResult<{ message: string }>> {
+    const response = await apiCall(`/api/events/${eventId}/restore`, {}, token);
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: {
+                message: response.message as string,
+            },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to restore event',
         return_code: response.return_code,
     };
 }
