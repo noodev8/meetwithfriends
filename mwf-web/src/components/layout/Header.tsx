@@ -12,10 +12,12 @@ Shared header for all pages. Handles both authenticated and non-authenticated st
 */
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function Header() {
+    const router = useRouter();
     const { user, logout } = useAuth();
     const [menuOpen, setMenuOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -51,6 +53,7 @@ export default function Header() {
         setMenuOpen(false);
         setMobileMenuOpen(false);
         logout();
+        router.push('/');
     };
 
     return (

@@ -159,31 +159,62 @@ export interface GroupMember {
     joined_at: string;
 }
 
+// Paginated members response type
+export interface PaginatedMembers {
+    members: GroupMember[];
+    total_count: number;
+    has_more: boolean;
+}
+
+// Options for fetching group members
+export interface GetMembersOptions {
+    status?: 'active' | 'pending' | 'all';
+    search?: string;
+    limit?: number;
+    offset?: number;
+}
+
 /*
 =======================================================================================================================================
 getGroupMembers
 =======================================================================================================================================
-Fetches members of a group. Use status param to filter:
-- "active": Only active members (default)
-- "pending": Only pending members (requires organiser/host role)
-- "all": All members (requires organiser/host role)
+Fetches members of a group with pagination and search support.
+- status: "active" (default), "pending", or "all" (pending/all require organiser/host role)
+- search: optional name search (case-insensitive partial match)
+- limit: number of results per page (default: 20, max: 100)
+- offset: pagination offset (default: 0)
 =======================================================================================================================================
 */
 export async function getGroupMembers(
     groupId: number,
     token?: string,
-    status?: 'active' | 'pending' | 'all'
-): Promise<ApiResult<GroupMember[]>> {
-    const url = status
-        ? `/api/groups/${groupId}/members?status=${status}`
-        : `/api/groups/${groupId}/members`;
+    options?: GetMembersOptions | 'active' | 'pending' | 'all'
+): Promise<ApiResult<PaginatedMembers>> {
+    // Support legacy call pattern: getGroupMembers(id, token, 'pending')
+    const opts: GetMembersOptions = typeof options === 'string'
+        ? { status: options }
+        : options || {};
+
+    // Build query string
+    const params = new URLSearchParams();
+    if (opts.status) params.append('status', opts.status);
+    if (opts.search) params.append('search', opts.search);
+    if (opts.limit) params.append('limit', opts.limit.toString());
+    if (opts.offset) params.append('offset', opts.offset.toString());
+
+    const queryString = params.toString();
+    const url = `/api/groups/${groupId}/members${queryString ? `?${queryString}` : ''}`;
 
     const response = await apiGet(url, token);
 
     if (response.return_code === 'SUCCESS') {
         return {
             success: true,
-            data: response.members as GroupMember[],
+            data: {
+                members: response.members as GroupMember[],
+                total_count: response.total_count as number,
+                has_more: response.has_more as boolean,
+            },
         };
     }
 
@@ -254,6 +285,38 @@ export async function rejectMember(
     return {
         success: false,
         error: (response.message as string) || 'Failed to reject member',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+removeMember
+=======================================================================================================================================
+Removes a member from a group. Only the group organiser can remove members.
+=======================================================================================================================================
+*/
+export async function removeMember(
+    token: string,
+    groupId: number,
+    membershipId: number
+): Promise<ApiResult<{ message: string }>> {
+    const response = await apiCall(
+        `/api/groups/${groupId}/members/remove`,
+        { membership_id: membershipId },
+        token
+    );
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: { message: response.message as string },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to remove member',
         return_code: response.return_code,
     };
 }

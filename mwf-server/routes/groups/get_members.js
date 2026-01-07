@@ -3,13 +3,17 @@
 API Route: get_members
 =======================================================================================================================================
 Method: GET
-Purpose: Retrieves members of a group. Only organisers and hosts can see pending members.
+Purpose: Retrieves members of a group with pagination and search support.
+         Only organisers and hosts can see pending members.
          Regular members and non-members only see active members.
 =======================================================================================================================================
 Request Payload:
 None (GET request with :id URL parameter)
 Query params:
   - status: "active" | "pending" | "all" (default: "active", "pending" and "all" require organiser/host role)
+  - search: string (optional, filters members by name, case-insensitive partial match)
+  - limit: number (optional, default: 20, max: 100)
+  - offset: number (optional, default: 0)
 
 Success Response:
 {
@@ -24,7 +28,9 @@ Success Response:
       "status": "active",
       "joined_at": "2026-01-01T00:00:00.000Z"
     }
-  ]
+  ],
+  "total_count": 150,                       // total matching members (for pagination)
+  "has_more": true                          // whether more results exist
 }
 =======================================================================================================================================
 Return Codes:
@@ -43,8 +49,14 @@ const { optionalAuth } = require('../../middleware/auth');
 router.get('/:id/members', optionalAuth, async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.query;
+        const { status, search } = req.query;
         const userId = req.user?.id || null;
+
+        // =======================================================================
+        // Parse pagination params with defaults and limits
+        // =======================================================================
+        const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
+        const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
 
         // =======================================================================
         // Validate ID is a number
@@ -104,57 +116,82 @@ router.get('/:id/members', optionalAuth, async (req, res) => {
         }
 
         // =======================================================================
-        // Build query based on status filter
+        // Build query based on status filter and search
         // =======================================================================
-        let membersQuery;
         let queryParams = [id];
+        let paramIndex = 2;
 
-        if (statusFilter === 'all') {
-            membersQuery = `
-                SELECT
-                    gm.id,
-                    gm.user_id,
-                    u.name,
-                    u.avatar_url,
-                    gm.role,
-                    gm.status,
-                    gm.joined_at
-                FROM group_member gm
-                JOIN app_user u ON gm.user_id = u.id
-                WHERE gm.group_id = $1
-                ORDER BY
-                    CASE gm.status WHEN 'pending' THEN 0 ELSE 1 END,
-                    CASE gm.role WHEN 'organiser' THEN 0 WHEN 'host' THEN 1 ELSE 2 END,
-                    gm.joined_at ASC
-            `;
-        } else {
-            membersQuery = `
-                SELECT
-                    gm.id,
-                    gm.user_id,
-                    u.name,
-                    u.avatar_url,
-                    gm.role,
-                    gm.status,
-                    gm.joined_at
-                FROM group_member gm
-                JOIN app_user u ON gm.user_id = u.id
-                WHERE gm.group_id = $1 AND gm.status = $2
-                ORDER BY
-                    CASE gm.role WHEN 'organiser' THEN 0 WHEN 'host' THEN 1 ELSE 2 END,
-                    gm.joined_at ASC
-            `;
+        // Build WHERE clause conditions
+        let whereConditions = ['gm.group_id = $1'];
+
+        // Add status filter
+        if (statusFilter !== 'all') {
+            whereConditions.push(`gm.status = $${paramIndex}`);
             queryParams.push(statusFilter);
+            paramIndex++;
         }
+
+        // Add search filter (case-insensitive partial match on name)
+        if (search && search.trim()) {
+            whereConditions.push(`u.name ILIKE $${paramIndex}`);
+            queryParams.push(`%${search.trim()}%`);
+            paramIndex++;
+        }
+
+        const whereClause = whereConditions.join(' AND ');
+
+        // Build ORDER BY clause
+        const orderByClause = statusFilter === 'all'
+            ? `ORDER BY
+                CASE gm.status WHEN 'pending' THEN 0 ELSE 1 END,
+                CASE gm.role WHEN 'organiser' THEN 0 WHEN 'host' THEN 1 ELSE 2 END,
+                u.name ASC`
+            : `ORDER BY
+                CASE gm.role WHEN 'organiser' THEN 0 WHEN 'host' THEN 1 ELSE 2 END,
+                u.name ASC`;
+
+        // =======================================================================
+        // Get total count for pagination
+        // =======================================================================
+        const countQuery = `
+            SELECT COUNT(*) as total
+            FROM group_member gm
+            JOIN app_user u ON gm.user_id = u.id
+            WHERE ${whereClause}
+        `;
+        const countResult = await query(countQuery, queryParams);
+        const totalCount = parseInt(countResult.rows[0].total, 10);
+
+        // =======================================================================
+        // Get paginated members
+        // =======================================================================
+        const membersQuery = `
+            SELECT
+                gm.id,
+                gm.user_id,
+                u.name,
+                u.avatar_url,
+                gm.role,
+                gm.status,
+                gm.joined_at
+            FROM group_member gm
+            JOIN app_user u ON gm.user_id = u.id
+            WHERE ${whereClause}
+            ${orderByClause}
+            LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+        `;
+        queryParams.push(limit, offset);
 
         const membersResult = await query(membersQuery, queryParams);
 
         // =======================================================================
-        // Return success response
+        // Return success response with pagination info
         // =======================================================================
         return res.json({
             return_code: 'SUCCESS',
-            members: membersResult.rows
+            members: membersResult.rows,
+            total_count: totalCount,
+            has_more: offset + membersResult.rows.length < totalCount
         });
 
     } catch (error) {

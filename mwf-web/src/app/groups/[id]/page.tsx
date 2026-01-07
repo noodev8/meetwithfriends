@@ -23,7 +23,11 @@ import {
     GroupMembership,
     GroupMember,
 } from '@/lib/api/groups';
+
 import Header from '@/components/layout/Header';
+
+// Number of pending members to show before "View all" link
+const PENDING_PREVIEW_LIMIT = 5;
 
 export default function GroupDetailPage() {
     const { user, token } = useAuth();
@@ -51,7 +55,7 @@ export default function GroupDetailPage() {
 
         const result = await getGroupMembers(Number(params.id), token, 'pending');
         if (result.success && result.data) {
-            setPendingMembers(result.data);
+            setPendingMembers(result.data.members);
         }
     }, [params.id, token]);
 
@@ -277,7 +281,7 @@ export default function GroupDetailPage() {
                             Pending Requests ({pendingMembers.length})
                         </h2>
                         <div className="bg-white rounded-lg border divide-y">
-                            {pendingMembers.map(member => (
+                            {pendingMembers.slice(0, PENDING_PREVIEW_LIMIT).map(member => (
                                 <div key={member.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
                                     <div className="flex items-center gap-4 flex-1">
                                         {/* Avatar */}
@@ -324,8 +328,32 @@ export default function GroupDetailPage() {
                                 </div>
                             ))}
                         </div>
+                        {pendingMembers.length > PENDING_PREVIEW_LIMIT && (
+                            <Link
+                                href={`/groups/${group.id}/members`}
+                                className="block text-center text-blue-600 hover:text-blue-700 mt-4"
+                            >
+                                View all {pendingMembers.length} pending requests
+                            </Link>
+                        )}
                     </div>
                 )}
+
+                {/* Members Section */}
+                <div className="bg-white rounded-lg border p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+                    <div className="text-center sm:text-left">
+                        <h2 className="text-xl font-bold text-gray-900">Members</h2>
+                        <p className="text-gray-500">
+                            {group.member_count} {group.member_count === 1 ? 'member' : 'members'} in this group
+                        </p>
+                    </div>
+                    <Link
+                        href={`/groups/${group.id}/members`}
+                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    >
+                        View Members
+                    </Link>
+                </div>
 
                 {/* Upcoming Events Section */}
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Upcoming Events</h2>
