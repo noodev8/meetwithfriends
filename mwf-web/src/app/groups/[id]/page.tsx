@@ -23,6 +23,7 @@ import {
     GroupMembership,
     GroupMember,
 } from '@/lib/api/groups';
+import { getAllEvents, EventWithDetails } from '@/lib/api/events';
 
 import Header from '@/components/layout/Header';
 
@@ -40,6 +41,7 @@ export default function GroupDetailPage() {
     const [joining, setJoining] = useState(false);
     const [processingMember, setProcessingMember] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [events, setEvents] = useState<EventWithDetails[]>([]);
 
     // =======================================================================
     // Check if user can manage members (organiser or host)
@@ -86,6 +88,21 @@ export default function GroupDetailPage() {
             fetchPendingMembers();
         }
     }, [canManageMembers, fetchPendingMembers]);
+
+    // =======================================================================
+    // Fetch group events
+    // =======================================================================
+    useEffect(() => {
+        async function fetchEvents() {
+            if (!params.id) return;
+
+            const result = await getAllEvents(token || undefined, Number(params.id));
+            if (result.success && result.data) {
+                setEvents(result.data);
+            }
+        }
+        fetchEvents();
+    }, [params.id, token]);
 
     // =======================================================================
     // Handle join group
@@ -356,10 +373,72 @@ export default function GroupDetailPage() {
                 </div>
 
                 {/* Upcoming Events Section */}
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Upcoming Events</h2>
-                <div className="bg-white rounded-lg border p-6 sm:p-8 text-center">
-                    <p className="text-gray-600">No upcoming events in this group.</p>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Upcoming Events</h2>
+                    {canManageMembers && (
+                        <Link
+                            href={`/groups/${group.id}/events/create`}
+                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-center"
+                        >
+                            Create Event
+                        </Link>
+                    )}
                 </div>
+                {events.length > 0 ? (
+                    <div className="space-y-4">
+                        {events.map(event => {
+                            const eventDate = new Date(event.date_time);
+                            return (
+                                <Link
+                                    key={event.id}
+                                    href={`/events/${event.id}`}
+                                    className="block bg-white rounded-lg border p-4 sm:p-6 hover:border-blue-300 transition"
+                                >
+                                    <div className="flex flex-col sm:flex-row gap-4">
+                                        {/* Date badge */}
+                                        <div className="flex-shrink-0 text-center sm:text-left">
+                                            <div className="inline-block sm:block bg-blue-50 rounded-lg p-3 sm:w-20">
+                                                <p className="text-sm text-blue-600 font-medium">
+                                                    {eventDate.toLocaleDateString('en-GB', { weekday: 'short' })}
+                                                </p>
+                                                <p className="text-2xl font-bold text-blue-700">
+                                                    {eventDate.getDate()}
+                                                </p>
+                                                <p className="text-sm text-blue-600">
+                                                    {eventDate.toLocaleDateString('en-GB', { month: 'short' })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        {/* Event details */}
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                                                {event.title}
+                                            </h3>
+                                            <p className="text-gray-500 text-sm mb-2">
+                                                {eventDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                                {event.location && ` · ${event.location}`}
+                                            </p>
+                                            <p className="text-gray-600 text-sm">
+                                                {event.attendee_count || 0} going
+                                                {event.capacity && ` · ${event.capacity - (event.attendee_count || 0)} spots left`}
+                                                {(event.waitlist_count || 0) > 0 && ` · ${event.waitlist_count} on waitlist`}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </Link>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <div className="bg-white rounded-lg border p-6 sm:p-8 text-center">
+                        <p className="text-gray-600">No upcoming events in this group.</p>
+                        {canManageMembers && (
+                            <p className="text-gray-500 mt-2 text-sm">
+                                Create an event to get started!
+                            </p>
+                        )}
+                    </div>
+                )}
             </div>
         </main>
     );

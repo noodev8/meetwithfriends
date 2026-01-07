@@ -66,7 +66,7 @@ export async function getGroup(id: number, token?: string): Promise<ApiResult<Gr
             success: true,
             data: {
                 group: response.group as unknown as GroupWithCount,
-                membership: response.membership as GroupMembership | null,
+                membership: response.membership as unknown as GroupMembership | null,
             },
         };
     }
@@ -211,9 +211,9 @@ export async function getGroupMembers(
         return {
             success: true,
             data: {
-                members: response.members as GroupMember[],
-                total_count: response.total_count as number,
-                has_more: response.has_more as boolean,
+                members: response.members as unknown as GroupMember[],
+                total_count: Number(response.total_count) || 0,
+                has_more: Boolean(response.has_more),
             },
         };
     }

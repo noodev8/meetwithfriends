@@ -20,7 +20,7 @@ import Header from '@/components/layout/Header';
 
 export default function ProfilePage() {
     const router = useRouter();
-    const { user, token, isLoading, updateUser } = useAuth();
+    const { user, token, isLoading, updateUser, logout } = useAuth();
 
     // =======================================================================
     // Profile edit state

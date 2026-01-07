@@ -3,10 +3,12 @@
 API Route: list_events
 =======================================================================================================================================
 Method: GET
-Purpose: Retrieves all upcoming published events with their attendee counts and group info. No authentication required.
+Purpose: Retrieves upcoming published events with their attendee counts and group info. No authentication required.
 =======================================================================================================================================
 Request Payload:
 None (GET request)
+Query params:
+  - group_id: number (optional, filters events by group)
 
 Success Response:
 {
@@ -42,14 +44,13 @@ const { query } = require('../../database');
 
 router.get('/', async (req, res) => {
     try {
+        const { group_id } = req.query;
+
         // =======================================================================
-        // Fetch all upcoming published events with attendee counts
+        // Build query with optional group filter
         // =======================================================================
-        // Only showing future events that are not cancelled
-        // Including group name for display purposes
-        // Counting attendees and waitlist separately
-        const result = await query(
-            `SELECT
+        let queryText = `
+            SELECT
                 e.id,
                 e.group_id,
                 g.name AS group_name,
@@ -67,10 +68,21 @@ router.get('/', async (req, res) => {
              JOIN group_list g ON e.group_id = g.id
              LEFT JOIN event_rsvp r ON e.id = r.event_id
              WHERE e.status = 'published'
-               AND e.date_time >= NOW()
+               AND e.date_time >= NOW()`;
+
+        const queryParams = [];
+
+        // Add group filter if provided
+        if (group_id && !isNaN(parseInt(group_id, 10))) {
+            queryParams.push(parseInt(group_id, 10));
+            queryText += ` AND e.group_id = $1`;
+        }
+
+        queryText += `
              GROUP BY e.id, g.name
-             ORDER BY e.date_time ASC`
-        );
+             ORDER BY e.date_time ASC`;
+
+        const result = await query(queryText, queryParams);
 
         // =======================================================================
         // Transform results to ensure counts are numbers
