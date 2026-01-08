@@ -49,6 +49,9 @@ export default function GroupDetailPage() {
     const canManageMembers = membership?.status === 'active' &&
         (membership?.role === 'organiser' || membership?.role === 'host');
 
+    // Check if user is the organiser (can edit group settings)
+    const isOrganiser = membership?.status === 'active' && membership?.role === 'organiser';
+
     // =======================================================================
     // Fetch pending members (for organisers/hosts)
     // =======================================================================
@@ -282,8 +285,16 @@ export default function GroupDetailPage() {
                                 {group.member_count} {group.member_count === 1 ? 'member' : 'members'}
                             </p>
                         </div>
-                        <div className="flex-shrink-0 flex justify-center sm:justify-start">
+                        <div className="flex-shrink-0 flex flex-col sm:flex-row items-center gap-3 justify-center sm:justify-start">
                             {renderMembershipAction()}
+                            {isOrganiser && (
+                                <Link
+                                    href={`/groups/${group.id}/edit`}
+                                    className="text-sm text-gray-500 hover:text-gray-700 transition"
+                                >
+                                    Edit Group
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -411,9 +422,16 @@ export default function GroupDetailPage() {
                                         </div>
                                         {/* Event details */}
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                                                {event.title}
-                                            </h3>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <h3 className="text-lg font-semibold text-gray-900">
+                                                    {event.title}
+                                                </h3>
+                                                {event.status === 'cancelled' && (
+                                                    <span className="px-2 py-0.5 text-xs font-medium text-red-700 bg-red-100 rounded-full">
+                                                        Cancelled
+                                                    </span>
+                                                )}
+                                            </div>
                                             <p className="text-gray-500 text-sm mb-2">
                                                 {eventDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                                                 {event.location && ` · ${event.location}`}

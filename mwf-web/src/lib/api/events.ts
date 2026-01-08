@@ -174,17 +174,29 @@ export async function rsvpEvent(
     };
 }
 
+// Attendees response with membership info
+export interface AttendeesResponse {
+    attending: Attendee[];
+    waitlist: Attendee[];
+    attending_count: number;
+    waitlist_count: number;
+    is_member: boolean;
+}
+
 /*
 =======================================================================================================================================
 getAttendees
 =======================================================================================================================================
 Fetches attendees and waitlist for an event.
+- Group members see full attendee list with profiles
+- Non-members only see counts (attending/waitlist arrays will be empty)
 =======================================================================================================================================
 */
 export async function getAttendees(
-    eventId: number
-): Promise<ApiResult<{ attending: Attendee[]; waitlist: Attendee[] }>> {
-    const response = await apiGet(`/api/events/${eventId}/attendees`);
+    eventId: number,
+    token?: string
+): Promise<ApiResult<AttendeesResponse>> {
+    const response = await apiGet(`/api/events/${eventId}/attendees`, token);
 
     if (response.return_code === 'SUCCESS') {
         return {
@@ -192,6 +204,9 @@ export async function getAttendees(
             data: {
                 attending: response.attending as unknown as Attendee[],
                 waitlist: response.waitlist as unknown as Attendee[],
+                attending_count: Number(response.attending_count) || 0,
+                waitlist_count: Number(response.waitlist_count) || 0,
+                is_member: Boolean(response.is_member),
             },
         };
     }

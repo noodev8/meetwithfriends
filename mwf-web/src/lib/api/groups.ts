@@ -110,6 +110,39 @@ export async function createGroup(
     };
 }
 
+/*
+=======================================================================================================================================
+updateGroup
+=======================================================================================================================================
+Updates a group's settings. Requires organiser role.
+=======================================================================================================================================
+*/
+export async function updateGroup(
+    token: string,
+    groupId: number,
+    data: {
+        name?: string;
+        description?: string | null;
+        image_url?: string | null;
+        join_policy?: 'auto' | 'approval';
+    }
+): Promise<ApiResult<Group>> {
+    const response = await apiCall(`/api/groups/${groupId}/update`, data, token);
+
+    if (response.return_code === 'SUCCESS' && response.group) {
+        return {
+            success: true,
+            data: response.group as unknown as Group,
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to update group',
+        return_code: response.return_code,
+    };
+}
+
 // Join group response type
 export interface JoinGroupResponse {
     status: 'active' | 'pending';
@@ -317,6 +350,54 @@ export async function removeMember(
     return {
         success: false,
         error: (response.message as string) || 'Failed to remove member',
+        return_code: response.return_code,
+    };
+}
+
+// Response type for assignRole
+export interface AssignRoleResponse {
+    message: string;
+    member: {
+        id: number;
+        user_id: number;
+        name: string;
+        role: 'host' | 'member';
+    };
+}
+
+/*
+=======================================================================================================================================
+assignRole
+=======================================================================================================================================
+Assigns a role (host or member) to a group member. Only the group organiser can assign roles.
+Cannot change the organiser role.
+=======================================================================================================================================
+*/
+export async function assignRole(
+    token: string,
+    groupId: number,
+    membershipId: number,
+    role: 'host' | 'member'
+): Promise<ApiResult<AssignRoleResponse>> {
+    const response = await apiCall(
+        `/api/groups/${groupId}/members/role`,
+        { membership_id: membershipId, role },
+        token
+    );
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: {
+                message: response.message as string,
+                member: response.member as AssignRoleResponse['member'],
+            },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to assign role',
         return_code: response.return_code,
     };
 }

@@ -3,14 +3,17 @@
 API Route: get_attendees
 =======================================================================================================================================
 Method: GET
-Purpose: Retrieves attendees and waitlist for an event. No authentication required.
+Purpose: Retrieves attendees and waitlist for an event.
+         - Group members see full attendee list with profiles
+         - Non-members only see counts (privacy protection)
 =======================================================================================================================================
 Request Payload:
 None (GET request with :id URL parameter)
 
-Success Response:
+Success Response (for members):
 {
   "return_code": "SUCCESS",
+  "is_member": true,
   "attending": [
     {
       "user_id": 5,
@@ -27,7 +30,19 @@ Success Response:
       "waitlist_position": 1,
       "rsvp_at": "2026-01-02T00:00:00.000Z"
     }
-  ]
+  ],
+  "attending_count": 1,
+  "waitlist_count": 1
+}
+
+Success Response (for non-members):
+{
+  "return_code": "SUCCESS",
+  "is_member": false,
+  "attending": [],
+  "waitlist": [],
+  "attending_count": 1,
+  "waitlist_count": 1
 }
 =======================================================================================================================================
 Return Codes:
@@ -40,10 +55,12 @@ Return Codes:
 const express = require('express');
 const router = express.Router();
 const { query } = require('../../database');
+const { optionalAuth } = require('../../middleware/auth');
 
-router.get('/:id/attendees', async (req, res) => {
+router.get('/:id/attendees', optionalAuth, async (req, res) => {
     try {
         const { id } = req.params;
+        const userId = req.user?.id || null;
 
         // =======================================================================
         // Validate ID is a number
@@ -56,10 +73,10 @@ router.get('/:id/attendees', async (req, res) => {
         }
 
         // =======================================================================
-        // Check if event exists
+        // Check if event exists and get group_id
         // =======================================================================
         const eventResult = await query(
-            'SELECT id FROM event_list WHERE id = $1',
+            'SELECT id, group_id FROM event_list WHERE id = $1',
             [id]
         );
 
@@ -68,6 +85,22 @@ router.get('/:id/attendees', async (req, res) => {
                 return_code: 'NOT_FOUND',
                 message: 'Event not found'
             });
+        }
+
+        const groupId = eventResult.rows[0].group_id;
+
+        // =======================================================================
+        // Check if user is a member of the group
+        // =======================================================================
+        let isMember = false;
+
+        if (userId) {
+            const membershipResult = await query(
+                `SELECT id FROM group_member
+                 WHERE group_id = $1 AND user_id = $2 AND status = 'active'`,
+                [groupId, userId]
+            );
+            isMember = membershipResult.rows.length > 0;
         }
 
         // =======================================================================
@@ -116,12 +149,17 @@ router.get('/:id/attendees', async (req, res) => {
         }
 
         // =======================================================================
-        // Return success response
+        // Return response based on membership
+        // - Members get full list
+        // - Non-members only get counts
         // =======================================================================
         return res.json({
             return_code: 'SUCCESS',
-            attending,
-            waitlist
+            is_member: isMember,
+            attending: isMember ? attending : [],
+            waitlist: isMember ? waitlist : [],
+            attending_count: attending.length,
+            waitlist_count: waitlist.length
         });
 
     } catch (error) {

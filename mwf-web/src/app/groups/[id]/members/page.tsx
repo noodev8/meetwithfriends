@@ -16,6 +16,7 @@ import {
     getGroup,
     getGroupMembers,
     removeMember,
+    assignRole,
     GroupWithCount,
     GroupMembership,
     GroupMember,
@@ -45,6 +46,9 @@ export default function GroupMembersPage() {
     // Remove member state
     const [memberToRemove, setMemberToRemove] = useState<GroupMember | null>(null);
     const [removing, setRemoving] = useState(false);
+
+    // Role assignment state
+    const [updatingRole, setUpdatingRole] = useState<number | null>(null);
 
     // Check if current user is the organiser
     const isOrganiser = membership?.status === 'active' && membership?.role === 'organiser';
@@ -153,6 +157,26 @@ export default function GroupMembersPage() {
             setMemberToRemove(null);
         } else {
             alert(result.error || 'Failed to remove member');
+        }
+    };
+
+    // =======================================================================
+    // Handle role assignment
+    // =======================================================================
+    const handleAssignRole = async (member: GroupMember, newRole: 'host' | 'member') => {
+        if (!token || !group) return;
+
+        setUpdatingRole(member.id);
+        const result = await assignRole(token, group.id, member.id, newRole);
+        setUpdatingRole(null);
+
+        if (result.success) {
+            // Update the member's role in the list
+            setMembers(prev => prev.map(m =>
+                m.id === member.id ? { ...m, role: newRole } : m
+            ));
+        } else {
+            alert(result.error || 'Failed to update role');
         }
     };
 
@@ -280,14 +304,35 @@ export default function GroupMembersPage() {
                                         </p>
                                     </div>
 
-                                    {/* Remove button - only for organisers, not for themselves */}
-                                    {isOrganiser && member.user_id !== user?.id && (
-                                        <button
-                                            onClick={() => setMemberToRemove(member)}
-                                            className="px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition"
-                                        >
-                                            Remove
-                                        </button>
+                                    {/* Actions - only for organisers, not for themselves or other organisers */}
+                                    {isOrganiser && member.user_id !== user?.id && member.role !== 'organiser' && (
+                                        <div className="flex items-center gap-2">
+                                            {/* Role toggle */}
+                                            {member.role === 'member' ? (
+                                                <button
+                                                    onClick={() => handleAssignRole(member, 'host')}
+                                                    disabled={updatingRole === member.id}
+                                                    className="px-3 py-1 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition disabled:opacity-50"
+                                                >
+                                                    {updatingRole === member.id ? '...' : 'Make Host'}
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleAssignRole(member, 'member')}
+                                                    disabled={updatingRole === member.id}
+                                                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded transition disabled:opacity-50"
+                                                >
+                                                    {updatingRole === member.id ? '...' : 'Remove Host'}
+                                                </button>
+                                            )}
+                                            {/* Remove button */}
+                                            <button
+                                                onClick={() => setMemberToRemove(member)}
+                                                className="px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition"
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             ))}
