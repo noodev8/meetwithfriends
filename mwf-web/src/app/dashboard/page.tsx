@@ -5,6 +5,7 @@
 Dashboard Page
 =======================================================================================================================================
 Main dashboard for logged-in users. Shows organized groups, member groups, discover groups, and upcoming events.
+Features warm onboarding for new users with no groups yet.
 Redirects to landing page if not authenticated.
 =======================================================================================================================================
 */
@@ -18,6 +19,80 @@ import { getMyEvents, EventWithDetails } from '@/lib/api/events';
 import Header from '@/components/layout/Header';
 
 // =======================================================================
+// Empty State Component - Warm onboarding for new users
+// =======================================================================
+function EmptyState({ userName }: { userName: string }) {
+    const firstName = userName.split(' ')[0];
+
+    return (
+        <div className="max-w-2xl mx-auto text-center py-8 sm:py-16">
+            {/* Welcome message */}
+            <div className="mb-8">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 mb-6">
+                    <span className="text-4xl">👋</span>
+                </div>
+                <h1 className="font-display text-3xl sm:text-4xl font-bold text-stone-800 mb-3">
+                    Welcome, {firstName}!
+                </h1>
+                <p className="text-lg text-stone-600 max-w-md mx-auto">
+                    Ready to bring your crew together? Start by creating your first group.
+                </p>
+            </div>
+
+            {/* Primary CTA */}
+            <Link
+                href="/groups/create"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-lg font-semibold rounded-full hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] mb-12"
+            >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Create Your First Group
+            </Link>
+
+            {/* Quick tips */}
+            <div className="bg-white rounded-2xl border border-stone-200 p-6 sm:p-8 text-left">
+                <h2 className="font-display text-lg font-semibold text-stone-800 mb-4 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    How it works
+                </h2>
+                <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
+                    <div className="flex gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                            <span className="text-amber-600 font-bold text-sm">1</span>
+                        </div>
+                        <div>
+                            <h3 className="font-medium text-stone-800 text-sm">Create a group</h3>
+                            <p className="text-stone-500 text-sm mt-0.5">For your dinner club, hiking crew, or any regular meetup</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                            <span className="text-amber-600 font-bold text-sm">2</span>
+                        </div>
+                        <div>
+                            <h3 className="font-medium text-stone-800 text-sm">Invite your people</h3>
+                            <p className="text-stone-500 text-sm mt-0.5">Share the link and they can join instantly</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                            <span className="text-amber-600 font-bold text-sm">3</span>
+                        </div>
+                        <div>
+                            <h3 className="font-medium text-stone-800 text-sm">Plan events together</h3>
+                            <p className="text-stone-500 text-sm mt-0.5">Create events, collect RSVPs, and actually meet up</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// =======================================================================
 // Group Card Component
 // =======================================================================
 function GroupCard({ group }: { group: MyGroup | GroupWithCount }) {
@@ -26,34 +101,44 @@ function GroupCard({ group }: { group: MyGroup | GroupWithCount }) {
     return (
         <Link
             href={`/groups/${group.id}`}
-            className="bg-white rounded-lg border hover:shadow-md transition overflow-hidden"
+            className="group bg-white rounded-2xl border border-stone-200 hover:border-amber-200 hover:shadow-lg transition-all duration-300 overflow-hidden"
         >
             {group.image_url ? (
-                <div className="h-32 bg-gray-200">
+                <div className="h-32 bg-stone-100">
                     <img
                         src={group.image_url}
                         alt={group.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                 </div>
             ) : (
-                <div className="h-32 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
-                    <span className="text-4xl text-blue-400">
+                <div className="h-32 bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
+                    <span className="text-4xl text-amber-300 group-hover:scale-110 transition-transform">
                         {group.name.charAt(0).toUpperCase()}
                     </span>
                 </div>
             )}
             <div className="p-4">
-                <h3 className="font-semibold text-gray-900">{group.name}</h3>
+                <h3 className="font-semibold text-stone-800 group-hover:text-amber-700 transition-colors">{group.name}</h3>
                 {group.description && (
-                    <p className="text-gray-500 text-sm mt-1 line-clamp-2">
+                    <p className="text-stone-500 text-sm mt-1 line-clamp-2">
                         {group.description}
                     </p>
                 )}
-                <div className="flex items-center gap-3 mt-2 text-sm text-gray-400">
-                    <span>{group.member_count} {group.member_count === 1 ? 'member' : 'members'}</span>
+                <div className="flex items-center gap-3 mt-3 text-sm text-stone-400">
+                    <span className="flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        {group.member_count}
+                    </span>
                     {upcomingCount > 0 && (
-                        <span>{upcomingCount} {upcomingCount === 1 ? 'event' : 'events'}</span>
+                        <span className="flex items-center gap-1 text-amber-600">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {upcomingCount} upcoming
+                        </span>
                     )}
                 </div>
             </div>
@@ -62,73 +147,112 @@ function GroupCard({ group }: { group: MyGroup | GroupWithCount }) {
 }
 
 // =======================================================================
-// Group Section Component
+// Event Card Component
 // =======================================================================
-function GroupSection({
-    title,
-    groups,
-    loading,
-    emptyMessage,
-    showCreateButton = false,
-    maxGroups = 6,
-}: {
-    title: string;
-    groups: (MyGroup | GroupWithCount)[];
-    loading: boolean;
-    emptyMessage: string;
-    showCreateButton?: boolean;
-    maxGroups?: number;
-}) {
-    if (loading) {
-        return (
-            <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
-                <p className="text-gray-500">Loading...</p>
-            </div>
-        );
-    }
-
-    if (groups.length === 0) {
-        return (
-            <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
-                <div className="bg-white rounded-lg border p-6 text-center">
-                    <p className="text-gray-500">{emptyMessage}</p>
-                    {showCreateButton && (
-                        <Link
-                            href="/groups/create"
-                            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition inline-block"
-                        >
-                            Create Group
-                        </Link>
+function EventCard({ event }: { event: EventWithDetails }) {
+    return (
+        <Link
+            href={`/events/${event.id}`}
+            className="group bg-white rounded-2xl border border-stone-200 hover:border-amber-200 hover:shadow-lg transition-all duration-300 overflow-hidden"
+        >
+            <div className="p-5">
+                <div className="flex items-start justify-between gap-2 mb-3">
+                    <p className="text-xs font-medium text-amber-600 uppercase tracking-wide">
+                        {event.group_name}
+                    </p>
+                    {event.rsvp_status && (
+                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                            event.rsvp_status === 'attending'
+                                ? 'text-green-700 bg-green-100'
+                                : 'text-amber-700 bg-amber-100'
+                        }`}>
+                            {event.rsvp_status === 'attending' ? 'Going' : 'Waitlist'}
+                        </span>
                     )}
                 </div>
-            </div>
-        );
-    }
 
-    const displayedGroups = groups.slice(0, maxGroups);
-    const hasMore = groups.length > maxGroups;
+                <div className="flex items-center gap-2 mb-2">
+                    <span className="text-sm font-semibold text-amber-600">
+                        {new Date(event.date_time).toLocaleDateString('en-GB', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                        })}
+                    </span>
+                    <span className="text-stone-300">·</span>
+                    <span className="text-sm text-stone-500">
+                        {new Date(event.date_time).toLocaleTimeString('en-GB', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}
+                    </span>
+                    {event.status === 'cancelled' && (
+                        <span className="px-2 py-0.5 text-xs font-medium text-red-700 bg-red-100 rounded-full">
+                            Cancelled
+                        </span>
+                    )}
+                </div>
 
-    return (
-        <div className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-                {hasMore && (
-                    <Link href="/groups" className="text-blue-600 hover:text-blue-700 text-sm">
-                        See all
-                    </Link>
+                <h3 className="font-semibold text-stone-800 group-hover:text-amber-700 transition-colors">
+                    {event.title}
+                </h3>
+
+                {event.location && (
+                    <p className="text-stone-500 text-sm mt-2 flex items-center gap-1.5">
+                        <svg className="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        {event.location}
+                    </p>
+                )}
+
+                {event.attendee_count !== undefined && (
+                    <p className="text-stone-400 text-sm mt-2 flex items-center gap-1.5">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        {event.attendee_count} attending
+                    </p>
                 )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {displayedGroups.map((group) => (
-                    <GroupCard key={group.id} group={group} />
-                ))}
-            </div>
+        </Link>
+    );
+}
+
+// =======================================================================
+// Section Header Component
+// =======================================================================
+function SectionHeader({
+    title,
+    action,
+    actionHref
+}: {
+    title: string;
+    action?: string;
+    actionHref?: string;
+}) {
+    return (
+        <div className="flex justify-between items-center mb-5">
+            <h2 className="font-display text-xl font-bold text-stone-800">{title}</h2>
+            {action && actionHref && (
+                <Link
+                    href={actionHref}
+                    className="text-amber-600 hover:text-amber-700 font-medium text-sm flex items-center gap-1 group"
+                >
+                    {action}
+                    <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                </Link>
+            )}
         </div>
     );
 }
 
+// =======================================================================
+// Main Dashboard Component
+// =======================================================================
 export default function Dashboard() {
     const { user, token, isLoading } = useAuth();
     const router = useRouter();
@@ -142,7 +266,6 @@ export default function Dashboard() {
     // Events state
     const [events, setEvents] = useState<EventWithDetails[]>([]);
     const [loadingEvents, setLoadingEvents] = useState(true);
-    const [eventsLimit, setEventsLimit] = useState(6);
 
     // =======================================================================
     // Redirect to landing if not authenticated
@@ -166,7 +289,6 @@ export default function Dashboard() {
             ]);
 
             if (myGroupsResult.success && myGroupsResult.data) {
-                // Split into organiser groups and member groups (no duplicates)
                 const organised = myGroupsResult.data.filter(g => g.role === 'organiser');
                 const memberOf = myGroupsResult.data.filter(g => g.role !== 'organiser');
                 setOrganiserGroups(organised);
@@ -186,7 +308,7 @@ export default function Dashboard() {
     }, [user, token]);
 
     // =======================================================================
-    // Fetch events data (only from groups user is a member of)
+    // Fetch events data
     // =======================================================================
     useEffect(() => {
         async function fetchEvents() {
@@ -211,136 +333,133 @@ export default function Dashboard() {
     // =======================================================================
     if (isLoading || !user) {
         return (
-            <main className="min-h-screen flex flex-col items-center justify-center p-8">
-                <p className="text-gray-600">Loading...</p>
+            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-stone-50">
+                <div className="w-8 h-8 border-2 border-amber-300 border-t-amber-600 rounded-full animate-spin" />
             </main>
         );
     }
+
+    // Check if user has any groups
+    const hasGroups = organiserGroups.length > 0 || memberGroups.length > 0;
+    const isEmptyState = !loadingGroups && !hasGroups;
 
     // =======================================================================
     // Dashboard view
     // =======================================================================
     return (
-        <main className="min-h-screen flex flex-col bg-gray-50">
+        <main className="min-h-screen flex flex-col bg-stone-50">
             <Header />
 
             <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto w-full">
-                {/* Groups Section */}
-                <section className="mb-12">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900">Groups</h2>
-                        <Link
-                            href="/groups/create"
-                            className="text-blue-600 hover:text-blue-700"
-                        >
-                            Create Group
-                        </Link>
+                {/* Loading state */}
+                {loadingGroups ? (
+                    <div className="flex items-center justify-center py-20">
+                        <div className="w-8 h-8 border-2 border-amber-300 border-t-amber-600 rounded-full animate-spin" />
                     </div>
-
-                    {/* Groups I Organise - only show if user organises any */}
-                    {!loadingGroups && organiserGroups.length > 0 && (
-                        <GroupSection
-                            title="Groups I Organise"
-                            groups={organiserGroups}
-                            loading={loadingGroups}
-                            emptyMessage=""
-                        />
-                    )}
-
-                    {/* Groups I'm In - only show if user is member of any (non-organiser) */}
-                    {!loadingGroups && memberGroups.length > 0 && (
-                        <GroupSection
-                            title="Groups I'm In"
-                            groups={memberGroups}
-                            loading={loadingGroups}
-                            emptyMessage=""
-                        />
-                    )}
-
-                    {/* Discover Groups - only show if there are groups to discover */}
-                    {!loadingGroups && discoverableGroups.length > 0 && (
-                        <GroupSection
-                            title="Discover Groups"
-                            groups={discoverableGroups}
-                            loading={loadingGroups}
-                            emptyMessage=""
-                        />
-                    )}
-                </section>
-
-                {/* Events Section - only show if user has events */}
-                {!loadingEvents && events.length > 0 && (
-                    <section>
-                        <div className="mb-6">
-                            <h2 className="text-2xl font-bold text-gray-900">Upcoming Events</h2>
+                ) : isEmptyState ? (
+                    /* Empty state for new users */
+                    <EmptyState userName={user.name} />
+                ) : (
+                    /* Dashboard with content */
+                    <>
+                        {/* Welcome back message */}
+                        <div className="mb-8">
+                            <h1 className="font-display text-2xl sm:text-3xl font-bold text-stone-800">
+                                Welcome back, {user.name.split(' ')[0]}
+                            </h1>
+                            <p className="text-stone-500 mt-1">Here's what's happening with your groups</p>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                            {events.slice(0, eventsLimit).map((event) => (
-                                <Link
-                                    key={event.id}
-                                    href={`/events/${event.id}`}
-                                    className="bg-white rounded-lg border hover:shadow-md transition overflow-hidden"
-                                >
-                                    <div className="p-4">
-                                        <div className="flex items-center justify-between">
-                                            <p className="text-xs text-gray-500 font-medium">
-                                                {event.group_name}
-                                            </p>
-                                            {event.rsvp_status && (
-                                                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                                                    event.rsvp_status === 'attending'
-                                                        ? 'text-green-700 bg-green-100'
-                                                        : 'text-amber-700 bg-amber-100'
-                                                }`}>
-                                                    {event.rsvp_status === 'attending' ? 'Going' : 'Waitlist'}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <p className="text-sm text-blue-600 font-medium">
-                                                {new Date(event.date_time).toLocaleDateString('en-GB', {
-                                                    weekday: 'short',
-                                                    day: 'numeric',
-                                                    month: 'short',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
-                                            </p>
-                                            {event.status === 'cancelled' && (
-                                                <span className="px-2 py-0.5 text-xs font-medium text-red-700 bg-red-100 rounded-full">
-                                                    Cancelled
-                                                </span>
-                                            )}
-                                        </div>
-                                        <h3 className="font-semibold text-gray-900 mt-1">
-                                            {event.title}
-                                        </h3>
-                                        {event.location && (
-                                            <p className="text-gray-500 text-sm mt-1">
-                                                {event.location}
-                                            </p>
-                                        )}
-                                        {event.attendee_count !== undefined && (
-                                            <p className="text-gray-400 text-sm mt-2">
-                                                {event.attendee_count} attending
-                                            </p>
-                                        )}
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                        {events.length > eventsLimit && (
-                            <div className="mt-6 text-center">
-                                <button
-                                    onClick={() => setEventsLimit(prev => prev + 6)}
-                                    className="px-4 py-2 text-blue-600 hover:text-blue-700 font-medium"
-                                >
-                                    Show more
-                                </button>
-                            </div>
+                        {/* Upcoming Events - shown first if any */}
+                        {!loadingEvents && events.length > 0 && (
+                            <section className="mb-10">
+                                <SectionHeader
+                                    title="Upcoming Events"
+                                    action="View all"
+                                    actionHref="/your-events"
+                                />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {events.slice(0, 3).map((event) => (
+                                        <EventCard key={event.id} event={event} />
+                                    ))}
+                                </div>
+                            </section>
                         )}
-                    </section>
+
+                        {/* Groups I Organise */}
+                        {organiserGroups.length > 0 && (
+                            <section className="mb-10">
+                                <SectionHeader
+                                    title="Your Groups"
+                                    action="Create new"
+                                    actionHref="/groups/create"
+                                />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {organiserGroups.slice(0, 6).map((group) => (
+                                        <GroupCard key={group.id} group={group} />
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Groups I'm In */}
+                        {memberGroups.length > 0 && (
+                            <section className="mb-10">
+                                <SectionHeader title="Groups You're In" />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {memberGroups.slice(0, 6).map((group) => (
+                                        <GroupCard key={group.id} group={group} />
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Discover Groups */}
+                        {discoverableGroups.length > 0 && (
+                            <section className="mb-10">
+                                <SectionHeader
+                                    title="Discover Groups"
+                                    action="Browse all"
+                                    actionHref="/groups"
+                                />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {discoverableGroups.slice(0, 3).map((group) => (
+                                        <GroupCard key={group.id} group={group} />
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Quick action if no events yet but has groups */}
+                        {events.length === 0 && hasGroups && (
+                            <section className="mb-10">
+                                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-100 p-6 sm:p-8 text-center">
+                                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white shadow-sm mb-4">
+                                        <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="font-display text-lg font-semibold text-stone-800 mb-2">
+                                        No upcoming events yet
+                                    </h3>
+                                    <p className="text-stone-600 mb-4 max-w-md mx-auto">
+                                        Get your group together! Create an event and start collecting RSVPs.
+                                    </p>
+                                    {organiserGroups.length > 0 && (
+                                        <Link
+                                            href={`/groups/${organiserGroups[0].id}/events/create`}
+                                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-full hover:from-amber-600 hover:to-orange-600 transition-all shadow-sm hover:shadow-md"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            Create Event
+                                        </Link>
+                                    )}
+                                </div>
+                            </section>
+                        )}
+                    </>
                 )}
             </div>
         </main>

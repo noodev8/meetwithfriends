@@ -60,12 +60,12 @@ const sampleEvents = [
 ];
 
 const categories = [
-    { name: 'Dinners & Drinks', icon: '🍽️', count: 24 },
-    { name: 'Outdoor & Active', icon: '🥾', count: 31 },
-    { name: 'Games & Sports', icon: '🎱', count: 18 },
-    { name: 'Coffee & Casual', icon: '☕', count: 42 },
-    { name: 'Arts & Culture', icon: '🎨', count: 15 },
-    { name: 'Learning & Skills', icon: '📚', count: 12 },
+    { name: 'Dinners & Drinks', icon: '🍽️' },
+    { name: 'Outdoor & Active', icon: '🥾' },
+    { name: 'Games & Sports', icon: '🎱' },
+    { name: 'Coffee & Casual', icon: '☕' },
+    { name: 'Arts & Culture', icon: '🎨' },
+    { name: 'Learning & Skills', icon: '📚' },
 ];
 
 // =======================================================================
@@ -199,8 +199,8 @@ export default function Home() {
                     <div className="max-w-3xl">
                         {/* Eyebrow */}
                         <div className={`inline-flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full border border-amber-200/50 shadow-sm mb-6 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                            <span className="text-sm font-medium text-stone-600">2,847 people connecting this week</span>
+                            <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+                            <span className="text-sm font-medium text-stone-600">A simpler way to make plans</span>
                         </div>
 
                         {/* Headline */}
@@ -256,46 +256,30 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* Social Proof Stats */}
+            {/* Value Proposition */}
             <section className="relative border-y border-stone-200 bg-white">
                 <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 py-8">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                        {[
-                            { value: '12,000+', label: 'Members' },
-                            { value: '340+', label: 'Active groups' },
-                            { value: '1,200+', label: 'Events hosted' },
-                            { value: '4.9★', label: 'Avg rating' },
-                        ].map((stat, i) => (
-                            <div key={i} className="text-center">
-                                <div className="font-display text-2xl sm:text-3xl font-bold text-stone-800">{stat.value}</div>
-                                <div className="text-sm text-stone-500 mt-1">{stat.label}</div>
-                            </div>
-                        ))}
-                    </div>
+                    <p className="text-center text-stone-600 text-lg">
+                        Stop losing plans in group chats. <span className="text-stone-800 font-medium">One place for your crew to organise, RSVP, and show up.</span>
+                    </p>
                 </div>
             </section>
 
-            {/* Featured Events */}
+            {/* Example Events */}
             <section className="py-16 sm:py-24 bg-stone-50">
                 <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12">
                     <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
                         <div>
                             <h2 className="font-display text-2xl sm:text-3xl font-bold text-stone-900 mb-2">
-                                Happening Soon
+                                What You Could Create
                             </h2>
                             <p className="text-stone-500">
-                                Join these upcoming gatherings in your area
+                                From casual catch-ups to regular meetups — here are some ideas
                             </p>
                         </div>
-                        <Link
-                            href="/events"
-                            className="text-amber-600 hover:text-amber-700 font-semibold flex items-center gap-1 group"
-                        >
-                            View all events
-                            <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                        </Link>
+                        <span className="text-stone-400 text-sm italic">
+                            Examples
+                        </span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -311,10 +295,10 @@ export default function Home() {
                 <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12">
                     <div className="text-center mb-10">
                         <h2 className="font-display text-2xl sm:text-3xl font-bold text-stone-900 mb-2">
-                            Find Your People
+                            Start a Group For...
                         </h2>
                         <p className="text-stone-500">
-                            Explore groups by what you love doing together
+                            Whatever brings your crew together
                         </p>
                     </div>
 
@@ -330,9 +314,6 @@ export default function Home() {
                                 </div>
                                 <div className="font-semibold text-stone-800 text-sm">
                                     {cat.name}
-                                </div>
-                                <div className="text-xs text-stone-400 mt-1">
-                                    {cat.count} groups
                                 </div>
                             </Link>
                         ))}
@@ -356,8 +337,8 @@ export default function Home() {
                         {[
                             {
                                 step: '01',
-                                title: 'Create or Join',
-                                description: 'Start your own group for any activity, or discover existing communities you can join.',
+                                title: 'Create Your Group',
+                                description: "Start a group for your crew — whether it's your book club, hiking buddies, or dinner regulars.",
                                 icon: (
                                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -426,7 +407,7 @@ export default function Home() {
                         Ready to bring your group together?
                     </h2>
                     <p className="text-lg text-white/90 mb-8 max-w-xl mx-auto">
-                        Join thousands of people organising real-world meetups with the friends who matter most.
+                        We're just getting started. Be one of the first to create a group and make planning effortless.
                     </p>
                     <Link
                         href="/register"

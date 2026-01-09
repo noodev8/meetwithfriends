@@ -57,20 +57,27 @@ export default function Header() {
     };
 
     return (
-        <header className="bg-white border-b relative">
-            <div className="flex justify-between items-center px-4 sm:px-8 py-4">
+        <header className="bg-white/80 backdrop-blur-sm border-b border-stone-200/50 relative z-20">
+            <div className="flex justify-between items-center px-4 sm:px-8 py-4 max-w-7xl mx-auto">
                 {/* Logo */}
-                <Link href={user ? '/dashboard' : '/'} className="text-xl font-bold text-blue-600">
-                    Meet With Friends
+                <Link href={user ? '/dashboard' : '/'} className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </div>
+                    <span className="font-display text-xl font-bold text-stone-800">
+                        Meet With Friends
+                    </span>
                 </Link>
 
                 {/* Desktop Navigation */}
-                <nav className="hidden md:flex items-center gap-8">
+                <nav className="hidden md:flex items-center gap-6">
                     {/* Your Events (logged in only) */}
                     {user && (
                         <Link
                             href="/your-events"
-                            className="text-gray-600 hover:text-gray-900 transition"
+                            className="text-stone-600 hover:text-stone-900 transition font-medium"
                         >
                             Your Events
                         </Link>
@@ -81,22 +88,22 @@ export default function Header() {
                         <div className="relative" ref={menuRef}>
                             <button
                                 onClick={() => setMenuOpen(!menuOpen)}
-                                className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition"
+                                className="flex items-center gap-2 text-stone-700 hover:text-stone-900 transition"
                             >
                                 {user.avatar_url ? (
                                     <img
                                         src={user.avatar_url}
                                         alt={user.name}
-                                        className="w-8 h-8 rounded-full object-cover"
+                                        className="w-8 h-8 rounded-full object-cover ring-2 ring-stone-100"
                                     />
                                 ) : (
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
-                                        <span className="text-sm text-blue-400">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center ring-2 ring-stone-100">
+                                        <span className="text-sm font-medium text-amber-600">
                                             {user.name.charAt(0).toUpperCase()}
                                         </span>
                                     </div>
                                 )}
-                                <span>{user.name}</span>
+                                <span className="font-medium">{user.name}</span>
                                 <svg
                                     className={`w-4 h-4 transition-transform ${menuOpen ? 'rotate-180' : ''}`}
                                     fill="none"
@@ -109,17 +116,17 @@ export default function Header() {
 
                             {/* Dropdown */}
                             {menuOpen && (
-                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 z-50">
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-stone-200 py-1 z-50">
                                     <Link
                                         href="/profile"
                                         onClick={() => setMenuOpen(false)}
-                                        className="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition"
+                                        className="block px-4 py-2.5 text-stone-700 hover:bg-stone-50 transition"
                                     >
                                         Profile
                                     </Link>
                                     <button
                                         onClick={handleLogout}
-                                        className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 transition"
+                                        className="block w-full text-left px-4 py-2.5 text-stone-700 hover:bg-stone-50 transition"
                                     >
                                         Log out
                                     </button>
@@ -128,16 +135,16 @@ export default function Header() {
                         </div>
                     ) : (
                         /* Auth links (logged out) */
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                             <Link
                                 href="/login"
-                                className="text-gray-600 hover:text-gray-900 transition"
+                                className="px-4 py-2 text-stone-600 hover:text-stone-900 font-medium transition"
                             >
                                 Log in
                             </Link>
                             <Link
                                 href="/register"
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                className="px-5 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-full hover:from-amber-600 hover:to-orange-600 transition-all shadow-sm hover:shadow-md"
                             >
                                 Sign up
                             </Link>
@@ -147,7 +154,7 @@ export default function Header() {
 
                 {/* Mobile Menu Button */}
                 <button
-                    className="md:hidden p-2 text-gray-600 hover:text-gray-900 transition"
+                    className="md:hidden p-2 text-stone-600 hover:text-stone-900 transition"
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                     aria-label="Toggle menu"
                 >
@@ -169,7 +176,7 @@ export default function Header() {
             {mobileMenuOpen && (
                 <div
                     ref={mobileMenuRef}
-                    className="md:hidden absolute top-full left-0 right-0 bg-white border-b shadow-lg z-50"
+                    className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-stone-200 shadow-lg z-50"
                 >
                     <nav className="flex flex-col py-2">
                         {user ? (
@@ -177,15 +184,15 @@ export default function Header() {
                                 <Link
                                     href="/your-events"
                                     onClick={closeMobileMenu}
-                                    className="px-4 py-3 text-gray-700 hover:bg-gray-50 transition"
+                                    className="px-4 py-3 text-stone-700 hover:bg-stone-50 transition font-medium"
                                 >
                                     Your Events
                                 </Link>
-                                <div className="border-t my-2" />
+                                <div className="border-t border-stone-100 my-2" />
                                 <Link
                                     href="/profile"
                                     onClick={closeMobileMenu}
-                                    className="px-4 py-3 text-gray-700 hover:bg-gray-50 transition flex items-center gap-3"
+                                    className="px-4 py-3 text-stone-700 hover:bg-stone-50 transition flex items-center gap-3"
                                 >
                                     {user.avatar_url ? (
                                         <img
@@ -194,17 +201,17 @@ export default function Header() {
                                             className="w-8 h-8 rounded-full object-cover"
                                         />
                                     ) : (
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
-                                            <span className="text-sm text-blue-400">
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
+                                            <span className="text-sm font-medium text-amber-600">
                                                 {user.name.charAt(0).toUpperCase()}
                                             </span>
                                         </div>
                                     )}
-                                    <span>{user.name}</span>
+                                    <span className="font-medium">{user.name}</span>
                                 </Link>
                                 <button
                                     onClick={handleLogout}
-                                    className="px-4 py-3 text-left text-gray-700 hover:bg-gray-50 transition"
+                                    className="px-4 py-3 text-left text-stone-700 hover:bg-stone-50 transition"
                                 >
                                     Log out
                                 </button>
@@ -214,14 +221,14 @@ export default function Header() {
                                 <Link
                                     href="/login"
                                     onClick={closeMobileMenu}
-                                    className="px-4 py-3 text-gray-700 hover:bg-gray-50 transition"
+                                    className="px-4 py-3 text-stone-700 hover:bg-stone-50 transition"
                                 >
                                     Log in
                                 </Link>
                                 <Link
                                     href="/register"
                                     onClick={closeMobileMenu}
-                                    className="px-4 py-3 text-blue-600 font-medium hover:bg-gray-50 transition"
+                                    className="px-4 py-3 text-amber-600 font-semibold hover:bg-stone-50 transition"
                                 >
                                     Sign up
                                 </Link>
