@@ -299,7 +299,7 @@ export default function EventDetailPage() {
         if (!token || !event || !user) return;
 
         const confirmed = window.confirm(
-            'Are you sure you want to step down as event host? You will no longer be able to manage this event.'
+            'Are you sure you want to step down as host? You will no longer be able to manage this event.'
         );
 
         if (!confirmed) return;
@@ -319,7 +319,7 @@ export default function EventDetailPage() {
                 setCanEdit(eventResult.data.can_edit);
             }
         } else {
-            alert(result.error || 'Failed to step down as event host');
+            alert(result.error || 'Failed to step down as host');
         }
     };
 
@@ -816,7 +816,7 @@ export default function EventDetailPage() {
                                             disabled={hostActionLoading}
                                             className="text-sm text-stone-400 hover:text-orange-600 transition disabled:opacity-50"
                                         >
-                                            {hostActionLoading ? 'Stepping down...' : 'Step down as event host'}
+                                            {hostActionLoading ? 'Stepping down...' : 'Step down as host'}
                                         </button>
                                     )}
                                 </div>
@@ -894,7 +894,7 @@ export default function EventDetailPage() {
                                                     </div>
                                                 )}
                                                 <p className="text-sm text-stone-500 mt-2">
-                                                    Pre-order deadline has passed. Contact an event host if you need to make changes.
+                                                    Pre-order deadline has passed. Contact a host if you need to make changes.
                                                 </p>
                                             </div>
                                         ) : (
@@ -1144,7 +1144,7 @@ export default function EventDetailPage() {
                                                             >
                                                                 {host.name}
                                                             </button>
-                                                            <span className="text-xs text-amber-600 font-medium">Event Host</span>
+                                                            <span className="text-xs text-amber-600 font-medium">Host</span>
                                                         </div>
                                                     </div>
                                                 );
@@ -1238,7 +1238,7 @@ export default function EventDetailPage() {
                             <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
                                 <div className="flex items-center justify-between mb-4">
                                     <h2 className="text-lg font-bold text-stone-900 font-display">
-                                        Event Hosts ({hosts.length})
+                                        Hosts ({hosts.length})
                                     </h2>
                                     <button
                                         onClick={() => setShowHostManager(!showHostManager)}
@@ -1277,7 +1277,7 @@ export default function EventDetailPage() {
                                 {showHostManager && (
                                     <div className="pt-4 border-t border-stone-200">
                                         <label className="block text-sm font-medium text-stone-700 mb-2">
-                                            Add an event host
+                                            Add a host
                                         </label>
                                         <input
                                             type="text"

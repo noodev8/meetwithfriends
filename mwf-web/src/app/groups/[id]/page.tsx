@@ -562,7 +562,7 @@ export default function GroupDetailPage() {
                                             </svg>
                                         </div>
                                         <p className="font-semibold text-stone-800">
-                                            {membership.role === 'organiser' ? 'Organiser' : membership.role === 'host' ? 'Event Host' : 'Member'}
+                                            {membership.role === 'organiser' ? 'Organiser' : membership.role === 'host' ? 'Host' : 'Member'}
                                         </p>
                                         <p className="text-sm text-stone-500 mt-1">You're part of this group</p>
                                     </div>

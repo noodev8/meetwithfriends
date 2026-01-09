@@ -571,7 +571,7 @@ export default function EditEventPage() {
                                 </li>
                                 <li className="flex gap-2">
                                     <span className="text-amber-500">•</span>
-                                    <span>Event hosts can view and edit all attendee orders</span>
+                                    <span>Hosts can view and edit all attendee orders</span>
                                 </li>
                             </ul>
                         </div>

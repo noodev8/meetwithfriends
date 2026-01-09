@@ -335,7 +335,7 @@ export default function AttendeesPage() {
                                                 </button>
                                                 {isHostUser && (
                                                     <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
-                                                        Event Host
+                                                        Host
                                                     </span>
                                                 )}
                                             </div>
