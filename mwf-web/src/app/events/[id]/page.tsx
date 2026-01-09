@@ -1399,98 +1399,46 @@ export default function EventDetailPage() {
                 </div>
             </div>
 
-            {/* Profile Modal */}
+            {/* Profile Modal - Focus on the face */}
             {selectedAttendee && (
                 <div
-                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                    className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
                     onClick={() => setSelectedAttendee(null)}
                 >
                     <div
-                        className="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden relative"
+                        className="relative"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Close button */}
                         <button
                             onClick={() => setSelectedAttendee(null)}
-                            className="absolute top-3 right-3 p-2 text-stone-400 hover:text-stone-600 transition z-10"
+                            className="absolute -top-12 right-0 p-2 text-white/70 hover:text-white transition"
                             aria-label="Close"
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
 
-                        {/* Content */}
-                        <div className="p-6 text-center">
-                            {/* Large Avatar - main focus */}
-                            <div className="flex justify-center mb-4">
-                                {selectedAttendee.avatar_url ? (
-                                    <img
-                                        src={selectedAttendee.avatar_url}
-                                        alt={selectedAttendee.name}
-                                        className="w-44 h-44 rounded-full object-cover border-4 border-amber-100 shadow-lg"
-                                    />
-                                ) : (
-                                    <div className="w-44 h-44 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center border-4 border-amber-100 shadow-lg">
-                                        <span className="text-6xl font-bold text-white">
-                                            {selectedAttendee.name.charAt(0).toUpperCase()}
-                                        </span>
-                                    </div>
-                                )}
+                        {/* Large photo */}
+                        {selectedAttendee.avatar_url ? (
+                            <img
+                                src={selectedAttendee.avatar_url}
+                                alt={selectedAttendee.name}
+                                className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl object-cover shadow-2xl"
+                            />
+                        ) : (
+                            <div className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center shadow-2xl">
+                                <span className="text-8xl font-bold text-white">
+                                    {selectedAttendee.name.charAt(0).toUpperCase()}
+                                </span>
                             </div>
-                            <h3 className="text-lg font-bold text-stone-900 font-display">
-                                {selectedAttendee.name}
-                            </h3>
+                        )}
 
-                            {/* RSVP status */}
-                            <div className="mt-2">
-                                {selectedAttendee.waitlist_position ? (
-                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-700 text-sm rounded-full">
-                                        Waitlist #{selectedAttendee.waitlist_position}
-                                    </span>
-                                ) : (
-                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full">
-                                        Attending
-                                        {selectedAttendee.guest_count > 0 && (
-                                            <span className="text-green-600">
-                                                +{selectedAttendee.guest_count} guest{selectedAttendee.guest_count > 1 ? 's' : ''}
-                                            </span>
-                                        )}
-                                    </span>
-                                )}
-                            </div>
-
-                            {/* Food order info when preorders enabled */}
-                            {event.preorders_enabled && (selectedAttendee.food_order || selectedAttendee.dietary_notes) && (
-                                <div className="mt-4 p-4 bg-stone-50 rounded-xl text-left">
-                                    <h4 className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2">
-                                        Food Order
-                                    </h4>
-                                    {selectedAttendee.food_order && (
-                                        <p className="text-sm text-stone-700">
-                                            {selectedAttendee.food_order}
-                                        </p>
-                                    )}
-                                    {selectedAttendee.dietary_notes && (
-                                        <p className="text-sm text-orange-600 mt-1">
-                                            {selectedAttendee.dietary_notes}
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* RSVP date and time */}
-                            <p className="mt-4 text-xs text-stone-400">
-                                RSVP'd {new Date(selectedAttendee.rsvp_at).toLocaleDateString('en-GB', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                    year: 'numeric'
-                                })} at {new Date(selectedAttendee.rsvp_at).toLocaleTimeString('en-GB', {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                })}
-                            </p>
-                        </div>
+                        {/* Name below */}
+                        <p className="text-center mt-4 text-xl font-medium text-white">
+                            {selectedAttendee.name}
+                        </p>
                     </div>
                 </div>
             )}

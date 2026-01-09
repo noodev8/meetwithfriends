@@ -304,7 +304,7 @@ export default function AttendeesPage() {
                                     className="p-4 hover:bg-stone-50 transition"
                                 >
                                     <div className="flex items-center gap-4">
-                                        {/* Large Avatar - priority on seeing the face */}
+                                        {/* Avatar */}
                                         <button
                                             onClick={() => setSelectedAttendee(person)}
                                             className="flex-shrink-0 hover:opacity-80 transition"
@@ -313,11 +313,11 @@ export default function AttendeesPage() {
                                                 <img
                                                     src={person.avatar_url}
                                                     alt={person.name}
-                                                    className="w-16 h-16 rounded-full object-cover"
+                                                    className="w-12 h-12 rounded-full object-cover"
                                                 />
                                             ) : (
-                                                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center">
-                                                    <span className="text-2xl font-bold text-white">
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center">
+                                                    <span className="text-lg font-bold text-white">
                                                         {person.name.charAt(0).toUpperCase()}
                                                     </span>
                                                 </div>
@@ -381,105 +381,46 @@ export default function AttendeesPage() {
                 )}
             </div>
 
-            {/* Profile Modal */}
+            {/* Profile Modal - Focus on the face */}
             {selectedAttendee && (
                 <div
-                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                    className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
                     onClick={() => setSelectedAttendee(null)}
                 >
                     <div
-                        className="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden relative"
+                        className="relative"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Close button */}
                         <button
                             onClick={() => setSelectedAttendee(null)}
-                            className="absolute top-3 right-3 p-2 text-stone-400 hover:text-stone-600 transition z-10"
+                            className="absolute -top-12 right-0 p-2 text-white/70 hover:text-white transition"
                             aria-label="Close"
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
 
-                        {/* Content */}
-                        <div className="p-6 text-center">
-                            {/* Large Avatar - main focus */}
-                            <div className="flex justify-center mb-4">
-                                {selectedAttendee.avatar_url ? (
-                                    <img
-                                        src={selectedAttendee.avatar_url}
-                                        alt={selectedAttendee.name}
-                                        className="w-44 h-44 rounded-full object-cover border-4 border-amber-100 shadow-lg"
-                                    />
-                                ) : (
-                                    <div className="w-44 h-44 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center border-4 border-amber-100 shadow-lg">
-                                        <span className="text-6xl font-bold text-white">
-                                            {selectedAttendee.name.charAt(0).toUpperCase()}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-
-                            <h3 className="text-lg font-bold text-stone-900 font-display">
-                                {selectedAttendee.name}
-                            </h3>
-
-                            {/* Host badge */}
-                            {isHost(selectedAttendee.user_id) && (
-                                <span className="inline-block mt-2 px-3 py-1 bg-amber-100 text-amber-700 text-sm font-medium rounded-full">
-                                    Host
+                        {/* Large photo */}
+                        {selectedAttendee.avatar_url ? (
+                            <img
+                                src={selectedAttendee.avatar_url}
+                                alt={selectedAttendee.name}
+                                className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl object-cover shadow-2xl"
+                            />
+                        ) : (
+                            <div className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center shadow-2xl">
+                                <span className="text-8xl font-bold text-white">
+                                    {selectedAttendee.name.charAt(0).toUpperCase()}
                                 </span>
-                            )}
-
-                            {/* Status */}
-                            <div className="mt-3">
-                                {activeTab === 'going' && (
-                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full">
-                                        Going
-                                        {(selectedAttendee as Attendee).guest_count > 0 && (
-                                            <span className="text-green-600">
-                                                +{(selectedAttendee as Attendee).guest_count} guest{(selectedAttendee as Attendee).guest_count > 1 ? 's' : ''}
-                                            </span>
-                                        )}
-                                    </span>
-                                )}
-                                {activeTab === 'waitlist' && (
-                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-700 text-sm rounded-full">
-                                        Waitlist #{(selectedAttendee as Attendee).waitlist_position}
-                                    </span>
-                                )}
-                                {activeTab === 'not_going' && (
-                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-stone-100 text-stone-600 text-sm rounded-full">
-                                        Not Going
-                                    </span>
-                                )}
                             </div>
+                        )}
 
-                            {/* Food order info */}
-                            {activeTab === 'going' && event.preorders_enabled && ((selectedAttendee as Attendee).food_order || (selectedAttendee as Attendee).dietary_notes) && (
-                                <div className="mt-4 p-4 bg-stone-50 rounded-xl text-left">
-                                    <h4 className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2">
-                                        Food Order
-                                    </h4>
-                                    {(selectedAttendee as Attendee).food_order && (
-                                        <p className="text-sm text-stone-700">
-                                            {(selectedAttendee as Attendee).food_order}
-                                        </p>
-                                    )}
-                                    {(selectedAttendee as Attendee).dietary_notes && (
-                                        <p className="text-sm text-orange-600 mt-1">
-                                            {(selectedAttendee as Attendee).dietary_notes}
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* RSVP date and time */}
-                            <p className="mt-4 text-xs text-stone-400">
-                                RSVP'd {formatRsvpTime(selectedAttendee.rsvp_at)}
-                            </p>
-                        </div>
+                        {/* Name below */}
+                        <p className="text-center mt-4 text-xl font-medium text-white">
+                            {selectedAttendee.name}
+                        </p>
                     </div>
                 </div>
             )}
