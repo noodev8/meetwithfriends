@@ -366,7 +366,7 @@ export default function GroupMembersPage() {
                                                         disabled={updatingRole === member.id}
                                                         className="px-3 py-1.5 text-sm text-amber-600 hover:bg-amber-50 rounded-lg transition disabled:opacity-50"
                                                     >
-                                                        {updatingRole === member.id ? '...' : 'Make Host'}
+                                                        {updatingRole === member.id ? '...' : 'Give Host Role'}
                                                     </button>
                                                 ) : (
                                                     <button
@@ -374,7 +374,7 @@ export default function GroupMembersPage() {
                                                         disabled={updatingRole === member.id}
                                                         className="px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100 rounded-lg transition disabled:opacity-50"
                                                     >
-                                                        {updatingRole === member.id ? '...' : 'Remove Host'}
+                                                        {updatingRole === member.id ? '...' : 'Remove Host Role'}
                                                     </button>
                                                 )}
                                                 {/* Remove button */}
