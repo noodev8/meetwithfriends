@@ -1108,19 +1108,24 @@ export default function EventDetailPage() {
                                                 >
                                                     <div className="flex items-center justify-between gap-2">
                                                         <div className="flex items-center gap-2 min-w-0">
-                                                            {person.avatar_url ? (
-                                                                <img
-                                                                    src={person.avatar_url}
-                                                                    alt={person.name}
-                                                                    className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                                                                />
-                                                            ) : (
-                                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center flex-shrink-0">
-                                                                    <span className="text-xs font-medium text-amber-600">
-                                                                        {person.name.charAt(0).toUpperCase()}
-                                                                    </span>
-                                                                </div>
-                                                            )}
+                                                            <button
+                                                                onClick={() => setSelectedAttendee(person)}
+                                                                className="flex-shrink-0 hover:opacity-80 transition"
+                                                            >
+                                                                {person.avatar_url ? (
+                                                                    <img
+                                                                        src={person.avatar_url}
+                                                                        alt={person.name}
+                                                                        className="w-8 h-8 rounded-full object-cover"
+                                                                    />
+                                                                ) : (
+                                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
+                                                                        <span className="text-xs font-medium text-amber-600">
+                                                                            {person.name.charAt(0).toUpperCase()}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                            </button>
                                                             <button
                                                                 onClick={() => setSelectedAttendee(person)}
                                                                 className="text-sm font-medium text-stone-900 truncate hover:text-amber-600 transition text-left"
@@ -1198,19 +1203,24 @@ export default function EventDetailPage() {
                                                             <span className="text-xs text-stone-400 w-4 flex-shrink-0">
                                                                 #{person.waitlist_position}
                                                             </span>
-                                                            {person.avatar_url ? (
-                                                                <img
-                                                                    src={person.avatar_url}
-                                                                    alt={person.name}
-                                                                    className="w-6 h-6 rounded-full object-cover flex-shrink-0"
-                                                                />
-                                                            ) : (
-                                                                <div className="w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
-                                                                    <span className="text-xs text-stone-400">
-                                                                        {person.name.charAt(0).toUpperCase()}
-                                                                    </span>
-                                                                </div>
-                                                            )}
+                                                            <button
+                                                                onClick={() => setSelectedAttendee(person)}
+                                                                className="flex-shrink-0 hover:opacity-80 transition"
+                                                            >
+                                                                {person.avatar_url ? (
+                                                                    <img
+                                                                        src={person.avatar_url}
+                                                                        alt={person.name}
+                                                                        className="w-6 h-6 rounded-full object-cover"
+                                                                    />
+                                                                ) : (
+                                                                    <div className="w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center">
+                                                                        <span className="text-xs text-stone-400">
+                                                                            {person.name.charAt(0).toUpperCase()}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                            </button>
                                                             <button
                                                                 onClick={() => setSelectedAttendee(person)}
                                                                 className="text-sm text-stone-600 truncate hover:text-amber-600 transition text-left"
@@ -1434,11 +1444,11 @@ export default function EventDetailPage() {
             {/* Profile Modal */}
             {selectedAttendee && (
                 <div
-                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                    className="fixed inset-0 bg-black/50 flex items-start justify-center p-4 pt-16 sm:pt-24 z-50 overflow-y-auto"
                     onClick={() => setSelectedAttendee(null)}
                 >
                     <div
-                        className="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden"
+                        className="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden my-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header with gradient */}
@@ -1514,12 +1524,15 @@ export default function EventDetailPage() {
                                 </div>
                             )}
 
-                            {/* RSVP date */}
+                            {/* RSVP date and time */}
                             <p className="mt-4 text-xs text-stone-400">
                                 RSVP'd {new Date(selectedAttendee.rsvp_at).toLocaleDateString('en-GB', {
                                     day: 'numeric',
                                     month: 'short',
                                     year: 'numeric'
+                                })} at {new Date(selectedAttendee.rsvp_at).toLocaleTimeString('en-GB', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
                                 })}
                             </p>
                         </div>
