@@ -59,6 +59,8 @@ router.get('/my-events', verifyToken, async (req, res) => {
                 e.location,
                 e.date_time,
                 e.capacity,
+                e.image_url,
+                e.image_position,
                 e.status,
                 e.created_at,
                 COUNT(r.id) FILTER (WHERE r.status = 'attending') AS attendee_count,

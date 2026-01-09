@@ -19,6 +19,7 @@ Success Response (for members):
       "user_id": 5,
       "name": "John Smith",
       "avatar_url": "https://...",
+      "guest_count": 2,
       "rsvp_at": "2026-01-01T00:00:00.000Z"
     }
   ],
@@ -27,11 +28,13 @@ Success Response (for members):
       "user_id": 8,
       "name": "Jane Doe",
       "avatar_url": null,
+      "guest_count": 0,
       "waitlist_position": 1,
       "rsvp_at": "2026-01-02T00:00:00.000Z"
     }
   ],
   "attending_count": 1,
+  "total_guest_count": 2,
   "waitlist_count": 1
 }
 
@@ -42,6 +45,7 @@ Success Response (for non-members):
   "attending": [],
   "waitlist": [],
   "attending_count": 1,
+  "total_guest_count": 2,
   "waitlist_count": 1
 }
 =======================================================================================================================================
@@ -112,6 +116,7 @@ router.get('/:id/attendees', optionalAuth, async (req, res) => {
                 u.name,
                 u.avatar_url,
                 r.status,
+                r.guest_count,
                 r.waitlist_position,
                 r.created_at AS rsvp_at
              FROM event_rsvp r
@@ -129,17 +134,21 @@ router.get('/:id/attendees', optionalAuth, async (req, res) => {
         // =======================================================================
         const attending = [];
         const waitlist = [];
+        let totalGuestCount = 0;
 
         for (const row of rsvpResult.rows) {
+            const guestCount = row.guest_count || 0;
             const person = {
                 user_id: row.user_id,
                 name: row.name,
                 avatar_url: row.avatar_url,
+                guest_count: guestCount,
                 rsvp_at: row.rsvp_at
             };
 
             if (row.status === 'attending') {
                 attending.push(person);
+                totalGuestCount += guestCount;
             } else {
                 waitlist.push({
                     ...person,
@@ -159,6 +168,7 @@ router.get('/:id/attendees', optionalAuth, async (req, res) => {
             attending: isMember ? attending : [],
             waitlist: isMember ? waitlist : [],
             attending_count: attending.length,
+            total_guest_count: totalGuestCount,
             waitlist_count: waitlist.length
         });
 

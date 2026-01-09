@@ -10,6 +10,7 @@ Request Payload:
   "name": "New Group Name",              // string, optional (max 100 chars)
   "description": "Updated description",  // string, optional (null to clear)
   "image_url": "https://...",            // string, optional (null to clear, max 500 chars)
+  "image_position": "top",               // string, optional ("top", "center", "bottom")
   "join_policy": "auto",                 // string, optional ("auto" or "approval")
   "visibility": "listed"                 // string, optional ("listed" or "unlisted")
 }
@@ -22,6 +23,7 @@ Success Response:
     "name": "New Group Name",
     "description": "Updated description",
     "image_url": "https://...",
+    "image_position": "top",
     "join_policy": "auto",
     "visibility": "listed",
     "created_at": "2026-01-01T00:00:00.000Z",
@@ -48,7 +50,7 @@ const { verifyToken } = require('../../middleware/auth');
 router.post('/:id/update', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, description, image_url, join_policy, visibility } = req.body;
+        const { name, description, image_url, image_position, join_policy, visibility } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -65,7 +67,7 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         // Check if group exists
         // =======================================================================
         const groupResult = await query(
-            'SELECT id, name, description, image_url, join_policy, visibility FROM group_list WHERE id = $1',
+            'SELECT id, name, description, image_url, image_position, join_policy, visibility FROM group_list WHERE id = $1',
             [id]
         );
 
@@ -144,16 +146,17 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         // =======================================================================
         const finalDescription = description !== undefined ? description : currentGroup.description;
         const finalImageUrl = image_url !== undefined ? image_url : currentGroup.image_url;
+        const finalImagePosition = image_position !== undefined ? image_position : currentGroup.image_position;
 
         // =======================================================================
         // Update the group
         // =======================================================================
         const updateResult = await query(
             `UPDATE group_list
-             SET name = $1, description = $2, image_url = $3, join_policy = $4, visibility = $5, updated_at = CURRENT_TIMESTAMP
-             WHERE id = $6
-             RETURNING id, name, description, image_url, join_policy, visibility, created_at, updated_at`,
-            [finalName.trim(), finalDescription, finalImageUrl, finalJoinPolicy, finalVisibility, id]
+             SET name = $1, description = $2, image_url = $3, image_position = $4, join_policy = $5, visibility = $6, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $7
+             RETURNING id, name, description, image_url, image_position, join_policy, visibility, created_at, updated_at`,
+            [finalName.trim(), finalDescription, finalImageUrl, finalImagePosition, finalJoinPolicy, finalVisibility, id]
         );
 
         const updatedGroup = updateResult.rows[0];

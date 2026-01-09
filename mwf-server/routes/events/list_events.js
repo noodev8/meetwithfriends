@@ -67,9 +67,14 @@ router.get('/', optionalAuth, async (req, res) => {
                 e.location,
                 e.date_time,
                 e.capacity,
+                e.image_url,
+                e.image_position,
+                e.allow_guests,
+                e.max_guests_per_rsvp,
                 e.status,
                 e.created_at,
                 COUNT(r.id) FILTER (WHERE r.status = 'attending') AS attendee_count,
+                COALESCE(SUM(r.guest_count) FILTER (WHERE r.status = 'attending'), 0) AS total_guest_count,
                 COUNT(r.id) FILTER (WHERE r.status = 'waitlist') AS waitlist_count`;
 
         // Include user's RSVP status if authenticated
@@ -119,6 +124,7 @@ router.get('/', optionalAuth, async (req, res) => {
         const events = result.rows.map(event => ({
             ...event,
             attendee_count: parseInt(event.attendee_count, 10) || 0,
+            total_guest_count: parseInt(event.total_guest_count, 10) || 0,
             waitlist_count: parseInt(event.waitlist_count, 10) || 0
         }));
 

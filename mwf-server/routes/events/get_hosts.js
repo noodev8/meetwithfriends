@@ -1,32 +1,29 @@
 /*
 =======================================================================================================================================
-API Route: list_groups
+API Route: get_hosts
 =======================================================================================================================================
 Method: GET
-Purpose: Retrieves all groups with their member counts. No authentication required - public listing.
+Purpose: Retrieves the list of hosts for an event. Anyone can view hosts.
 =======================================================================================================================================
 Request Payload:
-None (GET request)
+None (GET request with :id URL parameter)
 
 Success Response:
 {
   "return_code": "SUCCESS",
-  "groups": [
+  "hosts": [
     {
-      "id": 1,
-      "name": "Brookfield Socials",
-      "description": "A food-focused social group",
-      "image_url": "https://...",
-      "join_policy": "approval",
-      "visibility": "listed",
-      "member_count": 42,
-      "created_at": "2026-01-01T00:00:00.000Z"
+      "user_id": 5,
+      "name": "John Smith",
+      "avatar_url": "https://...",
+      "added_at": "2026-01-01T00:00:00.000Z"
     }
   ]
 }
 =======================================================================================================================================
 Return Codes:
 "SUCCESS"
+"NOT_FOUND"
 "SERVER_ERROR"
 =======================================================================================================================================
 */
@@ -35,48 +32,61 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../../database');
 
-router.get('/', async (req, res) => {
+router.get('/:id/hosts', async (req, res) => {
     try {
-        // =======================================================================
-        // Fetch all groups with member counts
-        // =======================================================================
-        // Using a LEFT JOIN to count active members for each group
-        // Groups with no members will show member_count of 0
-        const result = await query(
-            `SELECT
-                g.id,
-                g.name,
-                g.description,
-                g.image_url,
-                g.image_position,
-                g.join_policy,
-                g.visibility,
-                g.created_at,
-                COUNT(gm.id) FILTER (WHERE gm.status = 'active') AS member_count
-             FROM group_list g
-             LEFT JOIN group_member gm ON g.id = gm.group_id
-             GROUP BY g.id
-             ORDER BY g.created_at DESC`
-        );
+        const { id } = req.params;
 
         // =======================================================================
-        // Transform results to ensure member_count is a number
+        // Validate event ID
         // =======================================================================
-        const groups = result.rows.map(group => ({
-            ...group,
-            member_count: parseInt(group.member_count, 10) || 0
-        }));
+        if (!id || isNaN(parseInt(id, 10))) {
+            return res.json({
+                return_code: 'NOT_FOUND',
+                message: 'Event not found'
+            });
+        }
+
+        // =======================================================================
+        // Check if event exists
+        // =======================================================================
+        const eventResult = await query(
+            'SELECT id FROM event_list WHERE id = $1',
+            [id]
+        );
+
+        if (eventResult.rows.length === 0) {
+            return res.json({
+                return_code: 'NOT_FOUND',
+                message: 'Event not found'
+            });
+        }
+
+        // =======================================================================
+        // Fetch hosts with user info
+        // =======================================================================
+        const hostsResult = await query(
+            `SELECT
+                eh.user_id,
+                u.name,
+                u.avatar_url,
+                eh.created_at AS added_at
+             FROM event_host eh
+             JOIN app_user u ON eh.user_id = u.id
+             WHERE eh.event_id = $1
+             ORDER BY eh.created_at ASC`,
+            [id]
+        );
 
         // =======================================================================
         // Return success response
         // =======================================================================
         return res.json({
             return_code: 'SUCCESS',
-            groups
+            hosts: hostsResult.rows
         });
 
     } catch (error) {
-        console.error('List groups error:', error);
+        console.error('Get hosts error:', error);
         return res.json({
             return_code: 'SERVER_ERROR',
             message: 'An unexpected error occurred'

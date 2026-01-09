@@ -14,6 +14,8 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getGroup, updateGroup, GroupWithCount } from '@/lib/api/groups';
 import Header from '@/components/layout/Header';
+import ImageUpload from '@/components/ui/ImageUpload';
+import RichTextEditor from '@/components/ui/RichTextEditor';
 
 export default function EditGroupPage() {
     const { user, token, isLoading } = useAuth();
@@ -24,6 +26,9 @@ export default function EditGroupPage() {
     const [loading, setLoading] = useState(true);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [imagePosition, setImagePosition] = useState<'top' | 'center' | 'bottom'>('center');
+    const [imageSaving, setImageSaving] = useState(false);
     const [joinPolicy, setJoinPolicy] = useState<'auto' | 'approval'>('approval');
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -56,6 +61,8 @@ export default function EditGroupPage() {
                 setGroup(groupData);
                 setName(groupData.name);
                 setDescription(groupData.description || '');
+                setImageUrl(groupData.image_url || null);
+                setImagePosition(groupData.image_position || 'center');
                 setJoinPolicy(groupData.join_policy as 'auto' | 'approval');
             } else {
                 setError(result.error || 'Group not found');
@@ -66,6 +73,32 @@ export default function EditGroupPage() {
 
         fetchGroup();
     }, [params.id, token, user, isLoading, router]);
+
+    // =======================================================================
+    // Handle image change - auto-save to database
+    // =======================================================================
+    const handleImageChange = async (url: string | null) => {
+        setImageUrl(url);
+
+        if (!token || !group) return;
+
+        setImageSaving(true);
+        await updateGroup(token, group.id, { image_url: url });
+        setImageSaving(false);
+    };
+
+    // =======================================================================
+    // Handle image position change - auto-save to database
+    // =======================================================================
+    const handlePositionChange = async (position: 'top' | 'center' | 'bottom') => {
+        setImagePosition(position);
+
+        if (!token || !group) return;
+
+        setImageSaving(true);
+        await updateGroup(token, group.id, { image_position: position });
+        setImageSaving(false);
+    };
 
     // =======================================================================
     // Handle form submission
@@ -89,6 +122,8 @@ export default function EditGroupPage() {
         const result = await updateGroup(token, group.id, {
             name: name.trim(),
             description: description.trim() || null,
+            image_url: imageUrl,
+            image_position: imagePosition,
             join_policy: joinPolicy,
         });
 
@@ -172,16 +207,28 @@ export default function EditGroupPage() {
                     </div>
 
                     <div className="mb-6">
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                             Description
                         </label>
-                        <textarea
-                            id="description"
+                        <RichTextEditor
                             value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            onChange={setDescription}
                             placeholder="Tell people what your group is about..."
-                            rows={4}
+                        />
+                    </div>
+
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Group Image
+                            {imageSaving && (
+                                <span className="ml-2 text-xs text-blue-600">Saving...</span>
+                            )}
+                        </label>
+                        <ImageUpload
+                            value={imageUrl}
+                            onChange={handleImageChange}
+                            imagePosition={imagePosition}
+                            onPositionChange={handlePositionChange}
                         />
                     </div>
 

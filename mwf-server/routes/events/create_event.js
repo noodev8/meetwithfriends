@@ -9,10 +9,14 @@ Request Payload:
 {
   "group_id": 1,                         // integer, required
   "title": "Evening Meal",               // string, required (max 200 chars)
-  "description": "Join us...",           // string, optional
+  "description": "Join us...",           // string, optional (HTML allowed)
   "location": "The Beacon Hotel",        // string, optional
   "date_time": "2026-01-15T18:30:00Z",   // ISO datetime, required (must be in future)
-  "capacity": 20                         // integer, optional (null = unlimited)
+  "capacity": 20,                        // integer, optional (null = unlimited)
+  "image_url": "https://...",            // string, optional (Cloudinary URL)
+  "image_position": "center",            // string, optional (top/center/bottom, default: center)
+  "allow_guests": true,                  // boolean, optional (default: false)
+  "max_guests_per_rsvp": 2               // integer 1-5, optional (default: 1, only used if allow_guests is true)
 }
 
 Success Response:
@@ -27,6 +31,10 @@ Success Response:
     "location": "The Beacon Hotel",
     "date_time": "2026-01-15T18:30:00.000Z",
     "capacity": 20,
+    "image_url": "https://...",
+    "image_position": "center",
+    "allow_guests": true,
+    "max_guests_per_rsvp": 2,
     "status": "published",
     "created_at": "2026-01-01T00:00:00.000Z"
   }
@@ -45,11 +53,12 @@ Return Codes:
 const express = require('express');
 const router = express.Router();
 const { query } = require('../../database');
+const { withTransaction } = require('../../utils/transaction');
 const { verifyToken } = require('../../middleware/auth');
 
 router.post('/create', verifyToken, async (req, res) => {
     try {
-        const { group_id, title, description, location, date_time, capacity } = req.body;
+        const { group_id, title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -137,21 +146,38 @@ router.post('/create', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
-        // Create the event
+        // Create the event and add creator as first host (atomic transaction)
         // =======================================================================
-        const result = await query(
-            `INSERT INTO event_list (group_id, created_by, title, description, location, date_time, capacity)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)
-             RETURNING id, group_id, created_by, title, description, location, date_time, capacity, status, created_at`,
-            [group_id, userId, title.trim(), description?.trim() || null, location?.trim() || null, eventDate, capacity || null]
-        );
+        // Validate max_guests_per_rsvp if provided
+        const finalMaxGuests = max_guests_per_rsvp ? Math.min(Math.max(parseInt(max_guests_per_rsvp, 10), 1), 5) : 1;
+
+        const result = await withTransaction(async (client) => {
+            // Create the event
+            const eventResult = await client.query(
+                `INSERT INTO event_list (group_id, created_by, title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                 RETURNING id, group_id, created_by, title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp, status, created_at`,
+                [group_id, userId, title.trim(), description?.trim() || null, location?.trim() || null, eventDate, capacity || null, image_url?.trim() || null, image_position || 'center', allow_guests || false, finalMaxGuests]
+            );
+
+            const newEvent = eventResult.rows[0];
+
+            // Add creator as the first host
+            await client.query(
+                `INSERT INTO event_host (event_id, user_id, added_by)
+                 VALUES ($1, $2, $2)`,
+                [newEvent.id, userId]
+            );
+
+            return newEvent;
+        });
 
         // =======================================================================
         // Return success response
         // =======================================================================
         return res.json({
             return_code: 'SUCCESS',
-            event: result.rows[0]
+            event: result
         });
 
     } catch (error) {

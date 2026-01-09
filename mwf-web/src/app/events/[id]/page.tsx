@@ -16,13 +16,18 @@ import {
     getEvent,
     getAttendees,
     rsvpEvent,
+    updateRsvp,
     manageAttendee,
     cancelEvent,
     restoreEvent,
+    addHost,
+    removeHost,
     EventWithDetails,
     RsvpStatus,
     Attendee,
 } from '@/lib/api/events';
+import { getGroupMembers, GroupMember } from '@/lib/api/groups';
+import { EventHost } from '@/types';
 import {
     getComments,
     addComment,
@@ -30,6 +35,7 @@ import {
     CommentWithDetails,
 } from '@/lib/api/comments';
 import Header from '@/components/layout/Header';
+import DOMPurify from 'dompurify';
 
 export default function EventDetailPage() {
     const { user, token } = useAuth();
@@ -37,14 +43,23 @@ export default function EventDetailPage() {
 
     const [event, setEvent] = useState<EventWithDetails | null>(null);
     const [rsvp, setRsvp] = useState<RsvpStatus | null>(null);
+    const [hosts, setHosts] = useState<EventHost[]>([]);
+    const [isHost, setIsHost] = useState(false);
     const [isGroupMember, setIsGroupMember] = useState(false);
     const [canManageAttendees, setCanManageAttendees] = useState(false);
     const [canEdit, setCanEdit] = useState(false);
+    const [hostActionLoading, setHostActionLoading] = useState(false);
+    const [showHostManager, setShowHostManager] = useState(false);
+    const [hostSearchQuery, setHostSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<GroupMember[]>([]);
+    const [searchLoading, setSearchLoading] = useState(false);
     const [attending, setAttending] = useState<Attendee[]>([]);
     const [waitlist, setWaitlist] = useState<Attendee[]>([]);
     const [attendingCount, setAttendingCount] = useState(0);
+    const [totalGuestCount, setTotalGuestCount] = useState(0);
     const [waitlistCount, setWaitlistCount] = useState(0);
     const [canViewAttendees, setCanViewAttendees] = useState(false);
+    const [selectedGuestCount, setSelectedGuestCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [rsvpLoading, setRsvpLoading] = useState(false);
     const [managingUser, setManagingUser] = useState<number | null>(null);
@@ -79,6 +94,9 @@ export default function EventDetailPage() {
             if (eventResult.success && eventResult.data) {
                 setEvent(eventResult.data.event);
                 setRsvp(eventResult.data.rsvp);
+                setSelectedGuestCount(eventResult.data.rsvp?.guest_count || 0);
+                setHosts(eventResult.data.hosts);
+                setIsHost(eventResult.data.is_host);
                 setIsGroupMember(eventResult.data.is_group_member);
                 setCanManageAttendees(eventResult.data.can_manage_attendees);
                 setCanEdit(eventResult.data.can_edit);
@@ -90,6 +108,7 @@ export default function EventDetailPage() {
                 setAttending(attendeesResult.data.attending);
                 setWaitlist(attendeesResult.data.waitlist);
                 setAttendingCount(attendeesResult.data.attending_count);
+                setTotalGuestCount(attendeesResult.data.total_guest_count);
                 setWaitlistCount(attendeesResult.data.waitlist_count);
                 setCanViewAttendees(attendeesResult.data.is_member);
             }
@@ -108,20 +127,22 @@ export default function EventDetailPage() {
     // =======================================================================
     // Handle RSVP action
     // =======================================================================
-    const handleRsvp = async (action: 'join' | 'leave') => {
+    const handleRsvp = async (action: 'join' | 'leave', guestCount?: number) => {
         if (!token || !event) return;
 
         setRsvpLoading(true);
-        const result = await rsvpEvent(token, event.id, action);
+        const result = await rsvpEvent(token, event.id, action, guestCount);
         setRsvpLoading(false);
 
         if (result.success && result.data) {
             setRsvp(result.data.rsvp);
+            setSelectedGuestCount(result.data.rsvp?.guest_count || 0);
             // Refresh attendees
             const attendeesResult = await getAttendees(event.id);
             if (attendeesResult.success && attendeesResult.data) {
                 setAttending(attendeesResult.data.attending);
                 setWaitlist(attendeesResult.data.waitlist);
+                setTotalGuestCount(attendeesResult.data.total_guest_count);
             }
             // Update event counts
             const eventResult = await getEvent(event.id, token);
@@ -130,6 +151,36 @@ export default function EventDetailPage() {
             }
         } else {
             alert(result.error || 'Failed to update RSVP');
+        }
+    };
+
+    // =======================================================================
+    // Handle updating guest count
+    // =======================================================================
+    const handleUpdateGuests = async (newGuestCount: number) => {
+        if (!token || !event || !rsvp) return;
+
+        setRsvpLoading(true);
+        const result = await updateRsvp(token, event.id, newGuestCount);
+        setRsvpLoading(false);
+
+        if (result.success && result.data) {
+            setRsvp(result.data.rsvp);
+            setSelectedGuestCount(result.data.rsvp.guest_count);
+            // Refresh attendees
+            const attendeesResult = await getAttendees(event.id);
+            if (attendeesResult.success && attendeesResult.data) {
+                setAttending(attendeesResult.data.attending);
+                setWaitlist(attendeesResult.data.waitlist);
+                setTotalGuestCount(attendeesResult.data.total_guest_count);
+            }
+            // Update event counts
+            const eventResult = await getEvent(event.id, token);
+            if (eventResult.success && eventResult.data) {
+                setEvent(eventResult.data.event);
+            }
+        } else {
+            alert(result.error || 'Failed to update guests');
         }
     };
 
@@ -213,6 +264,88 @@ export default function EventDetailPage() {
             }
         } else {
             alert(result.error || 'Failed to restore event');
+        }
+    };
+
+    // =======================================================================
+    // Handle step down as host
+    // =======================================================================
+    const handleStepDown = async () => {
+        if (!token || !event || !user) return;
+
+        const confirmed = window.confirm(
+            'Are you sure you want to step down as host? You will no longer be able to manage this event.'
+        );
+
+        if (!confirmed) return;
+
+        setHostActionLoading(true);
+        const result = await removeHost(token, event.id, user.id);
+        setHostActionLoading(false);
+
+        if (result.success) {
+            // Refresh event data
+            const eventResult = await getEvent(event.id, token);
+            if (eventResult.success && eventResult.data) {
+                setEvent(eventResult.data.event);
+                setHosts(eventResult.data.hosts);
+                setIsHost(eventResult.data.is_host);
+                setCanManageAttendees(eventResult.data.can_manage_attendees);
+                setCanEdit(eventResult.data.can_edit);
+            }
+        } else {
+            alert(result.error || 'Failed to step down as host');
+        }
+    };
+
+    // =======================================================================
+    // Handle search for members to add as host
+    // =======================================================================
+    const handleHostSearch = async (query: string) => {
+        setHostSearchQuery(query);
+
+        if (!event || !token || query.trim().length < 2) {
+            setSearchResults([]);
+            return;
+        }
+
+        setSearchLoading(true);
+        const result = await getGroupMembers(event.group_id, token, {
+            search: query.trim(),
+            limit: 10
+        });
+        setSearchLoading(false);
+
+        if (result.success && result.data) {
+            // Filter out users who are already hosts
+            const hostUserIds = new Set(hosts.map(h => h.user_id));
+            const filtered = result.data.members.filter(m => !hostUserIds.has(m.user_id));
+            setSearchResults(filtered);
+        }
+    };
+
+    // =======================================================================
+    // Handle add host
+    // =======================================================================
+    const handleAddHost = async (userId: number) => {
+        if (!token || !event) return;
+
+        setHostActionLoading(true);
+        const result = await addHost(token, event.id, userId);
+        setHostActionLoading(false);
+
+        if (result.success) {
+            // Refresh event data to get updated hosts
+            const eventResult = await getEvent(event.id, token);
+            if (eventResult.success && eventResult.data) {
+                setHosts(eventResult.data.hosts);
+                setIsHost(eventResult.data.is_host);
+            }
+            // Clear search
+            setHostSearchQuery('');
+            setSearchResults([]);
+        } else {
+            alert(result.error || 'Failed to add host');
         }
     };
 
@@ -331,11 +464,24 @@ export default function EventDetailPage() {
     }
 
     const { date, time } = formatDateTime(event.date_time);
-    const spotsRemaining = event.capacity ? event.capacity - (event.attendee_count || 0) : null;
+    const totalSpotsUsed = (event.attendee_count || 0) + (event.total_guest_count || 0);
+    const spotsRemaining = event.capacity ? event.capacity - totalSpotsUsed : null;
 
     return (
         <main className="min-h-screen flex flex-col bg-gray-50">
             <Header />
+
+            {/* Featured Image */}
+            {event.image_url && (
+                <div className="w-full h-48 sm:h-64 md:h-80 bg-gray-200">
+                    <img
+                        src={event.image_url}
+                        alt={event.title}
+                        className="w-full h-full object-cover"
+                        style={{ objectPosition: event.image_position || 'center' }}
+                    />
+                </div>
+            )}
 
             {/* Event Header */}
             <div className="bg-white border-b">
@@ -373,7 +519,16 @@ export default function EventDetailPage() {
                                 {event.title}
                             </h1>
                             <p className="text-gray-500">
-                                Hosted by {event.creator_name}
+                                Hosted by {hosts.length > 0
+                                    ? hosts.map((h, i) => (
+                                        <span key={h.user_id}>
+                                            {h.name}
+                                            {i < hosts.length - 2 && ', '}
+                                            {i === hosts.length - 2 && ' and '}
+                                        </span>
+                                    ))
+                                    : event.creator_name
+                                }
                             </p>
                         </div>
 
@@ -397,8 +552,29 @@ export default function EventDetailPage() {
                                         ? 'bg-green-100 text-green-700'
                                         : 'bg-yellow-100 text-yellow-700'
                                 }`}>
-                                    {rsvp.status === 'attending' ? "You're going!" : `Waitlist #${rsvp.waitlist_position}`}
+                                    {rsvp.status === 'attending'
+                                        ? (rsvp.guest_count > 0 ? `You + ${rsvp.guest_count} guest${rsvp.guest_count > 1 ? 's' : ''}` : "You're going!")
+                                        : `Waitlist #${rsvp.waitlist_position}`
+                                    }
                                 </span>
+                            )}
+
+                            {/* Guest selector for attending members */}
+                            {event.status !== 'cancelled' && !isPastEvent && rsvp?.status === 'attending' && event.allow_guests && (
+                                <div className="flex items-center gap-2">
+                                    <label htmlFor="guestCount" className="text-sm text-gray-600">Guests:</label>
+                                    <select
+                                        id="guestCount"
+                                        value={selectedGuestCount}
+                                        onChange={(e) => handleUpdateGuests(parseInt(e.target.value, 10))}
+                                        disabled={rsvpLoading}
+                                        className="px-3 py-1 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                                    >
+                                        {Array.from({ length: (event.max_guests_per_rsvp || 1) + 1 }, (_, i) => (
+                                            <option key={i} value={i}>{i}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             )}
 
                             {/* RSVP Button */}
@@ -428,18 +604,36 @@ export default function EventDetailPage() {
                                             {rsvpLoading ? 'Updating...' : 'Cancel RSVP'}
                                         </button>
                                     ) : (
-                                        <button
-                                            onClick={() => handleRsvp('join')}
-                                            disabled={rsvpLoading}
-                                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-                                        >
-                                            {rsvpLoading
-                                                ? 'Updating...'
-                                                : spotsRemaining === 0
-                                                    ? 'Join Waitlist'
-                                                    : 'Attend'
-                                            }
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            {event.allow_guests && (
+                                                <div className="flex items-center gap-2">
+                                                    <label htmlFor="joinGuestCount" className="text-sm text-gray-600">Guests:</label>
+                                                    <select
+                                                        id="joinGuestCount"
+                                                        value={selectedGuestCount}
+                                                        onChange={(e) => setSelectedGuestCount(parseInt(e.target.value, 10))}
+                                                        disabled={rsvpLoading}
+                                                        className="px-3 py-1 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                                                    >
+                                                        {Array.from({ length: (event.max_guests_per_rsvp || 1) + 1 }, (_, i) => (
+                                                            <option key={i} value={i}>{i}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
+                                            <button
+                                                onClick={() => handleRsvp('join', selectedGuestCount)}
+                                                disabled={rsvpLoading}
+                                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                                            >
+                                                {rsvpLoading
+                                                    ? 'Updating...'
+                                                    : spotsRemaining === 0
+                                                        ? 'Join Waitlist'
+                                                        : 'Attend'
+                                                }
+                                            </button>
+                                        </div>
                                     )}
                                 </>
                             )}
@@ -454,8 +648,8 @@ export default function EventDetailPage() {
                         </div>
                     </div>
 
-                    {/* Edit/Cancel buttons - separate row for hosts */}
-                    {(canEdit || (event.status === 'cancelled' && canManageAttendees)) && (
+                    {/* Edit/Cancel/Step down buttons - separate row for hosts */}
+                    {(canEdit || (event.status === 'cancelled' && canManageAttendees) || (isHost && hosts.length > 1)) && (
                         <div className="flex items-center gap-4 mt-4 pt-4 border-t">
                             {canEdit && (
                                 <>
@@ -481,6 +675,15 @@ export default function EventDetailPage() {
                                     className="text-sm text-gray-400 hover:text-green-600 transition disabled:opacity-50"
                                 >
                                     {restoreLoading ? 'Restoring...' : 'Restore event'}
+                                </button>
+                            )}
+                            {isHost && hosts.length > 1 && (
+                                <button
+                                    onClick={handleStepDown}
+                                    disabled={hostActionLoading}
+                                    className="text-sm text-gray-400 hover:text-orange-600 transition disabled:opacity-50"
+                                >
+                                    {hostActionLoading ? 'Stepping down...' : 'Step down as host'}
                                 </button>
                             )}
                         </div>
@@ -516,7 +719,115 @@ export default function EventDetailPage() {
                     {event.description && (
                         <div className="bg-white rounded-lg border p-6">
                             <h2 className="text-lg font-bold text-gray-900 mb-4">About</h2>
-                            <p className="text-gray-600 whitespace-pre-wrap">{event.description}</p>
+                            <div
+                                className="text-gray-600 prose prose-sm max-w-none prose-a:text-blue-600"
+                                dangerouslySetInnerHTML={{
+                                    __html: DOMPurify.sanitize(event.description)
+                                }}
+                            />
+                        </div>
+                    )}
+
+                    {/* Manage Hosts Section - only visible to hosts/organisers */}
+                    {canManageAttendees && (
+                        <div className="bg-white rounded-lg border p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-bold text-gray-900">
+                                    Hosts ({hosts.length})
+                                </h2>
+                                <button
+                                    onClick={() => setShowHostManager(!showHostManager)}
+                                    className="text-sm text-blue-600 hover:text-blue-700"
+                                >
+                                    {showHostManager ? 'Done' : 'Manage'}
+                                </button>
+                            </div>
+
+                            {/* Current hosts list */}
+                            <div className="flex flex-wrap gap-2 mb-4">
+                                {hosts.map(host => (
+                                    <div
+                                        key={host.user_id}
+                                        className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full"
+                                    >
+                                        {host.avatar_url ? (
+                                            <img
+                                                src={host.avatar_url}
+                                                alt={host.name}
+                                                className="w-5 h-5 rounded-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                                                <span className="text-xs text-blue-400">
+                                                    {host.name.charAt(0).toUpperCase()}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <span className="text-sm text-gray-700">{host.name}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Add host interface - shown when managing */}
+                            {showHostManager && (
+                                <div className="pt-4 border-t">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Add a host
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={hostSearchQuery}
+                                        onChange={(e) => handleHostSearch(e.target.value)}
+                                        placeholder="Search group members by name..."
+                                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    />
+
+                                    {/* Search results */}
+                                    {searchLoading && (
+                                        <p className="text-sm text-gray-500 mt-2">Searching...</p>
+                                    )}
+
+                                    {!searchLoading && searchResults.length > 0 && (
+                                        <div className="mt-2 border rounded-lg divide-y max-h-48 overflow-y-auto">
+                                            {searchResults.map(member => (
+                                                <button
+                                                    key={member.user_id}
+                                                    onClick={() => handleAddHost(member.user_id)}
+                                                    disabled={hostActionLoading}
+                                                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 disabled:opacity-50 text-left"
+                                                >
+                                                    {member.avatar_url ? (
+                                                        <img
+                                                            src={member.avatar_url}
+                                                            alt={member.name}
+                                                            className="w-8 h-8 rounded-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                                                            <span className="text-sm text-blue-400">
+                                                                {member.name.charAt(0).toUpperCase()}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex-1">
+                                                        <p className="text-sm font-medium text-gray-900">{member.name}</p>
+                                                        <p className="text-xs text-gray-500 capitalize">{member.role}</p>
+                                                    </div>
+                                                    <span className="text-xs text-blue-600">Add</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {!searchLoading && hostSearchQuery.length >= 2 && searchResults.length === 0 && (
+                                        <p className="text-sm text-gray-500 mt-2">No members found</p>
+                                    )}
+
+                                    {hostSearchQuery.length > 0 && hostSearchQuery.length < 2 && (
+                                        <p className="text-sm text-gray-400 mt-2">Type at least 2 characters to search</p>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -524,7 +835,7 @@ export default function EventDetailPage() {
                     <div>
                         <div className="bg-white rounded-lg border p-6">
                             <h2 className="text-lg font-bold text-gray-900 mb-4">
-                                Attendees ({attendingCount})
+                                Attendees ({attendingCount}{totalGuestCount > 0 ? ` + ${totalGuestCount} guest${totalGuestCount > 1 ? 's' : ''}` : ''})
                             </h2>
 
                             {/* Members can view full attendee list */}
@@ -554,7 +865,14 @@ export default function EventDetailPage() {
                                                                 </span>
                                                             </div>
                                                         )}
-                                                        <span className="text-sm text-gray-700">{person.name}</span>
+                                                        <span className="text-sm text-gray-700">
+                                                            {person.name}
+                                                            {person.guest_count > 0 && (
+                                                                <span className="ml-1 text-gray-400">
+                                                                    +{person.guest_count}
+                                                                </span>
+                                                            )}
+                                                        </span>
                                                     </div>
                                                     {canManageAttendees && (
                                                         <div className="flex gap-1">
@@ -648,7 +966,7 @@ export default function EventDetailPage() {
                                 <div className="text-center py-4">
                                     <p className="text-gray-500 mb-2">
                                         {attendingCount > 0
-                                            ? `${attendingCount} ${attendingCount === 1 ? 'person is' : 'people are'} attending`
+                                            ? `${attendingCount} ${attendingCount === 1 ? 'person is' : 'people are'} attending${totalGuestCount > 0 ? ` (+${totalGuestCount} guest${totalGuestCount > 1 ? 's' : ''})` : ''}`
                                             : 'No attendees yet'}
                                         {waitlistCount > 0 && ` (${waitlistCount} on waitlist)`}
                                     </p>

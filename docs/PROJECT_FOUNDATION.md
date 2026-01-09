@@ -142,7 +142,19 @@ Target: 8 months maximum (phased delivery)
 - [ ] Visible to anyone (including non-members browsing)
 - [ ] Basic moderation (host/organiser can delete comments)
 
-## Phase 2: Payments & Deposits
+## Phase 2: Menu & Pre-orders
+*Goal: Restaurant coordination*
+
+See [PREORDER-FEATURE.md](./PREORDER-FEATURE.md) for detailed specification.
+
+- [ ] Menu link field on events
+- [ ] Pre-order cutoff date/time
+- [ ] Guest food order submission (free text)
+- [ ] Dietary requirements/notes
+- [ ] Host view of all orders
+- [ ] Export orders for venue
+
+## Phase 3: Payments & Deposits
 *Goal: Core differentiator - deposit handling*
 
 - [ ] Stripe Connect integration
@@ -151,15 +163,6 @@ Target: 8 months maximum (phased delivery)
 - [ ] Payment collection from guests
 - [ ] Refund handling
 - [ ] Payment status visibility
-
-## Phase 3: Menu & Pre-orders
-*Goal: Restaurant coordination*
-
-- [ ] Menu creation per event
-- [ ] Guest menu selection
-- [ ] Pre-order summary generation
-- [ ] Email pre-order to restaurant
-- [ ] Dietary requirements/notes
 
 ## Phase 4: Multi-Group & Monetization
 *Goal: Platform scaling*

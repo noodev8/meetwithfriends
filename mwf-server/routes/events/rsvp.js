@@ -6,10 +6,12 @@ Method: POST
 Purpose: RSVP to an event (join or leave). Handles capacity limits and waitlist management.
          When joining: if capacity available → attending, else → waitlist with position
          When leaving: if was attending and waitlist exists → promote first waitlist person
+         Capacity includes guests: each RSVP takes up (1 + guest_count) spots
 =======================================================================================================================================
 Request Payload:
 {
-  "action": "join" | "leave"             // string, required
+  "action": "join" | "leave",            // string, required
+  "guest_count": 2                       // integer 0-5, optional (only for join, requires event allow_guests)
 }
 
 Success Response (join - attending):
@@ -17,7 +19,8 @@ Success Response (join - attending):
   "return_code": "SUCCESS",
   "rsvp": {
     "status": "attending",
-    "waitlist_position": null
+    "waitlist_position": null,
+    "guest_count": 2
   },
   "message": "You're going to this event"
 }
@@ -27,7 +30,8 @@ Success Response (join - waitlist):
   "return_code": "SUCCESS",
   "rsvp": {
     "status": "waitlist",
-    "waitlist_position": 3
+    "waitlist_position": 3,
+    "guest_count": 0
   },
   "message": "You've been added to the waitlist (position 3)"
 }
@@ -43,6 +47,7 @@ Return Codes:
 "SUCCESS"
 "MISSING_FIELDS"
 "INVALID_ACTION"
+"INVALID_GUEST_COUNT"
 "NOT_FOUND"
 "NOT_GROUP_MEMBER"
 "EVENT_CANCELLED"
@@ -61,7 +66,7 @@ const { verifyToken } = require('../../middleware/auth');
 router.post('/:id/rsvp', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { action } = req.body;
+        const { action, guest_count } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -99,7 +104,7 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
             // Lock event row for update (separate from count query)
             // ===================================================================
             const eventResult = await client.query(
-                `SELECT id, group_id, capacity, status, date_time
+                `SELECT id, group_id, capacity, status, date_time, allow_guests, max_guests_per_rsvp
                  FROM event_list
                  WHERE id = $1
                  FOR UPDATE`,
@@ -116,15 +121,19 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
             const event = eventResult.rows[0];
 
             // ===================================================================
-            // Get current attendee count (separate query)
+            // Get current attendee count and total spots taken (including guests)
             // ===================================================================
             const countResult = await client.query(
-                `SELECT COUNT(*) AS attendee_count
+                `SELECT
+                    COUNT(*) AS attendee_count,
+                    COALESCE(SUM(guest_count), 0) AS total_guests
                  FROM event_rsvp
                  WHERE event_id = $1 AND status = 'attending'`,
                 [id]
             );
             const attendeeCount = parseInt(countResult.rows[0].attendee_count, 10) || 0;
+            const totalGuests = parseInt(countResult.rows[0].total_guests, 10) || 0;
+            const totalSpotsTaken = attendeeCount + totalGuests;
 
             // ===================================================================
             // Check event status
@@ -163,7 +172,7 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
             // Check user's current RSVP status
             // ===================================================================
             const existingRsvp = await client.query(
-                'SELECT id, status, waitlist_position FROM event_rsvp WHERE event_id = $1 AND user_id = $2',
+                'SELECT id, status, waitlist_position, guest_count FROM event_rsvp WHERE event_id = $1 AND user_id = $2',
                 [id, userId]
             );
 
@@ -177,29 +186,50 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                         message: 'You have already RSVP\'d to this event',
                         rsvp: {
                             status: existingRsvp.rows[0].status,
-                            waitlist_position: existingRsvp.rows[0].waitlist_position
+                            waitlist_position: existingRsvp.rows[0].waitlist_position,
+                            guest_count: existingRsvp.rows[0].guest_count || 0
                         }
                     };
                 }
 
-                // Determine if user gets a spot or goes to waitlist
-                const hasCapacity = event.capacity === null || attendeeCount < event.capacity;
+                // Validate and determine guest count
+                let finalGuestCount = 0;
+                if (event.allow_guests && guest_count !== undefined && guest_count !== null) {
+                    const requestedGuests = parseInt(guest_count, 10);
+                    if (isNaN(requestedGuests) || requestedGuests < 0 || requestedGuests > event.max_guests_per_rsvp) {
+                        return {
+                            return_code: 'INVALID_GUEST_COUNT',
+                            message: `Guest count must be between 0 and ${event.max_guests_per_rsvp}`
+                        };
+                    }
+                    finalGuestCount = requestedGuests;
+                } else if (!event.allow_guests && guest_count && parseInt(guest_count, 10) > 0) {
+                    return {
+                        return_code: 'INVALID_GUEST_COUNT',
+                        message: 'This event does not allow guests'
+                    };
+                }
+
+                // Determine if user (+ guests) gets a spot or goes to waitlist
+                // Spots needed = 1 (for the member) + guests
+                const spotsNeeded = 1 + finalGuestCount;
+                const hasCapacity = event.capacity === null || (totalSpotsTaken + spotsNeeded) <= event.capacity;
 
                 if (hasCapacity) {
-                    // Add as attending
+                    // Add as attending with guests
                     await client.query(
-                        `INSERT INTO event_rsvp (event_id, user_id, status)
-                         VALUES ($1, $2, 'attending')`,
-                        [id, userId]
+                        `INSERT INTO event_rsvp (event_id, user_id, status, guest_count)
+                         VALUES ($1, $2, 'attending', $3)`,
+                        [id, userId, finalGuestCount]
                     );
 
                     return {
                         return_code: 'SUCCESS',
-                        rsvp: { status: 'attending', waitlist_position: null },
+                        rsvp: { status: 'attending', waitlist_position: null, guest_count: finalGuestCount },
                         message: "You're going to this event"
                     };
                 } else {
-                    // Add to waitlist - get next position
+                    // Add to waitlist - get next position (no guests on waitlist)
                     const maxPosResult = await client.query(
                         `SELECT COALESCE(MAX(waitlist_position), 0) + 1 AS next_pos
                          FROM event_rsvp
@@ -209,14 +239,14 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                     const nextPosition = maxPosResult.rows[0].next_pos;
 
                     await client.query(
-                        `INSERT INTO event_rsvp (event_id, user_id, status, waitlist_position)
-                         VALUES ($1, $2, 'waitlist', $3)`,
+                        `INSERT INTO event_rsvp (event_id, user_id, status, waitlist_position, guest_count)
+                         VALUES ($1, $2, 'waitlist', $3, 0)`,
                         [id, userId, nextPosition]
                     );
 
                     return {
                         return_code: 'SUCCESS',
-                        rsvp: { status: 'waitlist', waitlist_position: nextPosition },
+                        rsvp: { status: 'waitlist', waitlist_position: nextPosition, guest_count: 0 },
                         message: `You've been added to the waitlist (position ${nextPosition})`
                     };
                 }

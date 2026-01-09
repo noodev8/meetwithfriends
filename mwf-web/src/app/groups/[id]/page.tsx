@@ -11,7 +11,8 @@ Shows join button for non-members, pending status for those awaiting approval, a
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import DOMPurify from 'dompurify';
 import { useAuth } from '@/context/AuthContext';
 import {
     getGroup,
@@ -51,6 +52,13 @@ export default function GroupDetailPage() {
 
     // Check if user is the organiser (can edit group settings)
     const isOrganiser = membership?.status === 'active' && membership?.role === 'organiser';
+
+    // Sanitize HTML description for safe rendering
+    const sanitizedDescription = useMemo(() => {
+        if (!group?.description) return '';
+        if (typeof window === 'undefined') return group.description;
+        return DOMPurify.sanitize(group.description);
+    }, [group?.description]);
 
     // =======================================================================
     // Fetch pending members (for organisers/hosts)
@@ -267,6 +275,7 @@ export default function GroupDetailPage() {
                                     src={group.image_url}
                                     alt={group.name}
                                     className="w-full h-full object-cover"
+                                    style={{ objectPosition: group.image_position || 'center' }}
                                 />
                             </div>
                         ) : (
@@ -278,8 +287,11 @@ export default function GroupDetailPage() {
                         )}
                         <div className="flex-1 text-center sm:text-left">
                             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{group.name}</h1>
-                            {group.description && (
-                                <p className="text-gray-600 mb-4">{group.description}</p>
+                            {sanitizedDescription && (
+                                <div
+                                    className="prose prose-sm max-w-none text-gray-600 mb-4"
+                                    dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
+                                />
                             )}
                             <p className="text-gray-500 mb-4 sm:mb-0">
                                 {group.member_count} {group.member_count === 1 ? 'member' : 'members'}

@@ -99,6 +99,7 @@ export async function createGroup(
         name: string;
         description?: string;
         image_url?: string;
+        image_position?: 'top' | 'center' | 'bottom';
         join_policy?: 'auto' | 'approval';
     }
 ): Promise<ApiResult<Group>> {
@@ -132,6 +133,7 @@ export async function updateGroup(
         name?: string;
         description?: string | null;
         image_url?: string | null;
+        image_position?: 'top' | 'center' | 'bottom';
         join_policy?: 'auto' | 'approval';
     }
 ): Promise<ApiResult<Group>> {

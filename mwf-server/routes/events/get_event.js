@@ -22,17 +22,31 @@ Success Response:
     "location": "The Beacon Hotel, Copthorne",
     "date_time": "2026-01-15T18:30:00.000Z",
     "capacity": 20,
+    "image_url": "https://...",
+    "image_position": "center",
+    "allow_guests": true,
+    "max_guests_per_rsvp": 2,
     "status": "published",
     "attendee_count": 12,
+    "total_guest_count": 5,
     "waitlist_count": 3,
     "created_at": "2026-01-01T00:00:00.000Z"
   },
   "rsvp": {                              // null if not logged in or no RSVP
     "status": "attending",               // "attending" or "waitlist"
-    "waitlist_position": null            // position if on waitlist
+    "waitlist_position": null,           // position if on waitlist
+    "guest_count": 2                     // number of guests (0-5)
   },
   "is_group_member": true,               // false if not logged in or not a member
-  "can_manage_attendees": true,          // true if organiser or event creator
+  "hosts": [                             // list of event hosts
+    {
+      "user_id": 5,
+      "name": "John Smith",
+      "avatar_url": "https://..."
+    }
+  ],
+  "is_host": true,                       // true if current user is a host
+  "can_manage_attendees": true,          // true if organiser or event host
   "can_edit": true                       // true if can manage AND event not cancelled
 }
 =======================================================================================================================================
@@ -79,9 +93,14 @@ router.get('/:id', optionalAuth, async (req, res) => {
                 e.location,
                 e.date_time,
                 e.capacity,
+                e.image_url,
+                e.image_position,
+                e.allow_guests,
+                e.max_guests_per_rsvp,
                 e.status,
                 e.created_at,
                 COUNT(r.id) FILTER (WHERE r.status = 'attending') AS attendee_count,
+                COALESCE(SUM(r.guest_count) FILTER (WHERE r.status = 'attending'), 0) AS total_guest_count,
                 COUNT(r.id) FILTER (WHERE r.status = 'waitlist') AS waitlist_count
              FROM event_list e
              JOIN group_list g ON e.group_id = g.id
@@ -108,21 +127,39 @@ router.get('/:id', optionalAuth, async (req, res) => {
         const event = {
             ...result.rows[0],
             attendee_count: parseInt(result.rows[0].attendee_count, 10) || 0,
+            total_guest_count: parseInt(result.rows[0].total_guest_count, 10) || 0,
             waitlist_count: parseInt(result.rows[0].waitlist_count, 10) || 0
         };
+
+        // =======================================================================
+        // Fetch hosts for this event
+        // =======================================================================
+        const hostsResult = await query(
+            `SELECT
+                eh.user_id,
+                u.name,
+                u.avatar_url
+             FROM event_host eh
+             JOIN app_user u ON eh.user_id = u.id
+             WHERE eh.event_id = $1
+             ORDER BY eh.created_at ASC`,
+            [id]
+        );
+        const hosts = hostsResult.rows;
 
         // =======================================================================
         // Fetch user's RSVP status, group membership, and management permission if logged in
         // =======================================================================
         let rsvp = null;
         let isGroupMember = false;
+        let isHost = false;
         let canManageAttendees = false;
 
         if (userId) {
-            // Check RSVP and membership in parallel
-            const [rsvpResult, membershipResult] = await Promise.all([
+            // Check RSVP, membership, and host status in parallel
+            const [rsvpResult, membershipResult, hostResult] = await Promise.all([
                 query(
-                    `SELECT status, waitlist_position
+                    `SELECT status, waitlist_position, guest_count
                      FROM event_rsvp
                      WHERE event_id = $1 AND user_id = $2`,
                     [id, userId]
@@ -131,22 +168,28 @@ router.get('/:id', optionalAuth, async (req, res) => {
                     `SELECT role FROM group_member
                      WHERE group_id = $1 AND user_id = $2 AND status = 'active'`,
                     [event.group_id, userId]
+                ),
+                query(
+                    `SELECT id FROM event_host
+                     WHERE event_id = $1 AND user_id = $2`,
+                    [id, userId]
                 )
             ]);
 
             if (rsvpResult.rows.length > 0) {
                 rsvp = {
                     status: rsvpResult.rows[0].status,
-                    waitlist_position: rsvpResult.rows[0].waitlist_position
+                    waitlist_position: rsvpResult.rows[0].waitlist_position,
+                    guest_count: rsvpResult.rows[0].guest_count || 0
                 };
             }
 
             isGroupMember = membershipResult.rows.length > 0;
+            isHost = hostResult.rows.length > 0;
 
-            // Can manage/edit if organiser or event creator
+            // Can manage/edit if organiser or event host
             const isOrganiser = membershipResult.rows[0]?.role === 'organiser';
-            const isEventCreator = event.created_by === userId;
-            canManageAttendees = isOrganiser || isEventCreator;
+            canManageAttendees = isOrganiser || isHost;
         }
 
         // Can edit if can manage AND event not cancelled
@@ -159,7 +202,9 @@ router.get('/:id', optionalAuth, async (req, res) => {
             return_code: 'SUCCESS',
             event,
             rsvp,
+            hosts,
             is_group_member: isGroupMember,
+            is_host: isHost,
             can_manage_attendees: canManageAttendees,
             can_edit: canEdit
         });

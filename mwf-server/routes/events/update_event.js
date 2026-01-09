@@ -8,10 +8,14 @@ Purpose: Updates an existing event. Only the event creator or group organiser ca
 Request Payload:
 {
   "title": "Updated Event Title",          // string, optional (1-200 chars)
-  "description": "Updated description",    // string, optional
+  "description": "Updated description",    // string, optional (HTML allowed)
   "location": "New Location",              // string, optional
   "date_time": "2026-02-15T19:00:00Z",    // string (ISO 8601), optional, must be in future
-  "capacity": 25                           // number, optional, null for unlimited
+  "capacity": 25,                          // number, optional, null for unlimited
+  "image_url": "https://...",              // string, optional (Cloudinary URL)
+  "image_position": "top",                 // string, optional (top/center/bottom)
+  "allow_guests": true,                    // boolean, optional
+  "max_guests_per_rsvp": 2                 // integer 1-5, optional
 }
 
 Success Response:
@@ -44,7 +48,7 @@ const { verifyToken } = require('../../middleware/auth');
 router.post('/:id/update', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, location, date_time, capacity } = req.body;
+        const { title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -58,15 +62,15 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
-        // Fetch event with group info to check permissions
+        // Fetch event with group info and host status to check permissions
         // =======================================================================
         const eventResult = await query(
             `SELECT
                 e.id,
                 e.group_id,
-                e.created_by,
                 e.status,
-                gm.role AS current_user_role
+                gm.role AS current_user_role,
+                EXISTS(SELECT 1 FROM event_host eh WHERE eh.event_id = e.id AND eh.user_id = $2) AS is_host
              FROM event_list e
              LEFT JOIN group_member gm ON e.group_id = gm.group_id
                 AND gm.user_id = $2
@@ -85,15 +89,15 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         const event = eventResult.rows[0];
 
         // =======================================================================
-        // Check permissions: must be organiser OR event creator
+        // Check permissions: must be organiser OR event host
         // =======================================================================
         const isOrganiser = event.current_user_role === 'organiser';
-        const isEventCreator = event.created_by === userId;
+        const isEventHost = event.is_host;
 
-        if (!isOrganiser && !isEventCreator) {
+        if (!isOrganiser && !isEventHost) {
             return res.json({
                 return_code: 'FORBIDDEN',
-                message: 'Only the organiser or event creator can edit this event'
+                message: 'Only hosts or group organisers can edit this event'
             });
         }
 
@@ -174,6 +178,27 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         if (capacity !== undefined) {
             updates.push(`capacity = $${paramCount++}`);
             values.push(capacity);
+        }
+
+        if (image_url !== undefined) {
+            updates.push(`image_url = $${paramCount++}`);
+            values.push(image_url?.trim() || null);
+        }
+
+        if (image_position !== undefined) {
+            updates.push(`image_position = $${paramCount++}`);
+            values.push(image_position || 'center');
+        }
+
+        if (allow_guests !== undefined) {
+            updates.push(`allow_guests = $${paramCount++}`);
+            values.push(Boolean(allow_guests));
+        }
+
+        if (max_guests_per_rsvp !== undefined) {
+            updates.push(`max_guests_per_rsvp = $${paramCount++}`);
+            // Clamp to 1-5 range
+            values.push(Math.min(Math.max(parseInt(max_guests_per_rsvp, 10) || 1, 1), 5));
         }
 
         // Always update updated_at

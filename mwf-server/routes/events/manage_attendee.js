@@ -3,7 +3,7 @@
 API Route: manage_attendee
 =======================================================================================================================================
 Method: POST
-Purpose: Allows organisers and event creators to manage attendees - remove, demote to waitlist, or promote from waitlist.
+Purpose: Allows organisers and event hosts to manage attendees - remove, demote to waitlist, or promote from waitlist.
 =======================================================================================================================================
 Request Payload:
 {
@@ -84,15 +84,15 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
         // =======================================================================
         const result = await withTransaction(async (client) => {
             // ===================================================================
-            // Fetch event with group_id and creator - check permissions in one query
+            // Fetch event with group_id and host status - check permissions in one query
             // ===================================================================
             const eventResult = await client.query(
                 `SELECT
                     e.id,
                     e.group_id,
-                    e.created_by,
                     e.capacity,
-                    gm.role AS current_user_role
+                    gm.role AS current_user_role,
+                    EXISTS(SELECT 1 FROM event_host eh WHERE eh.event_id = e.id AND eh.user_id = $2) AS is_host
                  FROM event_list e
                  LEFT JOIN group_member gm ON e.group_id = gm.group_id
                     AND gm.user_id = $2
@@ -112,15 +112,15 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
             const event = eventResult.rows[0];
 
             // ===================================================================
-            // Check permissions: must be organiser OR event creator
+            // Check permissions: must be organiser OR event host
             // ===================================================================
             const isOrganiser = event.current_user_role === 'organiser';
-            const isEventCreator = event.created_by === currentUserId;
+            const isEventHost = event.is_host;
 
-            if (!isOrganiser && !isEventCreator) {
+            if (!isOrganiser && !isEventHost) {
                 return {
                     return_code: 'FORBIDDEN',
-                    message: 'Only the organiser or event creator can manage attendees'
+                    message: 'Only hosts or group organisers can manage attendees'
                 };
             }
 

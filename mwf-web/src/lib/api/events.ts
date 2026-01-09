@@ -8,13 +8,14 @@ Following API-Rules: never throw on API errors, return structured objects.
 */
 
 import { apiGet, apiCall } from '../apiClient';
-import { ApiResult, Event } from '@/types';
+import { ApiResult, Event, EventHost } from '@/types';
 
 // Extended Event type with group_name and counts
 export interface EventWithDetails extends Event {
     group_name: string;
     creator_name: string;
     waitlist_count: number;
+    total_guest_count: number;
     rsvp_status?: 'attending' | 'waitlist' | null;
 }
 
@@ -22,13 +23,16 @@ export interface EventWithDetails extends Event {
 export interface RsvpStatus {
     status: 'attending' | 'waitlist';
     waitlist_position: number | null;
+    guest_count: number;
 }
 
 // Event with RSVP response
 export interface EventWithRsvp {
     event: EventWithDetails;
     rsvp: RsvpStatus | null;
+    hosts: EventHost[];
     is_group_member: boolean;
+    is_host: boolean;
     can_manage_attendees: boolean;
     can_edit: boolean;
 }
@@ -40,6 +44,10 @@ export interface UpdateEventPayload {
     location?: string;
     date_time?: string;
     capacity?: number | null;
+    image_url?: string | null;
+    image_position?: 'top' | 'center' | 'bottom';
+    allow_guests?: boolean;
+    max_guests_per_rsvp?: number;
 }
 
 // Attendee type
@@ -47,6 +55,7 @@ export interface Attendee {
     user_id: number;
     name: string;
     avatar_url: string | null;
+    guest_count: number;
     rsvp_at: string;
     waitlist_position?: number;
 }
@@ -59,6 +68,10 @@ export interface CreateEventPayload {
     location?: string;
     date_time: string;
     capacity?: number | null;
+    image_url?: string;
+    image_position?: 'top' | 'center' | 'bottom';
+    allow_guests?: boolean;
+    max_guests_per_rsvp?: number;
 }
 
 /*
@@ -103,7 +116,9 @@ export async function getEvent(id: number, token?: string): Promise<ApiResult<Ev
             data: {
                 event: response.event as unknown as EventWithDetails,
                 rsvp: response.rsvp as unknown as RsvpStatus | null,
+                hosts: (response.hosts || []) as unknown as EventHost[],
                 is_group_member: Boolean(response.is_group_member),
+                is_host: Boolean(response.is_host),
                 can_manage_attendees: Boolean(response.can_manage_attendees),
                 can_edit: Boolean(response.can_edit),
             },
@@ -149,14 +164,20 @@ export async function createEvent(
 rsvpEvent
 =======================================================================================================================================
 Join or leave an event. Returns new RSVP status.
+When joining, optionally specify guest_count (0-5) if the event allows guests.
 =======================================================================================================================================
 */
 export async function rsvpEvent(
     token: string,
     eventId: number,
-    action: 'join' | 'leave'
+    action: 'join' | 'leave',
+    guestCount?: number
 ): Promise<ApiResult<{ rsvp: RsvpStatus | null; message: string }>> {
-    const response = await apiCall(`/api/events/${eventId}/rsvp`, { action }, token);
+    const payload: { action: string; guest_count?: number } = { action };
+    if (action === 'join' && guestCount !== undefined) {
+        payload.guest_count = guestCount;
+    }
+    const response = await apiCall(`/api/events/${eventId}/rsvp`, payload, token);
 
     if (response.return_code === 'SUCCESS') {
         return {
@@ -180,6 +201,7 @@ export interface AttendeesResponse {
     attending: Attendee[];
     waitlist: Attendee[];
     attending_count: number;
+    total_guest_count: number;
     waitlist_count: number;
     is_member: boolean;
 }
@@ -206,6 +228,7 @@ export async function getAttendees(
                 attending: response.attending as unknown as Attendee[],
                 waitlist: response.waitlist as unknown as Attendee[],
                 attending_count: Number(response.attending_count) || 0,
+                total_guest_count: Number(response.total_guest_count) || 0,
                 waitlist_count: Number(response.waitlist_count) || 0,
                 is_member: Boolean(response.is_member),
             },
@@ -381,6 +404,123 @@ export async function getMyRsvps(token: string): Promise<ApiResult<EventWithDeta
     return {
         success: false,
         error: (response.message as string) || 'Failed to get your events',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+updateRsvp
+=======================================================================================================================================
+Updates guest count for an existing RSVP. Only the RSVP owner can update.
+=======================================================================================================================================
+*/
+export async function updateRsvp(
+    token: string,
+    eventId: number,
+    guestCount: number
+): Promise<ApiResult<{ rsvp: RsvpStatus; message: string }>> {
+    const response = await apiCall(`/api/events/${eventId}/rsvp/update`, { guest_count: guestCount }, token);
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: {
+                rsvp: response.rsvp as unknown as RsvpStatus,
+                message: response.message as string,
+            },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to update RSVP',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+getHosts
+=======================================================================================================================================
+Gets the list of hosts for an event.
+=======================================================================================================================================
+*/
+export async function getHosts(eventId: number): Promise<ApiResult<EventHost[]>> {
+    const response = await apiGet(`/api/events/${eventId}/hosts`);
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: (response.hosts || []) as unknown as EventHost[],
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to get hosts',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+addHost
+=======================================================================================================================================
+Adds a host to an event. Requires being a host or group organiser.
+=======================================================================================================================================
+*/
+export async function addHost(
+    token: string,
+    eventId: number,
+    userId: number
+): Promise<ApiResult<{ host: EventHost; message: string }>> {
+    const response = await apiCall(`/api/events/${eventId}/hosts/add`, { user_id: userId }, token);
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: {
+                host: response.host as unknown as EventHost,
+                message: response.message as string,
+            },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to add host',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+removeHost
+=======================================================================================================================================
+Removes a host from an event. Hosts can step down, organisers can remove any host.
+Cannot remove the last host.
+=======================================================================================================================================
+*/
+export async function removeHost(
+    token: string,
+    eventId: number,
+    userId: number
+): Promise<ApiResult<{ message: string }>> {
+    const response = await apiCall(`/api/events/${eventId}/hosts/remove`, { user_id: userId }, token);
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: {
+                message: response.message as string,
+            },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to remove host',
         return_code: response.return_code,
     };
 }

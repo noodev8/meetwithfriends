@@ -14,6 +14,8 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getEvent, updateEvent, EventWithDetails } from '@/lib/api/events';
 import Header from '@/components/layout/Header';
+import ImageUpload from '@/components/ui/ImageUpload';
+import RichTextEditor from '@/components/ui/RichTextEditor';
 
 export default function EditEventPage() {
     const { token } = useAuth();
@@ -33,6 +35,11 @@ export default function EditEventPage() {
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
     const [capacity, setCapacity] = useState('');
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [imagePosition, setImagePosition] = useState<'top' | 'center' | 'bottom'>('center');
+    const [imageSaving, setImageSaving] = useState(false);
+    const [allowGuests, setAllowGuests] = useState(false);
+    const [maxGuestsPerRsvp, setMaxGuestsPerRsvp] = useState(1);
 
     // =======================================================================
     // Fetch event details
@@ -62,6 +69,10 @@ export default function EditEventPage() {
                 setTime(eventDate.toTimeString().slice(0, 5));
 
                 setCapacity(evt.capacity?.toString() || '');
+                setImageUrl(evt.image_url || null);
+                setImagePosition(evt.image_position || 'center');
+                setAllowGuests(evt.allow_guests || false);
+                setMaxGuestsPerRsvp(evt.max_guests_per_rsvp || 1);
             } else {
                 setError(result.error || 'Event not found');
             }
@@ -69,6 +80,32 @@ export default function EditEventPage() {
         }
         fetchEvent();
     }, [params.id, token]);
+
+    // =======================================================================
+    // Handle image change - auto-save to database
+    // =======================================================================
+    const handleImageChange = async (url: string | null) => {
+        setImageUrl(url);
+
+        if (!token || !event) return;
+
+        setImageSaving(true);
+        await updateEvent(token, event.id, { image_url: url });
+        setImageSaving(false);
+    };
+
+    // =======================================================================
+    // Handle image position change - auto-save to database
+    // =======================================================================
+    const handlePositionChange = async (position: 'top' | 'center' | 'bottom') => {
+        setImagePosition(position);
+
+        if (!token || !event) return;
+
+        setImageSaving(true);
+        await updateEvent(token, event.id, { image_position: position });
+        setImageSaving(false);
+    };
 
     // =======================================================================
     // Handle form submission
@@ -110,6 +147,10 @@ export default function EditEventPage() {
             location: location.trim() || undefined,
             date_time: dateTime.toISOString(),
             capacity: capacity ? parseInt(capacity, 10) : null,
+            image_url: imageUrl,
+            image_position: imagePosition,
+            allow_guests: allowGuests,
+            max_guests_per_rsvp: allowGuests ? maxGuestsPerRsvp : undefined,
         });
 
         setSubmitting(false);
@@ -256,17 +297,30 @@ export default function EditEventPage() {
                         />
                     </div>
 
+                    {/* Featured Image */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Featured Image
+                            {imageSaving && (
+                                <span className="ml-2 text-xs text-blue-600">Saving...</span>
+                            )}
+                        </label>
+                        <ImageUpload
+                            value={imageUrl}
+                            onChange={handleImageChange}
+                            imagePosition={imagePosition}
+                            onPositionChange={handlePositionChange}
+                        />
+                    </div>
+
                     {/* Description */}
                     <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                             Description
                         </label>
-                        <textarea
-                            id="description"
+                        <RichTextEditor
                             value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            rows={4}
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                            onChange={setDescription}
                             placeholder="Tell people what to expect..."
                         />
                     </div>
@@ -288,6 +342,45 @@ export default function EditEventPage() {
                         <p className="mt-1 text-sm text-gray-500">
                             Leave empty for unlimited capacity. If set, a waitlist will be used when full.
                         </p>
+                    </div>
+
+                    {/* Guest Options */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="allowGuests"
+                                checked={allowGuests}
+                                onChange={(e) => setAllowGuests(e.target.checked)}
+                                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <label htmlFor="allowGuests" className="text-sm font-medium text-gray-700">
+                                Allow members to bring guests
+                            </label>
+                        </div>
+
+                        {allowGuests && (
+                            <div className="ml-8">
+                                <label htmlFor="maxGuests" className="block text-sm font-medium text-gray-700 mb-2">
+                                    Maximum guests per RSVP
+                                </label>
+                                <select
+                                    id="maxGuests"
+                                    value={maxGuestsPerRsvp}
+                                    onChange={(e) => setMaxGuestsPerRsvp(parseInt(e.target.value, 10))}
+                                    className="w-32 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value={1}>1</option>
+                                    <option value={2}>2</option>
+                                    <option value={3}>3</option>
+                                    <option value={4}>4</option>
+                                    <option value={5}>5</option>
+                                </select>
+                                <p className="mt-1 text-sm text-gray-500">
+                                    Guests count towards event capacity.
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Submit */}

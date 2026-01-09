@@ -15,6 +15,8 @@ import { useAuth } from '@/context/AuthContext';
 import { getGroup, GroupWithCount, GroupMembership } from '@/lib/api/groups';
 import { createEvent } from '@/lib/api/events';
 import Header from '@/components/layout/Header';
+import ImageUpload from '@/components/ui/ImageUpload';
+import RichTextEditor from '@/components/ui/RichTextEditor';
 
 export default function CreateEventPage() {
     const { token } = useAuth();
@@ -34,6 +36,9 @@ export default function CreateEventPage() {
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
     const [capacity, setCapacity] = useState('');
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [allowGuests, setAllowGuests] = useState(false);
+    const [maxGuestsPerRsvp, setMaxGuestsPerRsvp] = useState(1);
 
     // Check if user can create events
     const canCreateEvents = membership?.status === 'active' &&
@@ -98,6 +103,9 @@ export default function CreateEventPage() {
             location: location.trim() || undefined,
             date_time: dateTime.toISOString(),
             capacity: capacity ? parseInt(capacity, 10) : undefined,
+            image_url: imageUrl || undefined,
+            allow_guests: allowGuests,
+            max_guests_per_rsvp: allowGuests ? maxGuestsPerRsvp : undefined,
         });
 
         setSubmitting(false);
@@ -246,17 +254,25 @@ export default function CreateEventPage() {
                         />
                     </div>
 
+                    {/* Featured Image */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Featured Image
+                        </label>
+                        <ImageUpload
+                            value={imageUrl}
+                            onChange={setImageUrl}
+                        />
+                    </div>
+
                     {/* Description */}
                     <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                             Description
                         </label>
-                        <textarea
-                            id="description"
+                        <RichTextEditor
                             value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            rows={4}
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                            onChange={setDescription}
                             placeholder="Tell people what to expect..."
                         />
                     </div>
@@ -278,6 +294,45 @@ export default function CreateEventPage() {
                         <p className="mt-1 text-sm text-gray-500">
                             Leave empty for unlimited capacity. If set, a waitlist will be used when full.
                         </p>
+                    </div>
+
+                    {/* Guest Options */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="allowGuests"
+                                checked={allowGuests}
+                                onChange={(e) => setAllowGuests(e.target.checked)}
+                                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <label htmlFor="allowGuests" className="text-sm font-medium text-gray-700">
+                                Allow members to bring guests
+                            </label>
+                        </div>
+
+                        {allowGuests && (
+                            <div className="ml-8">
+                                <label htmlFor="maxGuests" className="block text-sm font-medium text-gray-700 mb-2">
+                                    Maximum guests per RSVP
+                                </label>
+                                <select
+                                    id="maxGuests"
+                                    value={maxGuestsPerRsvp}
+                                    onChange={(e) => setMaxGuestsPerRsvp(parseInt(e.target.value, 10))}
+                                    className="w-32 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value={1}>1</option>
+                                    <option value={2}>2</option>
+                                    <option value={3}>3</option>
+                                    <option value={4}>4</option>
+                                    <option value={5}>5</option>
+                                </select>
+                                <p className="mt-1 text-sm text-gray-500">
+                                    Guests count towards event capacity.
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Submit */}

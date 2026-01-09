@@ -14,12 +14,16 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { createGroup } from '@/lib/api/groups';
 import Header from '@/components/layout/Header';
+import ImageUpload from '@/components/ui/ImageUpload';
+import RichTextEditor from '@/components/ui/RichTextEditor';
 
 export default function CreateGroupPage() {
     const { user, token, isLoading } = useAuth();
     const router = useRouter();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [imagePosition, setImagePosition] = useState<'top' | 'center' | 'bottom'>('center');
     const [joinPolicy, setJoinPolicy] = useState<'auto' | 'approval'>('approval');
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -55,6 +59,8 @@ export default function CreateGroupPage() {
         const result = await createGroup(token, {
             name: name.trim(),
             description: description.trim() || undefined,
+            image_url: imageUrl || undefined,
+            image_position: imageUrl ? imagePosition : undefined,
             join_policy: joinPolicy,
         });
 
@@ -111,16 +117,25 @@ export default function CreateGroupPage() {
                     </div>
 
                     <div className="mb-6">
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                             Description
                         </label>
-                        <textarea
-                            id="description"
+                        <RichTextEditor
                             value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            onChange={setDescription}
                             placeholder="Tell people what your group is about..."
-                            rows={4}
+                        />
+                    </div>
+
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Group Image
+                        </label>
+                        <ImageUpload
+                            value={imageUrl}
+                            onChange={setImageUrl}
+                            imagePosition={imagePosition}
+                            onPositionChange={setImagePosition}
                         />
                     </div>
 

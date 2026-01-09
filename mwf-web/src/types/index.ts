@@ -21,6 +21,7 @@ export interface Group {
     name: string;
     description?: string;
     image_url?: string;
+    image_position?: 'top' | 'center' | 'bottom';
     join_policy: 'auto' | 'approval';
     created_at: string;
 }
@@ -46,9 +47,14 @@ export interface Event {
     location?: string;
     date_time: string;
     capacity?: number;
+    image_url?: string;
+    image_position?: 'top' | 'center' | 'bottom';
+    allow_guests?: boolean;
+    max_guests_per_rsvp?: number;
     status: 'published' | 'cancelled';
     created_at: string;
     attendee_count?: number;
+    total_guest_count?: number;
     waitlist_count?: number;
 }
 
@@ -59,8 +65,17 @@ export interface EventRsvp {
     user_id: number;
     status: 'attending' | 'waitlist';
     waitlist_position?: number;
+    guest_count?: number;
     created_at: string;
     user?: User;
+}
+
+// Event Host
+export interface EventHost {
+    user_id: number;
+    name: string;
+    avatar_url?: string;
+    added_at?: string;
 }
 
 // Comment

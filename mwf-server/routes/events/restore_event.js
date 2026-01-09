@@ -3,7 +3,7 @@
 API Route: restore_event
 =======================================================================================================================================
 Method: POST
-Purpose: Restores a cancelled event. Only the event creator or group organiser can restore.
+Purpose: Restores a cancelled event. Only event hosts or group organisers can restore.
          Restored events return to 'published' status and can accept RSVPs again.
 =======================================================================================================================================
 Request Payload:
@@ -45,15 +45,15 @@ router.post('/:id/restore', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
-        // Fetch event with group info to check permissions
+        // Fetch event with group info and host status to check permissions
         // =======================================================================
         const eventResult = await query(
             `SELECT
                 e.id,
                 e.group_id,
-                e.created_by,
                 e.status,
-                gm.role AS current_user_role
+                gm.role AS current_user_role,
+                EXISTS(SELECT 1 FROM event_host eh WHERE eh.event_id = e.id AND eh.user_id = $2) AS is_host
              FROM event_list e
              LEFT JOIN group_member gm ON e.group_id = gm.group_id
                 AND gm.user_id = $2
@@ -72,15 +72,15 @@ router.post('/:id/restore', verifyToken, async (req, res) => {
         const event = eventResult.rows[0];
 
         // =======================================================================
-        // Check permissions: must be organiser OR event creator
+        // Check permissions: must be organiser OR event host
         // =======================================================================
         const isOrganiser = event.current_user_role === 'organiser';
-        const isEventCreator = event.created_by === userId;
+        const isEventHost = event.is_host;
 
-        if (!isOrganiser && !isEventCreator) {
+        if (!isOrganiser && !isEventHost) {
             return res.json({
                 return_code: 'FORBIDDEN',
-                message: 'Only the organiser or event creator can restore this event'
+                message: 'Only hosts or group organisers can restore this event'
             });
         }
 
