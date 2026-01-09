@@ -666,141 +666,112 @@ export default function EventDetailPage() {
                                 }
                             </p>
 
-                            {/* RSVP Section */}
-                            <div className="flex flex-wrap items-center gap-3">
-                                {/* Attendance info */}
-                                <div className="flex items-center gap-2 px-3 py-1.5 bg-stone-100 rounded-full text-sm">
-                                    <span className="font-semibold text-stone-900">{event.attendee_count}</span>
-                                    <span className="text-stone-600">going</span>
-                                    {event.capacity && (
-                                        <>
-                                            <span className="text-stone-300">•</span>
-                                            <span className="text-stone-600">{spotsRemaining} left</span>
-                                        </>
-                                    )}
-                                </div>
-
-                                {/* RSVP Status Badge */}
-                                {rsvp && (
-                                    <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${
-                                        rsvp.status === 'attending'
-                                            ? 'bg-green-100 text-green-700'
-                                            : 'bg-yellow-100 text-yellow-700'
-                                    }`}>
-                                        {rsvp.status === 'attending'
-                                            ? (rsvp.guest_count > 0 ? `You + ${rsvp.guest_count} guest${rsvp.guest_count > 1 ? 's' : ''}` : "You're going!")
-                                            : `Waitlist #${rsvp.waitlist_position}`
-                                        }
-                                    </span>
+                            {/* Attendance Info */}
+                            <p className="text-stone-600">
+                                <span className="font-semibold text-stone-900">{event.attendee_count}</span> going
+                                {event.capacity && (
+                                    <span className="text-stone-400"> · {spotsRemaining} spots left</span>
                                 )}
+                            </p>
 
-                                {/* Guest selector for attending members */}
-                                {event.status !== 'cancelled' && !isPastEvent && rsvp?.status === 'attending' && event.allow_guests && (
-                                    <div className="flex items-center gap-2">
-                                        <label htmlFor="guestCount" className="text-sm text-stone-600">Guests:</label>
-                                        <select
-                                            id="guestCount"
-                                            value={selectedGuestCount}
-                                            onChange={(e) => handleUpdateGuests(parseInt(e.target.value, 10))}
-                                            disabled={rsvpLoading}
-                                            className="px-3 py-1.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:opacity-50 bg-white"
-                                        >
-                                            {Array.from({ length: (event.max_guests_per_rsvp || 1) + 1 }, (_, i) => (
-                                                <option key={i} value={i}>{i}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                )}
-
-                                {/* RSVP Button */}
-                                {event.status !== 'cancelled' && !isPastEvent && (
-                                    <>
-                                        {!user ? (
-                                            <Link
-                                                href="/login"
-                                                className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
-                                            >
-                                                Log in to RSVP
-                                            </Link>
-                                        ) : !isGroupMember ? (
-                                            <Link
-                                                href={`/groups/${event.group_id}`}
-                                                className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
-                                                title="Join this group to RSVP"
-                                            >
-                                                Join Group
-                                            </Link>
-                                        ) : rsvp ? (
-                                            <button
-                                                onClick={() => handleRsvp('leave')}
+                            {/* RSVP Status & Actions */}
+                            <div className="flex flex-wrap items-center gap-3 mt-4">
+                                {event.status === 'cancelled' ? (
+                                    <span className="px-4 py-2 bg-red-50 text-red-700 rounded-lg font-medium">Event cancelled</span>
+                                ) : isPastEvent ? (
+                                    <span className="px-4 py-2 bg-stone-100 text-stone-500 rounded-lg">Event ended</span>
+                                ) : !user ? (
+                                    <Link
+                                        href="/login"
+                                        className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
+                                    >
+                                        Log in to RSVP
+                                    </Link>
+                                ) : !isGroupMember ? (
+                                    <Link
+                                        href={`/groups/${event.group_id}`}
+                                        className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
+                                    >
+                                        Join Group to RSVP
+                                    </Link>
+                                ) : rsvp ? (
+                                    /* Already RSVP'd - show status and cancel option */
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        <span className={`px-4 py-2 rounded-lg font-medium ${
+                                            rsvp.status === 'attending'
+                                                ? 'bg-green-50 text-green-700'
+                                                : 'bg-yellow-50 text-yellow-700'
+                                        }`}>
+                                            {rsvp.status === 'attending'
+                                                ? (rsvp.guest_count > 0 ? `Going + ${rsvp.guest_count} guest${rsvp.guest_count > 1 ? 's' : ''}` : 'Going')
+                                                : `Waitlist #${rsvp.waitlist_position}`
+                                            }
+                                        </span>
+                                        {rsvp.status === 'attending' && event.allow_guests && (
+                                            <select
+                                                value={selectedGuestCount}
+                                                onChange={(e) => handleUpdateGuests(parseInt(e.target.value, 10))}
                                                 disabled={rsvpLoading}
-                                                className="px-6 py-2.5 bg-stone-100 text-stone-700 font-medium rounded-xl hover:bg-stone-200 transition disabled:opacity-50"
+                                                className="px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 bg-white"
                                             >
-                                                {rsvpLoading ? 'Updating...' : 'Cancel RSVP'}
-                                            </button>
-                                        ) : (
-                                            <div className="flex items-center gap-2">
-                                                {event.allow_guests && (
-                                                    <div className="flex items-center gap-2">
-                                                        <label htmlFor="joinGuestCount" className="text-sm text-stone-600">Guests:</label>
-                                                        <select
-                                                            id="joinGuestCount"
-                                                            value={selectedGuestCount}
-                                                            onChange={(e) => setSelectedGuestCount(parseInt(e.target.value, 10))}
-                                                            disabled={rsvpLoading}
-                                                            className="px-3 py-1.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:opacity-50 bg-white"
-                                                        >
-                                                            {Array.from({ length: (event.max_guests_per_rsvp || 1) + 1 }, (_, i) => (
-                                                                <option key={i} value={i}>{i}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                )}
-                                                <button
-                                                    onClick={() => handleRsvp('join', selectedGuestCount)}
-                                                    disabled={rsvpLoading}
-                                                    className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md disabled:opacity-50"
-                                                >
-                                                    {rsvpLoading
-                                                        ? 'Updating...'
-                                                        : spotsRemaining === 0
-                                                            ? 'Join Waitlist'
-                                                            : 'Attend'
-                                                    }
-                                                </button>
-                                            </div>
+                                                {Array.from({ length: (event.max_guests_per_rsvp || 1) + 1 }, (_, i) => (
+                                                    <option key={i} value={i}>{i === 0 ? 'No guests' : `${i} guest${i > 1 ? 's' : ''}`}</option>
+                                                ))}
+                                            </select>
                                         )}
-                                    </>
-                                )}
-
-                                {event.status === 'cancelled' && (
-                                    <span className="text-red-600 font-medium">Event cancelled</span>
-                                )}
-
-                                {isPastEvent && event.status !== 'cancelled' && (
-                                    <span className="text-stone-500">Event ended</span>
+                                        <button
+                                            onClick={() => handleRsvp('leave')}
+                                            disabled={rsvpLoading}
+                                            className="px-4 py-2 text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition text-sm"
+                                        >
+                                            {rsvpLoading ? 'Updating...' : 'Cancel'}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    /* Not RSVP'd - show join options */
+                                    <div className="flex items-center gap-3">
+                                        {event.allow_guests && (
+                                            <select
+                                                value={selectedGuestCount}
+                                                onChange={(e) => setSelectedGuestCount(parseInt(e.target.value, 10))}
+                                                disabled={rsvpLoading}
+                                                className="px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 bg-white"
+                                            >
+                                                {Array.from({ length: (event.max_guests_per_rsvp || 1) + 1 }, (_, i) => (
+                                                    <option key={i} value={i}>{i === 0 ? 'No guests' : `+ ${i} guest${i > 1 ? 's' : ''}`}</option>
+                                                ))}
+                                            </select>
+                                        )}
+                                        <button
+                                            onClick={() => handleRsvp('join', selectedGuestCount)}
+                                            disabled={rsvpLoading}
+                                            className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md disabled:opacity-50"
+                                        >
+                                            {rsvpLoading ? 'Updating...' : spotsRemaining === 0 ? 'Join Waitlist' : 'Attend'}
+                                        </button>
+                                    </div>
                                 )}
                             </div>
 
-                            {/* Edit/Cancel/Step down buttons */}
+                            {/* Host Actions - subtle, separated */}
                             {(canEdit || (event.status === 'cancelled' && canManageAttendees) || (isHost && hosts.length > 1)) && (
-                                <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-stone-200">
+                                <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-stone-100">
                                     {canEdit && (
-                                        <>
-                                            <Link
-                                                href={`/events/${event.id}/edit`}
-                                                className="px-4 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition text-sm font-medium"
-                                            >
-                                                Edit Event
-                                            </Link>
-                                            <button
-                                                onClick={handleCancelEvent}
-                                                disabled={cancelLoading}
-                                                className="text-sm text-stone-400 hover:text-red-600 transition disabled:opacity-50"
-                                            >
-                                                {cancelLoading ? 'Cancelling...' : 'Cancel event'}
-                                            </button>
-                                        </>
+                                        <Link
+                                            href={`/events/${event.id}/edit`}
+                                            className="text-sm text-stone-500 hover:text-amber-600 transition"
+                                        >
+                                            Edit event
+                                        </Link>
+                                    )}
+                                    {canEdit && (
+                                        <button
+                                            onClick={handleCancelEvent}
+                                            disabled={cancelLoading}
+                                            className="text-sm text-stone-400 hover:text-red-600 transition disabled:opacity-50"
+                                        >
+                                            {cancelLoading ? 'Cancelling...' : 'Cancel event'}
+                                        </button>
                                     )}
                                     {event.status === 'cancelled' && canManageAttendees && (
                                         <button
