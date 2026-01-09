@@ -17,6 +17,7 @@ import { useAuth } from '@/context/AuthContext';
 import {
     getGroup,
     joinGroup,
+    leaveGroup,
     getGroupMembers,
     approveMember,
     rejectMember,
@@ -41,6 +42,7 @@ export default function GroupDetailPage() {
     const [allMembers, setAllMembers] = useState<GroupMember[]>([]);
     const [loading, setLoading] = useState(true);
     const [joining, setJoining] = useState(false);
+    const [leaving, setLeaving] = useState(false);
     const [processingMember, setProcessingMember] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [events, setEvents] = useState<EventWithDetails[]>([]);
@@ -153,9 +155,32 @@ export default function GroupDetailPage() {
             });
             if (result.data.status === 'active') {
                 setGroup(prev => prev ? { ...prev, member_count: prev.member_count + 1 } : null);
+                // Refresh members list to update the avatar grid
+                fetchAllMembers();
             }
         } else {
             alert(result.error || 'Failed to join group');
+        }
+    };
+
+    // =======================================================================
+    // Handle leave group
+    // =======================================================================
+    const handleLeaveGroup = async () => {
+        if (!token || !group) return;
+
+        if (!confirm('Are you sure you want to leave this group?')) {
+            return;
+        }
+
+        setLeaving(true);
+        const result = await leaveGroup(token, group.id);
+        setLeaving(false);
+
+        if (result.success) {
+            router.push('/dashboard');
+        } else {
+            alert(result.error || 'Failed to leave group');
         }
     };
 
@@ -538,6 +563,15 @@ export default function GroupDetailPage() {
                                             {membership.role === 'organiser' ? 'Organiser' : membership.role === 'host' ? 'Host' : 'Member'}
                                         </p>
                                         <p className="text-sm text-stone-500 mt-1">You're part of this group</p>
+                                        {membership.role !== 'organiser' && (
+                                            <button
+                                                onClick={handleLeaveGroup}
+                                                disabled={leaving}
+                                                className="mt-4 text-sm text-stone-500 hover:text-red-600 transition"
+                                            >
+                                                {leaving ? 'Leaving...' : 'Leave group'}
+                                            </button>
+                                        )}
                                     </div>
                                 )
                             ) : (

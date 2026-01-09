@@ -21,6 +21,7 @@ const approveMember = require('./approve_member');
 const rejectMember = require('./reject_member');
 const removeMember = require('./remove_member');
 const assignRole = require('./assign_role');
+const leaveGroup = require('./leave_group');
 
 // =======================================================================
 // Route definitions
@@ -35,6 +36,7 @@ router.use('/', approveMember);        // POST /api/groups/:id/members/approve -
 router.use('/', rejectMember);         // POST /api/groups/:id/members/reject - reject pending member
 router.use('/', removeMember);         // POST /api/groups/:id/members/remove - remove member (organiser only)
 router.use('/', assignRole);           // POST /api/groups/:id/members/role - assign role (organiser only)
+router.use('/', leaveGroup);           // POST /api/groups/:id/leave - leave a group (members only)
 router.use('/', getGroup);             // GET /api/groups/:id - get single group (must be last)
 
 module.exports = router;

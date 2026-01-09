@@ -460,3 +460,30 @@ export async function discoverGroups(token: string): Promise<ApiResult<GroupWith
         return_code: response.return_code,
     };
 }
+
+/*
+=======================================================================================================================================
+leaveGroup
+=======================================================================================================================================
+Allows a member to voluntarily leave a group. Organisers cannot leave (must transfer ownership or delete group).
+=======================================================================================================================================
+*/
+export async function leaveGroup(
+    token: string,
+    groupId: number
+): Promise<ApiResult<{ message: string }>> {
+    const response = await apiCall(`/api/groups/${groupId}/leave`, {}, token);
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: { message: response.message as string },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to leave group',
+        return_code: response.return_code,
+    };
+}
