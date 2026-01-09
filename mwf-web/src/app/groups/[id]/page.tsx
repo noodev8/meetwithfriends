@@ -47,6 +47,7 @@ export default function GroupDetailPage() {
     const [error, setError] = useState<string | null>(null);
     const [events, setEvents] = useState<EventWithDetails[]>([]);
     const [copied, setCopied] = useState(false);
+    const [showLeaveModal, setShowLeaveModal] = useState(false);
 
     // =======================================================================
     // Check if user can manage members (organiser or host)
@@ -164,18 +165,15 @@ export default function GroupDetailPage() {
     };
 
     // =======================================================================
-    // Handle leave group
+    // Handle leave group (called after modal confirmation)
     // =======================================================================
     const handleLeaveGroup = async () => {
         if (!token || !group) return;
 
-        if (!confirm('Are you sure you want to leave this group?')) {
-            return;
-        }
-
         setLeaving(true);
         const result = await leaveGroup(token, group.id);
         setLeaving(false);
+        setShowLeaveModal(false);
 
         if (result.success) {
             router.push('/dashboard');
@@ -563,15 +561,6 @@ export default function GroupDetailPage() {
                                             {membership.role === 'organiser' ? 'Organiser' : membership.role === 'host' ? 'Host' : 'Member'}
                                         </p>
                                         <p className="text-sm text-stone-500 mt-1">You're part of this group</p>
-                                        {membership.role !== 'organiser' && (
-                                            <button
-                                                onClick={handleLeaveGroup}
-                                                disabled={leaving}
-                                                className="mt-4 text-sm text-stone-500 hover:text-red-600 transition"
-                                            >
-                                                {leaving ? 'Leaving...' : 'Leave group'}
-                                            </button>
-                                        )}
                                     </div>
                                 )
                             ) : (
@@ -685,9 +674,56 @@ export default function GroupDetailPage() {
                                 )}
                             </button>
                         </div>
+
+                        {/* Leave group - tucked away at bottom */}
+                        {membership?.status === 'active' && membership?.role !== 'organiser' && (
+                            <div className="text-center pt-4">
+                                <button
+                                    onClick={() => setShowLeaveModal(true)}
+                                    className="text-xs text-stone-400 hover:text-stone-600 transition"
+                                >
+                                    Leave group
+                                </button>
+                            </div>
+                        )}
                     </aside>
                 </div>
             </div>
+
+            {/* Leave Group Confirmation Modal */}
+            {showLeaveModal && (
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                    onClick={() => setShowLeaveModal(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className="text-lg font-bold text-stone-900 font-display mb-2">
+                            Leave {group?.name}?
+                        </h3>
+                        <p className="text-sm text-stone-600 mb-6">
+                            You'll lose access to events and discussions. You can rejoin later if the group allows it.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowLeaveModal(false)}
+                                className="flex-1 px-4 py-2.5 border border-stone-300 text-stone-700 rounded-xl hover:bg-stone-50 transition font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleLeaveGroup}
+                                disabled={leaving}
+                                className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition font-medium disabled:opacity-50"
+                            >
+                                {leaving ? 'Leaving...' : 'Leave'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }
