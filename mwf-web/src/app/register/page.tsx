@@ -77,98 +77,112 @@ export default function RegisterPage() {
     // =======================================================================
     if (isRedirecting) {
         return (
-            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50">
+            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-stone-50">
                 <div className="text-center">
-                    <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-600">Setting up your account...</p>
+                    <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-stone-600">Setting up your account...</p>
                 </div>
             </main>
         );
     }
 
     return (
-        <main className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 bg-gray-50">
-            <div className="w-full max-w-md bg-white rounded-lg shadow-md p-6 sm:p-8">
-                <h1 className="text-2xl font-bold text-center mb-6">Create Account</h1>
-
-                {error && (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
-                        {error}
+        <main className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 bg-stone-50">
+            <div className="w-full max-w-md">
+                {/* Logo */}
+                <Link href="/" className="flex items-center justify-center gap-2 mb-8">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
                     </div>
-                )}
+                    <span className="font-display text-xl font-bold text-stone-800">
+                        Meet With Friends
+                    </span>
+                </Link>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                            Name
-                        </label>
-                        <input
-                            type="text"
-                            id="name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                            placeholder="Your name"
-                        />
-                    </div>
+                <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 sm:p-8">
+                    <h1 className="text-2xl font-bold text-center mb-6 text-stone-800">Create Account</h1>
 
-                    <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                            Email
-                        </label>
-                        <input
-                            type="email"
-                            id="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                            placeholder="you@example.com"
-                        />
-                    </div>
+                    {error && (
+                        <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
+                            {error}
+                        </div>
+                    )}
 
-                    <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                            Password
-                        </label>
-                        <input
-                            type="password"
-                            id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                            placeholder="At least 8 characters"
-                        />
-                    </div>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <label htmlFor="name" className="block text-sm font-medium text-stone-700 mb-1">
+                                Name
+                            </label>
+                            <input
+                                type="text"
+                                id="name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                placeholder="Your name"
+                            />
+                        </div>
 
-                    <div>
-                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                            Confirm Password
-                        </label>
-                        <input
-                            type="password"
-                            id="confirmPassword"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                            placeholder="Confirm your password"
-                        />
-                    </div>
+                        <div>
+                            <label htmlFor="email" className="block text-sm font-medium text-stone-700 mb-1">
+                                Email
+                            </label>
+                            <input
+                                type="email"
+                                id="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                placeholder="you@example.com"
+                            />
+                        </div>
 
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isLoading ? 'Creating Account...' : 'Create Account'}
-                    </button>
-                </form>
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-stone-700 mb-1">
+                                Password
+                            </label>
+                            <input
+                                type="password"
+                                id="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                placeholder="At least 8 characters"
+                            />
+                        </div>
 
-                <p className="text-center text-gray-600 mt-6">
-                    Already have an account?{' '}
-                    <Link href="/login" className="text-blue-600 hover:underline">
-                        Log in
-                    </Link>
-                </p>
+                        <div>
+                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-stone-700 mb-1">
+                                Confirm Password
+                            </label>
+                            <input
+                                type="password"
+                                id="confirmPassword"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                placeholder="Confirm your password"
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? 'Creating Account...' : 'Create Account'}
+                        </button>
+                    </form>
+
+                    <p className="text-center text-stone-600 mt-6">
+                        Already have an account?{' '}
+                        <Link href="/login" className="text-amber-600 hover:text-amber-700 font-medium">
+                            Log in
+                        </Link>
+                    </p>
+                </div>
             </div>
         </main>
     );

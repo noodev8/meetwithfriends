@@ -14,12 +14,30 @@ import Link from 'next/link';
 import { resetPassword } from '@/lib/api/auth';
 
 // =======================================================================
+// Logo component (reused across states)
+// =======================================================================
+function Logo() {
+    return (
+        <Link href="/" className="flex items-center justify-center gap-2 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+            </div>
+            <span className="font-display text-xl font-bold text-stone-800">
+                Meet With Friends
+            </span>
+        </Link>
+    );
+}
+
+// =======================================================================
 // Loading component for Suspense fallback
 // =======================================================================
 function LoadingState() {
     return (
-        <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50">
-            <p className="text-gray-600">Loading...</p>
+        <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-stone-50">
+            <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
         </main>
     );
 }
@@ -99,23 +117,26 @@ function ResetPasswordForm() {
     // =======================================================================
     if (isSuccess) {
         return (
-            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50">
-                <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8 text-center">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
+            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-stone-50">
+                <div className="w-full max-w-md">
+                    <Logo />
+                    <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-8 text-center">
+                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h1 className="text-2xl font-bold mb-4 text-stone-800">Password Reset!</h1>
+                        <p className="text-stone-600 mb-6">
+                            Your password has been successfully reset. You can now log in with your new password.
+                        </p>
+                        <Link
+                            href="/login"
+                            className="inline-block px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-600 transition"
+                        >
+                            Go to Login
+                        </Link>
                     </div>
-                    <h1 className="text-2xl font-bold mb-4">Password Reset!</h1>
-                    <p className="text-gray-600 mb-6">
-                        Your password has been successfully reset. You can now log in with your new password.
-                    </p>
-                    <Link
-                        href="/login"
-                        className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
-                    >
-                        Go to Login
-                    </Link>
                 </div>
             </main>
         );
@@ -126,23 +147,26 @@ function ResetPasswordForm() {
     // =======================================================================
     if (!token) {
         return (
-            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50">
-                <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8 text-center">
-                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
+            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-stone-50">
+                <div className="w-full max-w-md">
+                    <Logo />
+                    <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-8 text-center">
+                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <h1 className="text-2xl font-bold mb-4 text-stone-800">Invalid Link</h1>
+                        <p className="text-stone-600 mb-6">
+                            This password reset link is invalid or has expired.
+                        </p>
+                        <Link
+                            href="/forgot-password"
+                            className="inline-block px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-600 transition"
+                        >
+                            Request New Link
+                        </Link>
                     </div>
-                    <h1 className="text-2xl font-bold mb-4">Invalid Link</h1>
-                    <p className="text-gray-600 mb-6">
-                        This password reset link is invalid or has expired.
-                    </p>
-                    <Link
-                        href="/forgot-password"
-                        className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
-                    >
-                        Request New Link
-                    </Link>
                 </div>
             </main>
         );
@@ -152,62 +176,65 @@ function ResetPasswordForm() {
     // Reset form
     // =======================================================================
     return (
-        <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50">
-            <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
-                <h1 className="text-2xl font-bold text-center mb-2">Set New Password</h1>
-                <p className="text-gray-600 text-center mb-6">
-                    Enter your new password below.
-                </p>
+        <main className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 bg-stone-50">
+            <div className="w-full max-w-md">
+                <Logo />
+                <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 sm:p-8">
+                    <h1 className="text-2xl font-bold text-center mb-2 text-stone-800">Set New Password</h1>
+                    <p className="text-stone-600 text-center mb-6">
+                        Enter your new password below.
+                    </p>
 
-                {error && (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
-                        {error}
-                    </div>
-                )}
+                    {error && (
+                        <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
+                            {error}
+                        </div>
+                    )}
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                            New Password
-                        </label>
-                        <input
-                            type="password"
-                            id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                            placeholder="At least 8 characters"
-                        />
-                    </div>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-stone-700 mb-1">
+                                New Password
+                            </label>
+                            <input
+                                type="password"
+                                id="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                placeholder="At least 8 characters"
+                            />
+                        </div>
 
-                    <div>
-                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                            Confirm New Password
-                        </label>
-                        <input
-                            type="password"
-                            id="confirmPassword"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                            placeholder="Confirm your password"
-                        />
-                    </div>
+                        <div>
+                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-stone-700 mb-1">
+                                Confirm New Password
+                            </label>
+                            <input
+                                type="password"
+                                id="confirmPassword"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                placeholder="Confirm your password"
+                            />
+                        </div>
 
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isLoading ? 'Resetting...' : 'Reset Password'}
-                    </button>
-                </form>
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? 'Resetting...' : 'Reset Password'}
+                        </button>
+                    </form>
 
-                <p className="text-center text-gray-600 mt-6">
-                    <Link href="/login" className="text-blue-600 hover:underline">
-                        Back to Login
-                    </Link>
-                </p>
+                    <p className="text-center text-stone-600 mt-6">
+                        <Link href="/login" className="text-amber-600 hover:text-amber-700 font-medium">
+                            Back to Login
+                        </Link>
+                    </p>
+                </div>
             </div>
         </main>
     );
