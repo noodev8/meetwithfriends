@@ -1421,24 +1421,24 @@ export default function EventDetailPage() {
                         </button>
 
                         {/* Content */}
-                        <div className="p-6 pt-8 text-center">
-                            {/* Avatar */}
+                        <div className="p-6 text-center">
+                            {/* Large Avatar - main focus */}
                             <div className="flex justify-center mb-4">
                                 {selectedAttendee.avatar_url ? (
                                     <img
                                         src={selectedAttendee.avatar_url}
                                         alt={selectedAttendee.name}
-                                        className="w-24 h-24 rounded-full object-cover border-4 border-amber-100 shadow-lg"
+                                        className="w-44 h-44 rounded-full object-cover border-4 border-amber-100 shadow-lg"
                                     />
                                 ) : (
-                                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center border-4 border-amber-100 shadow-lg">
-                                        <span className="text-3xl font-bold text-white">
+                                    <div className="w-44 h-44 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center border-4 border-amber-100 shadow-lg">
+                                        <span className="text-6xl font-bold text-white">
                                             {selectedAttendee.name.charAt(0).toUpperCase()}
                                         </span>
                                     </div>
                                 )}
                             </div>
-                            <h3 className="text-xl font-bold text-stone-900 font-display">
+                            <h3 className="text-lg font-bold text-stone-900 font-display">
                                 {selectedAttendee.name}
                             </h3>
 
