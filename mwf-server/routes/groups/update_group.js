@@ -36,6 +36,7 @@ Return Codes:
 "NOT_FOUND"
 "FORBIDDEN"
 "INVALID_NAME"
+"DUPLICATE_NAME"
 "INVALID_JOIN_POLICY"
 "INVALID_VISIBILITY"
 "SERVER_ERROR"
@@ -113,6 +114,23 @@ router.post('/:id/update', verifyToken, async (req, res) => {
                 return_code: 'INVALID_NAME',
                 message: 'Group name must be 100 characters or less'
             });
+        }
+
+        // =======================================================================
+        // Check for duplicate group name (excluding current group)
+        // =======================================================================
+        if (name !== undefined && name.trim().toLowerCase() !== currentGroup.name.toLowerCase()) {
+            const duplicateCheck = await query(
+                'SELECT id FROM group_list WHERE LOWER(name) = LOWER($1) AND id != $2',
+                [name.trim(), id]
+            );
+
+            if (duplicateCheck.rows.length > 0) {
+                return res.json({
+                    return_code: 'DUPLICATE_NAME',
+                    message: 'A group with this name already exists'
+                });
+            }
         }
 
         // =======================================================================

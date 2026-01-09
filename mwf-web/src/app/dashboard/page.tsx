@@ -21,13 +21,21 @@ import Header from '@/components/layout/Header';
 // =======================================================================
 // Empty State Component - Warm onboarding for new users
 // =======================================================================
-function EmptyState({ userName }: { userName: string }) {
+function EmptyState({ userName, discoverableGroups, GroupCard }: {
+    userName: string;
+    discoverableGroups: GroupWithCount[];
+    GroupCard: React.ComponentType<{ group: GroupWithCount }>;
+}) {
     const firstName = userName.split(' ')[0];
+    const [showAll, setShowAll] = useState(false);
+    const INITIAL_SHOW = 6;
+    const groupsToShow = showAll ? discoverableGroups : discoverableGroups.slice(0, INITIAL_SHOW);
+    const hasMoreGroups = discoverableGroups.length > INITIAL_SHOW;
 
     return (
-        <div className="max-w-2xl mx-auto text-center py-8 sm:py-16">
+        <div className="py-8 sm:py-12">
             {/* Welcome message */}
-            <div className="mb-8">
+            <div className="max-w-2xl mx-auto text-center mb-10">
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 mb-6">
                     <span className="text-4xl">👋</span>
                 </div>
@@ -35,55 +43,90 @@ function EmptyState({ userName }: { userName: string }) {
                     Welcome, {firstName}!
                 </h1>
                 <p className="text-lg text-stone-600 max-w-md mx-auto">
-                    Ready to bring your crew together? Start by creating your first group.
+                    {discoverableGroups.length > 0
+                        ? "Join an existing group or create your own to get started."
+                        : "Ready to bring your crew together? Start by creating your first group."
+                    }
                 </p>
+
+                {/* Primary CTA */}
+                <Link
+                    href="/groups/create"
+                    className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-lg font-semibold rounded-full hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] mt-6"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Create a Group
+                </Link>
             </div>
 
-            {/* Primary CTA */}
-            <Link
-                href="/groups/create"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-lg font-semibold rounded-full hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] mb-12"
-            >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Create Your First Group
-            </Link>
+            {/* Discover Groups Section */}
+            {discoverableGroups.length > 0 && (
+                <div className="mb-10">
+                    <div className="flex justify-between items-center mb-5">
+                        <h2 className="font-display text-xl font-bold text-stone-800">
+                            Groups to Join
+                            <span className="ml-2 text-stone-400 font-normal text-lg">{discoverableGroups.length}</span>
+                        </h2>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {groupsToShow.map((group) => (
+                            <GroupCard key={group.id} group={group} />
+                        ))}
+                    </div>
+                    {hasMoreGroups && !showAll && (
+                        <div className="text-center mt-6">
+                            <button
+                                onClick={() => setShowAll(true)}
+                                className="inline-flex items-center gap-2 px-6 py-3 border border-stone-300 text-stone-700 font-medium rounded-full hover:bg-stone-50 transition"
+                            >
+                                Show more groups
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Quick tips */}
-            <div className="bg-white rounded-2xl border border-stone-200 p-6 sm:p-8 text-left">
-                <h2 className="font-display text-lg font-semibold text-stone-800 mb-4 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    How it works
-                </h2>
-                <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
-                    <div className="flex gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-                            <span className="text-amber-600 font-bold text-sm">1</span>
+            <div className="max-w-2xl mx-auto">
+                <div className="bg-white rounded-2xl border border-stone-200 p-6 sm:p-8 text-left">
+                    <h2 className="font-display text-lg font-semibold text-stone-800 mb-4 flex items-center gap-2">
+                        <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        How it works
+                    </h2>
+                    <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
+                        <div className="flex gap-3">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                                <span className="text-amber-600 font-bold text-sm">1</span>
+                            </div>
+                            <div>
+                                <h3 className="font-medium text-stone-800 text-sm">Join or create a group</h3>
+                                <p className="text-stone-500 text-sm mt-0.5">For your dinner club, hiking crew, or any regular meetup</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 className="font-medium text-stone-800 text-sm">Create a group</h3>
-                            <p className="text-stone-500 text-sm mt-0.5">For your dinner club, hiking crew, or any regular meetup</p>
+                        <div className="flex gap-3">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                                <span className="text-amber-600 font-bold text-sm">2</span>
+                            </div>
+                            <div>
+                                <h3 className="font-medium text-stone-800 text-sm">Invite your people</h3>
+                                <p className="text-stone-500 text-sm mt-0.5">Share the link and they can join instantly</p>
+                            </div>
                         </div>
-                    </div>
-                    <div className="flex gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-                            <span className="text-amber-600 font-bold text-sm">2</span>
-                        </div>
-                        <div>
-                            <h3 className="font-medium text-stone-800 text-sm">Invite your people</h3>
-                            <p className="text-stone-500 text-sm mt-0.5">Share the link and they can join instantly</p>
-                        </div>
-                    </div>
-                    <div className="flex gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-                            <span className="text-amber-600 font-bold text-sm">3</span>
-                        </div>
-                        <div>
-                            <h3 className="font-medium text-stone-800 text-sm">Plan events together</h3>
-                            <p className="text-stone-500 text-sm mt-0.5">Create events, collect RSVPs, and actually meet up</p>
+                        <div className="flex gap-3">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                                <span className="text-amber-600 font-bold text-sm">3</span>
+                            </div>
+                            <div>
+                                <h3 className="font-medium text-stone-800 text-sm">Plan events together</h3>
+                                <p className="text-stone-500 text-sm mt-0.5">Create events, collect RSVPs, and actually meet up</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -353,7 +396,7 @@ export default function Dashboard() {
                     </div>
                 ) : isEmptyState ? (
                     /* Empty state for new users */
-                    <EmptyState userName={user.name} />
+                    <EmptyState userName={user.name} discoverableGroups={discoverableGroups} GroupCard={GroupCard} />
                 ) : (
                     /* Dashboard with content */
                     <>
@@ -405,6 +448,31 @@ export default function Dashboard() {
                                     {memberGroups.slice(0, 6).map((group) => (
                                         <GroupCard key={group.id} group={group} />
                                     ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Create your own group prompt - shown if user has no organiser groups */}
+                        {organiserGroups.length === 0 && (
+                            <section className="mb-10">
+                                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                    <div className="text-center sm:text-left">
+                                        <h3 className="font-display text-lg font-semibold text-stone-800 mb-1">
+                                            Want to organise your own meetups?
+                                        </h3>
+                                        <p className="text-stone-600 text-sm">
+                                            Create a group and start bringing your people together.
+                                        </p>
+                                    </div>
+                                    <Link
+                                        href="/groups/create"
+                                        className="flex-shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-full hover:from-amber-600 hover:to-orange-600 transition-all shadow-sm hover:shadow-md"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Create a Group
+                                    </Link>
                                 </div>
                             </section>
                         )}

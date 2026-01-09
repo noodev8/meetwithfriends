@@ -34,6 +34,7 @@ Return Codes:
 "SUCCESS"
 "MISSING_FIELDS"
 "INVALID_NAME"
+"DUPLICATE_NAME"
 "INVALID_JOIN_POLICY"
 "INVALID_VISIBILITY"
 "UNAUTHORIZED"
@@ -68,6 +69,21 @@ router.post('/', verifyToken, async (req, res) => {
             return res.json({
                 return_code: 'INVALID_NAME',
                 message: 'Group name must be 100 characters or less'
+            });
+        }
+
+        // =======================================================================
+        // Check for duplicate group name
+        // =======================================================================
+        const duplicateCheck = await query(
+            'SELECT id FROM group_list WHERE LOWER(name) = LOWER($1)',
+            [name.trim()]
+        );
+
+        if (duplicateCheck.rows.length > 0) {
+            return res.json({
+                return_code: 'DUPLICATE_NAME',
+                message: 'A group with this name already exists'
             });
         }
 

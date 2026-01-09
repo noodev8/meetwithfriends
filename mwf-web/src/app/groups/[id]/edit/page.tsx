@@ -5,6 +5,7 @@
 Edit Group Page
 =======================================================================================================================================
 Form to edit group settings. Requires organiser role.
+Two-column layout with form on left and tips sidebar on right.
 =======================================================================================================================================
 */
 
@@ -140,8 +141,8 @@ export default function EditGroupPage() {
     // =======================================================================
     if (isLoading || loading) {
         return (
-            <main className="min-h-screen flex flex-col items-center justify-center p-8">
-                <p className="text-gray-600">Loading...</p>
+            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-stone-50">
+                <div className="w-8 h-8 border-2 border-amber-300 border-t-amber-600 rounded-full animate-spin" />
             </main>
         );
     }
@@ -151,12 +152,12 @@ export default function EditGroupPage() {
     // =======================================================================
     if (error || !group || !isOrganiser) {
         return (
-            <main className="min-h-screen flex flex-col bg-gray-50">
+            <main className="min-h-screen flex flex-col bg-stone-50">
                 <Header />
                 <div className="flex-1 flex flex-col items-center justify-center p-8">
-                    <p className="text-gray-600 mb-4">{error || 'Access denied'}</p>
-                    <Link href="/groups" className="text-blue-600 hover:text-blue-700">
-                        Back to groups
+                    <p className="text-stone-600 mb-4">{error || 'Access denied'}</p>
+                    <Link href="/dashboard" className="text-amber-600 hover:text-amber-700">
+                        Back to dashboard
                     </Link>
                 </div>
             </main>
@@ -167,123 +168,217 @@ export default function EditGroupPage() {
     // Edit group form
     // =======================================================================
     return (
-        <main className="min-h-screen flex flex-col bg-gray-50">
+        <main className="min-h-screen flex flex-col bg-stone-50">
             <Header />
 
-            <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-2xl mx-auto w-full">
+            <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-5xl mx-auto w-full">
                 {/* Breadcrumb */}
                 <div className="mb-4">
                     <Link
                         href={`/groups/${group.id}`}
-                        className="text-blue-600 hover:text-blue-700"
+                        className="text-amber-600 hover:text-amber-700 flex items-center gap-1"
                     >
-                        &larr; Back to {group.name}
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Back to {group.name}
                     </Link>
                 </div>
 
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">Edit Group</h1>
+                <h1 className="font-display text-2xl sm:text-3xl font-bold text-stone-800 mb-6 sm:mb-8">Edit Group</h1>
 
-                <form onSubmit={handleSubmit} className="bg-white rounded-lg border p-6">
-                    {error && (
-                        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-                            {error}
-                        </div>
-                    )}
-
-                    <div className="mb-6">
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                            Group Name *
-                        </label>
-                        <input
-                            type="text"
-                            id="name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="e.g., Brookfield Socials"
-                            maxLength={100}
-                            required
-                        />
-                    </div>
-
-                    <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Description
-                        </label>
-                        <RichTextEditor
-                            value={description}
-                            onChange={setDescription}
-                            placeholder="Tell people what your group is about..."
-                        />
-                    </div>
-
-                    <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Group Image
-                            {imageSaving && (
-                                <span className="ml-2 text-xs text-blue-600">Saving...</span>
+                <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+                    {/* Form Column */}
+                    <div className="flex-1 lg:flex-[3]">
+                        <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-stone-200 p-6">
+                            {error && (
+                                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                                    {error}
+                                </div>
                             )}
-                        </label>
-                        <ImageUpload
-                            value={imageUrl}
-                            onChange={handleImageChange}
-                            imagePosition={imagePosition}
-                            onPositionChange={handlePositionChange}
-                        />
+
+                            <div className="mb-6">
+                                <label htmlFor="name" className="block text-sm font-medium text-stone-700 mb-2">
+                                    Group Name *
+                                </label>
+                                <input
+                                    type="text"
+                                    id="name"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                    placeholder="e.g., Brookfield Socials"
+                                    maxLength={100}
+                                    required
+                                />
+                            </div>
+
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-stone-700 mb-2">
+                                    Description
+                                </label>
+                                <RichTextEditor
+                                    value={description}
+                                    onChange={setDescription}
+                                    placeholder="Tell people what your group is about..."
+                                />
+                            </div>
+
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-stone-700 mb-2">
+                                    Group Image
+                                    {imageSaving && (
+                                        <span className="ml-2 text-xs text-amber-600">Saving...</span>
+                                    )}
+                                </label>
+                                <ImageUpload
+                                    value={imageUrl}
+                                    onChange={handleImageChange}
+                                    imagePosition={imagePosition}
+                                    onPositionChange={handlePositionChange}
+                                />
+                            </div>
+
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-stone-700 mb-2">
+                                    Join Policy
+                                </label>
+                                <div className="space-y-2">
+                                    <label className="flex items-center gap-3 p-3 border border-stone-200 rounded-lg cursor-pointer hover:bg-stone-50 transition">
+                                        <input
+                                            type="radio"
+                                            name="joinPolicy"
+                                            value="approval"
+                                            checked={joinPolicy === 'approval'}
+                                            onChange={() => setJoinPolicy('approval')}
+                                            className="text-amber-600 focus:ring-amber-500"
+                                        />
+                                        <div>
+                                            <p className="font-medium text-stone-800">Require Approval</p>
+                                            <p className="text-sm text-stone-500">New members must be approved by an organiser</p>
+                                        </div>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 border border-stone-200 rounded-lg cursor-pointer hover:bg-stone-50 transition">
+                                        <input
+                                            type="radio"
+                                            name="joinPolicy"
+                                            value="auto"
+                                            checked={joinPolicy === 'auto'}
+                                            onChange={() => setJoinPolicy('auto')}
+                                            className="text-amber-600 focus:ring-amber-500"
+                                        />
+                                        <div>
+                                            <p className="font-medium text-stone-800">Auto Approve</p>
+                                            <p className="text-sm text-stone-500">Anyone can join immediately</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                                <button
+                                    type="submit"
+                                    disabled={submitting}
+                                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50"
+                                >
+                                    {submitting ? 'Saving...' : 'Save Changes'}
+                                </button>
+                                <Link
+                                    href={`/groups/${group.id}`}
+                                    className="px-6 py-3 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition text-center"
+                                >
+                                    Cancel
+                                </Link>
+                            </div>
+                        </form>
                     </div>
 
-                    <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Join Policy
-                        </label>
-                        <div className="space-y-2">
-                            <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                                <input
-                                    type="radio"
-                                    name="joinPolicy"
-                                    value="approval"
-                                    checked={joinPolicy === 'approval'}
-                                    onChange={() => setJoinPolicy('approval')}
-                                    className="text-blue-600"
-                                />
-                                <div>
-                                    <p className="font-medium text-gray-900">Require Approval</p>
-                                    <p className="text-sm text-gray-500">New members must be approved by an organiser</p>
+                    {/* Tips Sidebar - Hidden on mobile, shown on lg+ */}
+                    <aside className="hidden lg:block lg:flex-[2]">
+                        <div className="sticky top-8 space-y-4">
+                            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-200/50 p-5">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <h2 className="font-display text-lg font-semibold text-stone-800">Tips</h2>
                                 </div>
-                            </label>
-                            <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                                <input
-                                    type="radio"
-                                    name="joinPolicy"
-                                    value="auto"
-                                    checked={joinPolicy === 'auto'}
-                                    onChange={() => setJoinPolicy('auto')}
-                                    className="text-blue-600"
-                                />
-                                <div>
-                                    <p className="font-medium text-gray-900">Auto Approve</p>
-                                    <p className="text-sm text-gray-500">Anyone can join immediately</p>
+                                <div className="space-y-4">
+                                    <div className="flex gap-3">
+                                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/80 flex items-center justify-center text-amber-600">
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-medium text-stone-800 text-sm">Image auto-saves</h3>
+                                            <p className="text-sm text-stone-600 mt-0.5">Your group image and position are saved automatically when changed.</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/80 flex items-center justify-center text-amber-600">
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-medium text-stone-800 text-sm">Changing join policy</h3>
+                                            <p className="text-sm text-stone-600 mt-0.5">Switching to approval mode won't affect existing members, only new join requests.</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/80 flex items-center justify-center text-amber-600">
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-medium text-stone-800 text-sm">Managing members</h3>
+                                            <p className="text-sm text-stone-600 mt-0.5">Use the Members page to approve requests, promote hosts, or remove members.</p>
+                                        </div>
+                                    </div>
                                 </div>
-                            </label>
+                            </div>
+
+                            {/* Quick Links */}
+                            <div className="bg-white rounded-2xl border border-stone-200 p-5">
+                                <h3 className="font-display font-semibold text-stone-800 mb-3">Quick Links</h3>
+                                <div className="space-y-2">
+                                    <Link
+                                        href={`/groups/${group.id}/members`}
+                                        className="flex items-center gap-2 text-stone-600 hover:text-amber-600 transition text-sm"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                        Manage Members
+                                    </Link>
+                                    <Link
+                                        href={`/groups/${group.id}/events/create`}
+                                        className="flex items-center gap-2 text-stone-600 hover:text-amber-600 transition text-sm"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        Create Event
+                                    </Link>
+                                    <Link
+                                        href={`/groups/${group.id}`}
+                                        className="flex items-center gap-2 text-stone-600 hover:text-amber-600 transition text-sm"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                        View Group Page
+                                    </Link>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                        <button
-                            type="submit"
-                            disabled={submitting}
-                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-                        >
-                            {submitting ? 'Saving...' : 'Save Changes'}
-                        </button>
-                        <Link
-                            href={`/groups/${group.id}`}
-                            className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-center"
-                        >
-                            Cancel
-                        </Link>
-                    </div>
-                </form>
+                    </aside>
+                </div>
             </div>
         </main>
     );
