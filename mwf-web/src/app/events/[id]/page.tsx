@@ -1444,45 +1444,42 @@ export default function EventDetailPage() {
             {/* Profile Modal */}
             {selectedAttendee && (
                 <div
-                    className="fixed inset-0 bg-black/50 flex items-start justify-center p-4 pt-16 sm:pt-24 z-50 overflow-y-auto"
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
                     onClick={() => setSelectedAttendee(null)}
                 >
                     <div
-                        className="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden my-auto"
+                        className="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden relative"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Header with gradient */}
-                        <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-6 pb-16 relative">
-                            <button
-                                onClick={() => setSelectedAttendee(null)}
-                                className="absolute top-4 right-4 p-2 text-stone-500 hover:text-stone-700 transition"
-                                aria-label="Close"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        {/* Avatar - positioned to overlap header */}
-                        <div className="flex justify-center -mt-12">
-                            {selectedAttendee.avatar_url ? (
-                                <img
-                                    src={selectedAttendee.avatar_url}
-                                    alt={selectedAttendee.name}
-                                    className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-                                />
-                            ) : (
-                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center border-4 border-white shadow-lg">
-                                    <span className="text-3xl font-bold text-white">
-                                        {selectedAttendee.name.charAt(0).toUpperCase()}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
+                        {/* Close button */}
+                        <button
+                            onClick={() => setSelectedAttendee(null)}
+                            className="absolute top-3 right-3 p-2 text-stone-400 hover:text-stone-600 transition z-10"
+                            aria-label="Close"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
 
                         {/* Content */}
-                        <div className="p-6 pt-4 text-center">
+                        <div className="p-6 pt-8 text-center">
+                            {/* Avatar */}
+                            <div className="flex justify-center mb-4">
+                                {selectedAttendee.avatar_url ? (
+                                    <img
+                                        src={selectedAttendee.avatar_url}
+                                        alt={selectedAttendee.name}
+                                        className="w-24 h-24 rounded-full object-cover border-4 border-amber-100 shadow-lg"
+                                    />
+                                ) : (
+                                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center border-4 border-amber-100 shadow-lg">
+                                        <span className="text-3xl font-bold text-white">
+                                            {selectedAttendee.name.charAt(0).toUpperCase()}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
                             <h3 className="text-xl font-bold text-stone-900 font-display">
                                 {selectedAttendee.name}
                             </h3>
