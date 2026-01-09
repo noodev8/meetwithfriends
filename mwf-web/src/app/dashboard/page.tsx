@@ -94,7 +94,7 @@ function EmptyState({ userName, discoverableGroups, GroupCard }: {
 
             {/* Quick tips */}
             <div className="max-w-2xl mx-auto">
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-stone-200/60 shadow-sm p-6 sm:p-8 text-left">
+                <div className="bg-white rounded-2xl border border-stone-200 p-6 sm:p-8 text-left">
                     <h2 className="font-display text-lg font-semibold text-stone-800 mb-4 flex items-center gap-2">
                         <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -145,7 +145,7 @@ function GroupCard({ group }: { group: MyGroup | GroupWithCount }) {
     return (
         <Link
             href={`/groups/${group.id}`}
-            className="group bg-white/90 backdrop-blur-sm rounded-2xl border border-stone-200/60 shadow-sm hover:shadow-xl hover:border-amber-300/60 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+            className="group bg-white rounded-2xl border border-stone-200 hover:border-amber-200 hover:shadow-lg transition-all duration-300 overflow-hidden"
         >
             {group.image_url ? (
                 <div className="h-32 bg-stone-100">
@@ -195,7 +195,7 @@ function EventCard({ event }: { event: EventWithDetails }) {
     return (
         <Link
             href={`/events/${event.id}`}
-            className="group bg-white/90 backdrop-blur-sm rounded-2xl border border-stone-200/60 shadow-sm hover:shadow-xl hover:border-amber-300/60 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+            className="group bg-white rounded-2xl border border-stone-200 hover:border-amber-200 hover:shadow-lg transition-all duration-300 overflow-hidden"
         >
             {/* Image header */}
             <div className="relative h-36 bg-stone-100">
@@ -387,7 +387,7 @@ export default function Dashboard() {
     // =======================================================================
     if (isLoading || !user) {
         return (
-            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-b from-amber-50/80 via-stone-50 to-stone-100">
+            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-stone-50">
                 <div className="w-8 h-8 border-2 border-amber-300 border-t-amber-600 rounded-full animate-spin" />
             </main>
         );
@@ -401,20 +401,10 @@ export default function Dashboard() {
     // Dashboard view
     // =======================================================================
     return (
-        <main className="min-h-screen flex flex-col bg-gradient-to-b from-amber-50/80 via-stone-50 to-stone-100 relative overflow-hidden">
-            {/* Subtle grain texture overlay */}
-            <div className="fixed inset-0 pointer-events-none opacity-[0.015] z-40" style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-            }} />
-
-            {/* Decorative background blobs */}
-            <div className="fixed top-20 -left-32 w-96 h-96 bg-amber-200/20 rounded-full blur-3xl pointer-events-none" />
-            <div className="fixed top-60 -right-40 w-80 h-80 bg-orange-200/20 rounded-full blur-3xl pointer-events-none" />
-            <div className="fixed bottom-40 left-1/4 w-64 h-64 bg-amber-100/30 rounded-full blur-3xl pointer-events-none" />
-
+        <main className="min-h-screen flex flex-col bg-stone-50">
             <Header />
 
-            <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto w-full relative z-10">
+            <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto w-full">
                 {/* Loading state */}
                 {loadingGroups ? (
                     <div className="flex items-center justify-center py-20">
