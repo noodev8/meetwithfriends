@@ -37,9 +37,18 @@ Success Response (for members):
       "rsvp_at": "2026-01-02T00:00:00.000Z"
     }
   ],
+  "not_going": [
+    {
+      "user_id": 10,
+      "name": "Bob Wilson",
+      "avatar_url": null,
+      "rsvp_at": "2026-01-03T00:00:00.000Z"
+    }
+  ],
   "attending_count": 1,
   "total_guest_count": 2,
-  "waitlist_count": 1
+  "waitlist_count": 1,
+  "not_going_count": 1
 }
 
 Success Response (for non-members):
@@ -48,9 +57,11 @@ Success Response (for non-members):
   "is_member": false,
   "attending": [],
   "waitlist": [],
+  "not_going": [],
   "attending_count": 1,
   "total_guest_count": 2,
-  "waitlist_count": 1
+  "waitlist_count": 1,
+  "not_going_count": 1
 }
 =======================================================================================================================================
 Return Codes:
@@ -130,17 +141,18 @@ router.get('/:id/attendees', optionalAuth, async (req, res) => {
              JOIN app_user u ON r.user_id = u.id
              WHERE r.event_id = $1
              ORDER BY
-                CASE r.status WHEN 'attending' THEN 0 ELSE 1 END,
+                CASE r.status WHEN 'attending' THEN 0 WHEN 'waitlist' THEN 1 ELSE 2 END,
                 r.waitlist_position ASC NULLS LAST,
                 r.created_at ASC`,
             [id]
         );
 
         // =======================================================================
-        // Split into attending and waitlist
+        // Split into attending, waitlist, and not_going
         // =======================================================================
         const attending = [];
         const waitlist = [];
+        const notGoing = [];
         let totalGuestCount = 0;
 
         for (const row of rsvpResult.rows) {
@@ -158,10 +170,17 @@ router.get('/:id/attendees', optionalAuth, async (req, res) => {
             if (row.status === 'attending') {
                 attending.push(person);
                 totalGuestCount += guestCount;
-            } else {
+            } else if (row.status === 'waitlist') {
                 waitlist.push({
                     ...person,
                     waitlist_position: row.waitlist_position
+                });
+            } else if (row.status === 'not_going') {
+                notGoing.push({
+                    user_id: row.user_id,
+                    name: row.name,
+                    avatar_url: row.avatar_url,
+                    rsvp_at: row.rsvp_at
                 });
             }
         }
@@ -176,9 +195,11 @@ router.get('/:id/attendees', optionalAuth, async (req, res) => {
             is_member: isMember,
             attending: isMember ? attending : [],
             waitlist: isMember ? waitlist : [],
+            not_going: isMember ? notGoing : [],
             attending_count: attending.length,
             total_guest_count: totalGuestCount,
-            waitlist_count: waitlist.length
+            waitlist_count: waitlist.length,
+            not_going_count: notGoing.length
         });
 
     } catch (error) {

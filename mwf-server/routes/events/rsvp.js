@@ -180,7 +180,8 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
             // Handle JOIN action
             // ===================================================================
             if (action === 'join') {
-                if (existingRsvp.rows.length > 0) {
+                // Allow rejoining if status is 'not_going', otherwise error
+                if (existingRsvp.rows.length > 0 && existingRsvp.rows[0].status !== 'not_going') {
                     return {
                         return_code: 'ALREADY_RSVP',
                         message: 'You have already RSVP\'d to this event',
@@ -190,6 +191,14 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                             guest_count: existingRsvp.rows[0].guest_count || 0
                         }
                     };
+                }
+
+                // If rejoining from not_going, delete old record first (will be recreated below)
+                if (existingRsvp.rows.length > 0 && existingRsvp.rows[0].status === 'not_going') {
+                    await client.query(
+                        'DELETE FROM event_rsvp WHERE event_id = $1 AND user_id = $2',
+                        [id, userId]
+                    );
                 }
 
                 // Validate and determine guest count
@@ -256,7 +265,7 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
             // Handle LEAVE action
             // ===================================================================
             if (action === 'leave') {
-                if (existingRsvp.rows.length === 0) {
+                if (existingRsvp.rows.length === 0 || existingRsvp.rows[0].status === 'not_going') {
                     return {
                         return_code: 'NOT_RSVP',
                         message: 'You have not RSVP\'d to this event'
@@ -266,9 +275,11 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                 const wasAttending = existingRsvp.rows[0].status === 'attending';
                 const wasWaitlistPosition = existingRsvp.rows[0].waitlist_position;
 
-                // Delete the RSVP
+                // Update to not_going status (keep record for history)
                 await client.query(
-                    'DELETE FROM event_rsvp WHERE event_id = $1 AND user_id = $2',
+                    `UPDATE event_rsvp
+                     SET status = 'not_going', waitlist_position = NULL, guest_count = 0
+                     WHERE event_id = $1 AND user_id = $2`,
                     [id, userId]
                 );
 

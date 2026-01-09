@@ -266,7 +266,7 @@ CREATE TABLE public.event_rsvp (
     food_order text,
     dietary_notes text,
     CONSTRAINT event_rsvp_guest_count_check CHECK (((guest_count >= 0) AND (guest_count <= 5))),
-    CONSTRAINT event_rsvp_status_check CHECK (((status)::text = ANY ((ARRAY['attending'::character varying, 'waitlist'::character varying])::text[])))
+    CONSTRAINT event_rsvp_status_check CHECK (((status)::text = ANY ((ARRAY['attending'::character varying, 'waitlist'::character varying, 'not_going'::character varying])::text[])))
 );
 
 

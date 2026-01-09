@@ -206,13 +206,23 @@ export async function rsvpEvent(
     };
 }
 
+// Not going attendee (minimal info)
+export interface NotGoingAttendee {
+    user_id: number;
+    name: string;
+    avatar_url: string | null;
+    rsvp_at: string;
+}
+
 // Attendees response with membership info
 export interface AttendeesResponse {
     attending: Attendee[];
     waitlist: Attendee[];
+    not_going: NotGoingAttendee[];
     attending_count: number;
     total_guest_count: number;
     waitlist_count: number;
+    not_going_count: number;
     is_member: boolean;
 }
 
@@ -237,9 +247,11 @@ export async function getAttendees(
             data: {
                 attending: response.attending as unknown as Attendee[],
                 waitlist: response.waitlist as unknown as Attendee[],
+                not_going: response.not_going as unknown as NotGoingAttendee[],
                 attending_count: Number(response.attending_count) || 0,
                 total_guest_count: Number(response.total_guest_count) || 0,
                 waitlist_count: Number(response.waitlist_count) || 0,
+                not_going_count: Number(response.not_going_count) || 0,
                 is_member: Boolean(response.is_member),
             },
         };

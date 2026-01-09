@@ -1090,172 +1090,130 @@ export default function EventDetailPage() {
 
                     {/* Right Column - Sidebar */}
                     <div className="lg:w-80 space-y-6">
-                        {/* Attendees Card */}
+                        {/* Attendees Card - Compact View */}
                         <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm lg:sticky lg:top-6">
-                            <h2 className="text-lg font-bold text-stone-900 mb-4 font-display">
-                                Attendees ({attendingCount}{totalGuestCount > 0 ? ` + ${totalGuestCount}` : ''})
-                            </h2>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-bold text-stone-900 font-display">
+                                    Attendees ({attendingCount}{totalGuestCount > 0 ? ` +${totalGuestCount}` : ''})
+                                </h2>
+                                {canViewAttendees && (attendingCount > 0 || waitlistCount > 0) && (
+                                    <Link
+                                        href={`/events/${event.id}/attendees`}
+                                        className="text-sm text-amber-600 hover:text-amber-700 font-medium"
+                                    >
+                                        See all
+                                    </Link>
+                                )}
+                            </div>
 
-                            {/* Members can view full attendee list */}
+                            {/* Members can view attendee preview */}
                             {canViewAttendees ? (
                                 <>
-                                    {attending.length > 0 ? (
+                                    {attending.length > 0 || hosts.length > 0 ? (
                                         <div className="space-y-3">
-                                            {attending.slice(0, 10).map(person => (
-                                                <div
-                                                    key={person.user_id}
-                                                    className="space-y-1"
-                                                >
-                                                    <div className="flex items-center justify-between gap-2">
-                                                        <div className="flex items-center gap-2 min-w-0">
-                                                            <button
-                                                                onClick={() => setSelectedAttendee(person)}
-                                                                className="flex-shrink-0 hover:opacity-80 transition"
-                                                            >
-                                                                {person.avatar_url ? (
-                                                                    <img
-                                                                        src={person.avatar_url}
-                                                                        alt={person.name}
-                                                                        className="w-8 h-8 rounded-full object-cover"
-                                                                    />
-                                                                ) : (
-                                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                                                                        <span className="text-xs font-medium text-amber-600">
-                                                                            {person.name.charAt(0).toUpperCase()}
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setSelectedAttendee(person)}
-                                                                className="text-sm font-medium text-stone-900 truncate hover:text-amber-600 transition text-left"
-                                                            >
-                                                                {person.name}
-                                                                {person.guest_count > 0 && (
-                                                                    <span className="ml-1 text-stone-400 font-normal">
-                                                                        +{person.guest_count}
+                                            {/* Show hosts first */}
+                                            {hosts.map(host => {
+                                                const hostAttendee = attending.find(a => a.user_id === host.user_id);
+                                                return (
+                                                    <div
+                                                        key={host.user_id}
+                                                        className="flex items-center gap-3"
+                                                    >
+                                                        <button
+                                                            onClick={() => hostAttendee && setSelectedAttendee(hostAttendee)}
+                                                            className="flex-shrink-0 hover:opacity-80 transition"
+                                                        >
+                                                            {host.avatar_url ? (
+                                                                <img
+                                                                    src={host.avatar_url}
+                                                                    alt={host.name}
+                                                                    className="w-10 h-10 rounded-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
+                                                                    <span className="text-sm font-medium text-amber-600">
+                                                                        {host.name.charAt(0).toUpperCase()}
                                                                     </span>
-                                                                )}
-                                                            </button>
-                                                        </div>
-                                                        {canManageAttendees && (
-                                                            <div className="flex gap-1 flex-shrink-0">
-                                                                <button
-                                                                    onClick={() => handleManageAttendee(person.user_id, 'demote')}
-                                                                    disabled={managingUser === person.user_id}
-                                                                    className="p-1 text-xs text-yellow-700 hover:bg-yellow-50 rounded disabled:opacity-50"
-                                                                    title="Move to waitlist"
-                                                                >
-                                                                    ↓
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleManageAttendee(person.user_id, 'remove')}
-                                                                    disabled={managingUser === person.user_id}
-                                                                    className="p-1 text-xs text-red-600 hover:bg-red-50 rounded disabled:opacity-50"
-                                                                    title="Remove"
-                                                                >
-                                                                    ✕
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    {/* Show food order for all members when preorders enabled */}
-                                                    {event.preorders_enabled && (person.food_order || person.dietary_notes) && (
-                                                        <div className="ml-10 text-xs text-stone-500">
-                                                            {person.food_order && <span>{person.food_order}</span>}
-                                                            {person.food_order && person.dietary_notes && <span> • </span>}
-                                                            {person.dietary_notes && <span className="text-orange-600">{person.dietary_notes}</span>}
-                                                            {canManageAttendees && (
-                                                                <button
-                                                                    onClick={() => startEditOrder(person)}
-                                                                    className="ml-2 text-amber-600 hover:text-amber-700"
-                                                                >
-                                                                    Edit
-                                                                </button>
+                                                                </div>
                                                             )}
+                                                        </button>
+                                                        <div className="min-w-0">
+                                                            <button
+                                                                onClick={() => hostAttendee && setSelectedAttendee(hostAttendee)}
+                                                                className="text-sm font-medium text-stone-900 hover:text-amber-600 transition text-left block truncate"
+                                                            >
+                                                                {host.name}
+                                                            </button>
+                                                            <span className="text-xs text-amber-600 font-medium">Host</span>
                                                         </div>
-                                                    )}
-                                                </div>
-                                            ))}
-                                            {attending.length > 10 && (
-                                                <p className="text-sm text-stone-500 text-center pt-2">
-                                                    +{attending.length - 10} more
-                                                </p>
+                                                    </div>
+                                                );
+                                            })}
+
+                                            {/* Show up to 4 non-host attendees */}
+                                            {attending
+                                                .filter(a => !hosts.some(h => h.user_id === a.user_id))
+                                                .slice(0, 4)
+                                                .map(person => (
+                                                    <div
+                                                        key={person.user_id}
+                                                        className="flex items-center gap-3"
+                                                    >
+                                                        <button
+                                                            onClick={() => setSelectedAttendee(person)}
+                                                            className="flex-shrink-0 hover:opacity-80 transition"
+                                                        >
+                                                            {person.avatar_url ? (
+                                                                <img
+                                                                    src={person.avatar_url}
+                                                                    alt={person.name}
+                                                                    className="w-10 h-10 rounded-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
+                                                                    <span className="text-sm font-medium text-amber-600">
+                                                                        {person.name.charAt(0).toUpperCase()}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setSelectedAttendee(person)}
+                                                            className="text-sm font-medium text-stone-900 truncate hover:text-amber-600 transition text-left"
+                                                        >
+                                                            {person.name}
+                                                            {person.guest_count > 0 && (
+                                                                <span className="ml-1 text-stone-400 font-normal">
+                                                                    +{person.guest_count}
+                                                                </span>
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                ))}
+
+                                            {/* Show "and X more" if there are more attendees */}
+                                            {attending.filter(a => !hosts.some(h => h.user_id === a.user_id)).length > 4 && (
+                                                <Link
+                                                    href={`/events/${event.id}/attendees`}
+                                                    className="text-sm text-stone-500 hover:text-amber-600 transition pl-13"
+                                                >
+                                                    +{attending.filter(a => !hosts.some(h => h.user_id === a.user_id)).length - 4} more going
+                                                </Link>
                                             )}
                                         </div>
                                     ) : (
                                         <p className="text-stone-500 text-sm">No attendees yet. Be the first!</p>
                                     )}
 
-                                    {/* Waitlist */}
-                                    {waitlist.length > 0 && (
-                                        <div className="mt-6 pt-6 border-t border-stone-200">
-                                            <h3 className="text-sm font-semibold text-stone-700 mb-3">
-                                                Waitlist ({waitlistCount})
-                                            </h3>
-                                            <div className="space-y-2">
-                                                {waitlist.slice(0, 5).map(person => (
-                                                    <div
-                                                        key={person.user_id}
-                                                        className="flex items-center justify-between gap-2"
-                                                    >
-                                                        <div className="flex items-center gap-2 min-w-0">
-                                                            <span className="text-xs text-stone-400 w-4 flex-shrink-0">
-                                                                #{person.waitlist_position}
-                                                            </span>
-                                                            <button
-                                                                onClick={() => setSelectedAttendee(person)}
-                                                                className="flex-shrink-0 hover:opacity-80 transition"
-                                                            >
-                                                                {person.avatar_url ? (
-                                                                    <img
-                                                                        src={person.avatar_url}
-                                                                        alt={person.name}
-                                                                        className="w-6 h-6 rounded-full object-cover"
-                                                                    />
-                                                                ) : (
-                                                                    <div className="w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center">
-                                                                        <span className="text-xs text-stone-400">
-                                                                            {person.name.charAt(0).toUpperCase()}
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setSelectedAttendee(person)}
-                                                                className="text-sm text-stone-600 truncate hover:text-amber-600 transition text-left"
-                                                            >
-                                                                {person.name}
-                                                            </button>
-                                                        </div>
-                                                        {canManageAttendees && (
-                                                            <div className="flex gap-1 flex-shrink-0">
-                                                                <button
-                                                                    onClick={() => handleManageAttendee(person.user_id, 'promote')}
-                                                                    disabled={managingUser === person.user_id}
-                                                                    className="p-1 text-xs text-green-600 hover:bg-green-50 rounded disabled:opacity-50"
-                                                                    title="Promote"
-                                                                >
-                                                                    ↑
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleManageAttendee(person.user_id, 'remove')}
-                                                                    disabled={managingUser === person.user_id}
-                                                                    className="p-1 text-xs text-red-600 hover:bg-red-50 rounded disabled:opacity-50"
-                                                                    title="Remove"
-                                                                >
-                                                                    ✕
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                                {waitlist.length > 5 && (
-                                                    <p className="text-xs text-stone-500 text-center pt-1">
-                                                        +{waitlist.length - 5} more on waitlist
-                                                    </p>
-                                                )}
-                                            </div>
+                                    {/* Waitlist summary */}
+                                    {waitlistCount > 0 && (
+                                        <div className="mt-4 pt-4 border-t border-stone-200">
+                                            <Link
+                                                href={`/events/${event.id}/attendees`}
+                                                className="text-sm text-yellow-600 hover:text-yellow-700"
+                                            >
+                                                {waitlistCount} on waitlist
+                                            </Link>
                                         </div>
                                     )}
                                 </>
