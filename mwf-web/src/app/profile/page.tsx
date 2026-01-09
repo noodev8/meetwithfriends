@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { updateProfile, changePassword, deleteAccount } from '@/lib/api/users';
 import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -553,6 +554,8 @@ export default function ProfilePage() {
                 </div>
                 </div>
             </div>
+
+            <Footer />
         </main>
     );
 }

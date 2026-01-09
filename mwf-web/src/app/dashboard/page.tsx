@@ -17,6 +17,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getMyGroups, discoverGroups, MyGroup, GroupWithCount } from '@/lib/api/groups';
 import { getMyEvents, EventWithDetails } from '@/lib/api/events';
 import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 
 // =======================================================================
 // Empty State Component - Warm onboarding for new users
@@ -540,6 +541,8 @@ export default function Dashboard() {
                     </>
                 )}
             </div>
+
+            <Footer />
         </main>
     );
 }

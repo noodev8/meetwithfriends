@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getMyRsvps, EventWithDetails } from '@/lib/api/events';
 import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 
 export default function YourEventsPage() {
     const { user, token, isLoading } = useAuth();
@@ -177,6 +178,8 @@ export default function YourEventsPage() {
                     </div>
                 )}
             </div>
+
+            <Footer />
         </main>
     );
 }

@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getAllGroups, GroupWithCount } from '@/lib/api/groups';
 import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 
 export default function GroupsPage() {
     const { user, token } = useAuth();
@@ -101,6 +102,8 @@ export default function GroupsPage() {
                     </div>
                 )}
             </div>
+
+            <Footer />
         </main>
     );
 }

@@ -28,6 +28,7 @@ import {
 import { getAllEvents, EventWithDetails } from '@/lib/api/events';
 
 import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 
 // Number of pending members to show before "View all" link
 const PENDING_PREVIEW_LIMIT = 3;
@@ -728,6 +729,8 @@ export default function GroupDetailPage() {
                     </div>
                 </div>
             )}
+
+            <Footer />
         </main>
     );
 }

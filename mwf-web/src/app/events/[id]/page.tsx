@@ -37,6 +37,7 @@ import {
     CommentWithDetails,
 } from '@/lib/api/comments';
 import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 import DOMPurify from 'dompurify';
 
 export default function EventDetailPage() {
@@ -1442,6 +1443,8 @@ export default function EventDetailPage() {
                     </div>
                 </div>
             )}
+
+            <Footer />
         </main>
     );
 }
