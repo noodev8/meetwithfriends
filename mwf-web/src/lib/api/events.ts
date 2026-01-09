@@ -13,6 +13,7 @@ import { ApiResult, Event, EventHost } from '@/types';
 // Extended Event type with group_name and counts
 export interface EventWithDetails extends Event {
     group_name: string;
+    group_image_url?: string;
     creator_name: string;
     waitlist_count: number;
     total_guest_count: number;

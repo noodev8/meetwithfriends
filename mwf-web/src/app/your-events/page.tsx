@@ -94,90 +94,82 @@ export default function YourEventsPage() {
                         </Link>
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {events.map(event => {
                             const eventDate = new Date(event.date_time);
                             const isWaitlist = event.rsvp_status === 'waitlist';
+                            const imageUrl = event.image_url || event.group_image_url;
+
                             return (
                                 <Link
                                     key={event.id}
                                     href={`/events/${event.id}`}
-                                    className="block bg-white rounded-2xl border border-stone-200 p-4 sm:p-5 hover:border-amber-300 hover:shadow-md transition-all shadow-sm"
+                                    className="group bg-white rounded-2xl border border-stone-200 hover:border-amber-300 hover:shadow-md transition-all shadow-sm overflow-hidden"
                                 >
-                                    <div className="flex gap-4">
-                                        {/* Date badge */}
-                                        <div className="flex-shrink-0">
-                                            <div className={`w-16 sm:w-20 rounded-xl p-2 sm:p-3 text-center ${
-                                                isWaitlist
-                                                    ? 'bg-yellow-50'
-                                                    : 'bg-gradient-to-br from-amber-50 to-orange-50'
-                                            }`}>
-                                                <p className={`text-xs font-medium ${
-                                                    isWaitlist ? 'text-yellow-600' : 'text-amber-600'
-                                                }`}>
-                                                    {eventDate.toLocaleDateString('en-GB', { weekday: 'short' })}
-                                                </p>
-                                                <p className={`text-2xl sm:text-3xl font-bold ${
-                                                    isWaitlist ? 'text-yellow-700' : 'text-amber-600'
-                                                }`}>
-                                                    {eventDate.getDate()}
-                                                </p>
-                                                <p className={`text-xs ${
-                                                    isWaitlist ? 'text-yellow-600' : 'text-amber-600'
-                                                }`}>
-                                                    {eventDate.toLocaleDateString('en-GB', { month: 'short' })}
-                                                </p>
+                                    {/* Image header */}
+                                    <div className="relative h-36 bg-stone-100">
+                                        {imageUrl ? (
+                                            <img
+                                                src={imageUrl}
+                                                alt={event.title}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                style={{ objectPosition: event.image_url ? (event.image_position || 'center') : 'center' }}
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
+                                                <svg className="w-10 h-10 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
                                             </div>
-                                        </div>
+                                        )}
 
-                                        {/* Event details */}
-                                        <div className="flex-1 min-w-0 py-1">
-                                            <p className="text-xs text-stone-500 font-medium mb-1">
-                                                {event.group_name}
-                                            </p>
-                                            <h3 className="text-base sm:text-lg font-semibold text-stone-900 mb-1 line-clamp-1">
-                                                {event.title}
-                                            </h3>
-                                            <p className="text-stone-500 text-sm mb-2">
-                                                {eventDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                                                {event.location && (
-                                                    <span className="text-stone-400"> · {event.location}</span>
-                                                )}
-                                            </p>
-                                            <div className="flex items-center gap-3">
-                                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full ${
-                                                    isWaitlist
-                                                        ? 'text-yellow-700 bg-yellow-100'
-                                                        : 'text-green-700 bg-green-100'
-                                                }`}>
-                                                    {isWaitlist ? (
-                                                        <>
-                                                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                                                            </svg>
-                                                            Waitlist
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                            </svg>
-                                                            Going
-                                                        </>
-                                                    )}
-                                                </span>
-                                                <span className="text-xs text-stone-400">
-                                                    {event.attendee_count || 0} attending
-                                                </span>
-                                            </div>
-                                        </div>
+                                        {/* Status badge overlay */}
+                                        <span className={`absolute top-3 left-3 inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full shadow-sm ${
+                                            isWaitlist
+                                                ? 'text-yellow-800 bg-yellow-100'
+                                                : 'text-green-800 bg-green-100'
+                                        }`}>
+                                            {isWaitlist ? (
+                                                <>
+                                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                                                    </svg>
+                                                    Waitlist
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                    Going
+                                                </>
+                                            )}
+                                        </span>
+                                    </div>
 
-                                        {/* Arrow */}
-                                        <div className="flex-shrink-0 flex items-center">
-                                            <svg className="w-5 h-5 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                            </svg>
-                                        </div>
+                                    {/* Content */}
+                                    <div className="p-4">
+                                        <p className="text-xs text-amber-600 font-medium uppercase tracking-wide mb-1">
+                                            {event.group_name}
+                                        </p>
+                                        <h3 className="text-base font-semibold text-stone-900 group-hover:text-amber-700 transition-colors line-clamp-1">
+                                            {event.title}
+                                        </h3>
+                                        <p className="text-sm text-stone-500 mt-1">
+                                            {eventDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} · {eventDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                        {event.location && (
+                                            <p className="text-stone-500 text-sm mt-1 flex items-center gap-1.5 line-clamp-1">
+                                                <svg className="w-4 h-4 text-stone-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                {event.location}
+                                            </p>
+                                        )}
+                                        <p className="text-xs text-stone-400 mt-2">
+                                            {event.attendee_count || 0} attending
+                                        </p>
                                     </div>
                                 </Link>
                             );

@@ -55,6 +55,7 @@ router.get('/my-rsvps', verifyToken, async (req, res) => {
                 e.id,
                 e.group_id,
                 g.name AS group_name,
+                g.image_url AS group_image_url,
                 e.title,
                 e.description,
                 e.location,
@@ -74,7 +75,7 @@ router.get('/my-rsvps', verifyToken, async (req, res) => {
              WHERE e.status = 'published'
                AND e.date_time > NOW()
                AND user_rsvp.status IN ('attending', 'waitlist')
-             GROUP BY e.id, g.name, user_rsvp.status
+             GROUP BY e.id, g.name, g.image_url, user_rsvp.status
              ORDER BY e.date_time ASC`,
             [userId]
         );

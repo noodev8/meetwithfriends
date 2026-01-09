@@ -188,56 +188,73 @@ function GroupCard({ group }: { group: MyGroup | GroupWithCount }) {
 // Event Card Component
 // =======================================================================
 function EventCard({ event }: { event: EventWithDetails }) {
+    // Use event image, fall back to group image
+    const imageUrl = event.image_url || event.group_image_url;
+
     return (
         <Link
             href={`/events/${event.id}`}
             className="group bg-white rounded-2xl border border-stone-200 hover:border-amber-200 hover:shadow-lg transition-all duration-300 overflow-hidden"
         >
-            <div className="p-5">
-                <div className="flex items-start justify-between gap-2 mb-3">
-                    <p className="text-xs font-medium text-amber-600 uppercase tracking-wide">
-                        {event.group_name}
-                    </p>
-                    {event.rsvp_status && (
-                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                            event.rsvp_status === 'attending'
-                                ? 'text-green-700 bg-green-100'
-                                : 'text-amber-700 bg-amber-100'
-                        }`}>
-                            {event.rsvp_status === 'attending' ? 'Going' : 'Waitlist'}
-                        </span>
-                    )}
-                </div>
+            {/* Image header */}
+            <div className="relative h-36 bg-stone-100">
+                {imageUrl ? (
+                    <img
+                        src={imageUrl}
+                        alt={event.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        style={{ objectPosition: event.image_url ? (event.image_position || 'center') : 'center' }}
+                    />
+                ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
+                        <svg className="w-10 h-10 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                )}
 
-                <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm font-semibold text-amber-600">
-                        {new Date(event.date_time).toLocaleDateString('en-GB', {
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'short',
-                        })}
+                {/* Status badge overlay */}
+                {event.rsvp_status && (
+                    <span className={`absolute top-3 left-3 px-2.5 py-1 text-xs font-semibold rounded-full shadow-sm ${
+                        event.rsvp_status === 'attending'
+                            ? 'text-green-800 bg-green-100'
+                            : 'text-amber-800 bg-amber-100'
+                    }`}>
+                        {event.rsvp_status === 'attending' ? 'Going' : 'Waitlist'}
                     </span>
-                    <span className="text-stone-300">·</span>
-                    <span className="text-sm text-stone-500">
-                        {new Date(event.date_time).toLocaleTimeString('en-GB', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        })}
-                    </span>
-                    {event.status === 'cancelled' && (
-                        <span className="px-2 py-0.5 text-xs font-medium text-red-700 bg-red-100 rounded-full">
-                            Cancelled
-                        </span>
-                    )}
-                </div>
+                )}
 
-                <h3 className="font-semibold text-stone-800 group-hover:text-amber-700 transition-colors">
+                {event.status === 'cancelled' && (
+                    <span className="absolute top-3 left-3 px-2.5 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full shadow-sm">
+                        Cancelled
+                    </span>
+                )}
+            </div>
+
+            {/* Content */}
+            <div className="p-4">
+                <p className="text-xs font-medium text-amber-600 uppercase tracking-wide mb-1">
+                    {event.group_name}
+                </p>
+
+                <h3 className="font-semibold text-stone-800 group-hover:text-amber-700 transition-colors line-clamp-1">
                     {event.title}
                 </h3>
 
+                <p className="text-sm text-stone-500 mt-1">
+                    {new Date(event.date_time).toLocaleDateString('en-GB', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                    })} · {new Date(event.date_time).toLocaleTimeString('en-GB', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}
+                </p>
+
                 {event.location && (
-                    <p className="text-stone-500 text-sm mt-2 flex items-center gap-1.5">
-                        <svg className="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <p className="text-stone-500 text-sm mt-1 flex items-center gap-1.5 line-clamp-1">
+                        <svg className="w-4 h-4 text-stone-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
@@ -245,14 +262,12 @@ function EventCard({ event }: { event: EventWithDetails }) {
                     </p>
                 )}
 
-                {event.attendee_count !== undefined && (
-                    <p className="text-stone-400 text-sm mt-2 flex items-center gap-1.5">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        {event.attendee_count} attending
-                    </p>
-                )}
+                <p className="text-stone-400 text-sm mt-2 flex items-center gap-1.5">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    {event.attendee_count || 0} attending
+                </p>
             </div>
         </Link>
     );

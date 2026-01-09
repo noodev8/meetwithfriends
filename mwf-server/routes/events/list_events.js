@@ -61,6 +61,7 @@ router.get('/', optionalAuth, async (req, res) => {
                 e.id,
                 e.group_id,
                 g.name AS group_name,
+                g.image_url AS group_image_url,
                 e.created_by,
                 e.title,
                 e.description,
@@ -107,7 +108,7 @@ router.get('/', optionalAuth, async (req, res) => {
         }
 
         queryText += `
-             GROUP BY e.id, g.name`;
+             GROUP BY e.id, g.name, g.image_url`;
 
         if (userId) {
             queryText += `, user_rsvp.status`;
