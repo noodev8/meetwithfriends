@@ -39,6 +39,9 @@ export default function CreateEventPage() {
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [allowGuests, setAllowGuests] = useState(false);
     const [maxGuestsPerRsvp, setMaxGuestsPerRsvp] = useState(1);
+    const [menuLink, setMenuLink] = useState('');
+    const [preorderCutoffDate, setPreorderCutoffDate] = useState('');
+    const [preorderCutoffTime, setPreorderCutoffTime] = useState('');
 
     // Check if user can create events
     const canCreateEvents = membership?.status === 'active' &&
@@ -93,6 +96,21 @@ export default function CreateEventPage() {
             return;
         }
 
+        // Validate preorder cutoff if menu link is set
+        let preorderCutoff: string | undefined;
+        if (menuLink.trim() && preorderCutoffDate && preorderCutoffTime) {
+            const cutoffDateTime = new Date(`${preorderCutoffDate}T${preorderCutoffTime}`);
+            if (isNaN(cutoffDateTime.getTime())) {
+                setError('Invalid pre-order cutoff date or time');
+                return;
+            }
+            if (cutoffDateTime >= dateTime) {
+                setError('Pre-order cutoff must be before the event date');
+                return;
+            }
+            preorderCutoff = cutoffDateTime.toISOString();
+        }
+
         setSubmitting(true);
         setError(null);
 
@@ -106,6 +124,8 @@ export default function CreateEventPage() {
             image_url: imageUrl || undefined,
             allow_guests: allowGuests,
             max_guests_per_rsvp: allowGuests ? maxGuestsPerRsvp : undefined,
+            menu_link: menuLink.trim() || undefined,
+            preorder_cutoff: preorderCutoff,
         });
 
         setSubmitting(false);
@@ -333,6 +353,56 @@ export default function CreateEventPage() {
                                 </p>
                             </div>
                         )}
+                    </div>
+
+                    {/* Pre-orders Section */}
+                    <div className="border-t pt-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Pre-orders</h3>
+                        <p className="text-sm text-gray-500 mb-4">
+                            Add a menu link to allow attendees to submit food orders before the event.
+                        </p>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label htmlFor="menuLink" className="block text-sm font-medium text-gray-700 mb-2">
+                                    Menu Link
+                                </label>
+                                <input
+                                    type="url"
+                                    id="menuLink"
+                                    value={menuLink}
+                                    onChange={(e) => setMenuLink(e.target.value)}
+                                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="https://restaurant.com/menu"
+                                />
+                            </div>
+
+                            {menuLink.trim() && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Pre-order Cutoff
+                                    </label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <input
+                                            type="date"
+                                            value={preorderCutoffDate}
+                                            onChange={(e) => setPreorderCutoffDate(e.target.value)}
+                                            min={minDate}
+                                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                        <input
+                                            type="time"
+                                            value={preorderCutoffTime}
+                                            onChange={(e) => setPreorderCutoffTime(e.target.value)}
+                                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        Orders will be locked after this time. Leave empty for no deadline.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Submit */}

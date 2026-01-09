@@ -16,7 +16,9 @@ Request Payload:
   "image_url": "https://...",            // string, optional (Cloudinary URL)
   "image_position": "center",            // string, optional (top/center/bottom, default: center)
   "allow_guests": true,                  // boolean, optional (default: false)
-  "max_guests_per_rsvp": 2               // integer 1-5, optional (default: 1, only used if allow_guests is true)
+  "max_guests_per_rsvp": 2,              // integer 1-5, optional (default: 1, only used if allow_guests is true)
+  "menu_link": "https://...",            // string, optional (URL to menu)
+  "preorder_cutoff": "2026-01-14T12:00:00Z"  // ISO datetime, optional (deadline for pre-orders)
 }
 
 Success Response:
@@ -35,6 +37,8 @@ Success Response:
     "image_position": "center",
     "allow_guests": true,
     "max_guests_per_rsvp": 2,
+    "menu_link": "https://...",
+    "preorder_cutoff": "2026-01-14T12:00:00.000Z",
     "status": "published",
     "created_at": "2026-01-01T00:00:00.000Z"
   }
@@ -44,6 +48,7 @@ Return Codes:
 "SUCCESS"
 "MISSING_FIELDS"
 "INVALID_DATE"
+"INVALID_CUTOFF"
 "NOT_FOUND"
 "FORBIDDEN"
 "SERVER_ERROR"
@@ -58,7 +63,7 @@ const { verifyToken } = require('../../middleware/auth');
 
 router.post('/create', verifyToken, async (req, res) => {
     try {
-        const { group_id, title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp } = req.body;
+        const { group_id, title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp, menu_link, preorder_cutoff } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -111,6 +116,27 @@ router.post('/create', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
+        // Validate preorder_cutoff if provided
+        // Must be a valid date and should be before the event date
+        // =======================================================================
+        let cutoffDate = null;
+        if (preorder_cutoff) {
+            cutoffDate = new Date(preorder_cutoff);
+            if (isNaN(cutoffDate.getTime())) {
+                return res.json({
+                    return_code: 'INVALID_CUTOFF',
+                    message: 'Invalid pre-order cutoff date format'
+                });
+            }
+            if (cutoffDate >= eventDate) {
+                return res.json({
+                    return_code: 'INVALID_CUTOFF',
+                    message: 'Pre-order cutoff must be before the event date'
+                });
+            }
+        }
+
+        // =======================================================================
         // Check if group exists and user has permission (organiser or host)
         // Single query to verify both group existence and user's role
         // =======================================================================
@@ -154,10 +180,10 @@ router.post('/create', verifyToken, async (req, res) => {
         const result = await withTransaction(async (client) => {
             // Create the event
             const eventResult = await client.query(
-                `INSERT INTO event_list (group_id, created_by, title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-                 RETURNING id, group_id, created_by, title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp, status, created_at`,
-                [group_id, userId, title.trim(), description?.trim() || null, location?.trim() || null, eventDate, capacity || null, image_url?.trim() || null, image_position || 'center', allow_guests || false, finalMaxGuests]
+                `INSERT INTO event_list (group_id, created_by, title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp, menu_link, preorder_cutoff)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                 RETURNING id, group_id, created_by, title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp, menu_link, preorder_cutoff, status, created_at`,
+                [group_id, userId, title.trim(), description?.trim() || null, location?.trim() || null, eventDate, capacity || null, image_url?.trim() || null, image_position || 'center', allow_guests || false, finalMaxGuests, menu_link?.trim() || null, cutoffDate]
             );
 
             const newEvent = eventResult.rows[0];

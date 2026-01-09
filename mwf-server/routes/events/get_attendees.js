@@ -4,7 +4,7 @@ API Route: get_attendees
 =======================================================================================================================================
 Method: GET
 Purpose: Retrieves attendees and waitlist for an event.
-         - Group members see full attendee list with profiles
+         - Group members see full attendee list with profiles and food orders
          - Non-members only see counts (privacy protection)
 =======================================================================================================================================
 Request Payload:
@@ -20,6 +20,8 @@ Success Response (for members):
       "name": "John Smith",
       "avatar_url": "https://...",
       "guest_count": 2,
+      "food_order": "Roast beef, medium",
+      "dietary_notes": "Gluten free",
       "rsvp_at": "2026-01-01T00:00:00.000Z"
     }
   ],
@@ -29,6 +31,8 @@ Success Response (for members):
       "name": "Jane Doe",
       "avatar_url": null,
       "guest_count": 0,
+      "food_order": null,
+      "dietary_notes": null,
       "waitlist_position": 1,
       "rsvp_at": "2026-01-02T00:00:00.000Z"
     }
@@ -109,6 +113,7 @@ router.get('/:id/attendees', optionalAuth, async (req, res) => {
 
         // =======================================================================
         // Fetch all RSVPs with user info in single query
+        // Includes food_order and dietary_notes for pre-order feature
         // =======================================================================
         const rsvpResult = await query(
             `SELECT
@@ -117,6 +122,8 @@ router.get('/:id/attendees', optionalAuth, async (req, res) => {
                 u.avatar_url,
                 r.status,
                 r.guest_count,
+                r.food_order,
+                r.dietary_notes,
                 r.waitlist_position,
                 r.created_at AS rsvp_at
              FROM event_rsvp r
@@ -143,6 +150,8 @@ router.get('/:id/attendees', optionalAuth, async (req, res) => {
                 name: row.name,
                 avatar_url: row.avatar_url,
                 guest_count: guestCount,
+                food_order: row.food_order || null,
+                dietary_notes: row.dietary_notes || null,
                 rsvp_at: row.rsvp_at
             };
 

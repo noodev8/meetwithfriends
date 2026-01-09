@@ -40,6 +40,9 @@ export default function EditEventPage() {
     const [imageSaving, setImageSaving] = useState(false);
     const [allowGuests, setAllowGuests] = useState(false);
     const [maxGuestsPerRsvp, setMaxGuestsPerRsvp] = useState(1);
+    const [menuLink, setMenuLink] = useState('');
+    const [preorderCutoffDate, setPreorderCutoffDate] = useState('');
+    const [preorderCutoffTime, setPreorderCutoffTime] = useState('');
 
     // =======================================================================
     // Fetch event details
@@ -73,6 +76,14 @@ export default function EditEventPage() {
                 setImagePosition(evt.image_position || 'center');
                 setAllowGuests(evt.allow_guests || false);
                 setMaxGuestsPerRsvp(evt.max_guests_per_rsvp || 1);
+                setMenuLink(evt.menu_link || '');
+
+                // Parse preorder cutoff date and time
+                if (evt.preorder_cutoff) {
+                    const cutoffDate = new Date(evt.preorder_cutoff);
+                    setPreorderCutoffDate(cutoffDate.toISOString().split('T')[0]);
+                    setPreorderCutoffTime(cutoffDate.toTimeString().slice(0, 5));
+                }
             } else {
                 setError(result.error || 'Event not found');
             }
@@ -138,6 +149,21 @@ export default function EditEventPage() {
             return;
         }
 
+        // Validate preorder cutoff if set
+        let preorderCutoff: string | null = null;
+        if (menuLink.trim() && preorderCutoffDate && preorderCutoffTime) {
+            const cutoffDateTime = new Date(`${preorderCutoffDate}T${preorderCutoffTime}`);
+            if (isNaN(cutoffDateTime.getTime())) {
+                setError('Invalid pre-order cutoff date or time');
+                return;
+            }
+            if (cutoffDateTime >= dateTime) {
+                setError('Pre-order cutoff must be before the event date');
+                return;
+            }
+            preorderCutoff = cutoffDateTime.toISOString();
+        }
+
         setSubmitting(true);
         setError(null);
 
@@ -151,6 +177,8 @@ export default function EditEventPage() {
             image_position: imagePosition,
             allow_guests: allowGuests,
             max_guests_per_rsvp: allowGuests ? maxGuestsPerRsvp : undefined,
+            menu_link: menuLink.trim() || null,
+            preorder_cutoff: preorderCutoff,
         });
 
         setSubmitting(false);
@@ -381,6 +409,56 @@ export default function EditEventPage() {
                                 </p>
                             </div>
                         )}
+                    </div>
+
+                    {/* Pre-orders Section */}
+                    <div className="border-t pt-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Pre-orders</h3>
+                        <p className="text-sm text-gray-500 mb-4">
+                            Add a menu link to allow attendees to submit food orders before the event.
+                        </p>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label htmlFor="menuLink" className="block text-sm font-medium text-gray-700 mb-2">
+                                    Menu Link
+                                </label>
+                                <input
+                                    type="url"
+                                    id="menuLink"
+                                    value={menuLink}
+                                    onChange={(e) => setMenuLink(e.target.value)}
+                                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="https://restaurant.com/menu"
+                                />
+                            </div>
+
+                            {menuLink.trim() && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Pre-order Cutoff
+                                    </label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <input
+                                            type="date"
+                                            value={preorderCutoffDate}
+                                            onChange={(e) => setPreorderCutoffDate(e.target.value)}
+                                            min={today}
+                                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                        <input
+                                            type="time"
+                                            value={preorderCutoffTime}
+                                            onChange={(e) => setPreorderCutoffTime(e.target.value)}
+                                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        Orders will be locked after this time. Leave empty for no deadline.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Submit */}

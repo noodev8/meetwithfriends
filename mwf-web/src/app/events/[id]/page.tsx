@@ -22,6 +22,8 @@ import {
     restoreEvent,
     addHost,
     removeHost,
+    submitOrder,
+    updateOrder,
     EventWithDetails,
     RsvpStatus,
     Attendee,
@@ -75,6 +77,15 @@ export default function EventDetailPage() {
     const [commentLoading, setCommentLoading] = useState(false);
     const [deletingComment, setDeletingComment] = useState<number | null>(null);
 
+    // Pre-order state
+    const [foodOrder, setFoodOrder] = useState('');
+    const [dietaryNotes, setDietaryNotes] = useState('');
+    const [orderLoading, setOrderLoading] = useState(false);
+    const [orderSuccess, setOrderSuccess] = useState('');
+    const [editingOrderUserId, setEditingOrderUserId] = useState<number | null>(null);
+    const [editFoodOrder, setEditFoodOrder] = useState('');
+    const [editDietaryNotes, setEditDietaryNotes] = useState('');
+
     // =======================================================================
     // Fetch event details, attendees, and comments
     // =======================================================================
@@ -95,6 +106,8 @@ export default function EventDetailPage() {
                 setEvent(eventResult.data.event);
                 setRsvp(eventResult.data.rsvp);
                 setSelectedGuestCount(eventResult.data.rsvp?.guest_count || 0);
+                setFoodOrder(eventResult.data.rsvp?.food_order || '');
+                setDietaryNotes(eventResult.data.rsvp?.dietary_notes || '');
                 setHosts(eventResult.data.hosts);
                 setIsHost(eventResult.data.is_host);
                 setIsGroupMember(eventResult.data.is_group_member);
@@ -348,6 +361,82 @@ export default function EventDetailPage() {
             alert(result.error || 'Failed to add host');
         }
     };
+
+    // =======================================================================
+    // Handle submit own food order
+    // =======================================================================
+    const handleSubmitOrder = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!token || !event) return;
+
+        setOrderLoading(true);
+        setOrderSuccess('');
+        const result = await submitOrder(token, event.id, foodOrder.trim() || null, dietaryNotes.trim() || null);
+        setOrderLoading(false);
+
+        if (result.success) {
+            setOrderSuccess('Order saved');
+            // Update local rsvp state
+            if (rsvp) {
+                setRsvp({
+                    ...rsvp,
+                    food_order: foodOrder.trim() || null,
+                    dietary_notes: dietaryNotes.trim() || null,
+                });
+            }
+            // Refresh attendees to show updated orders
+            const attendeesResult = await getAttendees(event.id, token);
+            if (attendeesResult.success && attendeesResult.data) {
+                setAttending(attendeesResult.data.attending);
+                setWaitlist(attendeesResult.data.waitlist);
+            }
+            // Clear success message after 3 seconds
+            setTimeout(() => setOrderSuccess(''), 3000);
+        } else {
+            alert(result.error || 'Failed to submit order');
+        }
+    };
+
+    // =======================================================================
+    // Handle host editing another attendee's order
+    // =======================================================================
+    const handleUpdateOtherOrder = async (userId: number) => {
+        if (!token || !event) return;
+
+        setOrderLoading(true);
+        const result = await updateOrder(token, event.id, userId, editFoodOrder.trim() || null, editDietaryNotes.trim() || null);
+        setOrderLoading(false);
+
+        if (result.success) {
+            // Refresh attendees
+            const attendeesResult = await getAttendees(event.id, token);
+            if (attendeesResult.success && attendeesResult.data) {
+                setAttending(attendeesResult.data.attending);
+                setWaitlist(attendeesResult.data.waitlist);
+            }
+            setEditingOrderUserId(null);
+            setEditFoodOrder('');
+            setEditDietaryNotes('');
+        } else {
+            alert(result.error || 'Failed to update order');
+        }
+    };
+
+    // =======================================================================
+    // Start editing another attendee's order (host only)
+    // =======================================================================
+    const startEditOrder = (person: Attendee) => {
+        setEditingOrderUserId(person.user_id);
+        setEditFoodOrder(person.food_order || '');
+        setEditDietaryNotes(person.dietary_notes || '');
+    };
+
+    // =======================================================================
+    // Check if preorder cutoff has passed
+    // =======================================================================
+    const isCutoffPassed = event?.preorder_cutoff
+        ? new Date(event.preorder_cutoff) < new Date()
+        : false;
 
     // =======================================================================
     // Handle add comment
@@ -712,6 +801,29 @@ export default function EventDetailPage() {
                                     </div>
                                 </div>
                             )}
+                            {event.menu_link && (
+                                <div className="flex gap-4">
+                                    <div className="text-2xl">🍽️</div>
+                                    <div>
+                                        <a
+                                            href={event.menu_link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="font-medium text-blue-600 hover:text-blue-700"
+                                        >
+                                            View Menu
+                                        </a>
+                                        {event.preorder_cutoff && (
+                                            <p className="text-sm text-gray-500">
+                                                {isCutoffPassed
+                                                    ? 'Pre-orders closed'
+                                                    : `Order by ${new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} ${new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`
+                                                }
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -725,6 +837,92 @@ export default function EventDetailPage() {
                                     __html: DOMPurify.sanitize(event.description)
                                 }}
                             />
+                        </div>
+                    )}
+
+                    {/* Pre-order Form - only visible to attendees when menu link is set */}
+                    {event.menu_link && rsvp && (
+                        <div className="bg-white rounded-lg border p-6">
+                            <h2 className="text-lg font-bold text-gray-900 mb-4">Your Order</h2>
+                            {isCutoffPassed ? (
+                                <div>
+                                    {rsvp.food_order || rsvp.dietary_notes ? (
+                                        <div className="space-y-2">
+                                            {rsvp.food_order && (
+                                                <div>
+                                                    <span className="text-sm font-medium text-gray-700">Order: </span>
+                                                    <span className="text-gray-600">{rsvp.food_order}</span>
+                                                </div>
+                                            )}
+                                            {rsvp.dietary_notes && (
+                                                <div>
+                                                    <span className="text-sm font-medium text-gray-700">Notes: </span>
+                                                    <span className="text-gray-600">{rsvp.dietary_notes}</span>
+                                                </div>
+                                            )}
+                                            <p className="text-sm text-gray-500 mt-2">
+                                                Pre-order deadline has passed. Contact a host if you need to make changes.
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <p className="text-gray-500">
+                                            Pre-order deadline has passed. You did not submit an order.
+                                        </p>
+                                    )}
+                                </div>
+                            ) : (
+                                <form onSubmit={handleSubmitOrder} className="space-y-4">
+                                    <div>
+                                        <label htmlFor="foodOrder" className="block text-sm font-medium text-gray-700 mb-1">
+                                            Your Food Order
+                                        </label>
+                                        <textarea
+                                            id="foodOrder"
+                                            value={foodOrder}
+                                            onChange={(e) => setFoodOrder(e.target.value)}
+                                            placeholder="e.g., Chicken Caesar Salad, no croutons"
+                                            rows={2}
+                                            maxLength={500}
+                                            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="dietaryNotes" className="block text-sm font-medium text-gray-700 mb-1">
+                                            Dietary Notes / Allergies
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="dietaryNotes"
+                                            value={dietaryNotes}
+                                            onChange={(e) => setDietaryNotes(e.target.value)}
+                                            placeholder="e.g., Vegetarian, nut allergy"
+                                            maxLength={200}
+                                            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <button
+                                            type="submit"
+                                            disabled={orderLoading}
+                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                                        >
+                                            {orderLoading ? 'Saving...' : 'Save Order'}
+                                        </button>
+                                        {orderSuccess && (
+                                            <span className="text-sm text-green-600">{orderSuccess}</span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-gray-500">
+                                        <a href={event.menu_link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700">
+                                            View the menu
+                                        </a>
+                                        {' '}to see what's available.
+                                        {event.preorder_cutoff && (
+                                            <> Order by {new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at {new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}.</>
+                                        )}
+                                    </p>
+                                </form>
+                            )}
                         </div>
                     )}
 
@@ -842,56 +1040,124 @@ export default function EventDetailPage() {
                             {canViewAttendees ? (
                                 <>
                                     {attending.length > 0 ? (
-                                        <div className={canManageAttendees ? 'space-y-2' : 'flex flex-wrap gap-3'}>
+                                        <div className={canManageAttendees || event.menu_link ? 'space-y-2' : 'flex flex-wrap gap-3'}>
                                             {attending.map(person => (
                                                 <div
                                                     key={person.user_id}
-                                                    className={canManageAttendees
-                                                        ? 'flex items-center justify-between gap-2 p-2 rounded hover:bg-gray-50'
+                                                    className={canManageAttendees || event.menu_link
+                                                        ? 'p-3 rounded-lg border bg-gray-50'
                                                         : 'flex items-center gap-2'
                                                     }
                                                 >
-                                                    <div className="flex items-center gap-2">
-                                                        {person.avatar_url ? (
-                                                            <img
-                                                                src={person.avatar_url}
-                                                                alt={person.name}
-                                                                className="w-8 h-8 rounded-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
-                                                                <span className="text-sm text-blue-400">
-                                                                    {person.name.charAt(0).toUpperCase()}
-                                                                </span>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <div className="flex items-center gap-2">
+                                                            {person.avatar_url ? (
+                                                                <img
+                                                                    src={person.avatar_url}
+                                                                    alt={person.name}
+                                                                    className="w-8 h-8 rounded-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                                                                    <span className="text-sm text-blue-400">
+                                                                        {person.name.charAt(0).toUpperCase()}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                            <span className="text-sm font-medium text-gray-900">
+                                                                {person.name}
+                                                                {person.guest_count > 0 && (
+                                                                    <span className="ml-1 text-gray-400 font-normal">
+                                                                        +{person.guest_count}
+                                                                    </span>
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                        {canManageAttendees && (
+                                                            <div className="flex gap-1">
+                                                                <button
+                                                                    onClick={() => handleManageAttendee(person.user_id, 'demote')}
+                                                                    disabled={managingUser === person.user_id}
+                                                                    className="px-2 py-1 text-xs text-yellow-700 bg-yellow-50 rounded hover:bg-yellow-100 disabled:opacity-50"
+                                                                    title="Move to waitlist"
+                                                                >
+                                                                    Waitlist
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleManageAttendee(person.user_id, 'remove')}
+                                                                    disabled={managingUser === person.user_id}
+                                                                    className="px-2 py-1 text-xs text-red-700 bg-red-50 rounded hover:bg-red-100 disabled:opacity-50"
+                                                                    title="Remove from event"
+                                                                >
+                                                                    Remove
+                                                                </button>
                                                             </div>
                                                         )}
-                                                        <span className="text-sm text-gray-700">
-                                                            {person.name}
-                                                            {person.guest_count > 0 && (
-                                                                <span className="ml-1 text-gray-400">
-                                                                    +{person.guest_count}
-                                                                </span>
-                                                            )}
-                                                        </span>
                                                     </div>
-                                                    {canManageAttendees && (
-                                                        <div className="flex gap-1">
-                                                            <button
-                                                                onClick={() => handleManageAttendee(person.user_id, 'demote')}
-                                                                disabled={managingUser === person.user_id}
-                                                                className="px-2 py-1 text-xs text-yellow-700 bg-yellow-50 rounded hover:bg-yellow-100 disabled:opacity-50"
-                                                                title="Move to waitlist"
-                                                            >
-                                                                Waitlist
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleManageAttendee(person.user_id, 'remove')}
-                                                                disabled={managingUser === person.user_id}
-                                                                className="px-2 py-1 text-xs text-red-700 bg-red-50 rounded hover:bg-red-100 disabled:opacity-50"
-                                                                title="Remove from event"
-                                                            >
-                                                                Remove
-                                                            </button>
+
+                                                    {/* Food Order - shown when event has menu */}
+                                                    {event.menu_link && (
+                                                        <div className="mt-2 pl-10">
+                                                            {editingOrderUserId === person.user_id ? (
+                                                                /* Inline edit form for hosts */
+                                                                <div className="space-y-2">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={editFoodOrder}
+                                                                        onChange={(e) => setEditFoodOrder(e.target.value)}
+                                                                        placeholder="Food order..."
+                                                                        maxLength={500}
+                                                                        className="w-full px-2 py-1 text-sm border rounded focus:ring-2 focus:ring-blue-500"
+                                                                    />
+                                                                    <input
+                                                                        type="text"
+                                                                        value={editDietaryNotes}
+                                                                        onChange={(e) => setEditDietaryNotes(e.target.value)}
+                                                                        placeholder="Dietary notes..."
+                                                                        maxLength={200}
+                                                                        className="w-full px-2 py-1 text-sm border rounded focus:ring-2 focus:ring-blue-500"
+                                                                    />
+                                                                    <div className="flex gap-2">
+                                                                        <button
+                                                                            onClick={() => handleUpdateOtherOrder(person.user_id)}
+                                                                            disabled={orderLoading}
+                                                                            className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                                                                        >
+                                                                            {orderLoading ? 'Saving...' : 'Save'}
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => setEditingOrderUserId(null)}
+                                                                            className="px-2 py-1 text-xs text-gray-600 bg-gray-100 rounded hover:bg-gray-200"
+                                                                        >
+                                                                            Cancel
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                /* Display order info */
+                                                                <div className="flex items-start justify-between gap-2">
+                                                                    <div className="text-sm text-gray-600">
+                                                                        {person.food_order ? (
+                                                                            <span>{person.food_order}</span>
+                                                                        ) : (
+                                                                            <span className="text-gray-400 italic">No order</span>
+                                                                        )}
+                                                                        {person.dietary_notes && (
+                                                                            <span className="ml-2 text-orange-600">
+                                                                                ({person.dietary_notes})
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                    {canManageAttendees && (
+                                                                        <button
+                                                                            onClick={() => startEditOrder(person)}
+                                                                            className="text-xs text-blue-600 hover:text-blue-700 flex-shrink-0"
+                                                                        >
+                                                                            Edit
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </div>

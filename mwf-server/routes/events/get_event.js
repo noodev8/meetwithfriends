@@ -26,6 +26,8 @@ Success Response:
     "image_position": "center",
     "allow_guests": true,
     "max_guests_per_rsvp": 2,
+    "menu_link": "https://...",          // URL to menu (null if not set)
+    "preorder_cutoff": "2026-01-14T12:00:00.000Z",  // deadline for pre-orders (null if not set)
     "status": "published",
     "attendee_count": 12,
     "total_guest_count": 5,
@@ -35,7 +37,9 @@ Success Response:
   "rsvp": {                              // null if not logged in or no RSVP
     "status": "attending",               // "attending" or "waitlist"
     "waitlist_position": null,           // position if on waitlist
-    "guest_count": 2                     // number of guests (0-5)
+    "guest_count": 2,                    // number of guests (0-5)
+    "food_order": "Roast beef, medium",  // user's food order (null if not set)
+    "dietary_notes": "Gluten free"       // dietary requirements (null if not set)
   },
   "is_group_member": true,               // false if not logged in or not a member
   "hosts": [                             // list of event hosts
@@ -97,6 +101,8 @@ router.get('/:id', optionalAuth, async (req, res) => {
                 e.image_position,
                 e.allow_guests,
                 e.max_guests_per_rsvp,
+                e.menu_link,
+                e.preorder_cutoff,
                 e.status,
                 e.created_at,
                 COUNT(r.id) FILTER (WHERE r.status = 'attending') AS attendee_count,
@@ -159,7 +165,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
             // Check RSVP, membership, and host status in parallel
             const [rsvpResult, membershipResult, hostResult] = await Promise.all([
                 query(
-                    `SELECT status, waitlist_position, guest_count
+                    `SELECT status, waitlist_position, guest_count, food_order, dietary_notes
                      FROM event_rsvp
                      WHERE event_id = $1 AND user_id = $2`,
                     [id, userId]
@@ -180,7 +186,9 @@ router.get('/:id', optionalAuth, async (req, res) => {
                 rsvp = {
                     status: rsvpResult.rows[0].status,
                     waitlist_position: rsvpResult.rows[0].waitlist_position,
-                    guest_count: rsvpResult.rows[0].guest_count || 0
+                    guest_count: rsvpResult.rows[0].guest_count || 0,
+                    food_order: rsvpResult.rows[0].food_order || null,
+                    dietary_notes: rsvpResult.rows[0].dietary_notes || null
                 };
             }
 

@@ -15,7 +15,9 @@ Request Payload:
   "image_url": "https://...",              // string, optional (Cloudinary URL)
   "image_position": "top",                 // string, optional (top/center/bottom)
   "allow_guests": true,                    // boolean, optional
-  "max_guests_per_rsvp": 2                 // integer 1-5, optional
+  "max_guests_per_rsvp": 2,                // integer 1-5, optional
+  "menu_link": "https://...",              // string, optional (URL to menu)
+  "preorder_cutoff": "2026-02-14T12:00:00Z"  // ISO datetime, optional (deadline for pre-orders)
 }
 
 Success Response:
@@ -35,6 +37,7 @@ Return Codes:
 "INVALID_TITLE"
 "INVALID_DATE"
 "INVALID_CAPACITY"
+"INVALID_CUTOFF"
 "EVENT_CANCELLED"
 "SERVER_ERROR"
 =======================================================================================================================================
@@ -48,7 +51,7 @@ const { verifyToken } = require('../../middleware/auth');
 router.post('/:id/update', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp } = req.body;
+        const { title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp, menu_link, preorder_cutoff } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -63,12 +66,14 @@ router.post('/:id/update', verifyToken, async (req, res) => {
 
         // =======================================================================
         // Fetch event with group info and host status to check permissions
+        // Also get date_time for preorder_cutoff validation
         // =======================================================================
         const eventResult = await query(
             `SELECT
                 e.id,
                 e.group_id,
                 e.status,
+                e.date_time,
                 gm.role AS current_user_role,
                 EXISTS(SELECT 1 FROM event_host eh WHERE eh.event_id = e.id AND eh.user_id = $2) AS is_host
              FROM event_list e
@@ -149,6 +154,28 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
+        // Validate preorder_cutoff if provided
+        // Must be a valid date and before the event date
+        // =======================================================================
+        if (preorder_cutoff !== undefined && preorder_cutoff !== null) {
+            const cutoffDate = new Date(preorder_cutoff);
+            if (isNaN(cutoffDate.getTime())) {
+                return res.json({
+                    return_code: 'INVALID_CUTOFF',
+                    message: 'Invalid pre-order cutoff date format'
+                });
+            }
+            // Use new date_time if provided, otherwise use existing event date
+            const eventDateToCompare = date_time ? new Date(date_time) : new Date(event.date_time);
+            if (cutoffDate >= eventDateToCompare) {
+                return res.json({
+                    return_code: 'INVALID_CUTOFF',
+                    message: 'Pre-order cutoff must be before the event date'
+                });
+            }
+        }
+
+        // =======================================================================
         // Build update query dynamically
         // =======================================================================
         const updates = [];
@@ -199,6 +226,16 @@ router.post('/:id/update', verifyToken, async (req, res) => {
             updates.push(`max_guests_per_rsvp = $${paramCount++}`);
             // Clamp to 1-5 range
             values.push(Math.min(Math.max(parseInt(max_guests_per_rsvp, 10) || 1, 1), 5));
+        }
+
+        if (menu_link !== undefined) {
+            updates.push(`menu_link = $${paramCount++}`);
+            values.push(menu_link?.trim() || null);
+        }
+
+        if (preorder_cutoff !== undefined) {
+            updates.push(`preorder_cutoff = $${paramCount++}`);
+            values.push(preorder_cutoff ? new Date(preorder_cutoff).toISOString() : null);
         }
 
         // Always update updated_at

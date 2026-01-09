@@ -24,6 +24,8 @@ export interface RsvpStatus {
     status: 'attending' | 'waitlist';
     waitlist_position: number | null;
     guest_count: number;
+    food_order: string | null;
+    dietary_notes: string | null;
 }
 
 // Event with RSVP response
@@ -48,6 +50,8 @@ export interface UpdateEventPayload {
     image_position?: 'top' | 'center' | 'bottom';
     allow_guests?: boolean;
     max_guests_per_rsvp?: number;
+    menu_link?: string | null;
+    preorder_cutoff?: string | null;
 }
 
 // Attendee type
@@ -56,6 +60,8 @@ export interface Attendee {
     name: string;
     avatar_url: string | null;
     guest_count: number;
+    food_order: string | null;
+    dietary_notes: string | null;
     rsvp_at: string;
     waitlist_position?: number;
 }
@@ -72,6 +78,8 @@ export interface CreateEventPayload {
     image_position?: 'top' | 'center' | 'bottom';
     allow_guests?: boolean;
     max_guests_per_rsvp?: number;
+    menu_link?: string;
+    preorder_cutoff?: string;
 }
 
 /*
@@ -521,6 +529,87 @@ export async function removeHost(
     return {
         success: false,
         error: (response.message as string) || 'Failed to remove host',
+        return_code: response.return_code,
+    };
+}
+
+// Food order type
+export interface FoodOrder {
+    food_order: string | null;
+    dietary_notes: string | null;
+}
+
+/*
+=======================================================================================================================================
+submitOrder
+=======================================================================================================================================
+Submits or updates the current user's food order for an event.
+Cannot submit after preorder_cutoff has passed.
+=======================================================================================================================================
+*/
+export async function submitOrder(
+    token: string,
+    eventId: number,
+    foodOrder: string | null,
+    dietaryNotes: string | null
+): Promise<ApiResult<{ order: FoodOrder; message: string }>> {
+    const response = await apiCall(
+        `/api/events/${eventId}/submit-order`,
+        { food_order: foodOrder, dietary_notes: dietaryNotes },
+        token
+    );
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: {
+                order: response.order as unknown as FoodOrder,
+                message: response.message as string,
+            },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to submit order',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+updateOrder
+=======================================================================================================================================
+Allows hosts/organisers to update another attendee's food order.
+Can update regardless of cutoff.
+=======================================================================================================================================
+*/
+export async function updateOrder(
+    token: string,
+    eventId: number,
+    userId: number,
+    foodOrder: string | null,
+    dietaryNotes: string | null
+): Promise<ApiResult<{ order: FoodOrder & { user_id: number }; message: string }>> {
+    const response = await apiCall(
+        `/api/events/${eventId}/update-order`,
+        { user_id: userId, food_order: foodOrder, dietary_notes: dietaryNotes },
+        token
+    );
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: {
+                order: response.order as unknown as FoodOrder & { user_id: number },
+                message: response.message as string,
+            },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to update order',
         return_code: response.return_code,
     };
 }

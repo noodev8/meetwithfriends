@@ -5,7 +5,7 @@
 -- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 17.4
 
--- Started on 2026-01-09 12:13:45
+-- Started on 2026-01-09 13:24:50
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -214,6 +214,8 @@ CREATE TABLE public.event_list (
     image_position character varying(10) DEFAULT 'center'::character varying,
     allow_guests boolean DEFAULT false,
     max_guests_per_rsvp integer DEFAULT 1,
+    menu_link text,
+    preorder_cutoff timestamp without time zone,
     CONSTRAINT event_image_position_check CHECK (((image_position)::text = ANY ((ARRAY['top'::character varying, 'center'::character varying, 'bottom'::character varying])::text[]))),
     CONSTRAINT event_max_guests_check CHECK (((max_guests_per_rsvp >= 1) AND (max_guests_per_rsvp <= 5))),
     CONSTRAINT event_status_check CHECK (((status)::text = ANY ((ARRAY['published'::character varying, 'cancelled'::character varying])::text[])))
@@ -260,6 +262,8 @@ CREATE TABLE public.event_rsvp (
     waitlist_position integer,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     guest_count integer DEFAULT 0,
+    food_order text,
+    dietary_notes text,
     CONSTRAINT event_rsvp_guest_count_check CHECK (((guest_count >= 0) AND (guest_count <= 5))),
     CONSTRAINT event_rsvp_status_check CHECK (((status)::text = ANY ((ARRAY['attending'::character varying, 'waitlist'::character varying])::text[])))
 );
@@ -842,7 +846,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENC
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO meetwithfriends_user;
 
 
--- Completed on 2026-01-09 12:13:47
+-- Completed on 2026-01-09 13:24:52
 
 --
 -- PostgreSQL database dump complete

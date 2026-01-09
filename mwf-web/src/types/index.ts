@@ -51,6 +51,8 @@ export interface Event {
     image_position?: 'top' | 'center' | 'bottom';
     allow_guests?: boolean;
     max_guests_per_rsvp?: number;
+    menu_link?: string;
+    preorder_cutoff?: string;
     status: 'published' | 'cancelled';
     created_at: string;
     attendee_count?: number;
@@ -66,6 +68,8 @@ export interface EventRsvp {
     status: 'attending' | 'waitlist';
     waitlist_position?: number;
     guest_count?: number;
+    food_order?: string;
+    dietary_notes?: string;
     created_at: string;
     user?: User;
 }
