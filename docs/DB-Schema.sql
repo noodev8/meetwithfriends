@@ -5,7 +5,7 @@
 -- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 17.4
 
--- Started on 2026-01-09 13:24:50
+-- Started on 2026-01-09 14:52:42
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -741,12 +741,12 @@ ALTER TABLE ONLY public.event_comment
 
 
 --
--- TOC entry 3377 (class 2606 OID 23624)
+-- TOC entry 3377 (class 2606 OID 23748)
 -- Name: event_list event_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
 ALTER TABLE ONLY public.event_list
-    ADD CONSTRAINT event_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.app_user(id);
+    ADD CONSTRAINT event_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.app_user(id) ON DELETE SET NULL;
 
 
 --
@@ -759,12 +759,12 @@ ALTER TABLE ONLY public.event_list
 
 
 --
--- TOC entry 3383 (class 2606 OID 23739)
+-- TOC entry 3383 (class 2606 OID 23753)
 -- Name: event_host event_host_added_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
 ALTER TABLE ONLY public.event_host
-    ADD CONSTRAINT event_host_added_by_fkey FOREIGN KEY (added_by) REFERENCES public.app_user(id);
+    ADD CONSTRAINT event_host_added_by_fkey FOREIGN KEY (added_by) REFERENCES public.app_user(id) ON DELETE SET NULL;
 
 
 --
@@ -846,7 +846,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENC
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO meetwithfriends_user;
 
 
--- Completed on 2026-01-09 13:24:52
+-- Completed on 2026-01-09 14:52:44
 
 --
 -- PostgreSQL database dump complete

@@ -110,7 +110,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
                 COUNT(r.id) FILTER (WHERE r.status = 'waitlist') AS waitlist_count
              FROM event_list e
              JOIN group_list g ON e.group_id = g.id
-             JOIN app_user u ON e.created_by = u.id
+             LEFT JOIN app_user u ON e.created_by = u.id
              LEFT JOIN event_rsvp r ON e.id = r.event_id
              WHERE e.id = $1
              GROUP BY e.id, g.name, u.name`,
@@ -128,10 +128,11 @@ router.get('/:id', optionalAuth, async (req, res) => {
         }
 
         // =======================================================================
-        // Transform result to ensure counts are numbers
+        // Transform result to ensure counts are numbers and handle deleted users
         // =======================================================================
         const event = {
             ...result.rows[0],
+            creator_name: result.rows[0].creator_name || 'Deleted User',
             attendee_count: parseInt(result.rows[0].attendee_count, 10) || 0,
             total_guest_count: parseInt(result.rows[0].total_guest_count, 10) || 0,
             waitlist_count: parseInt(result.rows[0].waitlist_count, 10) || 0

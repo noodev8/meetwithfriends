@@ -29,7 +29,8 @@ Return Codes:
 =======================================================================================================================================
 Notes:
 - This action is irreversible
-- All user data will be deleted (cascades to related tables via foreign keys)
+- User data is deleted (cascades: RSVPs, comments, group memberships, event host entries)
+- Events created by the user will remain but show "Deleted User" as creator
 - Groups where user is the only organiser will remain but lose their organiser
 =======================================================================================================================================
 */
@@ -87,10 +88,14 @@ router.post('/', verifyToken, async (req, res) => {
         // =======================================================================
         // Delete user account
         // Foreign key cascades will clean up:
-        // - password_reset_token
-        // - group_member
-        // - event_rsvp
-        // - event_comment
+        // - password_reset_token (CASCADE)
+        // - group_member (CASCADE)
+        // - event_rsvp (CASCADE)
+        // - event_comment (CASCADE)
+        // - event_host (CASCADE)
+        // Foreign keys set to NULL:
+        // - event_list.created_by (SET NULL) - events remain, creator shows as deleted
+        // - event_host.added_by (SET NULL) - host records remain
         // =======================================================================
         await query(
             `DELETE FROM app_user WHERE id = $1`,
