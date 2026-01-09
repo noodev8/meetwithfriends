@@ -83,6 +83,19 @@ export default function Header() {
                                 onClick={() => setMenuOpen(!menuOpen)}
                                 className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition"
                             >
+                                {user.avatar_url ? (
+                                    <img
+                                        src={user.avatar_url}
+                                        alt={user.name}
+                                        className="w-8 h-8 rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                                        <span className="text-sm text-blue-400">
+                                            {user.name.charAt(0).toUpperCase()}
+                                        </span>
+                                    </div>
+                                )}
                                 <span>{user.name}</span>
                                 <svg
                                     className={`w-4 h-4 transition-transform ${menuOpen ? 'rotate-180' : ''}`}
@@ -172,9 +185,22 @@ export default function Header() {
                                 <Link
                                     href="/profile"
                                     onClick={closeMobileMenu}
-                                    className="px-4 py-3 text-gray-700 hover:bg-gray-50 transition"
+                                    className="px-4 py-3 text-gray-700 hover:bg-gray-50 transition flex items-center gap-3"
                                 >
-                                    Profile
+                                    {user.avatar_url ? (
+                                        <img
+                                            src={user.avatar_url}
+                                            alt={user.name}
+                                            className="w-8 h-8 rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                                            <span className="text-sm text-blue-400">
+                                                {user.name.charAt(0).toUpperCase()}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <span>{user.name}</span>
                                 </Link>
                                 <button
                                     onClick={handleLogout}
