@@ -51,6 +51,7 @@ export interface Event {
     image_position?: 'top' | 'center' | 'bottom';
     allow_guests?: boolean;
     max_guests_per_rsvp?: number;
+    preorders_enabled?: boolean;
     menu_link?: string;
     preorder_cutoff?: string;
     status: 'published' | 'cancelled';

@@ -86,6 +86,9 @@ export default function EventDetailPage() {
     const [editFoodOrder, setEditFoodOrder] = useState('');
     const [editDietaryNotes, setEditDietaryNotes] = useState('');
 
+    // Profile modal state
+    const [selectedAttendee, setSelectedAttendee] = useState<Attendee | null>(null);
+
     // =======================================================================
     // Fetch event details, attendees, and comments
     // =======================================================================
@@ -870,8 +873,8 @@ export default function EventDetailPage() {
                             </div>
                         )}
 
-                        {/* Pre-order Form - only visible to attendees when menu link is set */}
-                        {event.menu_link && rsvp && (
+                        {/* Pre-order Form - visible to attendees when pre-orders are enabled */}
+                        {event.preorders_enabled && rsvp && (
                             <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
                                 <h2 className="text-lg font-bold text-stone-900 mb-4 font-display">Your Order</h2>
                                 {isCutoffPassed ? (
@@ -943,12 +946,16 @@ export default function EventDetailPage() {
                                             )}
                                         </div>
                                         <p className="text-xs text-stone-500">
-                                            <a href={event.menu_link} target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:text-amber-700">
-                                                View the menu
-                                            </a>
-                                            {' '}to see what's available.
+                                            {event.menu_link && (
+                                                <>
+                                                    <a href={event.menu_link} target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:text-amber-700">
+                                                        View the menu
+                                                    </a>
+                                                    {' '}to see what's available.{' '}
+                                                </>
+                                            )}
                                             {event.preorder_cutoff && (
-                                                <> Order by {new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at {new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}.</>
+                                                <>Order by {new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at {new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}.</>
                                             )}
                                         </p>
                                     </form>
@@ -1097,49 +1104,70 @@ export default function EventDetailPage() {
                                             {attending.slice(0, 10).map(person => (
                                                 <div
                                                     key={person.user_id}
-                                                    className="flex items-center justify-between gap-2"
+                                                    className="space-y-1"
                                                 >
-                                                    <div className="flex items-center gap-2 min-w-0">
-                                                        {person.avatar_url ? (
-                                                            <img
-                                                                src={person.avatar_url}
-                                                                alt={person.name}
-                                                                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center flex-shrink-0">
-                                                                <span className="text-xs font-medium text-amber-600">
-                                                                    {person.name.charAt(0).toUpperCase()}
-                                                                </span>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <div className="flex items-center gap-2 min-w-0">
+                                                            {person.avatar_url ? (
+                                                                <img
+                                                                    src={person.avatar_url}
+                                                                    alt={person.name}
+                                                                    className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center flex-shrink-0">
+                                                                    <span className="text-xs font-medium text-amber-600">
+                                                                        {person.name.charAt(0).toUpperCase()}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                            <button
+                                                                onClick={() => setSelectedAttendee(person)}
+                                                                className="text-sm font-medium text-stone-900 truncate hover:text-amber-600 transition text-left"
+                                                            >
+                                                                {person.name}
+                                                                {person.guest_count > 0 && (
+                                                                    <span className="ml-1 text-stone-400 font-normal">
+                                                                        +{person.guest_count}
+                                                                    </span>
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                        {canManageAttendees && (
+                                                            <div className="flex gap-1 flex-shrink-0">
+                                                                <button
+                                                                    onClick={() => handleManageAttendee(person.user_id, 'demote')}
+                                                                    disabled={managingUser === person.user_id}
+                                                                    className="p-1 text-xs text-yellow-700 hover:bg-yellow-50 rounded disabled:opacity-50"
+                                                                    title="Move to waitlist"
+                                                                >
+                                                                    ↓
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleManageAttendee(person.user_id, 'remove')}
+                                                                    disabled={managingUser === person.user_id}
+                                                                    className="p-1 text-xs text-red-600 hover:bg-red-50 rounded disabled:opacity-50"
+                                                                    title="Remove"
+                                                                >
+                                                                    ✕
+                                                                </button>
                                                             </div>
                                                         )}
-                                                        <span className="text-sm font-medium text-stone-900 truncate">
-                                                            {person.name}
-                                                            {person.guest_count > 0 && (
-                                                                <span className="ml-1 text-stone-400 font-normal">
-                                                                    +{person.guest_count}
-                                                                </span>
-                                                            )}
-                                                        </span>
                                                     </div>
-                                                    {canManageAttendees && (
-                                                        <div className="flex gap-1 flex-shrink-0">
-                                                            <button
-                                                                onClick={() => handleManageAttendee(person.user_id, 'demote')}
-                                                                disabled={managingUser === person.user_id}
-                                                                className="p-1 text-xs text-yellow-700 hover:bg-yellow-50 rounded disabled:opacity-50"
-                                                                title="Move to waitlist"
-                                                            >
-                                                                ↓
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleManageAttendee(person.user_id, 'remove')}
-                                                                disabled={managingUser === person.user_id}
-                                                                className="p-1 text-xs text-red-600 hover:bg-red-50 rounded disabled:opacity-50"
-                                                                title="Remove"
-                                                            >
-                                                                ✕
-                                                            </button>
+                                                    {/* Show food order for all members when preorders enabled */}
+                                                    {event.preorders_enabled && (person.food_order || person.dietary_notes) && (
+                                                        <div className="ml-10 text-xs text-stone-500">
+                                                            {person.food_order && <span>{person.food_order}</span>}
+                                                            {person.food_order && person.dietary_notes && <span> • </span>}
+                                                            {person.dietary_notes && <span className="text-orange-600">{person.dietary_notes}</span>}
+                                                            {canManageAttendees && (
+                                                                <button
+                                                                    onClick={() => startEditOrder(person)}
+                                                                    className="ml-2 text-amber-600 hover:text-amber-700"
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </div>
@@ -1183,7 +1211,12 @@ export default function EventDetailPage() {
                                                                     </span>
                                                                 </div>
                                                             )}
-                                                            <span className="text-sm text-stone-600 truncate">{person.name}</span>
+                                                            <button
+                                                                onClick={() => setSelectedAttendee(person)}
+                                                                className="text-sm text-stone-600 truncate hover:text-amber-600 transition text-left"
+                                                            >
+                                                                {person.name}
+                                                            </button>
                                                         </div>
                                                         {canManageAttendees && (
                                                             <div className="flex gap-1 flex-shrink-0">
@@ -1330,7 +1363,7 @@ export default function EventDetailPage() {
                         )}
 
                         {/* Food Orders Card - for hosts when event has pre-orders */}
-                        {canManageAttendees && event.menu_link && attending.some(a => a.food_order || a.dietary_notes) && (
+                        {canManageAttendees && event.preorders_enabled && attending.some(a => a.food_order || a.dietary_notes) && (
                             <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
                                 <h2 className="text-lg font-bold text-stone-900 mb-4 font-display">Food Orders</h2>
                                 <div className="space-y-3 max-h-64 overflow-y-auto">
@@ -1397,6 +1430,102 @@ export default function EventDetailPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Profile Modal */}
+            {selectedAttendee && (
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                    onClick={() => setSelectedAttendee(null)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header with gradient */}
+                        <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-6 pb-16 relative">
+                            <button
+                                onClick={() => setSelectedAttendee(null)}
+                                className="absolute top-4 right-4 p-2 text-stone-500 hover:text-stone-700 transition"
+                                aria-label="Close"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Avatar - positioned to overlap header */}
+                        <div className="flex justify-center -mt-12">
+                            {selectedAttendee.avatar_url ? (
+                                <img
+                                    src={selectedAttendee.avatar_url}
+                                    alt={selectedAttendee.name}
+                                    className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                                />
+                            ) : (
+                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center border-4 border-white shadow-lg">
+                                    <span className="text-3xl font-bold text-white">
+                                        {selectedAttendee.name.charAt(0).toUpperCase()}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 pt-4 text-center">
+                            <h3 className="text-xl font-bold text-stone-900 font-display">
+                                {selectedAttendee.name}
+                            </h3>
+
+                            {/* RSVP status */}
+                            <div className="mt-2">
+                                {selectedAttendee.waitlist_position ? (
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-700 text-sm rounded-full">
+                                        Waitlist #{selectedAttendee.waitlist_position}
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full">
+                                        Attending
+                                        {selectedAttendee.guest_count > 0 && (
+                                            <span className="text-green-600">
+                                                +{selectedAttendee.guest_count} guest{selectedAttendee.guest_count > 1 ? 's' : ''}
+                                            </span>
+                                        )}
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Food order info when preorders enabled */}
+                            {event.preorders_enabled && (selectedAttendee.food_order || selectedAttendee.dietary_notes) && (
+                                <div className="mt-4 p-4 bg-stone-50 rounded-xl text-left">
+                                    <h4 className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2">
+                                        Food Order
+                                    </h4>
+                                    {selectedAttendee.food_order && (
+                                        <p className="text-sm text-stone-700">
+                                            {selectedAttendee.food_order}
+                                        </p>
+                                    )}
+                                    {selectedAttendee.dietary_notes && (
+                                        <p className="text-sm text-orange-600 mt-1">
+                                            {selectedAttendee.dietary_notes}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* RSVP date */}
+                            <p className="mt-4 text-xs text-stone-400">
+                                RSVP'd {new Date(selectedAttendee.rsvp_at).toLocaleDateString('en-GB', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric'
+                                })}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }

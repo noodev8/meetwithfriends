@@ -26,6 +26,7 @@ Success Response:
     "image_position": "center",
     "allow_guests": true,
     "max_guests_per_rsvp": 2,
+    "preorders_enabled": true,           // whether pre-orders are enabled
     "menu_link": "https://...",          // URL to menu (null if not set)
     "preorder_cutoff": "2026-01-14T12:00:00.000Z",  // deadline for pre-orders (null if not set)
     "status": "published",
@@ -101,6 +102,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
                 e.image_position,
                 e.allow_guests,
                 e.max_guests_per_rsvp,
+                e.preorders_enabled,
                 e.menu_link,
                 e.preorder_cutoff,
                 e.status,

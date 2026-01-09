@@ -16,6 +16,7 @@ Request Payload:
   "image_position": "top",                 // string, optional (top/center/bottom)
   "allow_guests": true,                    // boolean, optional
   "max_guests_per_rsvp": 2,                // integer 1-5, optional
+  "preorders_enabled": true,               // boolean, optional
   "menu_link": "https://...",              // string, optional (URL to menu)
   "preorder_cutoff": "2026-02-14T12:00:00Z"  // ISO datetime, optional (deadline for pre-orders)
 }
@@ -51,7 +52,7 @@ const { verifyToken } = require('../../middleware/auth');
 router.post('/:id/update', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp, menu_link, preorder_cutoff } = req.body;
+        const { title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, preorder_cutoff } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -226,6 +227,11 @@ router.post('/:id/update', verifyToken, async (req, res) => {
             updates.push(`max_guests_per_rsvp = $${paramCount++}`);
             // Clamp to 1-5 range
             values.push(Math.min(Math.max(parseInt(max_guests_per_rsvp, 10) || 1, 1), 5));
+        }
+
+        if (preorders_enabled !== undefined) {
+            updates.push(`preorders_enabled = $${paramCount++}`);
+            values.push(Boolean(preorders_enabled));
         }
 
         if (menu_link !== undefined) {

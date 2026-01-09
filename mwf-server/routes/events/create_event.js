@@ -17,8 +17,9 @@ Request Payload:
   "image_position": "center",            // string, optional (top/center/bottom, default: center)
   "allow_guests": true,                  // boolean, optional (default: false)
   "max_guests_per_rsvp": 2,              // integer 1-5, optional (default: 1, only used if allow_guests is true)
+  "preorders_enabled": true,              // boolean, optional (default: false)
   "menu_link": "https://...",            // string, optional (URL to menu)
-  "preorder_cutoff": "2026-01-14T12:00:00Z"  // ISO datetime, optional (deadline for pre-orders)
+  "preorder_cutoff": "2026-01-14T12:00:00Z"  // ISO datetime, optional (deadline for pre-orders, requires preorders_enabled)
 }
 
 Success Response:
@@ -37,6 +38,7 @@ Success Response:
     "image_position": "center",
     "allow_guests": true,
     "max_guests_per_rsvp": 2,
+    "preorders_enabled": true,
     "menu_link": "https://...",
     "preorder_cutoff": "2026-01-14T12:00:00.000Z",
     "status": "published",
@@ -63,7 +65,7 @@ const { verifyToken } = require('../../middleware/auth');
 
 router.post('/create', verifyToken, async (req, res) => {
     try {
-        const { group_id, title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp, menu_link, preorder_cutoff } = req.body;
+        const { group_id, title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, preorder_cutoff } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -116,11 +118,11 @@ router.post('/create', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
-        // Validate preorder_cutoff if provided
+        // Validate preorder_cutoff if preorders are enabled
         // Must be a valid date and should be before the event date
         // =======================================================================
         let cutoffDate = null;
-        if (preorder_cutoff) {
+        if (preorders_enabled && preorder_cutoff) {
             cutoffDate = new Date(preorder_cutoff);
             if (isNaN(cutoffDate.getTime())) {
                 return res.json({
@@ -180,10 +182,10 @@ router.post('/create', verifyToken, async (req, res) => {
         const result = await withTransaction(async (client) => {
             // Create the event
             const eventResult = await client.query(
-                `INSERT INTO event_list (group_id, created_by, title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp, menu_link, preorder_cutoff)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-                 RETURNING id, group_id, created_by, title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp, menu_link, preorder_cutoff, status, created_at`,
-                [group_id, userId, title.trim(), description?.trim() || null, location?.trim() || null, eventDate, capacity || null, image_url?.trim() || null, image_position || 'center', allow_guests || false, finalMaxGuests, menu_link?.trim() || null, cutoffDate]
+                `INSERT INTO event_list (group_id, created_by, title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, preorder_cutoff)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                 RETURNING id, group_id, created_by, title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, preorder_cutoff, status, created_at`,
+                [group_id, userId, title.trim(), description?.trim() || null, location?.trim() || null, eventDate, capacity || null, image_url?.trim() || null, image_position || 'center', allow_guests || false, finalMaxGuests, preorders_enabled || false, menu_link?.trim() || null, cutoffDate]
             );
 
             const newEvent = eventResult.rows[0];

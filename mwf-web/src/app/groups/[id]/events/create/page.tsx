@@ -40,6 +40,7 @@ export default function CreateEventPage() {
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [allowGuests, setAllowGuests] = useState(false);
     const [maxGuestsPerRsvp, setMaxGuestsPerRsvp] = useState(1);
+    const [preordersEnabled, setPreordersEnabled] = useState(false);
     const [menuLink, setMenuLink] = useState('');
     const [preorderCutoffDate, setPreorderCutoffDate] = useState('');
     const [preorderCutoffTime, setPreorderCutoffTime] = useState('');
@@ -97,9 +98,9 @@ export default function CreateEventPage() {
             return;
         }
 
-        // Validate preorder cutoff if menu link is set
+        // Validate preorder cutoff if preorders are enabled
         let preorderCutoff: string | undefined;
-        if (menuLink.trim() && preorderCutoffDate && preorderCutoffTime) {
+        if (preordersEnabled && preorderCutoffDate && preorderCutoffTime) {
             const cutoffDateTime = new Date(`${preorderCutoffDate}T${preorderCutoffTime}`);
             if (isNaN(cutoffDateTime.getTime())) {
                 setError('Invalid pre-order cutoff date or time');
@@ -125,8 +126,9 @@ export default function CreateEventPage() {
             image_url: imageUrl || undefined,
             allow_guests: allowGuests,
             max_guests_per_rsvp: allowGuests ? maxGuestsPerRsvp : undefined,
-            menu_link: menuLink.trim() || undefined,
-            preorder_cutoff: preorderCutoff,
+            preorders_enabled: preordersEnabled,
+            menu_link: preordersEnabled ? (menuLink.trim() || undefined) : undefined,
+            preorder_cutoff: preordersEnabled ? preorderCutoff : undefined,
         });
 
         setSubmitting(false);
@@ -358,30 +360,44 @@ export default function CreateEventPage() {
 
                             {/* Pre-orders Section */}
                             <div className="border-t border-stone-200 pt-6">
-                                <h3 className="font-display text-lg font-semibold text-stone-800 mb-2">Pre-orders</h3>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <input
+                                        type="checkbox"
+                                        id="preordersEnabled"
+                                        checked={preordersEnabled}
+                                        onChange={(e) => setPreordersEnabled(e.target.checked)}
+                                        className="w-5 h-5 text-amber-500 border-stone-300 rounded focus:ring-amber-500"
+                                    />
+                                    <label htmlFor="preordersEnabled" className="font-display text-lg font-semibold text-stone-800">
+                                        Enable pre-orders
+                                    </label>
+                                </div>
                                 <p className="text-sm text-stone-500 mb-4">
-                                    Add a menu link to allow attendees to submit food orders before the event.
+                                    Allow attendees to submit food orders before the event.
                                 </p>
 
-                                <div className="space-y-4">
-                                    <div>
-                                        <label htmlFor="menuLink" className="block text-sm font-medium text-stone-700 mb-2">
-                                            Menu Link
-                                        </label>
-                                        <input
-                                            type="url"
-                                            id="menuLink"
-                                            value={menuLink}
-                                            onChange={(e) => setMenuLink(e.target.value)}
-                                            className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
-                                            placeholder="https://restaurant.com/menu"
-                                        />
-                                    </div>
+                                {preordersEnabled && (
+                                    <div className="space-y-4 ml-8">
+                                        <div>
+                                            <label htmlFor="menuLink" className="block text-sm font-medium text-stone-700 mb-2">
+                                                Menu Link (optional)
+                                            </label>
+                                            <input
+                                                type="url"
+                                                id="menuLink"
+                                                value={menuLink}
+                                                onChange={(e) => setMenuLink(e.target.value)}
+                                                className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                                placeholder="https://restaurant.com/menu"
+                                            />
+                                            <p className="mt-1.5 text-sm text-stone-500">
+                                                Share a link to the menu, or leave empty if sharing another way.
+                                            </p>
+                                        </div>
 
-                                    {menuLink.trim() && (
                                         <div>
                                             <label className="block text-sm font-medium text-stone-700 mb-2">
-                                                Pre-order Cutoff
+                                                Order Cutoff (optional)
                                             </label>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <input
@@ -399,11 +415,11 @@ export default function CreateEventPage() {
                                                 />
                                             </div>
                                             <p className="mt-1.5 text-sm text-stone-500">
-                                                Orders will be locked after this time. Leave empty for no deadline.
+                                                Set a deadline for orders. Leave empty for no deadline.
                                             </p>
                                         </div>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Submit */}
