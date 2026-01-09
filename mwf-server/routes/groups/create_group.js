@@ -10,7 +10,8 @@ Request Payload:
   "name": "Brookfield Socials",           // string, required (max 100 chars)
   "description": "A food-focused group",  // string, optional
   "image_url": "https://...",             // string, optional (max 500 chars)
-  "join_policy": "approval"               // string, optional (default: "approval", options: "auto", "approval")
+  "join_policy": "approval",              // string, optional (default: "approval", options: "auto", "approval")
+  "visibility": "listed"                  // string, optional (default: "listed", options: "listed", "unlisted")
 }
 
 Success Response:
@@ -22,6 +23,7 @@ Success Response:
     "description": "A food-focused group",
     "image_url": "https://...",
     "join_policy": "approval",
+    "visibility": "listed",
     "created_at": "2026-01-01T00:00:00.000Z"
   }
 }
@@ -31,6 +33,7 @@ Return Codes:
 "MISSING_FIELDS"
 "INVALID_NAME"
 "INVALID_JOIN_POLICY"
+"INVALID_VISIBILITY"
 "UNAUTHORIZED"
 "SERVER_ERROR"
 =======================================================================================================================================
@@ -43,7 +46,7 @@ const { verifyToken } = require('../../middleware/auth');
 
 router.post('/', verifyToken, async (req, res) => {
     try {
-        const { name, description, image_url, join_policy } = req.body;
+        const { name, description, image_url, join_policy, visibility } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -80,13 +83,26 @@ router.post('/', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
+        // Validate visibility if provided
+        // =======================================================================
+        const validVisibilities = ['listed', 'unlisted'];
+        const finalVisibility = visibility || 'listed';
+
+        if (!validVisibilities.includes(finalVisibility)) {
+            return res.json({
+                return_code: 'INVALID_VISIBILITY',
+                message: 'Visibility must be either "listed" or "unlisted"'
+            });
+        }
+
+        // =======================================================================
         // Create the group
         // =======================================================================
         const groupResult = await query(
-            `INSERT INTO group_list (name, description, image_url, join_policy)
-             VALUES ($1, $2, $3, $4)
-             RETURNING id, name, description, image_url, join_policy, created_at`,
-            [name.trim(), description || null, image_url || null, finalJoinPolicy]
+            `INSERT INTO group_list (name, description, image_url, join_policy, visibility)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING id, name, description, image_url, join_policy, visibility, created_at`,
+            [name.trim(), description || null, image_url || null, finalJoinPolicy, finalVisibility]
         );
 
         const group = groupResult.rows[0];

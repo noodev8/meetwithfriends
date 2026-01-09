@@ -13,6 +13,14 @@ import { ApiResult, Group } from '@/types';
 // Extended Group type with member_count
 export interface GroupWithCount extends Group {
     member_count: number;
+    visibility?: 'listed' | 'unlisted';
+    upcoming_event_count?: number;
+}
+
+// User's group with their role and upcoming event count
+export interface MyGroup extends GroupWithCount {
+    role: 'organiser' | 'host' | 'member';
+    upcoming_event_count: number;
 }
 
 // Membership status for the current user
@@ -398,6 +406,55 @@ export async function assignRole(
     return {
         success: false,
         error: (response.message as string) || 'Failed to assign role',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+getMyGroups
+=======================================================================================================================================
+Fetches all groups the authenticated user belongs to, with their role in each group.
+=======================================================================================================================================
+*/
+export async function getMyGroups(token: string): Promise<ApiResult<MyGroup[]>> {
+    const response = await apiGet('/api/users/my-groups', token);
+
+    if (response.return_code === 'SUCCESS' && response.groups) {
+        return {
+            success: true,
+            data: response.groups as unknown as MyGroup[],
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to get my groups',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+discoverGroups
+=======================================================================================================================================
+Fetches listed groups that the authenticated user is NOT already a member of.
+Used for the "Discover Groups" dashboard section.
+=======================================================================================================================================
+*/
+export async function discoverGroups(token: string): Promise<ApiResult<GroupWithCount[]>> {
+    const response = await apiGet('/api/groups/discover', token);
+
+    if (response.return_code === 'SUCCESS' && response.groups) {
+        return {
+            success: true,
+            data: response.groups as unknown as GroupWithCount[],
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to discover groups',
         return_code: response.return_code,
     };
 }

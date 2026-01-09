@@ -15,6 +15,7 @@ export interface EventWithDetails extends Event {
     group_name: string;
     creator_name: string;
     waitlist_count: number;
+    rsvp_status?: 'attending' | 'waitlist' | null;
 }
 
 // RSVP status type
@@ -331,6 +332,55 @@ export async function restoreEvent(
     return {
         success: false,
         error: (response.message as string) || 'Failed to restore event',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+getMyEvents
+=======================================================================================================================================
+Fetches upcoming events from groups the authenticated user is a member of.
+=======================================================================================================================================
+*/
+export async function getMyEvents(token: string): Promise<ApiResult<EventWithDetails[]>> {
+    const response = await apiGet('/api/users/my-events', token);
+
+    if (response.return_code === 'SUCCESS' && response.events) {
+        return {
+            success: true,
+            data: response.events as unknown as EventWithDetails[],
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to get my events',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+getMyRsvps
+=======================================================================================================================================
+Fetches events the authenticated user has RSVP'd to (attending or waitlist).
+Used for the "Your Events" personal calendar page.
+=======================================================================================================================================
+*/
+export async function getMyRsvps(token: string): Promise<ApiResult<EventWithDetails[]>> {
+    const response = await apiGet('/api/users/my-rsvps', token);
+
+    if (response.return_code === 'SUCCESS' && response.events) {
+        return {
+            success: true,
+            data: response.events as unknown as EventWithDetails[],
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to get your events',
         return_code: response.return_code,
     };
 }

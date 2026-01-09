@@ -206,6 +206,7 @@ Target: 8 months maximum (phased delivery)
 │ description     │
 │ image_url       │
 │ join_policy     │  (auto/approval)
+│ visibility      │  (listed/unlisted)
 │ created_at      │
 │ updated_at      │
 └─────────────────┘
@@ -435,6 +436,12 @@ Target: 8 months maximum (phased delivery)
 | 2026-01-04 | Strategic intent | Short-term: Replace Meetup. Medium-term: Deposits/pre-orders. Long-term: Restaurant group-booking business. |
 | 2026-01-04 | Migration strategy | Staged approach: soft launch → dual running → deposits force move → full migration |
 | 2026-01-04 | Long-term vision | Three-sided marketplace: Guests ↔ Hosts ↔ Restaurants. Build demand (hosts/guests) first. |
+| 2026-01-08 | Dashboard for logged-in only | Non-authenticated users see landing page, not dashboard. Dashboard is members-only. |
+| 2026-01-08 | Dashboard groups hierarchy | Groups I Organise → Groups I'm In → Discover Groups. Organiser role supersedes member (no duplicates). |
+| 2026-01-08 | Dashboard events hierarchy | Events I'm Hosting → Events I'm Attending → Upcoming in My Groups. Duplicates OK in events section. |
+| 2026-01-08 | Group visibility toggle | Groups have `visibility` field: listed/unlisted. Controls appearance in Discover Groups only, not access. |
+| 2026-01-08 | Visibility is not privacy | Unlisted groups still accessible via direct link. This is discoverability, not access control. |
+| 2026-01-08 | Visibility is flexible | Organisers can toggle listed/unlisted at any time. No restriction on changing back. |
 
 ---
 
@@ -615,6 +622,69 @@ meetwithfriends/
 | Cloudinary | Profile pics, group images | Direct upload from mwf-web, URL stored in DB |
 | Resend | Email notifications (Phase 2+) | Called from mwf-server |
 | Stripe Connect | Payments (Phase 2) | Called from mwf-server |
+
+---
+
+# Dashboard Organization
+
+## Members Dashboard (Logged In Users Only)
+
+The main dashboard is only for authenticated users. Non-authenticated users see a separate landing page encouraging registration.
+
+### Groups Section
+
+| Section | Description | Query Logic |
+|---------|-------------|-------------|
+| **Groups I Organise** | Groups where user has organiser role | `role = 'organiser'` |
+| **Groups I'm In** | Groups where user is member but NOT organiser (avoids duplicates) | `role IN ('member', 'host')` |
+| **Discover Groups** | Listed groups the user is NOT already a member of | `visibility = 'listed' AND user not in group` |
+
+### Events Section
+
+| Section | Description | Query Logic |
+|---------|-------------|-------------|
+| **Events I'm Hosting** | Events the user created | `created_by = user_id` |
+| **Events I'm Attending** | Events user has RSVP'd yes to | `event_rsvp.status = 'attending'` |
+| **Upcoming in My Groups** | All upcoming events from groups user belongs to | May include events also shown in "Attending" - duplicates OK here |
+
+### Key Rules
+- **No duplicates in Groups section**: Organiser role supersedes member display
+- **Duplicates OK in Events section**: An event can appear in both "Attending" and "Upcoming in My Groups"
+- **Discover Groups visible to logged-in users only**: Helps members find new groups to join
+
+## Non-Members (Not Logged In)
+
+Non-authenticated users do NOT see the dashboard. They are directed to a separate landing page that:
+- Explains the platform value proposition
+- Encourages registration
+- Does NOT show the "Discover Groups" section (that's for logged-in users only)
+
+---
+
+# Group Visibility
+
+## Listed vs Unlisted
+
+Groups have a `visibility` setting that controls whether they appear in the "Discover Groups" section:
+
+| Value | Behavior |
+|-------|----------|
+| `listed` | Group appears in Discover Groups for logged-in users to find and join |
+| `unlisted` | Group does NOT appear in discovery - only accessible via direct link |
+
+### Key Points
+- This is NOT a privacy/access control - unlisted groups are still accessible if you have the link
+- Organisers can toggle visibility at any time (listed → unlisted → listed)
+- Use case: Organiser wants to recruit members (listed), then stop accepting new members (unlisted), then open up again later (listed)
+- Different from potential future "private" groups which would restrict content access
+
+### Terminology Reference
+Related terms that all refer to this feature:
+- **listed** = visible, discoverable, public (in discovery), shown, searchable
+- **unlisted** = hidden, not discoverable, private (from discovery), invite-only, direct link only
+
+### Database
+See `DB-Schema.sql` for the `visibility` column on `group_list`.
 
 ---
 

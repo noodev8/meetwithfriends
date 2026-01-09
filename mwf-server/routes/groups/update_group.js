@@ -10,7 +10,8 @@ Request Payload:
   "name": "New Group Name",              // string, optional (max 100 chars)
   "description": "Updated description",  // string, optional (null to clear)
   "image_url": "https://...",            // string, optional (null to clear, max 500 chars)
-  "join_policy": "auto"                  // string, optional ("auto" or "approval")
+  "join_policy": "auto",                 // string, optional ("auto" or "approval")
+  "visibility": "listed"                 // string, optional ("listed" or "unlisted")
 }
 
 Success Response:
@@ -22,6 +23,7 @@ Success Response:
     "description": "Updated description",
     "image_url": "https://...",
     "join_policy": "auto",
+    "visibility": "listed",
     "created_at": "2026-01-01T00:00:00.000Z",
     "updated_at": "2026-01-07T10:30:00.000Z"
   }
@@ -33,6 +35,7 @@ Return Codes:
 "FORBIDDEN"
 "INVALID_NAME"
 "INVALID_JOIN_POLICY"
+"INVALID_VISIBILITY"
 "SERVER_ERROR"
 =======================================================================================================================================
 */
@@ -45,7 +48,7 @@ const { verifyToken } = require('../../middleware/auth');
 router.post('/:id/update', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, description, image_url, join_policy } = req.body;
+        const { name, description, image_url, join_policy, visibility } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -62,7 +65,7 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         // Check if group exists
         // =======================================================================
         const groupResult = await query(
-            'SELECT id, name, description, image_url, join_policy FROM group_list WHERE id = $1',
+            'SELECT id, name, description, image_url, join_policy, visibility FROM group_list WHERE id = $1',
             [id]
         );
 
@@ -124,6 +127,19 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
+        // Validate visibility if provided
+        // =======================================================================
+        const validVisibilities = ['listed', 'unlisted'];
+        const finalVisibility = visibility !== undefined ? visibility : currentGroup.visibility;
+
+        if (!validVisibilities.includes(finalVisibility)) {
+            return res.json({
+                return_code: 'INVALID_VISIBILITY',
+                message: 'Visibility must be either "listed" or "unlisted"'
+            });
+        }
+
+        // =======================================================================
         // Determine final values (use provided value or keep current)
         // =======================================================================
         const finalDescription = description !== undefined ? description : currentGroup.description;
@@ -134,10 +150,10 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         // =======================================================================
         const updateResult = await query(
             `UPDATE group_list
-             SET name = $1, description = $2, image_url = $3, join_policy = $4, updated_at = CURRENT_TIMESTAMP
-             WHERE id = $5
-             RETURNING id, name, description, image_url, join_policy, created_at, updated_at`,
-            [finalName.trim(), finalDescription, finalImageUrl, finalJoinPolicy, id]
+             SET name = $1, description = $2, image_url = $3, join_policy = $4, visibility = $5, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $6
+             RETURNING id, name, description, image_url, join_policy, visibility, created_at, updated_at`,
+            [finalName.trim(), finalDescription, finalImageUrl, finalJoinPolicy, finalVisibility, id]
         );
 
         const updatedGroup = updateResult.rows[0];

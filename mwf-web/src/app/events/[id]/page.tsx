@@ -322,8 +322,8 @@ export default function EventDetailPage() {
                 <Header />
                 <div className="flex-1 flex flex-col items-center justify-center p-8">
                     <p className="text-gray-600 mb-4">{error || 'Event not found'}</p>
-                    <Link href="/events" className="text-blue-600 hover:text-blue-700">
-                        Back to events
+                    <Link href="/dashboard" className="text-blue-600 hover:text-blue-700">
+                        Back to dashboard
                     </Link>
                 </div>
             </main>

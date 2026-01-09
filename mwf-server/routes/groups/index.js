@@ -11,6 +11,7 @@ const router = express.Router();
 
 // Import route handlers
 const listGroups = require('./list_groups');
+const discoverGroups = require('./discover_groups');
 const getGroup = require('./get_group');
 const createGroup = require('./create_group');
 const updateGroup = require('./update_group');
@@ -25,6 +26,7 @@ const assignRole = require('./assign_role');
 // Route definitions
 // =======================================================================
 router.use('/', listGroups);           // GET /api/groups - list all groups
+router.use('/discover', discoverGroups); // GET /api/groups/discover - listed groups user is not in
 router.use('/create', createGroup);    // POST /api/groups/create - create new group
 router.use('/join', joinGroup);        // POST /api/groups/join - join a group
 router.use('/', updateGroup);          // POST /api/groups/:id/update - update group (organiser only)

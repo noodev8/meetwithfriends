@@ -6,7 +6,7 @@ Header Component
 =======================================================================================================================================
 Shared header for all pages. Handles both authenticated and non-authenticated states.
 - Logo: Links to dashboard (logged in) or landing (logged out)
-- Nav: Groups, Events (desktop), hamburger menu (mobile)
+- Nav: Your Events (logged in), hamburger menu (mobile)
 - User Menu: Profile, Log out (logged in) or Log in, Sign up (logged out)
 =======================================================================================================================================
 */
@@ -66,18 +66,15 @@ export default function Header() {
 
                 {/* Desktop Navigation */}
                 <nav className="hidden md:flex items-center gap-8">
-                    <Link
-                        href="/groups"
-                        className="text-gray-600 hover:text-gray-900 transition"
-                    >
-                        Groups
-                    </Link>
-                    <Link
-                        href="/events"
-                        className="text-gray-600 hover:text-gray-900 transition"
-                    >
-                        Events
-                    </Link>
+                    {/* Your Events (logged in only) */}
+                    {user && (
+                        <Link
+                            href="/your-events"
+                            className="text-gray-600 hover:text-gray-900 transition"
+                        >
+                            Your Events
+                        </Link>
+                    )}
 
                     {/* User Menu (logged in) */}
                     {user ? (
@@ -162,25 +159,16 @@ export default function Header() {
                     className="md:hidden absolute top-full left-0 right-0 bg-white border-b shadow-lg z-50"
                 >
                     <nav className="flex flex-col py-2">
-                        <Link
-                            href="/groups"
-                            onClick={closeMobileMenu}
-                            className="px-4 py-3 text-gray-700 hover:bg-gray-50 transition"
-                        >
-                            Groups
-                        </Link>
-                        <Link
-                            href="/events"
-                            onClick={closeMobileMenu}
-                            className="px-4 py-3 text-gray-700 hover:bg-gray-50 transition"
-                        >
-                            Events
-                        </Link>
-
-                        <div className="border-t my-2" />
-
                         {user ? (
                             <>
+                                <Link
+                                    href="/your-events"
+                                    onClick={closeMobileMenu}
+                                    className="px-4 py-3 text-gray-700 hover:bg-gray-50 transition"
+                                >
+                                    Your Events
+                                </Link>
+                                <div className="border-t my-2" />
                                 <Link
                                     href="/profile"
                                     onClick={closeMobileMenu}

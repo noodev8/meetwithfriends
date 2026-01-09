@@ -426,6 +426,15 @@ export default function GroupDetailPage() {
                                                 <h3 className="text-lg font-semibold text-gray-900">
                                                     {event.title}
                                                 </h3>
+                                                {event.rsvp_status && (
+                                                    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                                                        event.rsvp_status === 'attending'
+                                                            ? 'text-green-700 bg-green-100'
+                                                            : 'text-amber-700 bg-amber-100'
+                                                    }`}>
+                                                        {event.rsvp_status === 'attending' ? 'Going' : 'Waitlist'}
+                                                    </span>
+                                                )}
                                                 {event.status === 'cancelled' && (
                                                     <span className="px-2 py-0.5 text-xs font-medium text-red-700 bg-red-100 rounded-full">
                                                         Cancelled

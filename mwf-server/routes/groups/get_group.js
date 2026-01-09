@@ -17,6 +17,7 @@ Success Response:
     "description": "A food-focused social group",
     "image_url": "https://...",
     "join_policy": "approval",
+    "visibility": "listed",
     "member_count": 42,
     "created_at": "2026-01-01T00:00:00.000Z"
   },
@@ -63,6 +64,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
                 g.description,
                 g.image_url,
                 g.join_policy,
+                g.visibility,
                 g.created_at,
                 COUNT(gm.id) FILTER (WHERE gm.status = 'active') AS member_count
              FROM group_list g

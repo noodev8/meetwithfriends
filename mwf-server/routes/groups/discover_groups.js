@@ -1,9 +1,9 @@
 /*
 =======================================================================================================================================
-API Route: list_groups
+API Route: discover_groups
 =======================================================================================================================================
 Method: GET
-Purpose: Retrieves all groups with their member counts. No authentication required - public listing.
+Purpose: Retrieves listed groups that the authenticated user is NOT already a member of. Used for the "Discover Groups" dashboard section.
 =======================================================================================================================================
 Request Payload:
 None (GET request)
@@ -18,8 +18,8 @@ Success Response:
       "description": "A food-focused social group",
       "image_url": "https://...",
       "join_policy": "approval",
-      "visibility": "listed",
       "member_count": 42,
+      "upcoming_event_count": 3,
       "created_at": "2026-01-01T00:00:00.000Z"
     }
   ]
@@ -34,14 +34,16 @@ Return Codes:
 const express = require('express');
 const router = express.Router();
 const { query } = require('../../database');
+const { verifyToken } = require('../../middleware/auth');
 
-router.get('/', async (req, res) => {
+router.get('/', verifyToken, async (req, res) => {
     try {
+        const userId = req.user.id;
+
         // =======================================================================
-        // Fetch all groups with member counts
+        // Fetch listed groups that the user is NOT a member of
+        // Includes member count and upcoming event count
         // =======================================================================
-        // Using a LEFT JOIN to count active members for each group
-        // Groups with no members will show member_count of 0
         const result = await query(
             `SELECT
                 g.id,
@@ -49,21 +51,28 @@ router.get('/', async (req, res) => {
                 g.description,
                 g.image_url,
                 g.join_policy,
-                g.visibility,
                 g.created_at,
-                COUNT(gm.id) FILTER (WHERE gm.status = 'active') AS member_count
+                COUNT(DISTINCT gm.id) FILTER (WHERE gm.status = 'active') AS member_count,
+                COUNT(DISTINCT e.id) FILTER (WHERE e.status = 'published' AND e.date_time > NOW()) AS upcoming_event_count
              FROM group_list g
              LEFT JOIN group_member gm ON g.id = gm.group_id
+             LEFT JOIN event_list e ON g.id = e.group_id
+             WHERE g.visibility = 'listed'
+               AND g.id NOT IN (
+                   SELECT group_id FROM group_member WHERE user_id = $1
+               )
              GROUP BY g.id
-             ORDER BY g.created_at DESC`
+             ORDER BY g.created_at DESC`,
+            [userId]
         );
 
         // =======================================================================
-        // Transform results to ensure member_count is a number
+        // Transform results to ensure counts are numbers
         // =======================================================================
         const groups = result.rows.map(group => ({
             ...group,
-            member_count: parseInt(group.member_count, 10) || 0
+            member_count: parseInt(group.member_count, 10) || 0,
+            upcoming_event_count: parseInt(group.upcoming_event_count, 10) || 0
         }));
 
         // =======================================================================
@@ -75,7 +84,7 @@ router.get('/', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('List groups error:', error);
+        console.error('Discover groups error:', error);
         return res.json({
             return_code: 'SERVER_ERROR',
             message: 'An unexpected error occurred'
