@@ -50,6 +50,9 @@ export default function GroupMembersPage() {
     // Role assignment state
     const [updatingRole, setUpdatingRole] = useState<number | null>(null);
 
+    // Profile modal state
+    const [selectedMember, setSelectedMember] = useState<GroupMember | null>(null);
+
     // Check if current user is the organiser
     const isOrganiser = membership?.status === 'active' && membership?.role === 'organiser';
 
@@ -181,12 +184,25 @@ export default function GroupMembersPage() {
     };
 
     // =======================================================================
+    // Format joined date
+    // =======================================================================
+    const formatJoinedDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+        });
+    };
+
+    // =======================================================================
     // Loading state
     // =======================================================================
     if (loading && !group) {
         return (
-            <main className="min-h-screen flex flex-col items-center justify-center p-8">
-                <p className="text-gray-600">Loading...</p>
+            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-stone-50">
+                <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-stone-600 mt-4">Loading...</p>
             </main>
         );
     }
@@ -196,11 +212,15 @@ export default function GroupMembersPage() {
     // =======================================================================
     if (error || !group) {
         return (
-            <main className="min-h-screen flex flex-col bg-gray-50">
+            <main className="min-h-screen flex flex-col bg-stone-50">
                 <Header />
                 <div className="flex-1 flex flex-col items-center justify-center p-8">
-                    <p className="text-gray-600 mb-4">{error || 'Group not found'}</p>
-                    <Link href="/groups" className="text-blue-600 hover:text-blue-700">
+                    <div className="text-6xl mb-4">👥</div>
+                    <p className="text-stone-600 mb-4">{error || 'Group not found'}</p>
+                    <Link
+                        href="/groups"
+                        className="text-amber-600 hover:text-amber-700 font-medium"
+                    >
                         Back to groups
                     </Link>
                 </div>
@@ -212,26 +232,26 @@ export default function GroupMembersPage() {
     // Members page view
     // =======================================================================
     return (
-        <main className="min-h-screen flex flex-col bg-gray-50">
+        <main className="min-h-screen flex flex-col bg-stone-50">
             <Header />
 
             {/* Page Header */}
-            <div className="bg-white border-b">
-                <div className="max-w-4xl mx-auto px-4 sm:px-8 py-6">
-                    {/* Breadcrumb */}
-                    <div className="mb-4">
-                        <Link
-                            href={`/groups/${group.id}`}
-                            className="text-blue-600 hover:text-blue-700"
-                        >
-                            &larr; Back to {group.name}
-                        </Link>
-                    </div>
+            <div className="bg-white border-b border-stone-200">
+                <div className="max-w-3xl mx-auto px-4 sm:px-8 py-6">
+                    <Link
+                        href={`/groups/${group.id}`}
+                        className="inline-flex items-center gap-2 text-amber-600 hover:text-amber-700 mb-3 transition-colors text-sm"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Back to {group.name}
+                    </Link>
 
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    <h1 className="text-xl sm:text-2xl font-bold text-stone-900 font-display">
                         Members
                     </h1>
-                    <p className="text-gray-500 mt-1">
+                    <p className="text-stone-500 mt-1">
                         {totalCount} member{totalCount !== 1 ? 's' : ''}
                         {searchQuery && ` matching "${searchQuery}"`}
                     </p>
@@ -239,19 +259,29 @@ export default function GroupMembersPage() {
             </div>
 
             {/* Search */}
-            <div className="bg-white border-b">
-                <div className="max-w-4xl mx-auto px-4 sm:px-8 py-4">
+            <div className="bg-white border-b border-stone-200">
+                <div className="max-w-3xl mx-auto px-4 sm:px-8 py-4">
                     <form onSubmit={handleSearch} className="flex gap-2">
-                        <input
-                            type="text"
-                            value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
-                            placeholder="Search by name..."
-                            className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
+                        <div className="flex-1 relative">
+                            <svg
+                                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <input
+                                type="text"
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
+                                placeholder="Search members..."
+                                className="w-full pl-10 pr-4 py-2.5 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                            />
+                        </div>
                         <button
                             type="submit"
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                            className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition font-medium"
                         >
                             Search
                         </button>
@@ -259,7 +289,7 @@ export default function GroupMembersPage() {
                             <button
                                 type="button"
                                 onClick={handleClearSearch}
-                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                                className="px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl hover:bg-stone-200 transition"
                             >
                                 Clear
                             </button>
@@ -269,71 +299,94 @@ export default function GroupMembersPage() {
             </div>
 
             {/* Members List */}
-            <div className="flex-1 px-4 sm:px-8 py-6 max-w-4xl mx-auto w-full">
+            <div className="flex-1 px-4 sm:px-8 py-6 max-w-3xl mx-auto w-full">
                 {loading ? (
                     <div className="text-center py-8">
-                        <p className="text-gray-600">Loading members...</p>
+                        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                        <p className="text-stone-600 mt-4">Loading members...</p>
                     </div>
                 ) : members.length > 0 ? (
                     <>
-                        <div className="bg-white rounded-lg border divide-y">
+                        <div className="bg-white rounded-2xl border border-stone-200 shadow-sm divide-y divide-stone-100">
                             {members.map(member => (
-                                <div key={member.id} className="p-4 flex items-center gap-4">
-                                    {/* Avatar */}
-                                    {member.avatar_url ? (
-                                        <img
-                                            src={member.avatar_url}
-                                            alt={member.name}
-                                            className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-                                        />
-                                    ) : (
-                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0">
-                                            <span className="text-lg text-blue-400">
-                                                {member.name.charAt(0).toUpperCase()}
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    {/* Name and info */}
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-gray-900 truncate">{member.name}</p>
-                                        <p className="text-sm text-gray-500">
-                                            <span className="capitalize">{member.role}</span>
-                                            <span className="mx-2">·</span>
-                                            Joined {new Date(member.joined_at).toLocaleDateString()}
-                                        </p>
-                                    </div>
-
-                                    {/* Actions - only for organisers, not for themselves or other organisers */}
-                                    {isOrganiser && member.user_id !== user?.id && member.role !== 'organiser' && (
-                                        <div className="flex items-center gap-2">
-                                            {/* Role toggle */}
-                                            {member.role === 'member' ? (
-                                                <button
-                                                    onClick={() => handleAssignRole(member, 'host')}
-                                                    disabled={updatingRole === member.id}
-                                                    className="px-3 py-1 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition disabled:opacity-50"
-                                                >
-                                                    {updatingRole === member.id ? '...' : 'Make Host'}
-                                                </button>
+                                <div key={member.id} className="p-4 hover:bg-stone-50 transition">
+                                    <div className="flex items-center gap-4">
+                                        {/* Avatar */}
+                                        <button
+                                            onClick={() => setSelectedMember(member)}
+                                            className="flex-shrink-0 hover:opacity-80 transition"
+                                        >
+                                            {member.avatar_url ? (
+                                                <img
+                                                    src={member.avatar_url}
+                                                    alt={member.name}
+                                                    className="w-12 h-12 rounded-full object-cover"
+                                                />
                                             ) : (
-                                                <button
-                                                    onClick={() => handleAssignRole(member, 'member')}
-                                                    disabled={updatingRole === member.id}
-                                                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded transition disabled:opacity-50"
-                                                >
-                                                    {updatingRole === member.id ? '...' : 'Remove Host'}
-                                                </button>
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center">
+                                                    <span className="text-lg font-bold text-white">
+                                                        {member.name.charAt(0).toUpperCase()}
+                                                    </span>
+                                                </div>
                                             )}
-                                            {/* Remove button */}
-                                            <button
-                                                onClick={() => setMemberToRemove(member)}
-                                                className="px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition"
-                                            >
-                                                Remove
-                                            </button>
+                                        </button>
+
+                                        {/* Name and info */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => setSelectedMember(member)}
+                                                    className="font-medium text-stone-900 hover:text-amber-600 transition text-left truncate"
+                                                >
+                                                    {member.name}
+                                                </button>
+                                                {member.role === 'organiser' && (
+                                                    <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+                                                        Organiser
+                                                    </span>
+                                                )}
+                                                {member.role === 'host' && (
+                                                    <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">
+                                                        Host
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-sm text-stone-500 mt-0.5">
+                                                Joined {formatJoinedDate(member.joined_at)}
+                                            </p>
                                         </div>
-                                    )}
+
+                                        {/* Actions - only for organisers, not for themselves or other organisers */}
+                                        {isOrganiser && member.user_id !== user?.id && member.role !== 'organiser' && (
+                                            <div className="flex items-center gap-1">
+                                                {/* Role toggle */}
+                                                {member.role === 'member' ? (
+                                                    <button
+                                                        onClick={() => handleAssignRole(member, 'host')}
+                                                        disabled={updatingRole === member.id}
+                                                        className="px-3 py-1.5 text-sm text-amber-600 hover:bg-amber-50 rounded-lg transition disabled:opacity-50"
+                                                    >
+                                                        {updatingRole === member.id ? '...' : 'Make Host'}
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleAssignRole(member, 'member')}
+                                                        disabled={updatingRole === member.id}
+                                                        className="px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100 rounded-lg transition disabled:opacity-50"
+                                                    >
+                                                        {updatingRole === member.id ? '...' : 'Remove Host'}
+                                                    </button>
+                                                )}
+                                                {/* Remove button */}
+                                                <button
+                                                    onClick={() => setMemberToRemove(member)}
+                                                    className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -344,7 +397,7 @@ export default function GroupMembersPage() {
                                 <button
                                     onClick={loadMore}
                                     disabled={loadingMore}
-                                    className="px-6 py-3 bg-white border rounded-lg text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-6 py-3 bg-white border border-stone-300 rounded-xl text-stone-700 hover:bg-stone-50 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                                 >
                                     {loadingMore ? 'Loading...' : `Load more (${members.length} of ${totalCount})`}
                                 </button>
@@ -352,8 +405,9 @@ export default function GroupMembersPage() {
                         )}
                     </>
                 ) : (
-                    <div className="bg-white rounded-lg border p-8 text-center">
-                        <p className="text-gray-600">
+                    <div className="bg-white rounded-2xl border border-stone-200 p-12 text-center">
+                        <div className="text-4xl mb-3">👥</div>
+                        <p className="text-stone-500">
                             {searchQuery
                                 ? `No members found matching "${searchQuery}"`
                                 : 'No members yet.'}
@@ -361,7 +415,7 @@ export default function GroupMembersPage() {
                         {searchQuery && (
                             <button
                                 onClick={handleClearSearch}
-                                className="mt-4 text-blue-600 hover:text-blue-700"
+                                className="mt-4 text-amber-600 hover:text-amber-700 font-medium"
                             >
                                 Clear search
                             </button>
@@ -370,29 +424,75 @@ export default function GroupMembersPage() {
                 )}
             </div>
 
+            {/* Profile Modal */}
+            {selectedMember && (
+                <div
+                    className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
+                    onClick={() => setSelectedMember(null)}
+                >
+                    <div
+                        className="relative"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={() => setSelectedMember(null)}
+                            className="absolute -top-12 right-0 p-2 text-white/70 hover:text-white transition"
+                            aria-label="Close"
+                        >
+                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+
+                        {selectedMember.avatar_url ? (
+                            <img
+                                src={selectedMember.avatar_url}
+                                alt={selectedMember.name}
+                                className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl object-cover shadow-2xl"
+                            />
+                        ) : (
+                            <div className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center shadow-2xl">
+                                <span className="text-8xl font-bold text-white">
+                                    {selectedMember.name.charAt(0).toUpperCase()}
+                                </span>
+                            </div>
+                        )}
+
+                        <p className="text-center mt-4 text-xl font-medium text-white">
+                            {selectedMember.name}
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* Remove Member Confirmation Dialog */}
             {memberToRemove && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg max-w-md w-full p-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-2">
-                            Remove Member
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                    onClick={() => setMemberToRemove(null)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className="text-lg font-bold text-stone-900 font-display mb-2">
+                            Remove {memberToRemove.name}?
                         </h3>
-                        <p className="text-gray-600 mb-6">
-                            Are you sure you want to remove <strong>{memberToRemove.name}</strong> from this group?
-                            This action cannot be undone.
+                        <p className="text-sm text-stone-600 mb-6">
+                            They will lose access to this group and its events. They can request to rejoin later.
                         </p>
-                        <div className="flex gap-3 justify-end">
+                        <div className="flex gap-3">
                             <button
                                 onClick={() => setMemberToRemove(null)}
                                 disabled={removing}
-                                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition disabled:opacity-50"
+                                className="flex-1 px-4 py-2.5 border border-stone-300 text-stone-700 rounded-xl hover:bg-stone-50 transition font-medium disabled:opacity-50"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleRemoveMember}
                                 disabled={removing}
-                                className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+                                className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition font-medium disabled:opacity-50"
                             >
                                 {removing ? 'Removing...' : 'Remove'}
                             </button>
