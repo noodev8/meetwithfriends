@@ -160,7 +160,7 @@ export default function ImageUpload({ value, onChange, imagePosition = 'center',
                                 type="button"
                                 onClick={handleClick}
                                 disabled={isUploading}
-                                className="px-3 py-1 bg-white text-gray-700 text-sm rounded-lg shadow hover:bg-gray-50 transition disabled:opacity-50"
+                                className="px-3 py-1 bg-white text-stone-700 text-sm rounded-lg shadow hover:bg-stone-50 transition disabled:opacity-50"
                             >
                                 Change
                             </button>
@@ -168,7 +168,7 @@ export default function ImageUpload({ value, onChange, imagePosition = 'center',
                                 type="button"
                                 onClick={handleRemove}
                                 disabled={isUploading}
-                                className="px-3 py-1 bg-white text-red-600 text-sm rounded-lg shadow hover:bg-gray-50 transition disabled:opacity-50"
+                                className="px-3 py-1 bg-white text-red-600 text-sm rounded-lg shadow hover:bg-stone-50 transition disabled:opacity-50"
                             >
                                 Remove
                             </button>
@@ -177,7 +177,7 @@ export default function ImageUpload({ value, onChange, imagePosition = 'center',
                     {/* Position selector */}
                     {onPositionChange && (
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600">Crop position:</span>
+                            <span className="text-sm text-stone-600">Crop position:</span>
                             <div className="flex gap-1">
                                 {(['top', 'center', 'bottom'] as const).map((pos) => (
                                     <button
@@ -186,8 +186,8 @@ export default function ImageUpload({ value, onChange, imagePosition = 'center',
                                         onClick={() => onPositionChange(pos)}
                                         className={`px-3 py-1 text-sm rounded-lg transition ${
                                             imagePosition === pos
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                ? 'bg-amber-500 text-white'
+                                                : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                                         }`}
                                     >
                                         {pos.charAt(0).toUpperCase() + pos.slice(1)}
@@ -203,27 +203,28 @@ export default function ImageUpload({ value, onChange, imagePosition = 'center',
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
-                    className={`w-full h-48 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-2 cursor-pointer transition ${
+                    className={`w-full h-48 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-2 cursor-pointer transition px-4 text-center ${
                         isDragging
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+                            ? 'border-amber-500 bg-amber-50'
+                            : 'border-stone-300 hover:border-amber-400 hover:bg-amber-50'
                     } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                     {isUploading ? (
                         <>
-                            <svg className="w-8 h-8 text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <svg className="w-8 h-8 text-amber-500 animate-spin" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                             </svg>
-                            <span className="text-gray-500">Uploading...</span>
+                            <span className="text-stone-500">Uploading...</span>
                         </>
                     ) : (
                         <>
-                            <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-10 h-10 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            <span className="text-gray-500">Click or drag to upload</span>
-                            <span className="text-xs text-gray-400">Recommended: 1200×630px · JPG, PNG or WebP (max 5MB)</span>
+                            <span className="text-stone-500">Click or drag to upload</span>
+                            <span className="text-xs text-stone-400">1200×630px recommended</span>
+                            <span className="text-xs text-stone-400">JPG, PNG or WebP (max 5MB)</span>
                         </>
                     )}
                 </div>

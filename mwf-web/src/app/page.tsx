@@ -172,16 +172,16 @@ export default function Home() {
                         Meet With Friends
                     </span>
                 </Link>
-                <div className="flex items-center gap-2 sm:gap-4">
+                <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
                     <Link
                         href="/login"
-                        className="px-3 sm:px-4 py-2 text-stone-600 hover:text-stone-900 font-medium transition"
+                        className="px-3 sm:px-4 py-2 text-stone-600 hover:text-stone-900 font-medium transition whitespace-nowrap text-sm sm:text-base"
                     >
                         Log in
                     </Link>
                     <Link
                         href="/register"
-                        className="px-4 sm:px-5 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-full hover:from-amber-600 hover:to-orange-600 transition-all shadow-sm hover:shadow-md"
+                        className="px-4 sm:px-5 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-full hover:from-amber-600 hover:to-orange-600 transition-all shadow-sm hover:shadow-md whitespace-nowrap text-sm sm:text-base"
                     >
                         Sign up
                     </Link>

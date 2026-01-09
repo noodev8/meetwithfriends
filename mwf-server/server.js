@@ -57,6 +57,6 @@ app.get('/api/health', (req, res) => {
 // Start server
 // =======================================================================================================================================
 const PORT = config.port;
-app.listen(PORT, () => {
-    console.log(`MWF Server running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`MWF Server running on http://0.0.0.0:${PORT}`);
 });

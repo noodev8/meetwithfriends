@@ -275,8 +275,8 @@ export default function ProfilePage() {
     // =======================================================================
     if (isLoading) {
         return (
-            <main className="min-h-screen flex items-center justify-center bg-gray-50">
-                <p className="text-gray-600">Loading...</p>
+            <main className="min-h-screen flex items-center justify-center bg-stone-50">
+                <div className="w-8 h-8 border-2 border-amber-300 border-t-amber-600 rounded-full animate-spin" />
             </main>
         );
     }
@@ -286,18 +286,18 @@ export default function ProfilePage() {
     }
 
     return (
-        <main className="min-h-screen flex flex-col bg-gray-50">
+        <main className="min-h-screen flex flex-col bg-stone-50">
             <Header />
 
             <div className="flex-1 py-6 sm:py-8 px-4 sm:px-8">
                 <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
-                    <h1 className="text-xl sm:text-2xl font-bold">Profile Settings</h1>
+                    <h1 className="font-display text-xl sm:text-2xl font-bold text-stone-800">Profile Settings</h1>
 
                     {/* ================================================================
                         Profile Information Section
                     ================================================================ */}
-                <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
-                    <h2 className="text-lg font-semibold mb-4">Profile Information</h2>
+                <div className="bg-white rounded-2xl border border-stone-200 p-4 sm:p-6">
+                    <h2 className="text-lg font-semibold text-stone-800 mb-4">Profile Information</h2>
 
                     {profileError && (
                         <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
@@ -313,7 +313,7 @@ export default function ProfilePage() {
 
                     <form onSubmit={handleUpdateProfile} className="space-y-4">
                         {/* Avatar Upload */}
-                        <div className="flex flex-col items-center gap-3 pb-4 border-b">
+                        <div className="flex flex-col items-center gap-3 pb-4 border-b border-stone-100">
                             <input
                                 ref={fileInputRef}
                                 type="file"
@@ -326,18 +326,18 @@ export default function ProfilePage() {
                                     <img
                                         src={avatarUrl}
                                         alt={name || 'Profile'}
-                                        className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                                        className="w-24 h-24 rounded-full object-cover ring-4 ring-stone-100"
                                     />
                                 ) : (
-                                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center border-2 border-gray-200">
-                                        <span className="text-3xl text-blue-400">
+                                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center ring-4 ring-stone-100">
+                                        <span className="text-3xl font-medium text-amber-600">
                                             {(user.name || 'U').charAt(0).toUpperCase()}
                                         </span>
                                     </div>
                                 )}
                                 {isUploadingAvatar && (
                                     <div className="absolute inset-0 bg-white bg-opacity-75 rounded-full flex items-center justify-center">
-                                        <svg className="w-6 h-6 text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <svg className="w-6 h-6 text-amber-500 animate-spin" fill="none" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                         </svg>
@@ -349,7 +349,7 @@ export default function ProfilePage() {
                                     type="button"
                                     onClick={() => fileInputRef.current?.click()}
                                     disabled={isUploadingAvatar}
-                                    className="px-4 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition disabled:opacity-50"
+                                    className="px-4 py-1.5 text-sm bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition disabled:opacity-50"
                                 >
                                     {avatarUrl ? 'Change photo' : 'Upload photo'}
                                 </button>
@@ -367,7 +367,7 @@ export default function ProfilePage() {
                         </div>
 
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="email" className="block text-sm font-medium text-stone-700 mb-1">
                                 Email
                             </label>
                             <input
@@ -375,13 +375,13 @@ export default function ProfilePage() {
                                 id="email"
                                 value={user.email}
                                 disabled
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+                                className="w-full px-4 py-2.5 border border-stone-200 rounded-lg bg-stone-50 text-stone-500 cursor-not-allowed"
                             />
-                            <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                            <p className="text-xs text-stone-400 mt-1">Email cannot be changed</p>
                         </div>
 
                         <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="name" className="block text-sm font-medium text-stone-700 mb-1">
                                 Name
                             </label>
                             <input
@@ -389,13 +389,13 @@ export default function ProfilePage() {
                                 id="name"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
                                 placeholder="Your name"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="bio" className="block text-sm font-medium text-stone-700 mb-1">
                                 Bio
                             </label>
                             <textarea
@@ -403,7 +403,7 @@ export default function ProfilePage() {
                                 value={bio}
                                 onChange={(e) => setBio(e.target.value)}
                                 rows={3}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                                className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none resize-none transition"
                                 placeholder="Tell us about yourself"
                             />
                         </div>
@@ -411,7 +411,7 @@ export default function ProfilePage() {
                         <button
                             type="submit"
                             disabled={isSavingProfile}
-                            className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isSavingProfile ? 'Saving...' : 'Save Changes'}
                         </button>
@@ -421,8 +421,8 @@ export default function ProfilePage() {
                 {/* ================================================================
                     Change Password Section
                 ================================================================ */}
-                <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
-                    <h2 className="text-lg font-semibold mb-4">Change Password</h2>
+                <div className="bg-white rounded-2xl border border-stone-200 p-4 sm:p-6">
+                    <h2 className="text-lg font-semibold text-stone-800 mb-4">Change Password</h2>
 
                     {passwordError && (
                         <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
@@ -438,7 +438,7 @@ export default function ProfilePage() {
 
                     <form onSubmit={handleChangePassword} className="space-y-4">
                         <div>
-                            <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="currentPassword" className="block text-sm font-medium text-stone-700 mb-1">
                                 Current Password
                             </label>
                             <input
@@ -446,13 +446,13 @@ export default function ProfilePage() {
                                 id="currentPassword"
                                 value={currentPassword}
                                 onChange={(e) => setCurrentPassword(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
                                 placeholder="Enter current password"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="newPassword" className="block text-sm font-medium text-stone-700 mb-1">
                                 New Password
                             </label>
                             <input
@@ -460,13 +460,13 @@ export default function ProfilePage() {
                                 id="newPassword"
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
                                 placeholder="At least 8 characters"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-stone-700 mb-1">
                                 Confirm New Password
                             </label>
                             <input
@@ -474,7 +474,7 @@ export default function ProfilePage() {
                                 id="confirmPassword"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
                                 placeholder="Confirm new password"
                             />
                         </div>
@@ -482,7 +482,7 @@ export default function ProfilePage() {
                         <button
                             type="submit"
                             disabled={isChangingPassword}
-                            className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isChangingPassword ? 'Changing...' : 'Change Password'}
                         </button>
@@ -492,12 +492,12 @@ export default function ProfilePage() {
                 {/* ================================================================
                     Delete Account Section
                 ================================================================ */}
-                <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 border border-red-200">
+                <div className="bg-white rounded-2xl border border-red-200 p-4 sm:p-6">
                     <h2 className="text-lg font-semibold text-red-600 mb-4">Danger Zone</h2>
 
                     {!showDeleteConfirm ? (
                         <div>
-                            <p className="text-gray-600 mb-4">
+                            <p className="text-stone-600 mb-4">
                                 Once you delete your account, there is no going back. Please be certain.
                             </p>
                             <button
@@ -509,7 +509,7 @@ export default function ProfilePage() {
                         </div>
                     ) : (
                         <div>
-                            <p className="text-gray-600 mb-4">
+                            <p className="text-stone-600 mb-4">
                                 Enter your password to confirm account deletion. This action is irreversible.
                             </p>
 
@@ -524,7 +524,7 @@ export default function ProfilePage() {
                                     type="password"
                                     value={deletePassword}
                                     onChange={(e) => setDeletePassword(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                                    className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
                                     placeholder="Enter your password"
                                 />
 
@@ -535,14 +535,14 @@ export default function ProfilePage() {
                                             setDeletePassword('');
                                             setDeleteError('');
                                         }}
-                                        className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
+                                        className="flex-1 py-2.5 border border-stone-300 text-stone-700 rounded-lg font-medium hover:bg-stone-50 transition"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={handleDeleteAccount}
                                         disabled={isDeleting}
-                                        className="flex-1 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="flex-1 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {isDeleting ? 'Deleting...' : 'Confirm Delete'}
                                     </button>
