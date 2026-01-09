@@ -347,7 +347,7 @@ export default function GroupMembersPage() {
                                                 )}
                                                 {member.role === 'host' && (
                                                     <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">
-                                                        Host
+                                                        Event Host
                                                     </span>
                                                 )}
                                             </div>
@@ -366,7 +366,7 @@ export default function GroupMembersPage() {
                                                         disabled={updatingRole === member.id}
                                                         className="px-3 py-1.5 text-sm text-amber-600 hover:bg-amber-50 rounded-lg transition disabled:opacity-50"
                                                     >
-                                                        {updatingRole === member.id ? '...' : 'Make Host'}
+                                                        {updatingRole === member.id ? '...' : 'Make Event Host'}
                                                     </button>
                                                 ) : (
                                                     <button
@@ -374,7 +374,7 @@ export default function GroupMembersPage() {
                                                         disabled={updatingRole === member.id}
                                                         className="px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100 rounded-lg transition disabled:opacity-50"
                                                     >
-                                                        {updatingRole === member.id ? '...' : 'Remove Host'}
+                                                        {updatingRole === member.id ? '...' : 'Remove Event Host'}
                                                     </button>
                                                 )}
                                                 {/* Remove button */}
