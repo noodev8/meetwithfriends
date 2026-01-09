@@ -197,6 +197,13 @@ router.post('/create', verifyToken, async (req, res) => {
                 [newEvent.id, userId]
             );
 
+            // Auto-RSVP creator as attending
+            await client.query(
+                `INSERT INTO event_rsvp (event_id, user_id, status, guest_count)
+                 VALUES ($1, $2, 'attending', 0)`,
+                [newEvent.id, userId]
+            );
+
             return newEvent;
         });
 
