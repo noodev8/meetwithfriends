@@ -303,8 +303,8 @@ export default function AttendeesPage() {
                                     key={person.user_id}
                                     className="p-4 hover:bg-stone-50 transition"
                                 >
-                                    <div className="flex items-start gap-4">
-                                        {/* Avatar */}
+                                    <div className="flex items-center gap-4">
+                                        {/* Large Avatar - priority on seeing the face */}
                                         <button
                                             onClick={() => setSelectedAttendee(person)}
                                             className="flex-shrink-0 hover:opacity-80 transition"
@@ -313,23 +313,23 @@ export default function AttendeesPage() {
                                                 <img
                                                     src={person.avatar_url}
                                                     alt={person.name}
-                                                    className="w-12 h-12 rounded-full object-cover"
+                                                    className="w-16 h-16 rounded-full object-cover"
                                                 />
                                             ) : (
-                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                                                    <span className="text-lg font-medium text-amber-600">
+                                                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center">
+                                                    <span className="text-2xl font-bold text-white">
                                                         {person.name.charAt(0).toUpperCase()}
                                                     </span>
                                                 </div>
                                             )}
                                         </button>
 
-                                        {/* Info */}
+                                        {/* Info - secondary to the photo */}
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 <button
                                                     onClick={() => setSelectedAttendee(person)}
-                                                    className="font-medium text-stone-900 hover:text-amber-600 transition text-left"
+                                                    className="text-sm font-medium text-stone-900 hover:text-amber-600 transition text-left"
                                                 >
                                                     {person.name}
                                                 </button>
@@ -338,21 +338,20 @@ export default function AttendeesPage() {
                                                         Host
                                                     </span>
                                                 )}
+                                            </div>
+                                            <div className="flex items-center gap-2 mt-0.5 text-xs text-stone-500">
                                                 {activeTab === 'going' && attendee.guest_count > 0 && (
-                                                    <span className="text-sm text-stone-500">
-                                                        +{attendee.guest_count} guest{attendee.guest_count > 1 ? 's' : ''}
-                                                    </span>
+                                                    <span>+{attendee.guest_count} guest{attendee.guest_count > 1 ? 's' : ''}</span>
                                                 )}
                                                 {activeTab === 'waitlist' && attendee.waitlist_position && (
-                                                    <span className="text-sm text-yellow-600">
-                                                        #{attendee.waitlist_position}
-                                                    </span>
+                                                    <span className="text-yellow-600">#{attendee.waitlist_position}</span>
                                                 )}
+                                                <span>{formatRsvpTime(person.rsvp_at)}</span>
                                             </div>
 
                                             {/* Food order (only for going tab when preorders enabled) */}
                                             {activeTab === 'going' && event.preorders_enabled && (attendee.food_order || attendee.dietary_notes) && (
-                                                <div className="mt-1 text-sm text-stone-500">
+                                                <div className="mt-1 text-xs text-stone-500">
                                                     {attendee.food_order && <span>{attendee.food_order}</span>}
                                                     {attendee.food_order && attendee.dietary_notes && <span> • </span>}
                                                     {attendee.dietary_notes && (
@@ -360,11 +359,6 @@ export default function AttendeesPage() {
                                                     )}
                                                 </div>
                                             )}
-
-                                            {/* RSVP time */}
-                                            <p className="text-xs text-stone-400 mt-1">
-                                                {formatRsvpTime(person.rsvp_at)}
-                                            </p>
                                         </div>
                                     </div>
                                 </div>
