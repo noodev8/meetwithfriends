@@ -14,7 +14,7 @@ Request Payload:
 Success Response (remove):
 {
   "return_code": "SUCCESS",
-  "message": "Attendee removed from event"
+  "message": "Attendee moved to not going"
 }
 
 Success Response (demote):
@@ -144,15 +144,17 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
             const targetRsvp = rsvpResult.rows[0];
 
             // ===================================================================
-            // Handle REMOVE action
+            // Handle REMOVE action (move to not_going)
             // ===================================================================
             if (action === 'remove') {
                 const wasAttending = targetRsvp.status === 'attending';
                 const wasWaitlistPosition = targetRsvp.waitlist_position;
 
-                // Delete the RSVP
+                // Move to not_going status
                 await client.query(
-                    'DELETE FROM event_rsvp WHERE id = $1',
+                    `UPDATE event_rsvp
+                     SET status = 'not_going', waitlist_position = NULL, guest_count = 0, created_at = NOW()
+                     WHERE id = $1`,
                     [targetRsvp.id]
                 );
 
@@ -194,7 +196,7 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
 
                 return {
                     return_code: 'SUCCESS',
-                    message: 'Attendee removed from event'
+                    message: 'Attendee moved to not going'
                 };
             }
 
