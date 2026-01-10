@@ -523,7 +523,7 @@ export default function EventDetailPage() {
                                         {event.preorder_cutoff && (
                                             <p className="text-sm text-amber-600">
                                                 {isCutoffPassed
-                                                    ? 'Pre-orders closed'
+                                                    ? 'Orders closed'
                                                     : `Order by ${new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} at ${new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`
                                                 }
                                             </p>
@@ -567,12 +567,12 @@ export default function EventDetailPage() {
                                                     </div>
                                                 )}
                                                 <p className="text-sm text-stone-500 mt-2">
-                                                    Pre-order deadline has passed. Contact a host if you need to make changes.
+                                                    Order deadline has passed. Contact a host if you need to make changes.
                                                 </p>
                                             </div>
                                         ) : (
                                             <p className="text-stone-500">
-                                                Pre-order deadline has passed. You did not submit an order.
+                                                Order deadline has passed. You did not submit an order.
                                             </p>
                                         )}
                                     </div>
@@ -580,7 +580,7 @@ export default function EventDetailPage() {
                                     <form onSubmit={handleSubmitOrder} className="space-y-4">
                                         <div>
                                             <label htmlFor="foodOrder" className="block text-sm font-medium text-stone-700 mb-1">
-                                                Your Food Order
+                                                Your Order
                                             </label>
                                             <textarea
                                                 id="foodOrder"
@@ -594,7 +594,7 @@ export default function EventDetailPage() {
                                         </div>
                                         <div>
                                             <label htmlFor="dietaryNotes" className="block text-sm font-medium text-stone-700 mb-1">
-                                                Dietary Notes / Allergies
+                                                Notes / Preferences
                                             </label>
                                             <input
                                                 type="text"
