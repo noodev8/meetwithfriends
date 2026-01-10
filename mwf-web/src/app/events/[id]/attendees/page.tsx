@@ -17,6 +17,7 @@ import {
     getAttendees,
     getHosts,
     manageAttendee,
+    updateOrder,
     EventWithDetails,
     Attendee,
     NotGoingAttendee,
@@ -50,6 +51,11 @@ export default function AttendeesPage() {
     const [activeTab, setActiveTab] = useState<Tab>('going');
     const [sortBy, setSortBy] = useState<SortBy>('rsvp_time');
     const [selectedAttendee, setSelectedAttendee] = useState<Attendee | NotGoingAttendee | null>(null);
+
+    // Order editing state
+    const [editFoodOrder, setEditFoodOrder] = useState('');
+    const [editDietaryNotes, setEditDietaryNotes] = useState('');
+    const [orderSaving, setOrderSaving] = useState(false);
 
     // =======================================================================
     // Fetch event and attendees
@@ -176,6 +182,39 @@ export default function AttendeesPage() {
         } else {
             alert(result.error || 'Failed to update attendee');
         }
+    };
+
+    // =======================================================================
+    // Handle order update
+    // =======================================================================
+    const handleSaveOrder = async () => {
+        if (!token || !event || !selectedAttendee) return;
+
+        setOrderSaving(true);
+        const result = await updateOrder(token, event.id, selectedAttendee.user_id, editFoodOrder, editDietaryNotes);
+        setOrderSaving(false);
+
+        if (result.success) {
+            // Update the local attending list with new order
+            setAttending(prev => prev.map(a =>
+                a.user_id === selectedAttendee.user_id
+                    ? { ...a, food_order: editFoodOrder || null, dietary_notes: editDietaryNotes || null }
+                    : a
+            ));
+            setSelectedAttendee(null);
+        } else {
+            alert(result.error || 'Failed to save order');
+        }
+    };
+
+    // =======================================================================
+    // Handle selecting an attendee (populate edit fields)
+    // =======================================================================
+    const handleSelectAttendee = (person: Attendee | NotGoingAttendee) => {
+        handleSelectAttendee(person);
+        const attendee = person as Attendee;
+        setEditFoodOrder(attendee.food_order || '');
+        setEditDietaryNotes(attendee.dietary_notes || '');
     };
 
     // =======================================================================
@@ -346,7 +385,7 @@ export default function AttendeesPage() {
                                     return (
                                         <button
                                             key={person.user_id}
-                                            onClick={() => setSelectedAttendee(person)}
+                                            onClick={() => handleSelectAttendee(person)}
                                             className="w-full flex items-start gap-4 p-3 rounded-xl hover:bg-stone-50 transition text-left"
                                         >
                                                 {/* Avatar */}
@@ -415,7 +454,7 @@ export default function AttendeesPage() {
                                     return (
                                         <button
                                             key={person.user_id}
-                                            onClick={() => setSelectedAttendee(person)}
+                                            onClick={() => handleSelectAttendee(person)}
                                             className="flex flex-col items-center text-center hover:opacity-80 transition"
                                         >
                                             {/* Avatar */}
@@ -529,6 +568,45 @@ export default function AttendeesPage() {
                             <p className="text-center mt-4 text-xl font-medium text-white">
                                 {selectedAttendee.name}
                             </p>
+
+                            {/* Order editing for hosts/organisers */}
+                            {canManageAttendees && isInGoing && event?.preorders_enabled && (
+                                <div className="mt-4 bg-white rounded-xl p-4 w-72 sm:w-80">
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="block text-xs font-medium text-stone-600 mb-1">
+                                                Order
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={editFoodOrder}
+                                                onChange={(e) => setEditFoodOrder(e.target.value)}
+                                                placeholder="e.g., Chicken Caesar Salad"
+                                                className="w-full px-3 py-2 text-sm border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-stone-600 mb-1">
+                                                Notes
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={editDietaryNotes}
+                                                onChange={(e) => setEditDietaryNotes(e.target.value)}
+                                                placeholder="e.g., No nuts, gluten free"
+                                                className="w-full px-3 py-2 text-sm border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={handleSaveOrder}
+                                            disabled={orderSaving}
+                                            className="w-full px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition disabled:opacity-50"
+                                        >
+                                            {orderSaving ? 'Saving...' : 'Save Order'}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Action buttons for hosts/organisers */}
                             {canManageAttendees && (isInGoing || isInWaitlist) && (
