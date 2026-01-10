@@ -131,10 +131,15 @@ export default function AttendeesPage() {
 
     const formatRsvpTime = (dateString: string) => {
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-GB', {
+        const dateStr = date.toLocaleDateString('en-GB', {
             day: 'numeric',
             month: 'short',
         });
+        const timeStr = date.toLocaleTimeString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+        return `${dateStr}, ${timeStr}`;
     };
 
     // =======================================================================
