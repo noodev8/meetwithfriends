@@ -3,7 +3,7 @@
 API Route: add_comment
 =======================================================================================================================================
 Method: POST
-Purpose: Adds a comment to an event. User must be attending or on the waitlist for the event.
+Purpose: Adds a comment to an event. User must be attending, on waitlist, or be a host/organiser.
 =======================================================================================================================================
 Request Payload:
 {
@@ -77,12 +77,18 @@ router.post('/', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
-        // Verify event exists and user is attending or on waitlist
+        // Verify event exists and check user permissions
         // =======================================================================
         const eventResult = await query(
-            `SELECT e.id, er.status AS rsvp_status
+            `SELECT
+                e.id,
+                e.group_id,
+                er.status AS rsvp_status,
+                gm.role AS member_role,
+                EXISTS(SELECT 1 FROM event_host eh WHERE eh.event_id = e.id AND eh.user_id = $2) AS is_host
              FROM event_list e
              LEFT JOIN event_rsvp er ON e.id = er.event_id AND er.user_id = $2
+             LEFT JOIN group_member gm ON e.group_id = gm.group_id AND gm.user_id = $2 AND gm.status = 'active'
              WHERE e.id = $1`,
             [event_id, userId]
         );
@@ -94,12 +100,15 @@ router.post('/', verifyToken, async (req, res) => {
             });
         }
 
-        const rsvpStatus = eventResult.rows[0].rsvp_status;
+        const { rsvp_status, member_role, is_host } = eventResult.rows[0];
 
         // =======================================================================
-        // Verify user is attending or on waitlist
+        // Verify user can comment: attending, waitlist, host, or organiser
         // =======================================================================
-        if (rsvpStatus !== 'attending' && rsvpStatus !== 'waitlist') {
+        const isAttendingOrWaitlist = rsvp_status === 'attending' || rsvp_status === 'waitlist';
+        const isHostOrOrganiser = is_host || member_role === 'organiser';
+
+        if (!isAttendingOrWaitlist && !isHostOrOrganiser) {
             return res.json({
                 return_code: 'NOT_ATTENDING',
                 message: 'You must be attending or on the waitlist to comment'
