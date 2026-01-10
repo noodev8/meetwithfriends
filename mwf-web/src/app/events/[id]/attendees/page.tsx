@@ -148,7 +148,8 @@ export default function AttendeesPage() {
         setActionLoading(null);
 
         if (result.success) {
-            // Refresh the attendees list
+            // Close modal and refresh the attendees list
+            setSelectedAttendee(null);
             const attendeesResult = await getAttendees(event.id, token);
             if (attendeesResult.success && attendeesResult.data) {
                 setAttending(attendeesResult.data.attending);
@@ -328,18 +329,13 @@ export default function AttendeesPage() {
                                 {currentList.map((person) => {
                                     const attendee = person as Attendee;
                                     const isHostUser = isHost(person.user_id);
-                                    const isLoading = actionLoading === person.user_id;
 
                                     return (
-                                        <div
+                                        <button
                                             key={person.user_id}
-                                            className="flex items-start gap-4 p-3 rounded-xl hover:bg-stone-50 transition"
+                                            onClick={() => setSelectedAttendee(person)}
+                                            className="w-full flex items-start gap-4 p-3 rounded-xl hover:bg-stone-50 transition text-left"
                                         >
-                                            {/* Clickable area for profile */}
-                                            <button
-                                                onClick={() => setSelectedAttendee(person)}
-                                                className="flex items-start gap-4 flex-1 min-w-0 text-left"
-                                            >
                                                 {/* Avatar */}
                                                 <div className="relative flex-shrink-0">
                                                     {person.avatar_url ? (
@@ -389,34 +385,7 @@ export default function AttendeesPage() {
                                                         </p>
                                                     )}
                                                 </div>
-                                            </button>
-
-                                            {/* Action buttons for hosts/organisers */}
-                                            {canManageAttendees && (
-                                                <div className="flex items-center gap-1 flex-shrink-0">
-                                                    <button
-                                                        onClick={() => handleManageAttendee(person.user_id, 'demote')}
-                                                        disabled={isLoading}
-                                                        className="p-1.5 text-stone-400 hover:text-yellow-600 hover:bg-yellow-50 rounded transition disabled:opacity-50"
-                                                        title="Move to waitlist"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                        </svg>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleManageAttendee(person.user_id, 'remove')}
-                                                        disabled={isLoading}
-                                                        className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded transition disabled:opacity-50"
-                                                        title="Remove from event"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
+                                        </button>
                                     );
                                 })}
                             </div>
@@ -426,18 +395,15 @@ export default function AttendeesPage() {
                                 {currentList.map((person) => {
                                     const attendee = person as Attendee;
                                     const isHostUser = isHost(person.user_id);
-                                    const isLoading = actionLoading === person.user_id;
 
                                     return (
-                                        <div
+                                        <button
                                             key={person.user_id}
-                                            className="flex flex-col items-center text-center group"
+                                            onClick={() => setSelectedAttendee(person)}
+                                            className="flex flex-col items-center text-center hover:opacity-80 transition"
                                         >
-                                            {/* Avatar - clickable */}
-                                            <button
-                                                onClick={() => setSelectedAttendee(person)}
-                                                className="relative mb-2 hover:opacity-80 transition"
-                                            >
+                                            {/* Avatar */}
+                                            <div className="relative mb-2">
                                                 {person.avatar_url ? (
                                                     <img
                                                         src={person.avatar_url}
@@ -461,7 +427,7 @@ export default function AttendeesPage() {
                                                         #{attendee.waitlist_position}
                                                     </span>
                                                 )}
-                                            </button>
+                                            </div>
 
                                             {/* Name */}
                                             <span className="text-sm font-medium text-stone-900">
@@ -475,47 +441,7 @@ export default function AttendeesPage() {
                                                     ? `+${attendee.guest_count} guest${attendee.guest_count > 1 ? 's' : ''}`
                                                     : 'Member'}
                                             </span>
-
-                                            {/* Action buttons for hosts/organisers */}
-                                            {canManageAttendees && activeTab !== 'not_going' && (
-                                                <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    {activeTab === 'going' && (
-                                                        <button
-                                                            onClick={() => handleManageAttendee(person.user_id, 'demote')}
-                                                            disabled={isLoading}
-                                                            className="p-1 text-stone-400 hover:text-yellow-600 hover:bg-yellow-50 rounded transition disabled:opacity-50"
-                                                            title="Move to waitlist"
-                                                        >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                            </svg>
-                                                        </button>
-                                                    )}
-                                                    {activeTab === 'waitlist' && (
-                                                        <button
-                                                            onClick={() => handleManageAttendee(person.user_id, 'promote')}
-                                                            disabled={isLoading}
-                                                            className="p-1 text-stone-400 hover:text-green-600 hover:bg-green-50 rounded transition disabled:opacity-50"
-                                                            title="Move to going"
-                                                        >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                                                            </svg>
-                                                        </button>
-                                                    )}
-                                                    <button
-                                                        onClick={() => handleManageAttendee(person.user_id, 'remove')}
-                                                        disabled={isLoading}
-                                                        className="p-1 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded transition disabled:opacity-50"
-                                                        title="Remove from event"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
+                                        </button>
                                     );
                                 })}
                             </div>
@@ -538,48 +464,85 @@ export default function AttendeesPage() {
             </div>
 
             {/* Profile Modal - Focus on the face */}
-            {selectedAttendee && (
-                <div
-                    className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
-                    onClick={() => setSelectedAttendee(null)}
-                >
+            {selectedAttendee && (() => {
+                const isInGoing = attending.some(a => a.user_id === selectedAttendee.user_id);
+                const isInWaitlist = waitlist.some(a => a.user_id === selectedAttendee.user_id);
+                const isLoading = actionLoading === selectedAttendee.user_id;
+
+                return (
                     <div
-                        className="relative"
-                        onClick={(e) => e.stopPropagation()}
+                        className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
+                        onClick={() => setSelectedAttendee(null)}
                     >
-                        {/* Close button */}
-                        <button
-                            onClick={() => setSelectedAttendee(null)}
-                            className="absolute -top-12 right-0 p-2 text-white/70 hover:text-white transition"
-                            aria-label="Close"
+                        <div
+                            className="relative"
+                            onClick={(e) => e.stopPropagation()}
                         >
-                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
+                            {/* Close button */}
+                            <button
+                                onClick={() => setSelectedAttendee(null)}
+                                className="absolute -top-12 right-0 p-2 text-white/70 hover:text-white transition"
+                                aria-label="Close"
+                            >
+                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
 
-                        {/* Large photo */}
-                        {selectedAttendee.avatar_url ? (
-                            <img
-                                src={selectedAttendee.avatar_url}
-                                alt={selectedAttendee.name}
-                                className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl object-cover shadow-2xl"
-                            />
-                        ) : (
-                            <div className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center shadow-2xl">
-                                <span className="text-8xl font-bold text-white">
-                                    {selectedAttendee.name.charAt(0).toUpperCase()}
-                                </span>
-                            </div>
-                        )}
+                            {/* Large photo */}
+                            {selectedAttendee.avatar_url ? (
+                                <img
+                                    src={selectedAttendee.avatar_url}
+                                    alt={selectedAttendee.name}
+                                    className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl object-cover shadow-2xl"
+                                />
+                            ) : (
+                                <div className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center shadow-2xl">
+                                    <span className="text-8xl font-bold text-white">
+                                        {selectedAttendee.name.charAt(0).toUpperCase()}
+                                    </span>
+                                </div>
+                            )}
 
-                        {/* Name below */}
-                        <p className="text-center mt-4 text-xl font-medium text-white">
-                            {selectedAttendee.name}
-                        </p>
+                            {/* Name below */}
+                            <p className="text-center mt-4 text-xl font-medium text-white">
+                                {selectedAttendee.name}
+                            </p>
+
+                            {/* Action buttons for hosts/organisers */}
+                            {canManageAttendees && (isInGoing || isInWaitlist) && (
+                                <div className="flex justify-center gap-3 mt-4">
+                                    {isInGoing && (
+                                        <button
+                                            onClick={() => handleManageAttendee(selectedAttendee.user_id, 'demote')}
+                                            disabled={isLoading}
+                                            className="px-4 py-2 bg-yellow-500 text-white text-sm font-medium rounded-lg hover:bg-yellow-600 transition disabled:opacity-50"
+                                        >
+                                            {isLoading ? 'Moving...' : 'Move to waitlist'}
+                                        </button>
+                                    )}
+                                    {isInWaitlist && (
+                                        <button
+                                            onClick={() => handleManageAttendee(selectedAttendee.user_id, 'promote')}
+                                            disabled={isLoading}
+                                            className="px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 transition disabled:opacity-50"
+                                        >
+                                            {isLoading ? 'Moving...' : 'Move to going'}
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => handleManageAttendee(selectedAttendee.user_id, 'remove')}
+                                        disabled={isLoading}
+                                        className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition disabled:opacity-50"
+                                    >
+                                        {isLoading ? 'Removing...' : 'Remove'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
-            )}
+                );
+            })()}
         </main>
     );
 }
