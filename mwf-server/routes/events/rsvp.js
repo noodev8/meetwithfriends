@@ -62,6 +62,8 @@ const express = require('express');
 const router = express.Router();
 const { withTransaction } = require('../../utils/transaction');
 const { verifyToken } = require('../../middleware/auth');
+const { query } = require('../../database');
+const { sendRsvpConfirmedEmail, sendPromotedFromWaitlistEmail } = require('../../services/email');
 
 router.post('/:id/rsvp', verifyToken, async (req, res) => {
     try {
@@ -104,7 +106,7 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
             // Lock event row for update (separate from count query)
             // ===================================================================
             const eventResult = await client.query(
-                `SELECT id, group_id, capacity, status, date_time, allow_guests, max_guests_per_rsvp
+                `SELECT id, group_id, capacity, status, date_time, allow_guests, max_guests_per_rsvp, title, location
                  FROM event_list
                  WHERE id = $1
                  FOR UPDATE`,
@@ -235,7 +237,8 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                     return {
                         return_code: 'SUCCESS',
                         rsvp: { status: 'attending', waitlist_position: null, guest_count: finalGuestCount },
-                        message: "You're going to this event"
+                        message: "You're going to this event",
+                        _emailData: { type: 'rsvp_confirmed', userId, event }
                     };
                 } else {
                     // Add to waitlist - get next position (no guests on waitlist)
@@ -284,6 +287,7 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                 );
 
                 // If was attending and there's a waitlist, promote first person
+                let promotedUserId = null;
                 if (wasAttending) {
                     const firstWaitlist = await client.query(
                         `SELECT id, user_id
@@ -295,6 +299,8 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                     );
 
                     if (firstWaitlist.rows.length > 0) {
+                        promotedUserId = firstWaitlist.rows[0].user_id;
+
                         // Promote to attending (update timestamp to reflect promotion time)
                         await client.query(
                             `UPDATE event_rsvp
@@ -324,10 +330,41 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                 return {
                     return_code: 'SUCCESS',
                     rsvp: null,
-                    message: "You've cancelled your RSVP"
+                    message: "You've cancelled your RSVP",
+                    _emailData: promotedUserId ? { type: 'promoted', promotedUserId, event } : null
                 };
             }
         });
+
+        // =======================================================================
+        // Send emails after successful transaction
+        // =======================================================================
+        if (result.return_code === 'SUCCESS' && result._emailData) {
+            const emailData = result._emailData;
+
+            if (emailData.type === 'rsvp_confirmed') {
+                // Get user details and send RSVP confirmation
+                const userResult = await query('SELECT name, email FROM app_user WHERE id = $1', [emailData.userId]);
+                if (userResult.rows.length > 0) {
+                    const user = userResult.rows[0];
+                    sendRsvpConfirmedEmail(user.email, user.name, emailData.event).catch(err => {
+                        console.error('Failed to send RSVP confirmation email:', err);
+                    });
+                }
+            } else if (emailData.type === 'promoted') {
+                // Get promoted user details and send promotion email
+                const userResult = await query('SELECT name, email FROM app_user WHERE id = $1', [emailData.promotedUserId]);
+                if (userResult.rows.length > 0) {
+                    const user = userResult.rows[0];
+                    sendPromotedFromWaitlistEmail(user.email, user.name, emailData.event).catch(err => {
+                        console.error('Failed to send waitlist promotion email:', err);
+                    });
+                }
+            }
+
+            // Remove internal email data before sending response
+            delete result._emailData;
+        }
 
         // =======================================================================
         // Return the result from transaction

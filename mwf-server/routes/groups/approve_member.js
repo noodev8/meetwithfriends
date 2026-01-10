@@ -31,6 +31,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
+const { sendJoinedGroupEmail } = require('../../services/email');
 
 router.post('/:id/members/approve', verifyToken, async (req, res) => {
     try {
@@ -62,7 +63,7 @@ router.post('/:id/members/approve', verifyToken, async (req, res) => {
         // Check if group exists
         // =======================================================================
         const groupResult = await query(
-            'SELECT id FROM group_list WHERE id = $1',
+            'SELECT id, name FROM group_list WHERE id = $1',
             [id]
         );
 
@@ -101,7 +102,7 @@ router.post('/:id/members/approve', verifyToken, async (req, res) => {
         // Check if the membership exists and belongs to this group
         // =======================================================================
         const membershipResult = await query(
-            'SELECT id, status FROM group_member WHERE id = $1 AND group_id = $2',
+            'SELECT id, status, user_id FROM group_member WHERE id = $1 AND group_id = $2',
             [membership_id, id]
         );
 
@@ -130,6 +131,20 @@ router.post('/:id/members/approve', verifyToken, async (req, res) => {
              WHERE id = $1`,
             [membership_id]
         );
+
+        const group = groupResult.rows[0];
+        const approvedUserId = membershipResult.rows[0].user_id;
+
+        // =======================================================================
+        // Send email to the approved member
+        // =======================================================================
+        const userResult = await query('SELECT name, email FROM app_user WHERE id = $1', [approvedUserId]);
+        if (userResult.rows.length > 0) {
+            const user = userResult.rows[0];
+            sendJoinedGroupEmail(user.email, user.name, group).catch(err => {
+                console.error('Failed to send joined group email:', err);
+            });
+        }
 
         // =======================================================================
         // Return success response

@@ -41,6 +41,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
+const { sendNewJoinRequestEmail } = require('../../services/email');
 
 router.post('/', verifyToken, async (req, res) => {
     try {
@@ -61,7 +62,7 @@ router.post('/', verifyToken, async (req, res) => {
         // Check if group exists and get join_policy
         // =======================================================================
         const groupResult = await query(
-            'SELECT id, join_policy FROM group_list WHERE id = $1',
+            'SELECT id, name, join_policy FROM group_list WHERE id = $1',
             [group_id]
         );
 
@@ -110,6 +111,33 @@ router.post('/', verifyToken, async (req, res) => {
              VALUES ($1, $2, 'member', $3)`,
             [group_id, userId, newStatus]
         );
+
+        // =======================================================================
+        // Send email to hosts/organisers for pending requests
+        // =======================================================================
+        if (newStatus === 'pending') {
+            // Get requesting user's name
+            const userResult = await query('SELECT name FROM app_user WHERE id = $1', [userId]);
+            const requesterName = userResult.rows[0]?.name || 'A user';
+
+            // Get hosts and organisers emails
+            const hostsResult = await query(
+                `SELECT u.email, u.name
+                 FROM group_member gm
+                 JOIN app_user u ON gm.user_id = u.id
+                 WHERE gm.group_id = $1
+                 AND gm.status = 'active'
+                 AND gm.role IN ('organiser', 'host')`,
+                [group_id]
+            );
+
+            // Send email to each host/organiser (async - don't wait)
+            hostsResult.rows.forEach(host => {
+                sendNewJoinRequestEmail(host.email, host.name, requesterName, group).catch(err => {
+                    console.error('Failed to send join request email:', err);
+                });
+            });
+        }
 
         // =======================================================================
         // Return success response

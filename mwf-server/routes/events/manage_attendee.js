@@ -45,6 +45,8 @@ const express = require('express');
 const router = express.Router();
 const { withTransaction } = require('../../utils/transaction');
 const { verifyToken } = require('../../middleware/auth');
+const { query } = require('../../database');
+const { sendRemovedFromEventEmail, sendPromotedFromWaitlistEmail } = require('../../services/email');
 
 router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
     try {
@@ -91,6 +93,9 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
                     e.id,
                     e.group_id,
                     e.capacity,
+                    e.title,
+                    e.location,
+                    e.date_time,
                     gm.role AS current_user_role,
                     EXISTS(SELECT 1 FROM event_host eh WHERE eh.event_id = e.id AND eh.user_id = $2) AS is_host
                  FROM event_list e
@@ -196,7 +201,8 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
 
                 return {
                     return_code: 'SUCCESS',
-                    message: 'Attendee moved to not going'
+                    message: 'Attendee moved to not going',
+                    _emailData: { type: 'removed', targetUserId, event, reason: 'removed' }
                 };
             }
 
@@ -256,7 +262,8 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
 
                 return {
                     return_code: 'SUCCESS',
-                    message: 'Attendee moved to waitlist'
+                    message: 'Attendee moved to waitlist',
+                    _emailData: { type: 'removed', targetUserId, event, reason: 'demoted' }
                 };
             }
 
@@ -291,10 +298,36 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
 
                 return {
                     return_code: 'SUCCESS',
-                    message: 'Attendee promoted from waitlist'
+                    message: 'Attendee promoted from waitlist',
+                    _emailData: { type: 'promoted', targetUserId, event }
                 };
             }
         });
+
+        // =======================================================================
+        // Send emails after successful transaction
+        // =======================================================================
+        if (result.return_code === 'SUCCESS' && result._emailData) {
+            const emailData = result._emailData;
+            const userResult = await query('SELECT name, email FROM app_user WHERE id = $1', [emailData.targetUserId]);
+
+            if (userResult.rows.length > 0) {
+                const user = userResult.rows[0];
+
+                if (emailData.type === 'removed') {
+                    sendRemovedFromEventEmail(user.email, user.name, emailData.event, emailData.reason).catch(err => {
+                        console.error('Failed to send removed from event email:', err);
+                    });
+                } else if (emailData.type === 'promoted') {
+                    sendPromotedFromWaitlistEmail(user.email, user.name, emailData.event).catch(err => {
+                        console.error('Failed to send waitlist promotion email:', err);
+                    });
+                }
+            }
+
+            // Remove internal email data before sending response
+            delete result._emailData;
+        }
 
         // =======================================================================
         // Return the result from transaction

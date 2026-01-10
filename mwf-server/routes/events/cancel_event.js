@@ -28,6 +28,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
+const { sendEventCancelledEmail } = require('../../services/email');
 
 router.post('/:id/cancel', verifyToken, async (req, res) => {
     try {
@@ -52,6 +53,9 @@ router.post('/:id/cancel', verifyToken, async (req, res) => {
                 e.id,
                 e.group_id,
                 e.status,
+                e.title,
+                e.location,
+                e.date_time,
                 gm.role AS current_user_role,
                 EXISTS(SELECT 1 FROM event_host eh WHERE eh.event_id = e.id AND eh.user_id = $2) AS is_host
              FROM event_list e
@@ -103,6 +107,24 @@ router.post('/:id/cancel', verifyToken, async (req, res) => {
              WHERE id = $1`,
             [id]
         );
+
+        // =======================================================================
+        // Send cancellation emails to all attendees and waitlist
+        // =======================================================================
+        const attendeesResult = await query(
+            `SELECT u.email, u.name
+             FROM event_rsvp er
+             JOIN app_user u ON er.user_id = u.id
+             WHERE er.event_id = $1
+             AND er.status IN ('attending', 'waitlist')`,
+            [id]
+        );
+
+        attendeesResult.rows.forEach(attendee => {
+            sendEventCancelledEmail(attendee.email, attendee.name, event).catch(err => {
+                console.error('Failed to send event cancelled email:', err);
+            });
+        });
 
         return res.json({
             return_code: 'SUCCESS',

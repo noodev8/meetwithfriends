@@ -39,6 +39,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { query } = require('../../database');
 const config = require('../../config/config');
+const { sendWelcomeEmail } = require('../../services/email');
 
 router.post('/', async (req, res) => {
     try {
@@ -116,6 +117,13 @@ router.post('/', async (req, res) => {
             config.jwtSecret,
             { expiresIn: config.jwtExpiresIn }
         );
+
+        // =======================================================================
+        // Send welcome email (async - don't wait)
+        // =======================================================================
+        sendWelcomeEmail(user.email, user.name).catch(err => {
+            console.error('Failed to send welcome email:', err);
+        });
 
         // =======================================================================
         // Return success response

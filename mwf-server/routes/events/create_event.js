@@ -62,6 +62,7 @@ const router = express.Router();
 const { query } = require('../../database');
 const { withTransaction } = require('../../utils/transaction');
 const { verifyToken } = require('../../middleware/auth');
+const { sendNewEventEmail } = require('../../services/email');
 
 router.post('/create', verifyToken, async (req, res) => {
     try {
@@ -205,6 +206,31 @@ router.post('/create', verifyToken, async (req, res) => {
             );
 
             return newEvent;
+        });
+
+        // =======================================================================
+        // Send email notification to all group members (except creator)
+        // =======================================================================
+        // Get group name
+        const groupResult = await query('SELECT id, name FROM group_list WHERE id = $1', [group_id]);
+        const group = groupResult.rows[0];
+
+        // Get all active group members except the event creator
+        const membersResult = await query(
+            `SELECT u.email, u.name
+             FROM group_member gm
+             JOIN app_user u ON gm.user_id = u.id
+             WHERE gm.group_id = $1
+             AND gm.status = 'active'
+             AND gm.user_id != $2`,
+            [group_id, userId]
+        );
+
+        // Send emails to each member (async - don't wait)
+        membersResult.rows.forEach(member => {
+            sendNewEventEmail(member.email, member.name, result, group).catch(err => {
+                console.error('Failed to send new event email:', err);
+            });
         });
 
         // =======================================================================
