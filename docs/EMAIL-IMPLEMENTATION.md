@@ -9,6 +9,16 @@ Reference: [EMAIL-LIST.md](./EMAIL-LIST.md)
 - [ ] Email service wrapper (`services/email.js` - extend existing)
 - [ ] Daily send counter (stop at 100 for free plan)
 - [ ] Email log table for tracking sends
+- [ ] Test mode intercept (see below)
+
+### Test Mode
+
+When sending emails, check if recipient ends with `@test.com`:
+- Intercept the email
+- Send only 1 email to `aandreou25@gmail.com` instead
+- Include original recipient in subject line for clarity, e.g. "[TEST: john@test.com] Welcome to Meet With Friends"
+
+This allows testing with dummy users without spamming real addresses.
 
 ---
 
