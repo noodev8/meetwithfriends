@@ -286,43 +286,6 @@ export default function CreateEventPage() {
                                                 })
                                             ).flat()}
                                         </select>
-                                        {/* Quick time presets */}
-                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2">
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="text-xs text-stone-400">Day</span>
-                                                {['12:00', '14:00', '15:00'].map((t) => (
-                                                    <button
-                                                        key={t}
-                                                        type="button"
-                                                        onClick={() => setTime(t)}
-                                                        className={`px-3 h-10 text-sm rounded-lg border transition ${
-                                                            time === t
-                                                                ? 'bg-amber-500 text-white border-amber-500'
-                                                                : 'bg-white text-stone-600 border-stone-300 hover:border-amber-400'
-                                                        }`}
-                                                    >
-                                                        {t === '12:00' ? '12pm' : t === '14:00' ? '2pm' : '3pm'}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="text-xs text-stone-400">Eve</span>
-                                                {['17:00', '18:00', '19:00'].map((t) => (
-                                                    <button
-                                                        key={t}
-                                                        type="button"
-                                                        onClick={() => setTime(t)}
-                                                        className={`px-3 h-10 text-sm rounded-lg border transition ${
-                                                            time === t
-                                                                ? 'bg-amber-500 text-white border-amber-500'
-                                                                : 'bg-white text-stone-600 border-stone-300 hover:border-amber-400'
-                                                        }`}
-                                                    >
-                                                        {t === '17:00' ? '5pm' : t === '18:00' ? '6pm' : '7pm'}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
 
