@@ -295,7 +295,7 @@ export default function CreateEventPage() {
                                                         key={t}
                                                         type="button"
                                                         onClick={() => setTime(t)}
-                                                        className={`px-2.5 py-1 text-sm rounded-md border transition ${
+                                                        className={`px-3 h-10 text-sm rounded-lg border transition ${
                                                             time === t
                                                                 ? 'bg-amber-500 text-white border-amber-500'
                                                                 : 'bg-white text-stone-600 border-stone-300 hover:border-amber-400'
@@ -312,7 +312,7 @@ export default function CreateEventPage() {
                                                         key={t}
                                                         type="button"
                                                         onClick={() => setTime(t)}
-                                                        className={`px-2.5 py-1 text-sm rounded-md border transition ${
+                                                        className={`px-3 h-10 text-sm rounded-lg border transition ${
                                                             time === t
                                                                 ? 'bg-amber-500 text-white border-amber-500'
                                                                 : 'bg-white text-stone-600 border-stone-300 hover:border-amber-400'
@@ -626,7 +626,7 @@ export default function CreateEventPage() {
                                                                             setPreorderCutoffDate(cutoffDate);
                                                                             setPreorderCutoffTime('17:00');
                                                                         }}
-                                                                        className={`px-3 h-10 rounded-lg text-sm font-medium transition ${
+                                                                        className={`px-3 h-11 rounded-lg text-sm font-medium transition ${
                                                                             isSelected
                                                                                 ? 'bg-amber-500 text-white'
                                                                                 : date
@@ -644,7 +644,7 @@ export default function CreateEventPage() {
                                                                     setPreorderCutoffDate('');
                                                                     setPreorderCutoffTime('');
                                                                 }}
-                                                                className={`px-3 h-10 rounded-lg text-sm font-medium transition ${
+                                                                className={`px-3 h-11 rounded-lg text-sm font-medium transition ${
                                                                     preorderCutoffDate === ''
                                                                         ? 'bg-amber-500 text-white'
                                                                         : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
