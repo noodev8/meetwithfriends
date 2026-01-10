@@ -45,8 +45,11 @@ export default function CreateEventPage() {
     const [preorderCutoffDate, setPreorderCutoffDate] = useState('');
     const [preorderCutoffTime, setPreorderCutoffTime] = useState('');
 
-    // UI state
-    const [optionsExpanded, setOptionsExpanded] = useState(true);
+    // UI state - individual option card expansion (all collapsed by default)
+    const [imageExpanded, setImageExpanded] = useState(false);
+    const [capacityExpanded, setCapacityExpanded] = useState(false);
+    const [guestsExpanded, setGuestsExpanded] = useState(false);
+    const [requestsExpanded, setRequestsExpanded] = useState(false);
 
     // Check if user can create events
     const canCreateEvents = membership?.status === 'active' &&
@@ -349,206 +352,341 @@ export default function CreateEventPage() {
                                         placeholder="Tell people what to expect..."
                                     />
                                 </div>
-
-                                {/* Submit Buttons */}
-                                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
-                                    <button
-                                        type="submit"
-                                        disabled={submitting}
-                                        className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50"
-                                    >
-                                        {submitting ? 'Creating...' : 'Create Event'}
-                                    </button>
-                                    <Link
-                                        href={`/groups/${group.id}`}
-                                        className="px-6 py-3 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition text-center"
-                                    >
-                                        Cancel
-                                    </Link>
-                                </div>
                             </div>
 
                             {/* ============================================================
-                                CARD 2: EVENT OPTIONS
+                                OPTIONS SECTION
                             ============================================================ */}
-                            <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
-                                {/* Accordion Header */}
-                                <button
-                                    type="button"
-                                    onClick={() => setOptionsExpanded(!optionsExpanded)}
-                                    className="w-full flex items-center justify-between p-4 bg-stone-50 hover:bg-stone-100 transition text-left"
-                                >
-                                    <div>
-                                        <h3 className="font-medium text-stone-800">Event Options</h3>
-                                        <p className="text-sm text-stone-500 mt-0.5">
-                                            Image, capacity, guests
-                                        </p>
-                                    </div>
-                                    <svg
-                                        className={`w-5 h-5 text-stone-400 transition-transform ${optionsExpanded ? 'rotate-180' : ''}`}
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
+                            <div className="pt-2">
+                                <h2 className="text-sm font-medium text-stone-500 uppercase tracking-wide mb-4">Options</h2>
 
-                                {/* Accordion Content */}
-                                {optionsExpanded && (
-                                    <div className="p-4 pt-2 space-y-6 border-t border-stone-200">
-                                        {/* Featured Image */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-stone-700 mb-2">
-                                                Featured Image
-                                            </label>
-                                            <ImageUpload
-                                                value={imageUrl}
-                                                onChange={setImageUrl}
-                                            />
-                                        </div>
-
-                                        {/* Capacity */}
-                                        <div>
-                                            <label htmlFor="capacity" className="block text-sm font-medium text-stone-700 mb-2">
-                                                Capacity
-                                            </label>
-                                            <input
-                                                type="number"
-                                                id="capacity"
-                                                value={capacity}
-                                                onChange={(e) => setCapacity(e.target.value)}
-                                                min={1}
-                                                className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
-                                                placeholder="Leave empty for unlimited"
-                                            />
-                                            <p className="mt-1.5 text-sm text-stone-500">
-                                                Leave empty for unlimited. If set, a waitlist will be used when full.
-                                            </p>
-                                        </div>
-
-                                        {/* Guest Options */}
-                                        <div className="space-y-4">
-                                            <label className="flex items-center gap-3 p-3 border border-stone-200 rounded-lg cursor-pointer hover:bg-stone-50 transition">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={allowGuests}
-                                                    onChange={(e) => setAllowGuests(e.target.checked)}
-                                                    className="w-5 h-5 text-amber-600 border-stone-300 rounded focus:ring-amber-500"
-                                                />
+                                <div className="space-y-3">
+                                    {/* Featured Image Card */}
+                                    <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
+                                        <button
+                                            type="button"
+                                            onClick={() => setImageExpanded(!imageExpanded)}
+                                            className="w-full flex items-center justify-between p-4 hover:bg-stone-50 transition text-left"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center flex-shrink-0">
+                                                    <svg className="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                </div>
                                                 <div>
-                                                    <p className="font-medium text-stone-800">Allow members to bring guests</p>
-                                                    <p className="text-sm text-stone-500">Members can RSVP with additional people</p>
+                                                    <span className="font-medium text-stone-800">Featured Image</span>
+                                                    <span className="text-stone-400 mx-2">·</span>
+                                                    <span className="text-sm text-stone-500">
+                                                        {imageUrl ? 'Added' : 'None'}
+                                                    </span>
                                                 </div>
-                                            </label>
-
-                                            {allowGuests && (
-                                                <div className="ml-4 pl-4 border-l-2 border-amber-200">
-                                                    <label htmlFor="maxGuests" className="block text-sm font-medium text-stone-700 mb-2">
-                                                        Maximum guests per RSVP
-                                                    </label>
-                                                    <select
-                                                        id="maxGuests"
-                                                        value={maxGuestsPerRsvp}
-                                                        onChange={(e) => setMaxGuestsPerRsvp(parseInt(e.target.value, 10))}
-                                                        className="w-32 px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
-                                                    >
-                                                        <option value={1}>1</option>
-                                                        <option value={2}>2</option>
-                                                        <option value={3}>3</option>
-                                                        <option value={4}>4</option>
-                                                        <option value={5}>5</option>
-                                                    </select>
-                                                    <p className="mt-1.5 text-sm text-stone-500">
-                                                        Guests count towards event capacity.
-                                                    </p>
+                                            </div>
+                                            <svg
+                                                className={`w-5 h-5 text-stone-400 transition-transform ${imageExpanded ? 'rotate-180' : ''}`}
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                        {imageExpanded && (
+                                            <div className="px-4 pb-4 border-t border-stone-100">
+                                                <div className="pt-4">
+                                                    <ImageUpload
+                                                        value={imageUrl}
+                                                        onChange={setImageUrl}
+                                                    />
                                                 </div>
-                                            )}
-                                        </div>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
+
+                                    {/* Capacity Card */}
+                                    <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
+                                        <button
+                                            type="button"
+                                            onClick={() => setCapacityExpanded(!capacityExpanded)}
+                                            className="w-full flex items-center justify-between p-4 hover:bg-stone-50 transition text-left"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center flex-shrink-0">
+                                                    <svg className="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <span className="font-medium text-stone-800">Capacity</span>
+                                                    <span className="text-stone-400 mx-2">·</span>
+                                                    <span className="text-sm text-stone-500">
+                                                        {capacity ? `${capacity} spots` : 'Unlimited'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <svg
+                                                className={`w-5 h-5 text-stone-400 transition-transform ${capacityExpanded ? 'rotate-180' : ''}`}
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                        {capacityExpanded && (
+                                            <div className="px-4 pb-4 border-t border-stone-100">
+                                                <div className="pt-4">
+                                                    <div className="flex gap-2 flex-wrap">
+                                                        {['', '6', '10', '12'].map((val) => {
+                                                            const isSelected = capacity === val;
+                                                            return (
+                                                                <button
+                                                                    key={val}
+                                                                    type="button"
+                                                                    onClick={() => setCapacity(val)}
+                                                                    className={`px-4 h-11 rounded-lg font-medium transition ${
+                                                                        isSelected
+                                                                            ? 'bg-amber-500 text-white'
+                                                                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                                                    }`}
+                                                                >
+                                                                    {val === '' ? 'Unlimited' : val}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                        <input
+                                                            type="number"
+                                                            value={capacity}
+                                                            onChange={(e) => setCapacity(e.target.value)}
+                                                            min={1}
+                                                            placeholder="Other"
+                                                            className="w-20 h-11 px-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition text-center"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Guests Card */}
+                                    <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
+                                        <button
+                                            type="button"
+                                            onClick={() => setGuestsExpanded(!guestsExpanded)}
+                                            className="w-full flex items-center justify-between p-4 hover:bg-stone-50 transition text-left"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center flex-shrink-0">
+                                                    <svg className="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <span className="font-medium text-stone-800">Guests</span>
+                                                    <span className="text-stone-400 mx-2">·</span>
+                                                    <span className="text-sm text-stone-500">
+                                                        {allowGuests ? `Up to ${maxGuestsPerRsvp} per member` : 'Not allowed'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <svg
+                                                className={`w-5 h-5 text-stone-400 transition-transform ${guestsExpanded ? 'rotate-180' : ''}`}
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                        {guestsExpanded && (
+                                            <div className="px-4 pb-4 border-t border-stone-100">
+                                                <div className="pt-4">
+                                                    <p className="text-sm text-stone-600 mb-3">Maximum guests per member</p>
+                                                    <div className="flex gap-2">
+                                                        {[0, 1, 2, 3, 4].map((num) => {
+                                                            const isSelected = num === 0 ? !allowGuests : (allowGuests && maxGuestsPerRsvp === num);
+                                                            return (
+                                                                <button
+                                                                    key={num}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        if (num === 0) {
+                                                                            setAllowGuests(false);
+                                                                        } else {
+                                                                            setAllowGuests(true);
+                                                                            setMaxGuestsPerRsvp(num);
+                                                                        }
+                                                                    }}
+                                                                    className={`w-11 h-11 rounded-lg font-medium transition ${
+                                                                        isSelected
+                                                                            ? 'bg-amber-500 text-white'
+                                                                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                                                    }`}
+                                                                >
+                                                                    {num}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Attendee Requests Card */}
+                                    <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
+                                        <button
+                                            type="button"
+                                            onClick={() => setRequestsExpanded(!requestsExpanded)}
+                                            className="w-full flex items-center justify-between p-4 hover:bg-stone-50 transition text-left"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center flex-shrink-0">
+                                                    <svg className="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <span className="font-medium text-stone-800">Attendee Requests</span>
+                                                    <span className="text-stone-400 mx-2">·</span>
+                                                    <span className="text-sm text-stone-500">
+                                                        {preordersEnabled ? 'On' : 'Off'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <svg
+                                                className={`w-5 h-5 text-stone-400 transition-transform ${requestsExpanded ? 'rotate-180' : ''}`}
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                        {requestsExpanded && (
+                                            <div className="px-4 pb-4 border-t border-stone-100">
+                                                <div className="pt-4 space-y-4">
+                                                    {/* iOS Toggle */}
+                                                    <div className="flex items-center justify-between">
+                                                        <div>
+                                                            <p className="font-medium text-stone-800">Collect orders or preferences</p>
+                                                            <p className="text-sm text-stone-500">Request details from attendees before the event</p>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setPreordersEnabled(!preordersEnabled)}
+                                                            className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+                                                                preordersEnabled ? 'bg-amber-500' : 'bg-stone-300'
+                                                            }`}
+                                                        >
+                                                            <span
+                                                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
+                                                                    preordersEnabled ? 'translate-x-5' : 'translate-x-0'
+                                                                }`}
+                                                            />
+                                                        </button>
+                                                    </div>
+
+                                                    <div>
+                                                        <label htmlFor="menuLink" className="block text-sm font-medium text-stone-700 mb-2">
+                                                            Link
+                                                        </label>
+                                                        <input
+                                                            type="url"
+                                                            id="menuLink"
+                                                            value={menuLink}
+                                                            onChange={(e) => setMenuLink(e.target.value)}
+                                                            className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                                            placeholder="https://restaurant.com/menu"
+                                                        />
+                                                        <p className="mt-1.5 text-sm text-stone-500">
+                                                            Share a menu, form, or any link for attendees to submit their choices
+                                                        </p>
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-stone-700 mb-2">
+                                                            Cutoff
+                                                        </label>
+                                                        {/* Date presets - relative to event date */}
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {[1, 2, 3].map((days) => {
+                                                                const cutoffDate = date ? (() => {
+                                                                    const d = new Date(date);
+                                                                    d.setDate(d.getDate() - days);
+                                                                    return d.toISOString().split('T')[0];
+                                                                })() : '';
+                                                                const isSelected = preorderCutoffDate === cutoffDate && cutoffDate !== '';
+                                                                return (
+                                                                    <button
+                                                                        key={days}
+                                                                        type="button"
+                                                                        disabled={!date}
+                                                                        onClick={() => {
+                                                                            setPreorderCutoffDate(cutoffDate);
+                                                                            setPreorderCutoffTime('17:00');
+                                                                        }}
+                                                                        className={`px-3 h-10 rounded-lg text-sm font-medium transition ${
+                                                                            isSelected
+                                                                                ? 'bg-amber-500 text-white'
+                                                                                : date
+                                                                                    ? 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                                                                    : 'bg-stone-50 text-stone-400 cursor-not-allowed'
+                                                                        }`}
+                                                                    >
+                                                                        {days} day{days > 1 ? 's' : ''} before
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setPreorderCutoffDate('');
+                                                                    setPreorderCutoffTime('');
+                                                                }}
+                                                                className={`px-3 h-10 rounded-lg text-sm font-medium transition ${
+                                                                    preorderCutoffDate === ''
+                                                                        ? 'bg-amber-500 text-white'
+                                                                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                                                }`}
+                                                            >
+                                                                No cutoff
+                                                            </button>
+                                                        </div>
+                                                        {/* Show selected date */}
+                                                        {preorderCutoffDate && (
+                                                            <p className="mt-2 text-sm text-stone-600">
+                                                                Orders due by {new Date(preorderCutoffDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })} at 5pm
+                                                            </p>
+                                                        )}
+                                                        {!date && (
+                                                            <p className="mt-2 text-sm text-stone-400">Set event date first</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                             {/* ============================================================
-                                CARD 3: ATTENDEE REQUESTS (subtle feature highlight)
+                                SUBMIT BUTTONS
                             ============================================================ */}
-                            <div className="bg-white rounded-2xl border border-stone-200 border-l-4 border-l-amber-400 p-5">
-                                {/* Header with toggle */}
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                                            <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <h3 className="font-medium text-stone-800">Attendee Requests</h3>
-                                            <p className="text-sm text-stone-500">
-                                                Collect orders or preferences before the event
-                                            </p>
-                                        </div>
-                                    </div>
-                                    {/* Toggle Switch */}
-                                    <button
-                                        type="button"
-                                        onClick={() => setPreordersEnabled(!preordersEnabled)}
-                                        className={`relative w-12 h-7 rounded-full transition-colors ${
-                                            preordersEnabled ? 'bg-amber-500' : 'bg-stone-300'
-                                        }`}
-                                    >
-                                        <span
-                                            className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                                                preordersEnabled ? 'translate-x-5' : 'translate-x-0'
-                                            }`}
-                                        />
-                                    </button>
-                                </div>
-
-                                {/* Options when enabled */}
-                                {preordersEnabled && (
-                                    <div className="mt-4 pt-4 border-t border-stone-100 space-y-4">
-                                        <div>
-                                            <label htmlFor="menuLink" className="block text-sm font-medium text-stone-700 mb-2">
-                                                Link
-                                            </label>
-                                            <input
-                                                type="url"
-                                                id="menuLink"
-                                                value={menuLink}
-                                                onChange={(e) => setMenuLink(e.target.value)}
-                                                className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
-                                                placeholder="https://restaurant.com/menu"
-                                            />
-                                            <p className="mt-1.5 text-sm text-stone-500">
-                                                Share a menu, form, or any link for attendees to submit their choices
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-stone-700 mb-2">
-                                                Cutoff
-                                            </label>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                <input
-                                                    type="date"
-                                                    value={preorderCutoffDate}
-                                                    onChange={(e) => setPreorderCutoffDate(e.target.value)}
-                                                    min={minDate}
-                                                    className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
-                                                />
-                                                <input
-                                                    type="time"
-                                                    value={preorderCutoffTime}
-                                                    onChange={(e) => setPreorderCutoffTime(e.target.value)}
-                                                    className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
-                                                />
-                                            </div>
-                                            <p className="mt-1.5 text-sm text-stone-500">
-                                                Set a deadline for orders, or leave empty for no cutoff
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
+                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
+                                <button
+                                    type="submit"
+                                    disabled={submitting}
+                                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50"
+                                >
+                                    {submitting ? 'Creating...' : 'Create Event'}
+                                </button>
+                                <Link
+                                    href={`/groups/${group.id}`}
+                                    className="px-6 py-3 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition text-center"
+                                >
+                                    Cancel
+                                </Link>
                             </div>
                         </form>
                     </div>

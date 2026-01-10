@@ -26,20 +26,20 @@ Redesigning the Create Event page to be simpler for the common case while showca
 
 ---
 
-## Proposed Structure
+## Final Structure
 
 ```
-ESSENTIALS (always visible)
+ESSENTIALS CARD (always visible)
 ├── Event Title *
 ├── Date * | Time *
 ├── Location
 └── Description
 
-EVENT OPTIONS (expandable/collapsible)
-├── Featured Image
-├── Capacity & Waitlist
-├── Guest Policy
-└── Pre-orders
+OPTIONS SECTION (individual collapsible cards with status hints)
+├── Featured Image · None/Added
+├── Capacity · Unlimited/X spots
+├── Guests · Not allowed/Up to X per member
+└── Attendee Requests · Off/Enabled
 
 [Create Event] [Cancel]
 ```
@@ -61,8 +61,8 @@ EVENT OPTIONS (expandable/collapsible)
 - [x] Moved Description above Featured Image (natural flow: write first, add image later)
 - [x] Added code comments to separate sections visually
 - [x] Essentials now in their own card (Card 1)
-- [x] Submit buttons (Create Event + Cancel) added to Card 1
 - [x] Fixed auth timing bug that showed "Please log in" error on refresh
+- [x] Submit buttons moved to bottom of form (after Options section)
 
 **Notes:**
 - These should always be visible
@@ -71,49 +71,30 @@ EVENT OPTIONS (expandable/collapsible)
 
 ---
 
-### Section 2: Event Options Accordion
+### Section 2: Options Section
 **Status:** Complete
 
 **Approach:**
-- Collapsible section for advanced options
-- Show summary of selected options when collapsed
-- Consistent card-style for all toggle options
+- "Options" subtitle with individual collapsible cards
+- Each card shows status hint when collapsed (e.g., "Capacity · Unlimited")
+- All cards collapsed by default for shortest initial form
+- Equal visual weight to all options (no special highlighting)
 
-**Contains:**
-- Featured Image upload
-- Capacity (with waitlist explanation)
-- Guest Policy (allow guests toggle + max per RSVP)
-- Pre-orders (toggle + menu link + cutoff)
-
-**Changes made:**
-- [x] Created collapsible accordion with header "Event Options"
-- [x] Collapsed by default - form is much shorter initially
-- [x] Added chevron indicator that rotates on expand
-- [x] Made pre-orders use same card-style checkbox as guests (consistent)
-- [x] Removed old border-top separator from pre-orders
-- [x] Moved Event Options to its own card (Card 2) - separate from essentials
-- [ ] Consider: Show summary badges when collapsed (e.g., "Capacity: 20, Guests allowed")
-
----
-
-### Section 3: Attendee Requests (formerly Pre-orders)
-**Status:** Complete
-
-**Goal:** Make this feel like a feature, not an afterthought
+**Contains (4 individual collapsible cards):**
+1. Featured Image · None/Added
+2. Capacity · Unlimited/X spots
+3. Guests · Not allowed/Up to X per member
+4. Attendee Requests · Off/Enabled
 
 **Changes made:**
-- [x] Moved out of Event Options accordion into its own Card 3
-- [x] Highlighted design with warm amber/orange gradient background
-- [x] Prominent icon (clipboard) in brand colors
-- [x] Renamed to "Attendee Requests" - broader than just food pre-orders
-- [x] Updated subtitle: "Collect orders, preferences, or details from attendees before the event"
-- [x] Updated field labels: "Link" and "Cutoff" (more generic)
-- [x] Updated helper text to mention menus, forms, or any link
-
-**Fields:**
-- Enable toggle
-- Link (optional) - menu, form, or any URL
-- Cutoff date/time (optional)
+- [x] Added "Options" section subtitle (uppercase, tracking-wide)
+- [x] Split accordion into 4 individual collapsible cards
+- [x] All collapsed by default - form is very short initially
+- [x] Status hints visible when collapsed (e.g., "Capacity · Unlimited")
+- [x] Each card has icon + title + status hint in header
+- [x] Consistent styling across all option cards (no amber accents)
+- [x] Chevron indicator rotates on expand/collapse
+- [x] Moved Create Event button to bottom of form
 
 ---
 
@@ -153,6 +134,7 @@ EVENT OPTIONS (expandable/collapsible)
 | 2026-01-10 | Section 1+2 | Split form into two cards: Card 1 (Essentials + Submit), Card 2 (Event Options). Fixed auth timing bug. |
 | 2026-01-10 | Section 3 | Created Card 3 for Attendee Requests with highlighted design. Renamed from Pre-orders. Broadened wording. |
 | 2026-01-10 | Section 5 | Added time picker with dropdown + quick presets (Day/Eve). Kept native date picker. |
+| 2026-01-10 | Section 2 | **Major restructure**: Split into 4 individual collapsible cards with status hints. All collapsed by default. Removed amber accents. Moved Create button to bottom. |
 
 ---
 
@@ -164,16 +146,9 @@ EVENT OPTIONS (expandable/collapsible)
 
 ---
 
-## Open Questions
+## Resolved Questions
 
 ### Create Event Button Placement
-**Options being considered:**
+**Decision:** Option B - After all options at the bottom of the form
 
-| Option | Pros | Cons |
-|--------|------|------|
-| A. After Description, before accordion | Quick create without scrolling | Unconventional placement |
-| B. After accordion (current) | Traditional form flow | Requires scroll on long forms |
-| C. Sticky at bottom of form | Always visible | Can feel intrusive |
-| D. Sidebar under group info card | Visible on desktop, contextual | Mobile placement unclear |
-
-**Decision:** TBD - will revisit after other sections complete
+**Rationale:** With all options collapsed by default, the form is short enough that the Create button is visible without scrolling. Users scan through the options, expand what they need, then click Create at the bottom. Traditional form flow.
