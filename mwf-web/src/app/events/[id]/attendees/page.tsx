@@ -434,81 +434,10 @@ export default function AttendeesPage() {
                     </div>
                 </div>
 
-                {/* Attendee List/Grid */}
+                {/* Attendee Grid */}
                 {currentList.length > 0 ? (
                     <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-6">
-                        {/* List view for Going tab when pre-orders are enabled */}
-                        {activeTab === 'going' && event.preorders_enabled ? (
-                            <div className="space-y-2">
-                                {currentList.map((person) => {
-                                    const attendee = person as Attendee;
-                                    const isHostUser = isHost(person.user_id);
-
-                                    return (
-                                        <button
-                                            key={person.user_id}
-                                            onClick={() => handleSelectAttendee(person)}
-                                            className="w-full flex items-start gap-4 p-3 rounded-xl hover:bg-stone-50 transition text-left"
-                                        >
-                                                {/* Avatar */}
-                                                <div className="relative flex-shrink-0">
-                                                    {person.avatar_url ? (
-                                                        <img
-                                                            src={person.avatar_url}
-                                                            alt={person.name}
-                                                            className="w-12 h-12 rounded-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                                                            <span className="text-lg font-medium text-amber-600">
-                                                                {person.name.charAt(0).toUpperCase()}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                    {isHostUser && (
-                                                        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-medium rounded">
-                                                            Host
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                {/* Name and Order */}
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-medium text-stone-900">
-                                                            {person.name}
-                                                        </span>
-                                                        {attendee.guest_count > 0 && (
-                                                            <span className="text-xs text-stone-500">
-                                                                +{attendee.guest_count} guest{attendee.guest_count > 1 ? 's' : ''}
-                                                            </span>
-                                                        )}
-                                                        <span className="text-xs text-stone-400">
-                                                            {formatRsvpTime(person.rsvp_at)}
-                                                        </span>
-                                                    </div>
-                                                    {attendee.food_order ? (
-                                                        <p className="text-sm text-stone-600 mt-0.5">
-                                                            {attendee.food_order}
-                                                        </p>
-                                                    ) : (
-                                                        <p className="text-sm text-stone-400 mt-0.5 italic">
-                                                            No order submitted
-                                                        </p>
-                                                    )}
-                                                    {attendee.dietary_notes && (
-                                                        <p className="text-xs text-orange-600 mt-0.5">
-                                                            {attendee.dietary_notes}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            /* Grid view for other tabs or when pre-orders disabled */
-                            <div className="flex flex-wrap gap-6 sm:gap-8">
+                        <div className="flex flex-wrap gap-6 sm:gap-8">
                                 {currentList.map((person) => {
                                     const attendee = person as Attendee;
                                     const isHostUser = isHost(person.user_id);
@@ -566,8 +495,7 @@ export default function AttendeesPage() {
                                         </button>
                                     );
                                 })}
-                            </div>
-                        )}
+                        </div>
                     </div>
                 ) : (
                     <div className="bg-white rounded-2xl border border-stone-200 p-12 text-center">
