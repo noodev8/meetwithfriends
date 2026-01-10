@@ -506,35 +506,6 @@ export default function EventDetailPage() {
             {/* Main Content - Full Width */}
             <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto w-full">
                 <div className="space-y-6">
-                        {/* Menu Link Card */}
-                        {event.menu_link && (
-                            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-200 p-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                                        <span className="text-2xl">🍽️</span>
-                                    </div>
-                                    <div className="flex-1">
-                                        <a
-                                            href={event.menu_link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="font-semibold text-amber-700 hover:text-amber-800 transition"
-                                        >
-                                            View Menu →
-                                        </a>
-                                        {event.preorder_cutoff && (
-                                            <p className="text-sm text-amber-600">
-                                                {isCutoffPassed
-                                                    ? 'Orders closed'
-                                                    : `Order by ${new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} at ${new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`
-                                                }
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
                         {/* Description */}
                         {event.description && (
                             <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
@@ -607,28 +578,32 @@ export default function EventDetailPage() {
                                             </p>
                                         )}
 
-                                        {/* Edit/Add button */}
-                                        <button
-                                            onClick={() => setShowOrderModal(true)}
-                                            className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
-                                        >
-                                            {rsvp.food_order || rsvp.dietary_notes ? 'Edit Order' : 'Add Order'}
-                                        </button>
+                                        {/* Edit/Add button and Menu link */}
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <button
+                                                onClick={() => setShowOrderModal(true)}
+                                                className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
+                                            >
+                                                {rsvp.food_order || rsvp.dietary_notes ? 'Edit Order' : 'Add Order'}
+                                            </button>
+                                            {event.menu_link && (
+                                                <a
+                                                    href={event.menu_link}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="px-4 py-2.5 text-amber-600 hover:text-amber-700 font-medium transition"
+                                                >
+                                                    View Menu →
+                                                </a>
+                                            )}
+                                        </div>
 
                                         {/* Deadline info */}
-                                        <p className="text-xs text-stone-500 mt-3">
-                                            {event.menu_link && (
-                                                <>
-                                                    <a href={event.menu_link} target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:text-amber-700">
-                                                        View the menu
-                                                    </a>
-                                                    {' '}to see what&apos;s available.{' '}
-                                                </>
-                                            )}
-                                            {event.preorder_cutoff && (
-                                                <>Order by {new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at {new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}.</>
-                                            )}
-                                        </p>
+                                        {event.preorder_cutoff && (
+                                            <p className="text-sm text-stone-500 mt-3">
+                                                Order by {new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at {new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}.
+                                            </p>
+                                        )}
                                     </div>
                                 )}
                             </div>
