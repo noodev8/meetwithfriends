@@ -22,7 +22,7 @@ export interface EventWithDetails extends Event {
 
 // RSVP status type
 export interface RsvpStatus {
-    status: 'attending' | 'waitlist';
+    status: 'attending' | 'waitlist' | 'not_going';
     waitlist_position: number | null;
     guest_count: number;
     food_order: string | null;

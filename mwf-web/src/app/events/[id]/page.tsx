@@ -20,7 +20,6 @@ import {
     manageAttendee,
     cancelEvent,
     restoreEvent,
-    addHost,
     removeHost,
     submitOrder,
     updateOrder,
@@ -28,7 +27,6 @@ import {
     RsvpStatus,
     Attendee,
 } from '@/lib/api/events';
-import { getGroupMembers, GroupMember } from '@/lib/api/groups';
 import { EventHost } from '@/types';
 import {
     getComments,
@@ -52,10 +50,6 @@ export default function EventDetailPage() {
     const [canManageAttendees, setCanManageAttendees] = useState(false);
     const [canEdit, setCanEdit] = useState(false);
     const [hostActionLoading, setHostActionLoading] = useState(false);
-    const [showHostManager, setShowHostManager] = useState(false);
-    const [hostSearchQuery, setHostSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<GroupMember[]>([]);
-    const [searchLoading, setSearchLoading] = useState(false);
     const [attending, setAttending] = useState<Attendee[]>([]);
     const [waitlist, setWaitlist] = useState<Attendee[]>([]);
     const [attendingCount, setAttendingCount] = useState(0);
@@ -321,57 +315,6 @@ export default function EventDetailPage() {
             }
         } else {
             alert(result.error || 'Failed to step down as host');
-        }
-    };
-
-    // =======================================================================
-    // Handle search for members to add as host
-    // =======================================================================
-    const handleHostSearch = async (query: string) => {
-        setHostSearchQuery(query);
-
-        if (!event || !token || query.trim().length < 2) {
-            setSearchResults([]);
-            return;
-        }
-
-        setSearchLoading(true);
-        const result = await getGroupMembers(event.group_id, token, {
-            search: query.trim(),
-            limit: 10
-        });
-        setSearchLoading(false);
-
-        if (result.success && result.data) {
-            // Filter out users who are already hosts
-            const hostUserIds = new Set(hosts.map(h => h.user_id));
-            const filtered = result.data.members.filter(m => !hostUserIds.has(m.user_id));
-            setSearchResults(filtered);
-        }
-    };
-
-    // =======================================================================
-    // Handle add host
-    // =======================================================================
-    const handleAddHost = async (userId: number) => {
-        if (!token || !event) return;
-
-        setHostActionLoading(true);
-        const result = await addHost(token, event.id, userId);
-        setHostActionLoading(false);
-
-        if (result.success) {
-            // Refresh event data to get updated hosts
-            const eventResult = await getEvent(event.id, token);
-            if (eventResult.success && eventResult.data) {
-                setHosts(eventResult.data.hosts);
-                setIsHost(eventResult.data.is_host);
-            }
-            // Clear search
-            setHostSearchQuery('');
-            setSearchResults([]);
-        } else {
-            alert(result.error || 'Failed to add host');
         }
     };
 
@@ -651,148 +594,73 @@ export default function EventDetailPage() {
                                 )}
                             </div>
 
-                            {/* Hosts */}
-                            <p className="text-stone-500 mb-4">
-                                Hosted by{' '}
-                                {hosts.length > 0
-                                    ? hosts.map((h, i) => (
-                                        <span key={h.user_id} className="font-medium text-stone-700">
-                                            {h.name}
-                                            {i < hosts.length - 2 && ', '}
-                                            {i === hosts.length - 2 && ' and '}
-                                        </span>
-                                    ))
-                                    : <span className="font-medium text-stone-700">{event.creator_name}</span>
-                                }
-                            </p>
-
-                            {/* Attendance Info */}
-                            <p className="text-stone-600">
-                                <span className="font-semibold text-stone-900">{event.attendee_count}</span> going
-                                {event.capacity && (
-                                    <span className="text-stone-400"> · {spotsRemaining} spots left</span>
-                                )}
-                            </p>
-
-                            {/* RSVP Status & Actions */}
-                            <div className="flex flex-wrap items-center gap-3 mt-4">
-                                {event.status === 'cancelled' ? (
-                                    <span className="px-4 py-2 bg-red-50 text-red-700 rounded-lg font-medium">Event cancelled</span>
-                                ) : isPastEvent ? (
-                                    <span className="px-4 py-2 bg-stone-100 text-stone-500 rounded-lg">Event ended</span>
-                                ) : !user ? (
-                                    <Link
-                                        href="/login"
-                                        className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
-                                    >
-                                        Log in to RSVP
-                                    </Link>
-                                ) : !isGroupMember ? (
-                                    <Link
-                                        href={`/groups/${event.group_id}`}
-                                        className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
-                                    >
-                                        Join Group to RSVP
-                                    </Link>
-                                ) : rsvp ? (
-                                    /* Already RSVP'd - show status and cancel option */
-                                    <div className="flex flex-wrap items-center gap-3">
-                                        <span className={`px-4 py-2 rounded-lg font-medium ${
-                                            rsvp.status === 'attending'
-                                                ? 'bg-green-50 text-green-700'
-                                                : 'bg-yellow-50 text-yellow-700'
-                                        }`}>
-                                            {rsvp.status === 'attending'
-                                                ? (rsvp.guest_count > 0 ? `Going + ${rsvp.guest_count} guest${rsvp.guest_count > 1 ? 's' : ''}` : 'Going')
-                                                : `Waitlist #${rsvp.waitlist_position}`
-                                            }
-                                        </span>
-                                        {rsvp.status === 'attending' && event.allow_guests && (
-                                            <select
-                                                value={selectedGuestCount}
-                                                onChange={(e) => handleUpdateGuests(parseInt(e.target.value, 10))}
-                                                disabled={rsvpLoading}
-                                                className="px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 bg-white"
-                                            >
-                                                {Array.from({ length: (event.max_guests_per_rsvp || 1) + 1 }, (_, i) => (
-                                                    <option key={i} value={i}>{i === 0 ? 'No guests' : `${i} guest${i > 1 ? 's' : ''}`}</option>
-                                                ))}
-                                            </select>
-                                        )}
-                                        <button
-                                            onClick={() => handleRsvp('leave')}
-                                            disabled={rsvpLoading}
-                                            className="px-4 py-2 text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition text-sm"
-                                        >
-                                            {rsvpLoading ? 'Updating...' : 'Cancel'}
-                                        </button>
-                                    </div>
+                            {/* Hosted by with avatar */}
+                            <div className="flex items-center gap-3 mb-4">
+                                {hosts.length > 0 ? (
+                                    <>
+                                        {/* Host avatar(s) */}
+                                        <div className="flex -space-x-2">
+                                            {hosts.slice(0, 2).map((h, i) => (
+                                                h.avatar_url ? (
+                                                    <img
+                                                        key={h.user_id}
+                                                        src={h.avatar_url}
+                                                        alt={h.name}
+                                                        className="w-8 h-8 rounded-full object-cover border-2 border-white"
+                                                        style={{ zIndex: 2 - i }}
+                                                    />
+                                                ) : (
+                                                    <div
+                                                        key={h.user_id}
+                                                        className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center border-2 border-white"
+                                                        style={{ zIndex: 2 - i }}
+                                                    >
+                                                        <span className="text-sm font-medium text-amber-800">
+                                                            {h.name.charAt(0).toUpperCase()}
+                                                        </span>
+                                                    </div>
+                                                )
+                                            ))}
+                                        </div>
+                                        <p className="text-stone-500">
+                                            Hosted by{' '}
+                                            <span className="font-medium text-stone-700">
+                                                {hosts[0].name}
+                                                {hosts.length > 1 && ` +${hosts.length - 1} other${hosts.length > 2 ? 's' : ''}`}
+                                            </span>
+                                        </p>
+                                    </>
                                 ) : (
-                                    /* Not RSVP'd - show join options */
-                                    <div className="flex items-center gap-3">
-                                        {event.allow_guests && (
-                                            <select
-                                                value={selectedGuestCount}
-                                                onChange={(e) => setSelectedGuestCount(parseInt(e.target.value, 10))}
-                                                disabled={rsvpLoading}
-                                                className="px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 bg-white"
-                                            >
-                                                {Array.from({ length: (event.max_guests_per_rsvp || 1) + 1 }, (_, i) => (
-                                                    <option key={i} value={i}>{i === 0 ? 'No guests' : `+ ${i} guest${i > 1 ? 's' : ''}`}</option>
-                                                ))}
-                                            </select>
-                                        )}
-                                        <button
-                                            onClick={() => handleRsvp('join', selectedGuestCount)}
-                                            disabled={rsvpLoading}
-                                            className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md disabled:opacity-50"
-                                        >
-                                            {rsvpLoading ? 'Updating...' : spotsRemaining === 0 ? 'Join Waitlist' : 'Attend'}
-                                        </button>
-                                    </div>
+                                    <p className="text-stone-500">
+                                        Hosted by <span className="font-medium text-stone-700">{event.creator_name}</span>
+                                    </p>
                                 )}
                             </div>
 
-                            {/* Host Actions - subtle, separated */}
-                            {(canEdit || (event.status === 'cancelled' && canManageAttendees) || (isHost && hosts.length > 1)) && (
-                                <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-stone-100">
-                                    {canEdit && (
-                                        <Link
-                                            href={`/events/${event.id}/edit`}
-                                            className="text-sm text-stone-500 hover:text-amber-600 transition"
-                                        >
-                                            Edit event
-                                        </Link>
+                            {/* Attendance Info & RSVP Status */}
+                            <div className="flex flex-wrap items-center gap-3">
+                                <p className="text-stone-600">
+                                    <span className="font-semibold text-stone-900">{event.attendee_count}</span> going
+                                    {event.capacity && (
+                                        <span className="text-stone-400"> · {spotsRemaining} spots left</span>
                                     )}
-                                    {canEdit && (
-                                        <button
-                                            onClick={handleCancelEvent}
-                                            disabled={cancelLoading}
-                                            className="text-sm text-stone-400 hover:text-red-600 transition disabled:opacity-50"
-                                        >
-                                            {cancelLoading ? 'Cancelling...' : 'Cancel event'}
-                                        </button>
-                                    )}
-                                    {event.status === 'cancelled' && canManageAttendees && (
-                                        <button
-                                            onClick={handleRestoreEvent}
-                                            disabled={restoreLoading}
-                                            className="text-sm text-stone-400 hover:text-green-600 transition disabled:opacity-50"
-                                        >
-                                            {restoreLoading ? 'Restoring...' : 'Restore event'}
-                                        </button>
-                                    )}
-                                    {isHost && hosts.length > 1 && (
-                                        <button
-                                            onClick={handleStepDown}
-                                            disabled={hostActionLoading}
-                                            className="text-sm text-stone-400 hover:text-orange-600 transition disabled:opacity-50"
-                                        >
-                                            {hostActionLoading ? 'Stepping down...' : 'Step down as host'}
-                                        </button>
-                                    )}
-                                </div>
-                            )}
+                                </p>
+                                {event.status === 'cancelled' && (
+                                    <span className="px-3 py-1 bg-red-50 text-red-700 rounded-full text-sm font-medium">Cancelled</span>
+                                )}
+                                {isPastEvent && event.status !== 'cancelled' && (
+                                    <span className="px-3 py-1 bg-stone-100 text-stone-500 rounded-full text-sm">Ended</span>
+                                )}
+                                {rsvp && rsvp.status !== 'not_going' && !isPastEvent && event.status !== 'cancelled' && (
+                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                        rsvp.status === 'attending'
+                                            ? 'bg-green-50 text-green-700'
+                                            : 'bg-yellow-50 text-yellow-700'
+                                    }`}>
+                                        {rsvp.status === 'attending' ? "You're going" : `Waitlist #${rsvp.waitlist_position}`}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1062,6 +930,62 @@ export default function EventDetailPage() {
 
                     {/* Right Column - Sidebar */}
                     <div className="lg:w-80 space-y-6">
+                        {/* Manage Event Card - for hosts/organisers */}
+                        {(canEdit || (event.status === 'cancelled' && canManageAttendees) || (isHost && hosts.length > 1)) && (
+                            <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+                                <h2 className="text-lg font-bold text-stone-900 font-display mb-4">Manage Event</h2>
+                                <div className="space-y-3">
+                                    {canEdit && event.status !== 'cancelled' && (
+                                        <Link
+                                            href={`/events/${event.id}/edit`}
+                                            className="flex items-center gap-3 w-full px-4 py-2.5 bg-stone-50 hover:bg-stone-100 rounded-xl transition text-stone-700"
+                                        >
+                                            <svg className="w-5 h-5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                            Edit event
+                                        </Link>
+                                    )}
+                                    {canEdit && event.status !== 'cancelled' && (
+                                        <button
+                                            onClick={handleCancelEvent}
+                                            disabled={cancelLoading}
+                                            className="flex items-center gap-3 w-full px-4 py-2.5 bg-stone-50 hover:bg-red-50 rounded-xl transition text-stone-700 hover:text-red-600 disabled:opacity-50"
+                                        >
+                                            <svg className="w-5 h-5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                            {cancelLoading ? 'Cancelling...' : 'Cancel event'}
+                                        </button>
+                                    )}
+                                    {event.status === 'cancelled' && canManageAttendees && (
+                                        <button
+                                            onClick={handleRestoreEvent}
+                                            disabled={restoreLoading}
+                                            className="flex items-center gap-3 w-full px-4 py-2.5 bg-green-50 hover:bg-green-100 rounded-xl transition text-green-700 disabled:opacity-50"
+                                        >
+                                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                            {restoreLoading ? 'Restoring...' : 'Restore event'}
+                                        </button>
+                                    )}
+                                    {isHost && hosts.length > 1 && (
+                                        <button
+                                            onClick={handleStepDown}
+                                            disabled={hostActionLoading}
+                                            className="flex items-center gap-3 w-full px-4 py-2.5 bg-stone-50 hover:bg-orange-50 rounded-xl transition text-stone-700 hover:text-orange-600 disabled:opacity-50"
+                                        >
+                                            <svg className="w-5 h-5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                            {hostActionLoading ? 'Stepping down...' : 'Step down as host'}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Attendees Card - Compact View */}
                         <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm lg:sticky lg:top-6">
                             <div className="flex items-center justify-between mb-4">
@@ -1205,103 +1129,6 @@ export default function EventDetailPage() {
                             )}
                         </div>
 
-                        {/* Manage Hosts Card - only visible to hosts/organisers */}
-                        {canManageAttendees && (
-                            <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-lg font-bold text-stone-900 font-display">
-                                        Hosts ({hosts.length})
-                                    </h2>
-                                    <button
-                                        onClick={() => setShowHostManager(!showHostManager)}
-                                        className="text-sm text-amber-600 hover:text-amber-700 font-medium"
-                                    >
-                                        {showHostManager ? 'Done' : 'Manage'}
-                                    </button>
-                                </div>
-
-                                {/* Current hosts list */}
-                                <div className="flex flex-wrap gap-2 mb-4">
-                                    {hosts.map(host => (
-                                        <div
-                                            key={host.user_id}
-                                            className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 rounded-full"
-                                        >
-                                            {host.avatar_url ? (
-                                                <img
-                                                    src={host.avatar_url}
-                                                    alt={host.name}
-                                                    className="w-5 h-5 rounded-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-200 to-orange-200 flex items-center justify-center">
-                                                    <span className="text-xs text-amber-700">
-                                                        {host.name.charAt(0).toUpperCase()}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            <span className="text-sm text-amber-800">{host.name}</span>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* Add host interface */}
-                                {showHostManager && (
-                                    <div className="pt-4 border-t border-stone-200">
-                                        <label className="block text-sm font-medium text-stone-700 mb-2">
-                                            Add a host
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={hostSearchQuery}
-                                            onChange={(e) => handleHostSearch(e.target.value)}
-                                            placeholder="Search members..."
-                                            className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
-                                        />
-
-                                        {searchLoading && (
-                                            <p className="text-sm text-stone-500 mt-2">Searching...</p>
-                                        )}
-
-                                        {!searchLoading && searchResults.length > 0 && (
-                                            <div className="mt-2 border border-stone-200 rounded-lg divide-y divide-stone-100 max-h-48 overflow-y-auto">
-                                                {searchResults.map(member => (
-                                                    <button
-                                                        key={member.user_id}
-                                                        onClick={() => handleAddHost(member.user_id)}
-                                                        disabled={hostActionLoading}
-                                                        className="w-full flex items-center gap-3 p-3 hover:bg-stone-50 disabled:opacity-50 text-left transition"
-                                                    >
-                                                        {member.avatar_url ? (
-                                                            <img
-                                                                src={member.avatar_url}
-                                                                alt={member.name}
-                                                                className="w-8 h-8 rounded-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                                                                <span className="text-sm text-amber-600">
-                                                                    {member.name.charAt(0).toUpperCase()}
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-sm font-medium text-stone-900 truncate">{member.name}</p>
-                                                        </div>
-                                                        <span className="text-xs text-amber-600 font-medium">Add</span>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        {!searchLoading && hostSearchQuery.length >= 2 && searchResults.length === 0 && (
-                                            <p className="text-sm text-stone-500 mt-2">No members found</p>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
                         {/* Food Orders Card - for hosts when event has pre-orders */}
                         {canManageAttendees && event.preorders_enabled && attending.some(a => a.food_order || a.dietary_notes) && (
                             <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
@@ -1411,6 +1238,118 @@ export default function EventDetailPage() {
                         <p className="text-center mt-4 text-xl font-medium text-white">
                             {selectedAttendee.name}
                         </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Bottom RSVP Section */}
+            {event && !isPastEvent && event.status !== 'cancelled' && (
+                <div className="bg-white border-t border-stone-200 py-8 px-4 sm:px-8">
+                    <div className="max-w-2xl mx-auto">
+                        {!user ? (
+                            /* Not logged in */
+                            <div className="text-center">
+                                <h3 className="text-xl font-bold text-stone-900 font-display mb-2">Want to attend?</h3>
+                                <p className="text-stone-500 mb-6">Log in to RSVP to this event</p>
+                                <Link
+                                    href="/login"
+                                    className="inline-block px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg text-lg"
+                                >
+                                    Log in to RSVP
+                                </Link>
+                            </div>
+                        ) : !isGroupMember ? (
+                            /* Not a group member */
+                            <div className="text-center">
+                                <h3 className="text-xl font-bold text-stone-900 font-display mb-2">Want to attend?</h3>
+                                <p className="text-stone-500 mb-6">Join the group first to RSVP to events</p>
+                                <Link
+                                    href={`/groups/${event.group_id}`}
+                                    className="inline-block px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg text-lg"
+                                >
+                                    Join Group to RSVP
+                                </Link>
+                            </div>
+                        ) : rsvp && rsvp.status !== 'not_going' ? (
+                            /* Already RSVP'd (attending or waitlist) */
+                            <div className="text-center">
+                                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-4 ${
+                                    rsvp.status === 'attending'
+                                        ? 'bg-green-50 text-green-700'
+                                        : 'bg-yellow-50 text-yellow-700'
+                                }`}>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    {rsvp.status === 'attending'
+                                        ? (rsvp.guest_count > 0 ? `You're going + ${rsvp.guest_count} guest${rsvp.guest_count > 1 ? 's' : ''}` : "You're going")
+                                        : `You're on the waitlist (#${rsvp.waitlist_position})`
+                                    }
+                                </div>
+
+                                {/* Guest selector for attending users */}
+                                {rsvp.status === 'attending' && event.allow_guests && (
+                                    <div className="mb-6">
+                                        <label className="block text-sm text-stone-500 mb-2">Bringing guests?</label>
+                                        <select
+                                            value={selectedGuestCount}
+                                            onChange={(e) => handleUpdateGuests(parseInt(e.target.value, 10))}
+                                            disabled={rsvpLoading}
+                                            className="px-4 py-2 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 bg-white"
+                                        >
+                                            {Array.from({ length: (event.max_guests_per_rsvp || 1) + 1 }, (_, i) => (
+                                                <option key={i} value={i}>{i === 0 ? 'Just me' : `Me + ${i} guest${i > 1 ? 's' : ''}`}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={() => handleRsvp('leave')}
+                                    disabled={rsvpLoading}
+                                    className="px-8 py-3 border-2 border-stone-300 text-stone-600 font-medium rounded-xl hover:border-stone-400 hover:bg-stone-50 transition-all text-lg disabled:opacity-50"
+                                >
+                                    {rsvpLoading ? 'Updating...' : "Not going anymore"}
+                                </button>
+                            </div>
+                        ) : (
+                            /* Not RSVP'd - show join options */
+                            <div className="text-center">
+                                <h3 className="text-xl font-bold text-stone-900 font-display mb-2">
+                                    {spotsRemaining === 0 ? 'Event is full' : 'Will you be there?'}
+                                </h3>
+                                <p className="text-stone-500 mb-6">
+                                    {spotsRemaining === 0
+                                        ? 'Join the waitlist and we\'ll notify you if a spot opens up'
+                                        : `${spotsRemaining} spot${spotsRemaining !== 1 ? 's' : ''} remaining`
+                                    }
+                                </p>
+
+                                {event.allow_guests && (
+                                    <div className="mb-6">
+                                        <label className="block text-sm text-stone-500 mb-2">Bringing guests?</label>
+                                        <select
+                                            value={selectedGuestCount}
+                                            onChange={(e) => setSelectedGuestCount(parseInt(e.target.value, 10))}
+                                            disabled={rsvpLoading}
+                                            className="px-4 py-2 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 bg-white"
+                                        >
+                                            {Array.from({ length: (event.max_guests_per_rsvp || 1) + 1 }, (_, i) => (
+                                                <option key={i} value={i}>{i === 0 ? 'Just me' : `Me + ${i} guest${i > 1 ? 's' : ''}`}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={() => handleRsvp('join', selectedGuestCount)}
+                                    disabled={rsvpLoading}
+                                    className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg text-lg disabled:opacity-50"
+                                >
+                                    {rsvpLoading ? 'Updating...' : spotsRemaining === 0 ? 'Join Waitlist' : 'Count me in'}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

@@ -191,6 +191,7 @@ function GroupCard({ group }: { group: MyGroup | GroupWithCount }) {
 function EventCard({ event }: { event: EventWithDetails }) {
     // Use event image, fall back to group image
     const imageUrl = event.image_url || event.group_image_url;
+    const isFull = event.capacity != null && (event.attendee_count || 0) >= event.capacity;
 
     return (
         <Link
@@ -214,20 +215,27 @@ function EventCard({ event }: { event: EventWithDetails }) {
                     </div>
                 )}
 
-                {/* Status badge overlay */}
-                {event.rsvp_status && (
+                {/* Status badge overlay - only show for attending or waitlist, not for not_going */}
+                {(event.rsvp_status === 'attending' || event.rsvp_status === 'waitlist') && (
                     <span className={`absolute top-3 left-3 px-2.5 py-1 text-xs font-semibold rounded-full shadow-sm ${
                         event.rsvp_status === 'attending'
                             ? 'text-green-800 bg-green-100'
                             : 'text-amber-800 bg-amber-100'
                     }`}>
-                        {event.rsvp_status === 'attending' ? 'Going' : 'Waitlist'}
+                        {event.rsvp_status === 'attending' ? 'Going' : 'On waitlist'}
                     </span>
                 )}
 
                 {event.status === 'cancelled' && (
                     <span className="absolute top-3 left-3 px-2.5 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full shadow-sm">
                         Cancelled
+                    </span>
+                )}
+
+                {/* Full badge - top right */}
+                {isFull && event.status !== 'cancelled' && (
+                    <span className="absolute top-3 right-3 px-2.5 py-1 text-xs font-semibold text-orange-800 bg-orange-100 rounded-full shadow-sm">
+                        Full
                     </span>
                 )}
             </div>

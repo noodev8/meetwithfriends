@@ -275,10 +275,10 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                 const wasAttending = existingRsvp.rows[0].status === 'attending';
                 const wasWaitlistPosition = existingRsvp.rows[0].waitlist_position;
 
-                // Update to not_going status (keep record for history)
+                // Update to not_going status (keep record for history, update timestamp)
                 await client.query(
                     `UPDATE event_rsvp
-                     SET status = 'not_going', waitlist_position = NULL, guest_count = 0
+                     SET status = 'not_going', waitlist_position = NULL, guest_count = 0, created_at = NOW()
                      WHERE event_id = $1 AND user_id = $2`,
                     [id, userId]
                 );
@@ -295,10 +295,10 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                     );
 
                     if (firstWaitlist.rows.length > 0) {
-                        // Promote to attending
+                        // Promote to attending (update timestamp to reflect promotion time)
                         await client.query(
                             `UPDATE event_rsvp
-                             SET status = 'attending', waitlist_position = NULL
+                             SET status = 'attending', waitlist_position = NULL, created_at = NOW()
                              WHERE id = $1`,
                             [firstWaitlist.rows[0].id]
                         );

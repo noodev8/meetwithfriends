@@ -462,13 +462,13 @@ export default function GroupDetailPage() {
 
                                                     {/* Status badges overlay */}
                                                     <div className="absolute top-3 left-3 flex gap-2">
-                                                        {event.rsvp_status && (
+                                                        {(event.rsvp_status === 'attending' || event.rsvp_status === 'waitlist') && (
                                                             <span className={`px-2.5 py-1 text-xs font-semibold rounded-full shadow-sm ${
                                                                 event.rsvp_status === 'attending'
                                                                     ? 'text-green-800 bg-green-100'
                                                                     : 'text-amber-800 bg-amber-100'
                                                             }`}>
-                                                                {event.rsvp_status === 'attending' ? 'Going' : 'Waitlist'}
+                                                                {event.rsvp_status === 'attending' ? 'Going' : 'On waitlist'}
                                                             </span>
                                                         )}
                                                         {event.status === 'cancelled' && (
@@ -477,6 +477,12 @@ export default function GroupDetailPage() {
                                                             </span>
                                                         )}
                                                     </div>
+                                                    {/* Full badge - top right */}
+                                                    {event.capacity && (event.attendee_count || 0) >= event.capacity && event.status !== 'cancelled' && (
+                                                        <span className="absolute top-3 right-3 px-2.5 py-1 text-xs font-semibold text-orange-800 bg-orange-100 rounded-full shadow-sm">
+                                                            Full
+                                                        </span>
+                                                    )}
                                                 </div>
 
                                                 {/* Content */}
@@ -503,7 +509,7 @@ export default function GroupDetailPage() {
                                                             </svg>
                                                             {event.attendee_count || 0} going
                                                         </span>
-                                                        {event.capacity && (
+                                                        {event.capacity && event.capacity > (event.attendee_count || 0) && (
                                                             <span>{event.capacity - (event.attendee_count || 0)} spots left</span>
                                                         )}
                                                         {(event.waitlist_count || 0) > 0 && (

@@ -169,7 +169,7 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
                     if (firstWaitlist.rows.length > 0) {
                         await client.query(
                             `UPDATE event_rsvp
-                             SET status = 'attending', waitlist_position = NULL
+                             SET status = 'attending', waitlist_position = NULL, created_at = NOW()
                              WHERE id = $1`,
                             [firstWaitlist.rows[0].id]
                         );
@@ -218,10 +218,10 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
                 );
                 const nextPosition = maxPosResult.rows[0].next_pos;
 
-                // Move to waitlist
+                // Move to waitlist (update timestamp)
                 await client.query(
                     `UPDATE event_rsvp
-                     SET status = 'waitlist', waitlist_position = $2
+                     SET status = 'waitlist', waitlist_position = $2, created_at = NOW()
                      WHERE id = $1`,
                     [targetRsvp.id, nextPosition]
                 );
@@ -238,7 +238,7 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
                 if (firstWaitlist.rows.length > 0) {
                     await client.query(
                         `UPDATE event_rsvp
-                         SET status = 'attending', waitlist_position = NULL
+                         SET status = 'attending', waitlist_position = NULL, created_at = NOW()
                          WHERE id = $1`,
                         [firstWaitlist.rows[0].id]
                     );
@@ -271,10 +271,10 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
 
                 const promotedPosition = targetRsvp.waitlist_position;
 
-                // Promote to attending (even if at capacity - admin override)
+                // Promote to attending (even if at capacity - admin override, update timestamp)
                 await client.query(
                     `UPDATE event_rsvp
-                     SET status = 'attending', waitlist_position = NULL
+                     SET status = 'attending', waitlist_position = NULL, created_at = NOW()
                      WHERE id = $1`,
                     [targetRsvp.id]
                 );
