@@ -37,13 +37,19 @@ These fire immediately when an action happens in existing endpoints.
 
 ---
 
-## Phase B: Broadcast Triggers (Medium) ✅ Complete
+## Phase B: Broadcast Triggers (Medium)
 
 These send to multiple recipients. Need to handle the 100/day limit.
 
 | # | Email | Endpoint Modified | Status |
 |---|-------|-------------------|--------|
 | 2 | New event in your group | `events/create_event.js` | ✅ |
+| 10 | New comment on event | `comments/add_comment.js` | ⏳ Pending |
+
+### Email #10: New Comment
+- **Recipients:** All attendees + waitlist, except the person who posted the comment
+- **Content:** Show commenter name, comment text (truncated if long), link to event page
+- **Note:** Could generate many emails for active discussions - consider batching or rate limiting per event
 
 ---
 
@@ -76,6 +82,7 @@ node scripts/send_reminders.js
 | Joined group | user.name, group.name |
 | New event | user.name, event.title, event.date_time, event.location, group.name |
 | Event reminder | user.name, event.title, event.date_time, event.location, attendee_summary (for host) |
+| New comment | user.name, event.title, commenter.name, comment.content, link to event |
 
 ---
 

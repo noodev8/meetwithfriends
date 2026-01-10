@@ -11,6 +11,7 @@
 | 7 | Event cancelled | Attendees | Host/organiser cancels event |
 | 8 | New join request | Host/Organiser | User requests to join group |
 | 9 | You have joined a group | User | Host/organiser manually approves join request (not auto-join) |
+| 10 | New comment on event | Attendees + Waitlist (except commenter) | User posts a comment. Shows latest comment with link to conversation. |
 
 ---
 
