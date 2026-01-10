@@ -17,11 +17,7 @@ import {
     getAttendees,
     rsvpEvent,
     updateRsvp,
-    cancelEvent,
-    restoreEvent,
-    removeHost,
     submitOrder,
-    updateOrder,
     EventWithDetails,
     RsvpStatus,
     Attendee,
@@ -44,22 +40,16 @@ export default function EventDetailPage() {
     const [event, setEvent] = useState<EventWithDetails | null>(null);
     const [rsvp, setRsvp] = useState<RsvpStatus | null>(null);
     const [hosts, setHosts] = useState<EventHost[]>([]);
-    const [isHost, setIsHost] = useState(false);
     const [isGroupMember, setIsGroupMember] = useState(false);
-    const [canManageAttendees, setCanManageAttendees] = useState(false);
     const [canEdit, setCanEdit] = useState(false);
-    const [hostActionLoading, setHostActionLoading] = useState(false);
     const [attending, setAttending] = useState<Attendee[]>([]);
     const [, setWaitlist] = useState<Attendee[]>([]);
     const [attendingCount, setAttendingCount] = useState(0);
-    const [totalGuestCount, setTotalGuestCount] = useState(0);
     const [waitlistCount, setWaitlistCount] = useState(0);
     const [canViewAttendees, setCanViewAttendees] = useState(false);
     const [selectedGuestCount, setSelectedGuestCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [rsvpLoading, setRsvpLoading] = useState(false);
-    const [cancelLoading, setCancelLoading] = useState(false);
-    const [restoreLoading, setRestoreLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     // Comments state
@@ -75,9 +65,6 @@ export default function EventDetailPage() {
     const [dietaryNotes, setDietaryNotes] = useState('');
     const [orderLoading, setOrderLoading] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState('');
-    const [editingOrderUserId, setEditingOrderUserId] = useState<number | null>(null);
-    const [editFoodOrder, setEditFoodOrder] = useState('');
-    const [editDietaryNotes, setEditDietaryNotes] = useState('');
 
     // Profile modal state
     const [selectedAttendee, setSelectedAttendee] = useState<Attendee | null>(null);
@@ -105,9 +92,7 @@ export default function EventDetailPage() {
                 setFoodOrder(eventResult.data.rsvp?.food_order || '');
                 setDietaryNotes(eventResult.data.rsvp?.dietary_notes || '');
                 setHosts(eventResult.data.hosts);
-                setIsHost(eventResult.data.is_host);
                 setIsGroupMember(eventResult.data.is_group_member);
-                setCanManageAttendees(eventResult.data.can_manage_attendees);
                 setCanEdit(eventResult.data.can_edit);
             } else {
                 setError(eventResult.error || 'Event not found');
@@ -117,7 +102,6 @@ export default function EventDetailPage() {
                 setAttending(attendeesResult.data.attending);
                 setWaitlist(attendeesResult.data.waitlist);
                 setAttendingCount(attendeesResult.data.attending_count);
-                setTotalGuestCount(attendeesResult.data.total_guest_count);
                 setWaitlistCount(attendeesResult.data.waitlist_count);
                 setCanViewAttendees(attendeesResult.data.is_member);
             }
@@ -152,7 +136,6 @@ export default function EventDetailPage() {
                 setAttending(attendeesResult.data.attending);
                 setWaitlist(attendeesResult.data.waitlist);
                 setAttendingCount(attendeesResult.data.attending_count);
-                setTotalGuestCount(attendeesResult.data.total_guest_count);
                 setWaitlistCount(attendeesResult.data.waitlist_count);
                 setCanViewAttendees(attendeesResult.data.is_member);
             }
@@ -186,7 +169,6 @@ export default function EventDetailPage() {
                 setAttending(attendeesResult.data.attending);
                 setWaitlist(attendeesResult.data.waitlist);
                 setAttendingCount(attendeesResult.data.attending_count);
-                setTotalGuestCount(attendeesResult.data.total_guest_count);
                 setWaitlistCount(attendeesResult.data.waitlist_count);
             }
             // Update event counts
@@ -200,92 +182,6 @@ export default function EventDetailPage() {
     };
 
     // =======================================================================
-    // Handle cancel event
-    // =======================================================================
-    const handleCancelEvent = async () => {
-        if (!token || !event) return;
-
-        const confirmed = window.confirm(
-            'Are you sure you want to cancel this event? This action cannot be undone.'
-        );
-
-        if (!confirmed) return;
-
-        setCancelLoading(true);
-        const result = await cancelEvent(token, event.id);
-        setCancelLoading(false);
-
-        if (result.success) {
-            // Refresh event to show cancelled status
-            const eventResult = await getEvent(event.id, token);
-            if (eventResult.success && eventResult.data) {
-                setEvent(eventResult.data.event);
-                setCanEdit(eventResult.data.can_edit);
-            }
-        } else {
-            alert(result.error || 'Failed to cancel event');
-        }
-    };
-
-    // =======================================================================
-    // Handle restore event
-    // =======================================================================
-    const handleRestoreEvent = async () => {
-        if (!token || !event) return;
-
-        const confirmed = window.confirm(
-            'Are you sure you want to restore this event? It will be visible and open for RSVPs again.'
-        );
-
-        if (!confirmed) return;
-
-        setRestoreLoading(true);
-        const result = await restoreEvent(token, event.id);
-        setRestoreLoading(false);
-
-        if (result.success) {
-            // Refresh event to show restored status
-            const eventResult = await getEvent(event.id, token);
-            if (eventResult.success && eventResult.data) {
-                setEvent(eventResult.data.event);
-                setCanEdit(eventResult.data.can_edit);
-            }
-        } else {
-            alert(result.error || 'Failed to restore event');
-        }
-    };
-
-    // =======================================================================
-    // Handle step down as host
-    // =======================================================================
-    const handleStepDown = async () => {
-        if (!token || !event || !user) return;
-
-        const confirmed = window.confirm(
-            'Are you sure you want to step down as host? You will no longer be able to manage this event.'
-        );
-
-        if (!confirmed) return;
-
-        setHostActionLoading(true);
-        const result = await removeHost(token, event.id, user.id);
-        setHostActionLoading(false);
-
-        if (result.success) {
-            // Refresh event data
-            const eventResult = await getEvent(event.id, token);
-            if (eventResult.success && eventResult.data) {
-                setEvent(eventResult.data.event);
-                setHosts(eventResult.data.hosts);
-                setIsHost(eventResult.data.is_host);
-                setCanManageAttendees(eventResult.data.can_manage_attendees);
-                setCanEdit(eventResult.data.can_edit);
-            }
-        } else {
-            alert(result.error || 'Failed to step down as host');
-        }
-    };
-
     // =======================================================================
     // Handle submit own food order
     // =======================================================================
@@ -319,40 +215,6 @@ export default function EventDetailPage() {
         } else {
             alert(result.error || 'Failed to submit order');
         }
-    };
-
-    // =======================================================================
-    // Handle host editing another attendee's order
-    // =======================================================================
-    const handleUpdateOtherOrder = async (userId: number) => {
-        if (!token || !event) return;
-
-        setOrderLoading(true);
-        const result = await updateOrder(token, event.id, userId, editFoodOrder.trim() || null, editDietaryNotes.trim() || null);
-        setOrderLoading(false);
-
-        if (result.success) {
-            // Refresh attendees
-            const attendeesResult = await getAttendees(event.id, token);
-            if (attendeesResult.success && attendeesResult.data) {
-                setAttending(attendeesResult.data.attending);
-                setWaitlist(attendeesResult.data.waitlist);
-            }
-            setEditingOrderUserId(null);
-            setEditFoodOrder('');
-            setEditDietaryNotes('');
-        } else {
-            alert(result.error || 'Failed to update order');
-        }
-    };
-
-    // =======================================================================
-    // Start editing another attendee's order (host only)
-    // =======================================================================
-    const startEditOrder = (person: Attendee) => {
-        setEditingOrderUserId(person.user_id);
-        setEditFoodOrder(person.food_order || '');
-        setEditDietaryNotes(person.dietary_notes || '');
     };
 
     // =======================================================================
@@ -873,7 +735,7 @@ export default function EventDetailPage() {
                                                                 <div className="relative w-20 h-20 mb-2">
                                                                     {/* 2x2 grid of small avatars */}
                                                                     <div className="grid grid-cols-2 gap-1 w-full h-full">
-                                                                        {remaining.slice(0, 3).map((person, i) => (
+                                                                        {remaining.slice(0, 3).map((person) => (
                                                                             person.avatar_url ? (
                                                                                 <img
                                                                                     key={person.user_id}
