@@ -763,38 +763,24 @@ export default function EditEventPage() {
                         {/* ============================================================
                             EVENT STATUS
                         ============================================================ */}
-                        <div className="mt-8 pt-8 border-t border-stone-200">
-                            <div className="bg-stone-50 border border-stone-200 rounded-xl p-5">
-                                {event.status === 'cancelled' ? (
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                        <div>
-                                            <p className="font-medium text-stone-900">Restore this event</p>
-                                            <p className="text-sm text-stone-600">This event is currently cancelled. Restore it to make it active again.</p>
-                                        </div>
-                                        <button
-                                            onClick={handleRestoreEvent}
-                                            disabled={cancelLoading}
-                                            className="px-5 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition disabled:opacity-50 whitespace-nowrap"
-                                        >
-                                            {cancelLoading ? 'Restoring...' : 'Restore Event'}
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                        <div>
-                                            <p className="font-medium text-stone-900">Cancel this event</p>
-                                            <p className="text-sm text-stone-600">Attendees will be notified. You can restore the event later.</p>
-                                        </div>
-                                        <button
-                                            onClick={handleCancelEvent}
-                                            disabled={cancelLoading}
-                                            className="px-5 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition disabled:opacity-50 whitespace-nowrap"
-                                        >
-                                            {cancelLoading ? 'Cancelling...' : 'Cancel Event'}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
+                        <div className="mt-6 pt-6 border-t border-stone-200">
+                            {event.status === 'cancelled' ? (
+                                <button
+                                    onClick={handleRestoreEvent}
+                                    disabled={cancelLoading}
+                                    className="text-sm text-green-600 hover:text-green-700 transition disabled:opacity-50"
+                                >
+                                    {cancelLoading ? 'Restoring...' : 'Restore this event'}
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleCancelEvent}
+                                    disabled={cancelLoading}
+                                    className="text-sm text-stone-500 hover:text-red-600 transition disabled:opacity-50"
+                                >
+                                    {cancelLoading ? 'Cancelling...' : 'Cancel this event'}
+                                </button>
+                            )}
                         </div>
                     </div>
 
