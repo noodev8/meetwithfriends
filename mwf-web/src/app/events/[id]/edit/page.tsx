@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getEvent, updateEvent, EventWithDetails } from '@/lib/api/events';
+import { getEvent, updateEvent, cancelEvent, restoreEvent, EventWithDetails } from '@/lib/api/events';
 import Header from '@/components/layout/Header';
 import ImageUpload from '@/components/ui/ImageUpload';
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -27,6 +27,7 @@ export default function EditEventPage() {
     const [canEdit, setCanEdit] = useState(false);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [cancelLoading, setCancelLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     // Form state
@@ -200,6 +201,39 @@ export default function EditEventPage() {
             router.push(`/events/${event.id}`);
         } else {
             setError(result.error || 'Failed to update event');
+        }
+    };
+
+    // =======================================================================
+    // Cancel / Restore Event
+    // =======================================================================
+    const handleCancelEvent = async () => {
+        if (!token || !event) return;
+        if (!confirm('Are you sure you want to cancel this event? Attendees will be notified.')) return;
+
+        setCancelLoading(true);
+        const result = await cancelEvent(token, event.id);
+        setCancelLoading(false);
+
+        if (result.success) {
+            setEvent({ ...event, status: 'cancelled' });
+        } else {
+            setError(result.error || 'Failed to cancel event');
+        }
+    };
+
+    const handleRestoreEvent = async () => {
+        if (!token || !event) return;
+        if (!confirm('Are you sure you want to restore this event?')) return;
+
+        setCancelLoading(true);
+        const result = await restoreEvent(token, event.id);
+        setCancelLoading(false);
+
+        if (result.success) {
+            setEvent({ ...event, status: 'published' });
+        } else {
+            setError(result.error || 'Failed to restore event');
         }
     };
 
@@ -721,10 +755,48 @@ export default function EditEventPage() {
                                     href={`/events/${event.id}`}
                                     className="px-6 py-3 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition text-center"
                                 >
-                                    Cancel
+                                    Discard
                                 </Link>
                             </div>
                         </form>
+
+                        {/* ============================================================
+                            DANGER ZONE
+                        ============================================================ */}
+                        <div className="mt-8 pt-8 border-t border-stone-200">
+                            <h3 className="text-lg font-semibold text-stone-900 mb-4 font-display">Danger Zone</h3>
+                            <div className="bg-red-50 border border-red-200 rounded-xl p-5">
+                                {event.status === 'cancelled' ? (
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                        <div>
+                                            <p className="font-medium text-stone-900">Restore this event</p>
+                                            <p className="text-sm text-stone-600">This event is currently cancelled. Restore it to make it active again.</p>
+                                        </div>
+                                        <button
+                                            onClick={handleRestoreEvent}
+                                            disabled={cancelLoading}
+                                            className="px-5 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition disabled:opacity-50 whitespace-nowrap"
+                                        >
+                                            {cancelLoading ? 'Restoring...' : 'Restore Event'}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                        <div>
+                                            <p className="font-medium text-stone-900">Cancel this event</p>
+                                            <p className="text-sm text-stone-600">Attendees will be notified. You can restore the event later.</p>
+                                        </div>
+                                        <button
+                                            onClick={handleCancelEvent}
+                                            disabled={cancelLoading}
+                                            className="px-5 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition disabled:opacity-50 whitespace-nowrap"
+                                        >
+                                            {cancelLoading ? 'Cancelling...' : 'Cancel Event'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Sidebar - Hidden on mobile, shown on lg+ */}
