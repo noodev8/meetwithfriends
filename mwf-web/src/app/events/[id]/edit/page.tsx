@@ -761,11 +761,10 @@ export default function EditEventPage() {
                         </form>
 
                         {/* ============================================================
-                            DANGER ZONE
+                            EVENT STATUS
                         ============================================================ */}
                         <div className="mt-8 pt-8 border-t border-stone-200">
-                            <h3 className="text-lg font-semibold text-stone-900 mb-4 font-display">Danger Zone</h3>
-                            <div className="bg-red-50 border border-red-200 rounded-xl p-5">
+                            <div className="bg-stone-50 border border-stone-200 rounded-xl p-5">
                                 {event.status === 'cancelled' ? (
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                         <div>
