@@ -137,7 +137,58 @@ function EmptyState({ userName, discoverableGroups, GroupCard }: {
 }
 
 // =======================================================================
-// Group Card Component
+// Compact Group Thumbnail Component - for dashboard header
+// =======================================================================
+function CompactGroupCard({ group }: { group: MyGroup | GroupWithCount }) {
+    const upcomingCount = ('upcoming_event_count' in group ? group.upcoming_event_count : 0) || 0;
+
+    return (
+        <Link
+            href={`/groups/${group.id}`}
+            className="group flex-shrink-0 w-28 bg-white rounded-lg border border-stone-200 hover:border-amber-300 hover:shadow-md transition-all duration-200 overflow-hidden"
+        >
+            {/* Image */}
+            <div className="relative h-14">
+                {group.image_url ? (
+                    <img
+                        src={group.image_url}
+                        alt={group.name}
+                        className="w-full h-full object-cover"
+                    />
+                ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center">
+                        <span className="text-lg font-bold text-amber-600">
+                            {group.name.charAt(0).toUpperCase()}
+                        </span>
+                    </div>
+                )}
+            </div>
+            {/* Info */}
+            <div className="px-2 py-1.5">
+                <h3 className="font-medium text-stone-800 text-xs truncate group-hover:text-amber-700 transition-colors">
+                    {group.name}
+                </h3>
+                <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-stone-400">
+                    <span className="flex items-center gap-0.5">
+                        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        {group.member_count}
+                    </span>
+                    <span className="flex items-center gap-0.5">
+                        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {upcomingCount}
+                    </span>
+                </div>
+            </div>
+        </Link>
+    );
+}
+
+// =======================================================================
+// Group Card Component (larger - for discover section)
 // =======================================================================
 function GroupCard({ group }: { group: MyGroup | GroupWithCount }) {
     const upcomingCount = ('upcoming_event_count' in group ? group.upcoming_event_count : 0) || 0;
@@ -425,14 +476,55 @@ export default function Dashboard() {
                     /* Dashboard with content */
                     <>
                         {/* Welcome back message */}
-                        <div className="mb-8">
+                        <div className="mb-6">
                             <h1 className="font-display text-2xl sm:text-3xl font-bold text-stone-800">
                                 Welcome back, {user.name.split(' ')[0]}
                             </h1>
                             <p className="text-stone-500 mt-1">Here's what's happening with your groups</p>
                         </div>
 
-                        {/* Upcoming Events - shown first if any */}
+                        {/* Your Groups - Compact thumbnails */}
+                        <section className="mb-8">
+                            <div className="flex justify-between items-center mb-3">
+                                <h2 className="font-display text-sm font-semibold text-stone-500 uppercase tracking-wide">Your Groups</h2>
+                                <Link
+                                    href="/groups/create"
+                                    className="text-amber-600 hover:text-amber-700 font-medium text-sm flex items-center gap-1"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Create Group
+                                </Link>
+                            </div>
+                            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:-mx-8 sm:px-8 scrollbar-hide">
+                                {[...organiserGroups, ...memberGroups].map((group) => (
+                                    <CompactGroupCard key={group.id} group={group} />
+                                ))}
+                            </div>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm">
+                                <Link
+                                    href="/my-groups"
+                                    className="text-stone-500 hover:text-amber-600 transition flex items-center gap-1"
+                                >
+                                    Your groups
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </Link>
+                                <Link
+                                    href="/groups"
+                                    className="text-stone-500 hover:text-amber-600 transition flex items-center gap-1"
+                                >
+                                    All groups
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </Link>
+                            </div>
+                        </section>
+
+                        {/* Upcoming Events */}
                         {!loadingEvents && events.length > 0 && (
                             <section className="mb-10">
                                 <SectionHeader
@@ -441,62 +533,25 @@ export default function Dashboard() {
                                     actionHref="/your-events"
                                 />
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {events.slice(0, 3).map((event) => (
+                                    {events.slice(0, 6).map((event) => (
                                         <EventCard key={event.id} event={event} />
                                     ))}
                                 </div>
                             </section>
                         )}
 
-                        {/* Groups I Organise */}
-                        {organiserGroups.length > 0 && (
+                        {/* No events message */}
+                        {!loadingEvents && events.length === 0 && (
                             <section className="mb-10">
-                                <SectionHeader
-                                    title="Your Groups"
-                                    action="Create new"
-                                    actionHref="/groups/create"
-                                />
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {organiserGroups.slice(0, 6).map((group) => (
-                                        <GroupCard key={group.id} group={group} />
-                                    ))}
-                                </div>
-                            </section>
-                        )}
-
-                        {/* Groups I'm In */}
-                        {memberGroups.length > 0 && (
-                            <section className="mb-10">
-                                <SectionHeader title="Groups You're In" />
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {memberGroups.slice(0, 6).map((group) => (
-                                        <GroupCard key={group.id} group={group} />
-                                    ))}
-                                </div>
-                            </section>
-                        )}
-
-                        {/* Create your own group prompt - shown if user has no organiser groups */}
-                        {organiserGroups.length === 0 && (
-                            <section className="mb-10">
-                                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                                    <div className="text-center sm:text-left">
-                                        <h3 className="font-display text-lg font-semibold text-stone-800 mb-1">
-                                            Want to organise your own meetups?
-                                        </h3>
-                                        <p className="text-stone-600 text-sm">
-                                            Create a group and start bringing your people together.
-                                        </p>
-                                    </div>
-                                    <Link
-                                        href="/groups/create"
-                                        className="flex-shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-full hover:from-amber-600 hover:to-orange-600 transition-all shadow-sm hover:shadow-md"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                <SectionHeader title="Upcoming Events" />
+                                <div className="bg-white rounded-2xl border border-stone-200 p-8 text-center">
+                                    <div className="w-12 h-12 rounded-xl bg-stone-100 flex items-center justify-center mx-auto mb-4">
+                                        <svg className="w-6 h-6 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
-                                        Create a Group
-                                    </Link>
+                                    </div>
+                                    <p className="text-stone-600 font-medium">No upcoming events</p>
+                                    <p className="text-stone-500 text-sm mt-1">Check your groups for new events</p>
                                 </div>
                             </section>
                         )}

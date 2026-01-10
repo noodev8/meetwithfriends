@@ -17,7 +17,6 @@ import {
     getAttendees,
     rsvpEvent,
     updateRsvp,
-    manageAttendee,
     cancelEvent,
     restoreEvent,
     removeHost,
@@ -51,7 +50,7 @@ export default function EventDetailPage() {
     const [canEdit, setCanEdit] = useState(false);
     const [hostActionLoading, setHostActionLoading] = useState(false);
     const [attending, setAttending] = useState<Attendee[]>([]);
-    const [waitlist, setWaitlist] = useState<Attendee[]>([]);
+    const [, setWaitlist] = useState<Attendee[]>([]);
     const [attendingCount, setAttendingCount] = useState(0);
     const [totalGuestCount, setTotalGuestCount] = useState(0);
     const [waitlistCount, setWaitlistCount] = useState(0);
@@ -59,7 +58,6 @@ export default function EventDetailPage() {
     const [selectedGuestCount, setSelectedGuestCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [rsvpLoading, setRsvpLoading] = useState(false);
-    const [managingUser, setManagingUser] = useState<number | null>(null);
     const [cancelLoading, setCancelLoading] = useState(false);
     const [restoreLoading, setRestoreLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -198,36 +196,6 @@ export default function EventDetailPage() {
             }
         } else {
             alert(result.error || 'Failed to update guests');
-        }
-    };
-
-    // =======================================================================
-    // Handle manage attendee action
-    // =======================================================================
-    const handleManageAttendee = async (userId: number, action: 'remove' | 'demote' | 'promote') => {
-        if (!token || !event) return;
-
-        setManagingUser(userId);
-        const result = await manageAttendee(token, event.id, userId, action);
-        setManagingUser(null);
-
-        if (result.success) {
-            // Refresh attendees (pass token to get full list)
-            const attendeesResult = await getAttendees(event.id, token);
-            if (attendeesResult.success && attendeesResult.data) {
-                setAttending(attendeesResult.data.attending);
-                setWaitlist(attendeesResult.data.waitlist);
-                setAttendingCount(attendeesResult.data.attending_count);
-                setTotalGuestCount(attendeesResult.data.total_guest_count);
-                setWaitlistCount(attendeesResult.data.waitlist_count);
-            }
-            // Update event counts
-            const eventResult = await getEvent(event.id, token);
-            if (eventResult.success && eventResult.data) {
-                setEvent(eventResult.data.event);
-            }
-        } else {
-            alert(result.error || 'Failed to manage attendee');
         }
     };
 
