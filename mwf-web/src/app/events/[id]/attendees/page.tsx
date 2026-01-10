@@ -129,6 +129,14 @@ export default function AttendeesPage() {
         };
     };
 
+    const formatRsvpTime = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'short',
+        });
+    };
+
     // =======================================================================
     // Manage attendee actions
     // =======================================================================
@@ -369,6 +377,9 @@ export default function AttendeesPage() {
                                                                 +{attendee.guest_count} guest{attendee.guest_count > 1 ? 's' : ''}
                                                             </span>
                                                         )}
+                                                        <span className="text-xs text-stone-400">
+                                                            {formatRsvpTime(person.rsvp_at)}
+                                                        </span>
                                                     </div>
                                                     {attendee.food_order ? (
                                                         <p className="text-sm text-stone-600 mt-0.5">
@@ -440,6 +451,11 @@ export default function AttendeesPage() {
                                                  activeTab === 'going' && attendee.guest_count > 0
                                                     ? `+${attendee.guest_count} guest${attendee.guest_count > 1 ? 's' : ''}`
                                                     : 'Member'}
+                                            </span>
+
+                                            {/* RSVP time */}
+                                            <span className="text-xs text-stone-400">
+                                                {formatRsvpTime(person.rsvp_at)}
                                             </span>
                                         </button>
                                     );
