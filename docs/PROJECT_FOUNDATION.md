@@ -174,12 +174,70 @@ See [PREORDER-FEATURE.md](./PREORDER-FEATURE.md) for detailed specification.
 ## Phase 5: Polish & Advanced
 *Goal: Quality of life improvements*
 
-- [ ] Notifications (email, push)
 - [ ] Advanced waitlist management (manual reorder, bulk actions)
 - [ ] Recurring events
 - [ ] Event templates
 - [ ] Attendance history/stats
 - [ ] Mobile app (Flutter)
+
+---
+
+# Email Notification Plan
+
+Email notifications at strategic points to keep members engaged and informed. All emails sent via Resend.
+
+## Priority 1: Critical (Build with Phase 3)
+These are essential for the platform to function properly.
+
+| Trigger | Recipient | Purpose |
+|---------|-----------|---------|
+| Password reset requested | User | Security - already implemented |
+| Promoted from waitlist | User | They now have a spot - need to know immediately |
+| Removed from event by host | User | Clarity on status change |
+| Event cancelled | All attendees | Critical - plans changed |
+| Payment confirmed | User | Receipt / confirmation (Phase 3) |
+| Refund processed | User | Money matters (Phase 3) |
+
+## Priority 2: Engagement (Build after Phase 3)
+These improve the experience and reduce manual chasing.
+
+| Trigger | Recipient | Purpose |
+|---------|-----------|---------|
+| Welcome email | New user | Onboarding, set expectations |
+| RSVP confirmation | User | Confirmation of their booking |
+| Event reminder (24h before) | Attendees | Reduce no-shows |
+| Pre-order reminder | Attendees without order | Sent X hours before cutoff |
+| New event created | Group members | Drive RSVPs (opt-in?) |
+| Join request approved | User | Welcome to the group |
+
+## Priority 3: Host/Organiser Notifications
+Help hosts manage their groups without constantly checking the app.
+
+| Trigger | Recipient | Purpose |
+|---------|-----------|---------|
+| New join request | Organiser + Hosts | Action needed |
+| Pre-order cutoff approaching | Event host | Reminder to chase/export orders |
+| Event tomorrow summary | Event host | Attendee count, order status |
+
+## Design Principles
+- **Minimal by default**: Don't spam. Each email should have clear value.
+- **Action-oriented**: Every email should tell the recipient what to do (or confirm what happened).
+- **Mobile-friendly**: Simple, clean templates that work on phones.
+- **Unsubscribe**: Members can opt out of non-critical emails.
+- **Organiser control**: Future option for organisers to customise which emails their group sends.
+
+## Email Templates Needed
+1. Transactional (password reset, payment receipt) - plain, functional
+2. Event notifications (reminder, cancellation) - include event details, location, time
+3. Status changes (waitlist promoted, removed) - clear explanation of what changed
+4. Welcome/onboarding - warm, explain next steps
+
+## Future: Push Notifications (Mobile App)
+When Flutter app launches, mirror key emails as push notifications:
+- Event reminder
+- Promoted from waitlist
+- Event cancelled
+- Payment confirmed
 
 ---
 
