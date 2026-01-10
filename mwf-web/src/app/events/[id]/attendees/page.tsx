@@ -365,8 +365,8 @@ export default function AttendeesPage() {
                             </p>
                         </div>
 
-                        {/* View Orders button for hosts/organisers */}
-                        {canManageAttendees && event.preorders_enabled && (
+                        {/* View Orders button for all group members */}
+                        {canViewAttendees && event.preorders_enabled && (
                             <button
                                 onClick={() => setShowOrderSummary(true)}
                                 className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-xl hover:bg-amber-600 transition shadow-sm"
