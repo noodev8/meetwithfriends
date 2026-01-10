@@ -211,7 +211,7 @@ export default function AttendeesPage() {
     // Handle selecting an attendee (populate edit fields)
     // =======================================================================
     const handleSelectAttendee = (person: Attendee | NotGoingAttendee) => {
-        handleSelectAttendee(person);
+        setSelectedAttendee(person);
         const attendee = person as Attendee;
         setEditFoodOrder(attendee.food_order || '');
         setEditDietaryNotes(attendee.dietary_notes || '');
