@@ -58,6 +58,10 @@ export default function AttendeesPage() {
     const [orderSaving, setOrderSaving] = useState(false);
     const [viewingLargePhoto, setViewingLargePhoto] = useState(false);
 
+    // Order summary modal state
+    const [showOrderSummary, setShowOrderSummary] = useState(false);
+    const [copiedOrders, setCopiedOrders] = useState(false);
+
     // =======================================================================
     // Fetch event and attendees
     // =======================================================================
@@ -220,6 +224,44 @@ export default function AttendeesPage() {
     };
 
     // =======================================================================
+    // Generate formatted order summary text
+    // =======================================================================
+    const generateOrderSummary = () => {
+        const lines: string[] = [];
+        lines.push(`${event?.title || 'Event'} - Orders`);
+        lines.push('');
+
+        attending.forEach((person) => {
+            lines.push(person.name);
+            if (person.food_order) {
+                lines.push(person.food_order);
+            } else {
+                lines.push('No order submitted');
+            }
+            if (person.dietary_notes) {
+                lines.push(`Notes: ${person.dietary_notes}`);
+            }
+            lines.push('');
+        });
+
+        return lines.join('\n').trim();
+    };
+
+    // =======================================================================
+    // Copy orders to clipboard
+    // =======================================================================
+    const handleCopyOrders = async () => {
+        const text = generateOrderSummary();
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopiedOrders(true);
+            setTimeout(() => setCopiedOrders(false), 2000);
+        } catch {
+            alert('Failed to copy to clipboard');
+        }
+    };
+
+    // =======================================================================
     // Loading state
     // =======================================================================
     if (loading) {
@@ -312,13 +354,31 @@ export default function AttendeesPage() {
                         Back to event
                     </Link>
 
-                    <h1 className="text-xl sm:text-2xl font-bold text-stone-900 font-display mb-2">
-                        {event.title}
-                    </h1>
-                    <p className="text-stone-600">
-                        {date} at {time}
-                        {event.location && <span className="text-stone-400"> • {event.location}</span>}
-                    </p>
+                    <div className="flex items-start justify-between gap-4">
+                        <div>
+                            <h1 className="text-xl sm:text-2xl font-bold text-stone-900 font-display mb-2">
+                                {event.title}
+                            </h1>
+                            <p className="text-stone-600">
+                                {date} at {time}
+                                {event.location && <span className="text-stone-400"> • {event.location}</span>}
+                            </p>
+                        </div>
+
+                        {/* View Orders button for hosts/organisers */}
+                        {canManageAttendees && event.preorders_enabled && (
+                            <button
+                                onClick={() => setShowOrderSummary(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-xl hover:bg-amber-600 transition shadow-sm"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                <span className="hidden sm:inline">View Orders</span>
+                                <span className="sm:hidden">Orders</span>
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -691,6 +751,81 @@ export default function AttendeesPage() {
                     </div>
                 );
             })()}
+
+            {/* Order Summary Modal */}
+            {showOrderSummary && event && (
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                    onClick={() => setShowOrderSummary(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="px-6 py-4 border-b border-stone-200 flex items-center justify-between flex-shrink-0">
+                            <h3 className="text-lg font-bold text-stone-900 font-display">Orders</h3>
+                            <button
+                                onClick={() => setShowOrderSummary(false)}
+                                className="p-1 text-stone-400 hover:text-stone-600 transition"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Order list - scrollable */}
+                        <div className="flex-1 overflow-y-auto px-6 py-4">
+                            {attending.length > 0 ? (
+                                <div className="space-y-4">
+                                    {attending.map((person) => (
+                                        <div key={person.user_id} className="pb-4 border-b border-stone-100 last:border-0 last:pb-0">
+                                            <p className="font-semibold text-stone-900">{person.name}</p>
+                                            {person.food_order ? (
+                                                <p className="text-stone-700 mt-1">{person.food_order}</p>
+                                            ) : (
+                                                <p className="text-stone-400 italic mt-1">No order submitted</p>
+                                            )}
+                                            {person.dietary_notes && (
+                                                <p className="text-sm text-orange-600 mt-1">
+                                                    Notes: {person.dietary_notes}
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-center text-stone-500 py-8">No attendees yet</p>
+                            )}
+                        </div>
+
+                        {/* Footer with copy button */}
+                        <div className="px-6 py-4 border-t border-stone-200 flex-shrink-0">
+                            <button
+                                onClick={handleCopyOrders}
+                                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-stone-100 text-stone-700 font-medium rounded-xl hover:bg-stone-200 transition"
+                            >
+                                {copiedOrders ? (
+                                    <>
+                                        <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <span className="text-green-600">Copied!</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        </svg>
+                                        Copy to clipboard
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }
