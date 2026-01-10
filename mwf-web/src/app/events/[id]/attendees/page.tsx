@@ -56,6 +56,7 @@ export default function AttendeesPage() {
     const [editFoodOrder, setEditFoodOrder] = useState('');
     const [editDietaryNotes, setEditDietaryNotes] = useState('');
     const [orderSaving, setOrderSaving] = useState(false);
+    const [viewingLargePhoto, setViewingLargePhoto] = useState(false);
 
     // =======================================================================
     // Fetch event and attendees
@@ -212,6 +213,7 @@ export default function AttendeesPage() {
     // =======================================================================
     const handleSelectAttendee = (person: Attendee | NotGoingAttendee) => {
         setSelectedAttendee(person);
+        setViewingLargePhoto(false);
         const attendee = person as Attendee;
         setEditFoodOrder(attendee.food_order || '');
         setEditDietaryNotes(attendee.dietary_notes || '');
@@ -530,6 +532,48 @@ export default function AttendeesPage() {
                 const isLoading = actionLoading === selectedAttendee.user_id;
                 const showOrderForm = canManageAttendees && isInGoing && event?.preorders_enabled;
 
+                // Large photo view
+                if (viewingLargePhoto) {
+                    return (
+                        <div
+                            className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50"
+                            onClick={() => setViewingLargePhoto(false)}
+                        >
+                            <div className="relative" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                    onClick={() => setViewingLargePhoto(false)}
+                                    className="absolute -top-12 right-0 p-2 text-white/70 hover:text-white transition"
+                                >
+                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                                {selectedAttendee.avatar_url ? (
+                                    <img
+                                        src={selectedAttendee.avatar_url}
+                                        alt={selectedAttendee.name}
+                                        className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl object-cover shadow-2xl cursor-pointer"
+                                        onClick={() => setViewingLargePhoto(false)}
+                                    />
+                                ) : (
+                                    <div
+                                        className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center shadow-2xl cursor-pointer"
+                                        onClick={() => setViewingLargePhoto(false)}
+                                    >
+                                        <span className="text-8xl font-bold text-white">
+                                            {selectedAttendee.name.charAt(0).toUpperCase()}
+                                        </span>
+                                    </div>
+                                )}
+                                <p className="text-center mt-4 text-xl font-medium text-white">
+                                    {selectedAttendee.name}
+                                </p>
+                            </div>
+                        </div>
+                    );
+                }
+
+                // Card modal view
                 return (
                     <div
                         className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
@@ -545,10 +589,14 @@ export default function AttendeesPage() {
                                     <img
                                         src={selectedAttendee.avatar_url}
                                         alt={selectedAttendee.name}
-                                        className="w-16 h-16 rounded-full object-cover"
+                                        className="w-16 h-16 rounded-full object-cover cursor-pointer hover:opacity-80 transition"
+                                        onClick={() => setViewingLargePhoto(true)}
                                     />
                                 ) : (
-                                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center">
+                                    <div
+                                        className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center cursor-pointer hover:opacity-80 transition"
+                                        onClick={() => setViewingLargePhoto(true)}
+                                    >
                                         <span className="text-2xl font-bold text-white">
                                             {selectedAttendee.name.charAt(0).toUpperCase()}
                                         </span>
@@ -635,7 +683,7 @@ export default function AttendeesPage() {
                                         disabled={isLoading}
                                         className="px-3 py-1.5 text-sm text-red-700 hover:bg-red-100 rounded-lg transition disabled:opacity-50"
                                     >
-                                        {isLoading ? 'Removing...' : 'Remove'}
+                                        {isLoading ? 'Removing...' : 'Remove from event'}
                                     </button>
                                 </div>
                             )}

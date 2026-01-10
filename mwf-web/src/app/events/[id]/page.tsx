@@ -65,6 +65,7 @@ export default function EventDetailPage() {
     const [dietaryNotes, setDietaryNotes] = useState('');
     const [orderLoading, setOrderLoading] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState('');
+    const [showOrderModal, setShowOrderModal] = useState(false);
 
     // Profile modal state
     const [selectedAttendee, setSelectedAttendee] = useState<Attendee | null>(null);
@@ -196,6 +197,7 @@ export default function EventDetailPage() {
 
         if (result.success) {
             setOrderSuccess('Order saved');
+            setShowOrderModal(false);
             // Update local rsvp state
             if (rsvp) {
                 setRsvp({
@@ -546,10 +548,15 @@ export default function EventDetailPage() {
                             </div>
                         )}
 
-                        {/* Pre-order Form - visible to attendees when pre-orders are enabled */}
+                        {/* Pre-order Section - visible to attendees when pre-orders are enabled */}
                         {event.preorders_enabled && rsvp && (
                             <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
-                                <h2 className="text-lg font-bold text-stone-900 mb-4 font-display">Your Order</h2>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-lg font-bold text-stone-900 font-display">Your Order</h2>
+                                    {orderSuccess && (
+                                        <span className="text-sm text-green-600 font-medium">{orderSuccess}</span>
+                                    )}
+                                </div>
                                 {isCutoffPassed ? (
                                     <div>
                                         {rsvp.food_order || rsvp.dietary_notes ? (
@@ -577,62 +584,165 @@ export default function EventDetailPage() {
                                         )}
                                     </div>
                                 ) : (
-                                    <form onSubmit={handleSubmitOrder} className="space-y-4">
-                                        <div>
-                                            <label htmlFor="foodOrder" className="block text-sm font-medium text-stone-700 mb-1">
-                                                Your Order
-                                            </label>
-                                            <textarea
-                                                id="foodOrder"
-                                                value={foodOrder}
-                                                onChange={(e) => setFoodOrder(e.target.value)}
-                                                placeholder="e.g., Chicken Caesar Salad, no croutons"
-                                                rows={2}
-                                                maxLength={500}
-                                                className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-none transition"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label htmlFor="dietaryNotes" className="block text-sm font-medium text-stone-700 mb-1">
-                                                Notes / Preferences
-                                            </label>
-                                            <input
-                                                type="text"
-                                                id="dietaryNotes"
-                                                value={dietaryNotes}
-                                                onChange={(e) => setDietaryNotes(e.target.value)}
-                                                placeholder="e.g., Vegetarian, nut allergy"
-                                                maxLength={200}
-                                                className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
-                                            />
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <button
-                                                type="submit"
-                                                disabled={orderLoading}
-                                                className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md disabled:opacity-50"
-                                            >
-                                                {orderLoading ? 'Saving...' : 'Save Order'}
-                                            </button>
-                                            {orderSuccess && (
-                                                <span className="text-sm text-green-600 font-medium">{orderSuccess}</span>
-                                            )}
-                                        </div>
-                                        <p className="text-xs text-stone-500">
+                                    <div>
+                                        {/* Show current order summary or prompt */}
+                                        {rsvp.food_order || rsvp.dietary_notes ? (
+                                            <div className="space-y-2 mb-4">
+                                                {rsvp.food_order && (
+                                                    <div>
+                                                        <span className="text-sm font-medium text-stone-700">Order: </span>
+                                                        <span className="text-stone-600">{rsvp.food_order}</span>
+                                                    </div>
+                                                )}
+                                                {rsvp.dietary_notes && (
+                                                    <div>
+                                                        <span className="text-sm font-medium text-stone-700">Notes: </span>
+                                                        <span className="text-stone-600">{rsvp.dietary_notes}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <p className="text-stone-500 mb-4">
+                                                You haven&apos;t submitted an order yet.
+                                            </p>
+                                        )}
+
+                                        {/* Edit/Add button */}
+                                        <button
+                                            onClick={() => setShowOrderModal(true)}
+                                            className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
+                                        >
+                                            {rsvp.food_order || rsvp.dietary_notes ? 'Edit Order' : 'Add Order'}
+                                        </button>
+
+                                        {/* Deadline info */}
+                                        <p className="text-xs text-stone-500 mt-3">
                                             {event.menu_link && (
                                                 <>
                                                     <a href={event.menu_link} target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:text-amber-700">
                                                         View the menu
                                                     </a>
-                                                    {' '}to see what's available.{' '}
+                                                    {' '}to see what&apos;s available.{' '}
                                                 </>
                                             )}
                                             {event.preorder_cutoff && (
                                                 <>Order by {new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at {new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}.</>
                                             )}
                                         </p>
-                                    </form>
+                                    </div>
                                 )}
+                            </div>
+                        )}
+
+                        {/* Order Modal */}
+                        {showOrderModal && event && (
+                            <div
+                                className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                                onClick={(e) => {
+                                    if (e.target === e.currentTarget) setShowOrderModal(false);
+                                }}
+                            >
+                                <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+                                    {/* Header */}
+                                    <div className="px-6 py-4 border-b border-stone-200 flex items-center justify-between">
+                                        <h3 className="text-lg font-bold text-stone-900 font-display">Your Order</h3>
+                                        <button
+                                            onClick={() => setShowOrderModal(false)}
+                                            className="text-stone-400 hover:text-stone-600 transition-colors"
+                                        >
+                                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    {/* Form */}
+                                    <form onSubmit={handleSubmitOrder} className="p-6 space-y-5">
+                                        {/* Menu link */}
+                                        {event.menu_link && (
+                                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                                                <a
+                                                    href={event.menu_link}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-amber-700 hover:text-amber-800 font-medium flex items-center gap-2"
+                                                >
+                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                    </svg>
+                                                    View the menu
+                                                </a>
+                                            </div>
+                                        )}
+
+                                        {/* Order textarea */}
+                                        <div>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <label htmlFor="modalFoodOrder" className="block text-sm font-medium text-stone-700">
+                                                    Your Order
+                                                </label>
+                                                <span className={`text-xs ${foodOrder.length > 450 ? 'text-amber-600' : 'text-stone-400'}`}>
+                                                    {foodOrder.length}/500
+                                                </span>
+                                            </div>
+                                            <textarea
+                                                id="modalFoodOrder"
+                                                value={foodOrder}
+                                                onChange={(e) => setFoodOrder(e.target.value)}
+                                                placeholder="e.g., Chicken Caesar Salad, no croutons"
+                                                rows={4}
+                                                maxLength={500}
+                                                className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-none transition text-base"
+                                            />
+                                        </div>
+
+                                        {/* Notes textarea */}
+                                        <div>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <label htmlFor="modalDietaryNotes" className="block text-sm font-medium text-stone-700">
+                                                    Notes / Preferences
+                                                </label>
+                                                <span className={`text-xs ${dietaryNotes.length > 180 ? 'text-amber-600' : 'text-stone-400'}`}>
+                                                    {dietaryNotes.length}/200
+                                                </span>
+                                            </div>
+                                            <textarea
+                                                id="modalDietaryNotes"
+                                                value={dietaryNotes}
+                                                onChange={(e) => setDietaryNotes(e.target.value)}
+                                                placeholder="e.g., Vegetarian, nut allergy, extra spicy"
+                                                rows={2}
+                                                maxLength={200}
+                                                className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-none transition text-base"
+                                            />
+                                        </div>
+
+                                        {/* Deadline notice */}
+                                        {event.preorder_cutoff && (
+                                            <p className="text-sm text-amber-600">
+                                                Order by {new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at {new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                            </p>
+                                        )}
+
+                                        {/* Actions */}
+                                        <div className="flex gap-3 pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowOrderModal(false)}
+                                                className="flex-1 px-5 py-3 border border-stone-300 text-stone-700 font-medium rounded-xl hover:bg-stone-50 transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                disabled={orderLoading}
+                                                className="flex-1 px-5 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md disabled:opacity-50"
+                                            >
+                                                {orderLoading ? 'Saving...' : 'Save Order'}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         )}
 
