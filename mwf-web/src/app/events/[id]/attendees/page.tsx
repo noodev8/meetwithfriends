@@ -125,17 +125,6 @@ export default function AttendeesPage() {
         };
     };
 
-    const formatRsvpTime = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-GB', {
-            day: 'numeric',
-            month: 'short',
-        }) + ' at ' + date.toLocaleTimeString('en-GB', {
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-    };
-
     // =======================================================================
     // Loading state
     // =======================================================================
@@ -240,7 +229,7 @@ export default function AttendeesPage() {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 max-w-3xl mx-auto w-full px-4 sm:px-8 py-6">
+            <div className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-8 py-6">
                 {/* Tabs and Sort */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     {/* Tabs */}
@@ -291,79 +280,80 @@ export default function AttendeesPage() {
                     </div>
                 </div>
 
-                {/* Attendee List */}
+                {/* Attendee Grid */}
                 {currentList.length > 0 ? (
-                    <div className="bg-white rounded-2xl border border-stone-200 shadow-sm divide-y divide-stone-100">
-                        {currentList.map((person) => {
-                            const attendee = person as Attendee;
-                            const isHostUser = isHost(person.user_id);
+                    <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-6">
+                        <div className="flex flex-wrap gap-6 sm:gap-8">
+                            {currentList.map((person) => {
+                                const attendee = person as Attendee;
+                                const isHostUser = isHost(person.user_id);
+                                const hasOrder = activeTab === 'going' && event.preorders_enabled && (attendee.food_order || attendee.dietary_notes);
 
-                            return (
-                                <div
-                                    key={person.user_id}
-                                    className="p-4 hover:bg-stone-50 transition"
-                                >
-                                    <div className="flex items-center gap-4">
+                                return (
+                                    <button
+                                        key={person.user_id}
+                                        onClick={() => setSelectedAttendee(person)}
+                                        className="flex flex-col items-center text-center hover:opacity-80 transition group"
+                                    >
                                         {/* Avatar */}
-                                        <button
-                                            onClick={() => setSelectedAttendee(person)}
-                                            className="flex-shrink-0 hover:opacity-80 transition"
-                                        >
+                                        <div className="relative mb-2">
                                             {person.avatar_url ? (
                                                 <img
                                                     src={person.avatar_url}
                                                     alt={person.name}
-                                                    className="w-12 h-12 rounded-full object-cover"
+                                                    className="w-20 h-20 rounded-full object-cover"
                                                 />
                                             ) : (
-                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center">
-                                                    <span className="text-lg font-bold text-white">
+                                                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
+                                                    <span className="text-2xl font-medium text-amber-600">
                                                         {person.name.charAt(0).toUpperCase()}
                                                     </span>
                                                 </div>
                                             )}
-                                        </button>
-
-                                        {/* Info - secondary to the photo */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <button
-                                                    onClick={() => setSelectedAttendee(person)}
-                                                    className="text-sm font-medium text-stone-900 hover:text-amber-600 transition text-left"
-                                                >
-                                                    {person.name}
-                                                </button>
-                                                {isHostUser && (
-                                                    <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
-                                                        Host
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="flex items-center gap-2 mt-0.5 text-xs text-stone-500">
-                                                {activeTab === 'going' && attendee.guest_count > 0 && (
-                                                    <span>+{attendee.guest_count} guest{attendee.guest_count > 1 ? 's' : ''}</span>
-                                                )}
-                                                {activeTab === 'waitlist' && attendee.waitlist_position && (
-                                                    <span className="text-yellow-600">#{attendee.waitlist_position}</span>
-                                                )}
-                                                <span>{formatRsvpTime(person.rsvp_at)}</span>
-                                            </div>
-
-                                            {/* Food order (only for going tab when preorders enabled) */}
-                                            {activeTab === 'going' && event.preorders_enabled && (attendee.food_order || attendee.dietary_notes) && (
-                                                <div className="mt-1 text-xs text-stone-500">
-                                                    {attendee.food_order && <span>{attendee.food_order}</span>}
-                                                    {attendee.food_order && attendee.dietary_notes && <span> • </span>}
-                                                    {attendee.dietary_notes && (
-                                                        <span className="text-orange-600">{attendee.dietary_notes}</span>
-                                                    )}
-                                                </div>
+                                            {isHostUser && (
+                                                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-amber-500 text-white text-xs font-medium rounded">
+                                                    Host
+                                                </span>
+                                            )}
+                                            {activeTab === 'waitlist' && attendee.waitlist_position && (
+                                                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-yellow-500 text-white text-xs font-medium rounded">
+                                                    #{attendee.waitlist_position}
+                                                </span>
                                             )}
                                         </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
+
+                                        {/* Name */}
+                                        <span className="text-sm font-medium text-stone-900 group-hover:text-amber-600 transition">
+                                            {person.name}
+                                        </span>
+
+                                        {/* Role/Guest info */}
+                                        <span className="text-xs text-stone-500">
+                                            {isHostUser ? 'Event Host' :
+                                             activeTab === 'going' && attendee.guest_count > 0
+                                                ? `+${attendee.guest_count} guest${attendee.guest_count > 1 ? 's' : ''}`
+                                                : 'Member'}
+                                        </span>
+
+                                        {/* Food order */}
+                                        {hasOrder && (
+                                            <div className="mt-2 max-w-[120px]">
+                                                {attendee.food_order && (
+                                                    <p className="text-xs text-stone-600 truncate" title={attendee.food_order}>
+                                                        {attendee.food_order}
+                                                    </p>
+                                                )}
+                                                {attendee.dietary_notes && (
+                                                    <p className="text-xs text-orange-600 truncate" title={attendee.dietary_notes}>
+                                                        {attendee.dietary_notes}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
                 ) : (
                     <div className="bg-white rounded-2xl border border-stone-200 p-12 text-center">
