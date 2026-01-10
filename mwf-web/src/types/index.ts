@@ -13,6 +13,10 @@ export interface User {
     name: string;
     bio?: string;
     avatar_url?: string;
+    contact_mobile?: string;
+    contact_email?: string;
+    show_mobile_to_guests?: boolean;
+    show_email_to_guests?: boolean;
 }
 
 // Group

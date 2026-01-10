@@ -3,7 +3,7 @@
 API Route: update_profile
 =======================================================================================================================================
 Method: POST
-Purpose: Updates the authenticated user's profile information (name, bio, avatar_url).
+Purpose: Updates the authenticated user's profile information (name, bio, avatar_url, contact details).
 =======================================================================================================================================
 Request Headers:
 Authorization: Bearer <token>          // Required JWT token
@@ -12,7 +12,11 @@ Request Payload:
 {
   "name": "John Smith",                // string, optional (min 1 char if provided)
   "bio": "Food enthusiast",            // string, optional (can be empty)
-  "avatar_url": "https://..."          // string, optional (can be empty)
+  "avatar_url": "https://...",         // string, optional (can be empty)
+  "contact_mobile": "+61412345678",    // string, optional (can be empty)
+  "contact_email": "contact@...",      // string, optional (can be empty)
+  "show_mobile_to_guests": true,       // boolean, optional
+  "show_email_to_guests": true         // boolean, optional
 }
 
 Success Response:
@@ -23,7 +27,11 @@ Success Response:
     "name": "John Smith",
     "email": "user@example.com",
     "bio": "Food enthusiast",
-    "avatar_url": "https://..."
+    "avatar_url": "https://...",
+    "contact_mobile": "+61412345678",
+    "contact_email": "contact@...",
+    "show_mobile_to_guests": true,
+    "show_email_to_guests": true
   }
 }
 =======================================================================================================================================
@@ -44,7 +52,7 @@ const { verifyToken } = require('../../middleware/auth');
 router.post('/', verifyToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        const { name, bio, avatar_url } = req.body;
+        const { name, bio, avatar_url, contact_mobile, contact_email, show_mobile_to_guests, show_email_to_guests } = req.body;
 
         // =======================================================================
         // Validate name if provided - must not be empty
@@ -82,10 +90,34 @@ router.post('/', verifyToken, async (req, res) => {
             paramIndex++;
         }
 
+        if (contact_mobile !== undefined) {
+            updates.push(`contact_mobile = $${paramIndex}`);
+            values.push(contact_mobile || null);
+            paramIndex++;
+        }
+
+        if (contact_email !== undefined) {
+            updates.push(`contact_email = $${paramIndex}`);
+            values.push(contact_email || null);
+            paramIndex++;
+        }
+
+        if (show_mobile_to_guests !== undefined) {
+            updates.push(`show_mobile_to_guests = $${paramIndex}`);
+            values.push(Boolean(show_mobile_to_guests));
+            paramIndex++;
+        }
+
+        if (show_email_to_guests !== undefined) {
+            updates.push(`show_email_to_guests = $${paramIndex}`);
+            values.push(Boolean(show_email_to_guests));
+            paramIndex++;
+        }
+
         // If no fields to update, just return current profile
         if (updates.length === 0) {
             const result = await query(
-                `SELECT id, name, email, bio, avatar_url
+                `SELECT id, name, email, bio, avatar_url, contact_mobile, contact_email, show_mobile_to_guests, show_email_to_guests
                  FROM app_user WHERE id = $1`,
                 [userId]
             );
@@ -111,7 +143,7 @@ router.post('/', verifyToken, async (req, res) => {
             UPDATE app_user
             SET ${updates.join(', ')}
             WHERE id = $${paramIndex}
-            RETURNING id, name, email, bio, avatar_url
+            RETURNING id, name, email, bio, avatar_url, contact_mobile, contact_email, show_mobile_to_guests, show_email_to_guests
         `;
 
         const result = await query(updateQuery, values);

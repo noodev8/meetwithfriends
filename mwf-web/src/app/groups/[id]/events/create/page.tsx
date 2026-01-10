@@ -20,7 +20,7 @@ import ImageUpload from '@/components/ui/ImageUpload';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 
 export default function CreateEventPage() {
-    const { token } = useAuth();
+    const { token, isLoading: authLoading } = useAuth();
     const router = useRouter();
     const params = useParams();
 
@@ -45,6 +45,9 @@ export default function CreateEventPage() {
     const [preorderCutoffDate, setPreorderCutoffDate] = useState('');
     const [preorderCutoffTime, setPreorderCutoffTime] = useState('');
 
+    // UI state
+    const [optionsExpanded, setOptionsExpanded] = useState(true);
+
     // Check if user can create events
     const canCreateEvents = membership?.status === 'active' &&
         (membership?.role === 'organiser' || membership?.role === 'host');
@@ -54,6 +57,9 @@ export default function CreateEventPage() {
     // =======================================================================
     useEffect(() => {
         async function fetchGroup() {
+            // Wait for auth to load before checking token
+            if (authLoading) return;
+
             if (!params.id || !token) {
                 setError('Please log in to create an event');
                 setLoading(false);
@@ -70,7 +76,7 @@ export default function CreateEventPage() {
             setLoading(false);
         }
         fetchGroup();
-    }, [params.id, token]);
+    }, [params.id, token, authLoading]);
 
     // =======================================================================
     // Handle form submission
@@ -201,186 +207,309 @@ export default function CreateEventPage() {
                     </Link>
                 </div>
 
-                <h1 className="font-display text-2xl sm:text-3xl font-bold text-stone-800 mb-6 sm:mb-8">Create Event</h1>
+                <div className="mb-6 sm:mb-8">
+                    <h1 className="font-display text-2xl sm:text-3xl font-bold text-stone-800">Create Event</h1>
+                    <p className="text-stone-500 mt-1">for {group.name}</p>
+                </div>
 
                 <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
                     {/* Form Column */}
                     <div className="flex-1 lg:flex-[3]">
-                        <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-stone-200 p-6 space-y-6">
-                            {/* Error message */}
-                            {error && (
-                                <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
-                                    {error}
-                                </div>
-                            )}
-
-                            {/* Title */}
-                            <div>
-                                <label htmlFor="title" className="block text-sm font-medium text-stone-700 mb-2">
-                                    Event Title *
-                                </label>
-                                <input
-                                    type="text"
-                                    id="title"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
-                                    placeholder="e.g., Friday Evening Dinner"
-                                    maxLength={200}
-                                    required
-                                />
-                            </div>
-
-                            {/* Date and Time */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label htmlFor="date" className="block text-sm font-medium text-stone-700 mb-2">
-                                        Date *
-                                    </label>
-                                    <input
-                                        type="date"
-                                        id="date"
-                                        value={date}
-                                        onChange={(e) => setDate(e.target.value)}
-                                        min={minDate}
-                                        className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="time" className="block text-sm font-medium text-stone-700 mb-2">
-                                        Time *
-                                    </label>
-                                    <input
-                                        type="time"
-                                        id="time"
-                                        value={time}
-                                        onChange={(e) => setTime(e.target.value)}
-                                        className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Location */}
-                            <div>
-                                <label htmlFor="location" className="block text-sm font-medium text-stone-700 mb-2">
-                                    Location
-                                </label>
-                                <input
-                                    type="text"
-                                    id="location"
-                                    value={location}
-                                    onChange={(e) => setLocation(e.target.value)}
-                                    className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
-                                    placeholder="e.g., The Beacon Hotel, Copthorne"
-                                />
-                            </div>
-
-                            {/* Featured Image */}
-                            <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-2">
-                                    Featured Image
-                                </label>
-                                <ImageUpload
-                                    value={imageUrl}
-                                    onChange={setImageUrl}
-                                />
-                            </div>
-
-                            {/* Description */}
-                            <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-2">
-                                    Description
-                                </label>
-                                <RichTextEditor
-                                    value={description}
-                                    onChange={setDescription}
-                                    placeholder="Tell people what to expect..."
-                                />
-                            </div>
-
-                            {/* Capacity */}
-                            <div>
-                                <label htmlFor="capacity" className="block text-sm font-medium text-stone-700 mb-2">
-                                    Capacity
-                                </label>
-                                <input
-                                    type="number"
-                                    id="capacity"
-                                    value={capacity}
-                                    onChange={(e) => setCapacity(e.target.value)}
-                                    min={1}
-                                    className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
-                                    placeholder="Leave empty for unlimited"
-                                />
-                                <p className="mt-1.5 text-sm text-stone-500">
-                                    Leave empty for unlimited. If set, a waitlist will be used when full.
-                                </p>
-                            </div>
-
-                            {/* Guest Options */}
-                            <div className="space-y-4">
-                                <label className="flex items-center gap-3 p-3 border border-stone-200 rounded-lg cursor-pointer hover:bg-stone-50 transition">
-                                    <input
-                                        type="checkbox"
-                                        checked={allowGuests}
-                                        onChange={(e) => setAllowGuests(e.target.checked)}
-                                        className="w-5 h-5 text-amber-600 border-stone-300 rounded focus:ring-amber-500"
-                                    />
-                                    <div>
-                                        <p className="font-medium text-stone-800">Allow members to bring guests</p>
-                                        <p className="text-sm text-stone-500">Members can RSVP with additional people</p>
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            {/* ============================================================
+                                CARD 1: ESSENTIALS
+                            ============================================================ */}
+                            <div className="bg-white rounded-2xl border border-stone-200 p-6 space-y-6">
+                                {/* Error message */}
+                                {error && (
+                                    <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+                                        {error}
                                     </div>
-                                </label>
+                                )}
 
-                                {allowGuests && (
-                                    <div className="ml-4 pl-4 border-l-2 border-amber-200">
-                                        <label htmlFor="maxGuests" className="block text-sm font-medium text-stone-700 mb-2">
-                                            Maximum guests per RSVP
+                                {/* Title */}
+                                <div>
+                                    <label htmlFor="title" className="block text-sm font-medium text-stone-700 mb-2">
+                                        Event Title *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="title"
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                        placeholder="e.g., Friday Evening Dinner"
+                                        maxLength={200}
+                                        required
+                                    />
+                                </div>
+
+                                {/* Date and Time */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label htmlFor="date" className="block text-sm font-medium text-stone-700 mb-2">
+                                            Date *
                                         </label>
+                                        <input
+                                            type="date"
+                                            id="date"
+                                            value={date}
+                                            onChange={(e) => setDate(e.target.value)}
+                                            min={minDate}
+                                            className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-stone-700 mb-2">
+                                            Time *
+                                        </label>
+                                        {/* Time dropdown */}
                                         <select
-                                            id="maxGuests"
-                                            value={maxGuestsPerRsvp}
-                                            onChange={(e) => setMaxGuestsPerRsvp(parseInt(e.target.value, 10))}
-                                            className="w-32 px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                            value={time}
+                                            onChange={(e) => setTime(e.target.value)}
+                                            className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition bg-white"
                                         >
-                                            <option value={1}>1</option>
-                                            <option value={2}>2</option>
-                                            <option value={3}>3</option>
-                                            <option value={4}>4</option>
-                                            <option value={5}>5</option>
+                                            <option value="">Select time...</option>
+                                            {Array.from({ length: 24 }, (_, h) =>
+                                                [0, 30].map(m => {
+                                                    const hour = h.toString().padStart(2, '0');
+                                                    const min = m.toString().padStart(2, '0');
+                                                    const val = `${hour}:${min}`;
+                                                    const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                                                    const ampm = h < 12 ? 'AM' : 'PM';
+                                                    const display = `${displayHour}:${min} ${ampm}`;
+                                                    return <option key={val} value={val}>{display}</option>;
+                                                })
+                                            ).flat()}
                                         </select>
-                                        <p className="mt-1.5 text-sm text-stone-500">
-                                            Guests count towards event capacity.
+                                        {/* Quick time presets */}
+                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-xs text-stone-400">Day</span>
+                                                {['12:00', '14:00', '15:00'].map((t) => (
+                                                    <button
+                                                        key={t}
+                                                        type="button"
+                                                        onClick={() => setTime(t)}
+                                                        className={`px-2.5 py-1 text-sm rounded-md border transition ${
+                                                            time === t
+                                                                ? 'bg-amber-500 text-white border-amber-500'
+                                                                : 'bg-white text-stone-600 border-stone-300 hover:border-amber-400'
+                                                        }`}
+                                                    >
+                                                        {t === '12:00' ? '12pm' : t === '14:00' ? '2pm' : '3pm'}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-xs text-stone-400">Eve</span>
+                                                {['17:00', '18:00', '19:00'].map((t) => (
+                                                    <button
+                                                        key={t}
+                                                        type="button"
+                                                        onClick={() => setTime(t)}
+                                                        className={`px-2.5 py-1 text-sm rounded-md border transition ${
+                                                            time === t
+                                                                ? 'bg-amber-500 text-white border-amber-500'
+                                                                : 'bg-white text-stone-600 border-stone-300 hover:border-amber-400'
+                                                        }`}
+                                                    >
+                                                        {t === '17:00' ? '5pm' : t === '18:00' ? '6pm' : '7pm'}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Location */}
+                                <div>
+                                    <label htmlFor="location" className="block text-sm font-medium text-stone-700 mb-2">
+                                        Location
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="location"
+                                        value={location}
+                                        onChange={(e) => setLocation(e.target.value)}
+                                        className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                        placeholder="e.g., The Beacon Hotel, Copthorne"
+                                    />
+                                </div>
+
+                                {/* Description */}
+                                <div>
+                                    <label className="block text-sm font-medium text-stone-700 mb-2">
+                                        Description
+                                    </label>
+                                    <RichTextEditor
+                                        value={description}
+                                        onChange={setDescription}
+                                        placeholder="Tell people what to expect..."
+                                    />
+                                </div>
+
+                                {/* Submit Buttons */}
+                                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
+                                    <button
+                                        type="submit"
+                                        disabled={submitting}
+                                        className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50"
+                                    >
+                                        {submitting ? 'Creating...' : 'Create Event'}
+                                    </button>
+                                    <Link
+                                        href={`/groups/${group.id}`}
+                                        className="px-6 py-3 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition text-center"
+                                    >
+                                        Cancel
+                                    </Link>
+                                </div>
+                            </div>
+
+                            {/* ============================================================
+                                CARD 2: EVENT OPTIONS
+                            ============================================================ */}
+                            <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+                                {/* Accordion Header */}
+                                <button
+                                    type="button"
+                                    onClick={() => setOptionsExpanded(!optionsExpanded)}
+                                    className="w-full flex items-center justify-between p-4 bg-stone-50 hover:bg-stone-100 transition text-left"
+                                >
+                                    <div>
+                                        <h3 className="font-medium text-stone-800">Event Options</h3>
+                                        <p className="text-sm text-stone-500 mt-0.5">
+                                            Image, capacity, guests
                                         </p>
+                                    </div>
+                                    <svg
+                                        className={`w-5 h-5 text-stone-400 transition-transform ${optionsExpanded ? 'rotate-180' : ''}`}
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+
+                                {/* Accordion Content */}
+                                {optionsExpanded && (
+                                    <div className="p-4 pt-2 space-y-6 border-t border-stone-200">
+                                        {/* Featured Image */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-stone-700 mb-2">
+                                                Featured Image
+                                            </label>
+                                            <ImageUpload
+                                                value={imageUrl}
+                                                onChange={setImageUrl}
+                                            />
+                                        </div>
+
+                                        {/* Capacity */}
+                                        <div>
+                                            <label htmlFor="capacity" className="block text-sm font-medium text-stone-700 mb-2">
+                                                Capacity
+                                            </label>
+                                            <input
+                                                type="number"
+                                                id="capacity"
+                                                value={capacity}
+                                                onChange={(e) => setCapacity(e.target.value)}
+                                                min={1}
+                                                className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                                placeholder="Leave empty for unlimited"
+                                            />
+                                            <p className="mt-1.5 text-sm text-stone-500">
+                                                Leave empty for unlimited. If set, a waitlist will be used when full.
+                                            </p>
+                                        </div>
+
+                                        {/* Guest Options */}
+                                        <div className="space-y-4">
+                                            <label className="flex items-center gap-3 p-3 border border-stone-200 rounded-lg cursor-pointer hover:bg-stone-50 transition">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={allowGuests}
+                                                    onChange={(e) => setAllowGuests(e.target.checked)}
+                                                    className="w-5 h-5 text-amber-600 border-stone-300 rounded focus:ring-amber-500"
+                                                />
+                                                <div>
+                                                    <p className="font-medium text-stone-800">Allow members to bring guests</p>
+                                                    <p className="text-sm text-stone-500">Members can RSVP with additional people</p>
+                                                </div>
+                                            </label>
+
+                                            {allowGuests && (
+                                                <div className="ml-4 pl-4 border-l-2 border-amber-200">
+                                                    <label htmlFor="maxGuests" className="block text-sm font-medium text-stone-700 mb-2">
+                                                        Maximum guests per RSVP
+                                                    </label>
+                                                    <select
+                                                        id="maxGuests"
+                                                        value={maxGuestsPerRsvp}
+                                                        onChange={(e) => setMaxGuestsPerRsvp(parseInt(e.target.value, 10))}
+                                                        className="w-32 px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                                    >
+                                                        <option value={1}>1</option>
+                                                        <option value={2}>2</option>
+                                                        <option value={3}>3</option>
+                                                        <option value={4}>4</option>
+                                                        <option value={5}>5</option>
+                                                    </select>
+                                                    <p className="mt-1.5 text-sm text-stone-500">
+                                                        Guests count towards event capacity.
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Pre-orders Section */}
-                            <div className="border-t border-stone-200 pt-6">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <input
-                                        type="checkbox"
-                                        id="preordersEnabled"
-                                        checked={preordersEnabled}
-                                        onChange={(e) => setPreordersEnabled(e.target.checked)}
-                                        className="w-5 h-5 text-amber-500 border-stone-300 rounded focus:ring-amber-500"
-                                    />
-                                    <label htmlFor="preordersEnabled" className="font-display text-lg font-semibold text-stone-800">
-                                        Enable pre-orders
-                                    </label>
+                            {/* ============================================================
+                                CARD 3: ATTENDEE REQUESTS (subtle feature highlight)
+                            ============================================================ */}
+                            <div className="bg-white rounded-2xl border border-stone-200 border-l-4 border-l-amber-400 p-5">
+                                {/* Header with toggle */}
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                                            <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-medium text-stone-800">Attendee Requests</h3>
+                                            <p className="text-sm text-stone-500">
+                                                Collect orders or preferences before the event
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {/* Toggle Switch */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setPreordersEnabled(!preordersEnabled)}
+                                        className={`relative w-12 h-7 rounded-full transition-colors ${
+                                            preordersEnabled ? 'bg-amber-500' : 'bg-stone-300'
+                                        }`}
+                                    >
+                                        <span
+                                            className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                                                preordersEnabled ? 'translate-x-5' : 'translate-x-0'
+                                            }`}
+                                        />
+                                    </button>
                                 </div>
-                                <p className="text-sm text-stone-500 mb-4">
-                                    Allow attendees to submit food orders before the event.
-                                </p>
 
+                                {/* Options when enabled */}
                                 {preordersEnabled && (
-                                    <div className="space-y-4 ml-8">
+                                    <div className="mt-4 pt-4 border-t border-stone-100 space-y-4">
                                         <div>
                                             <label htmlFor="menuLink" className="block text-sm font-medium text-stone-700 mb-2">
-                                                Menu Link (optional)
+                                                Link
                                             </label>
                                             <input
                                                 type="url"
@@ -391,15 +520,15 @@ export default function CreateEventPage() {
                                                 placeholder="https://restaurant.com/menu"
                                             />
                                             <p className="mt-1.5 text-sm text-stone-500">
-                                                Share a link to the menu, or leave empty if sharing another way.
+                                                Share a menu, form, or any link for attendees to submit their choices
                                             </p>
                                         </div>
 
                                         <div>
                                             <label className="block text-sm font-medium text-stone-700 mb-2">
-                                                Order Cutoff (optional)
+                                                Cutoff
                                             </label>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                 <input
                                                     type="date"
                                                     value={preorderCutoffDate}
@@ -415,28 +544,11 @@ export default function CreateEventPage() {
                                                 />
                                             </div>
                                             <p className="mt-1.5 text-sm text-stone-500">
-                                                Set a deadline for orders. Leave empty for no deadline.
+                                                Set a deadline for orders, or leave empty for no cutoff
                                             </p>
                                         </div>
                                     </div>
                                 )}
-                            </div>
-
-                            {/* Submit */}
-                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
-                                <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50"
-                                >
-                                    {submitting ? 'Creating...' : 'Create Event'}
-                                </button>
-                                <Link
-                                    href={`/groups/${group.id}`}
-                                    className="px-6 py-3 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition text-center"
-                                >
-                                    Cancel
-                                </Link>
                             </div>
                         </form>
                     </div>
@@ -498,30 +610,6 @@ export default function CreateEventPage() {
                                             <h3 className="font-medium text-stone-800 text-sm">Pre-orders</h3>
                                             <p className="text-sm text-stone-600 mt-0.5">Great for restaurant events. Link to the menu so people can order ahead.</p>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Group info */}
-                            <div className="bg-white rounded-2xl border border-stone-200 p-5">
-                                <h3 className="font-display font-semibold text-stone-800 mb-3">Creating event for</h3>
-                                <div className="flex items-center gap-3">
-                                    {group.image_url ? (
-                                        <img
-                                            src={group.image_url}
-                                            alt={group.name}
-                                            className="w-12 h-12 rounded-xl object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                                            <span className="text-lg font-medium text-amber-600">
-                                                {group.name.charAt(0).toUpperCase()}
-                                            </span>
-                                        </div>
-                                    )}
-                                    <div>
-                                        <p className="font-medium text-stone-800">{group.name}</p>
-                                        <p className="text-sm text-stone-500">{group.member_count} members</p>
                                     </div>
                                 </div>
                             </div>

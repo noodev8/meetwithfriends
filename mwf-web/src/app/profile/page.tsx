@@ -36,6 +36,17 @@ export default function ProfilePage() {
     const [isSavingProfile, setIsSavingProfile] = useState(false);
 
     // =======================================================================
+    // Contact details state
+    // =======================================================================
+    const [contactMobile, setContactMobile] = useState('');
+    const [contactEmail, setContactEmail] = useState('');
+    const [showMobileToGuests, setShowMobileToGuests] = useState(false);
+    const [showEmailToGuests, setShowEmailToGuests] = useState(false);
+    const [contactError, setContactError] = useState('');
+    const [contactSuccess, setContactSuccess] = useState('');
+    const [isSavingContact, setIsSavingContact] = useState(false);
+
+    // =======================================================================
     // Password change state
     // =======================================================================
     const [currentPassword, setCurrentPassword] = useState('');
@@ -70,6 +81,10 @@ export default function ProfilePage() {
             setName(user.name || '');
             setBio(user.bio || '');
             setAvatarUrl(user.avatar_url || '');
+            setContactMobile(user.contact_mobile || '');
+            setContactEmail(user.contact_email || '');
+            setShowMobileToGuests(user.show_mobile_to_guests || false);
+            setShowEmailToGuests(user.show_email_to_guests || false);
         }
     }, [user]);
 
@@ -201,6 +216,35 @@ export default function ProfilePage() {
         }
 
         setIsSavingProfile(false);
+    };
+
+    // =======================================================================
+    // Handle contact details update
+    // =======================================================================
+    const handleUpdateContact = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setContactError('');
+        setContactSuccess('');
+
+        if (!token) return;
+
+        setIsSavingContact(true);
+
+        const result = await updateProfile(token, {
+            contact_mobile: contactMobile,
+            contact_email: contactEmail,
+            show_mobile_to_guests: showMobileToGuests,
+            show_email_to_guests: showEmailToGuests
+        });
+
+        if (result.success && result.data) {
+            updateUser(result.data);
+            setContactSuccess('Contact details updated successfully');
+        } else {
+            setContactError(result.error || 'Failed to update contact details');
+        }
+
+        setIsSavingContact(false);
     };
 
     // =======================================================================
@@ -415,6 +459,91 @@ export default function ProfilePage() {
                             className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isSavingProfile ? 'Saving...' : 'Save Changes'}
+                        </button>
+                    </form>
+                </div>
+
+                {/* ================================================================
+                    Contact Details Section
+                ================================================================ */}
+                <div className="bg-white rounded-2xl border border-stone-200 p-4 sm:p-6">
+                    <h2 className="text-lg font-semibold text-stone-800 mb-2">Contact Details</h2>
+                    <p className="text-sm text-stone-500 mb-4">
+                        Add contact details for guests to reach you when you host events.
+                    </p>
+
+                    {contactError && (
+                        <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
+                            {contactError}
+                        </div>
+                    )}
+
+                    {contactSuccess && (
+                        <div className="bg-green-50 text-green-600 p-3 rounded-lg mb-4 text-sm">
+                            {contactSuccess}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleUpdateContact} className="space-y-4">
+                        <div>
+                            <label htmlFor="contactMobile" className="block text-sm font-medium text-stone-700 mb-1">
+                                Mobile Number
+                            </label>
+                            <input
+                                type="tel"
+                                id="contactMobile"
+                                value={contactMobile}
+                                onChange={(e) => setContactMobile(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                placeholder="+61 412 345 678"
+                            />
+                            <div className="mt-2 flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    id="showMobileToGuests"
+                                    checked={showMobileToGuests}
+                                    onChange={(e) => setShowMobileToGuests(e.target.checked)}
+                                    className="w-4 h-4 text-amber-500 border-stone-300 rounded focus:ring-amber-500"
+                                />
+                                <label htmlFor="showMobileToGuests" className="text-sm text-stone-600">
+                                    Show mobile number to guests on my events
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label htmlFor="contactEmail" className="block text-sm font-medium text-stone-700 mb-1">
+                                Contact Email
+                            </label>
+                            <input
+                                type="email"
+                                id="contactEmail"
+                                value={contactEmail}
+                                onChange={(e) => setContactEmail(e.target.value)}
+                                className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                placeholder="contact@example.com"
+                            />
+                            <p className="text-xs text-stone-400 mt-1">Can be different from your login email</p>
+                            <div className="mt-2 flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    id="showEmailToGuests"
+                                    checked={showEmailToGuests}
+                                    onChange={(e) => setShowEmailToGuests(e.target.checked)}
+                                    className="w-4 h-4 text-amber-500 border-stone-300 rounded focus:ring-amber-500"
+                                />
+                                <label htmlFor="showEmailToGuests" className="text-sm text-stone-600">
+                                    Show email to guests on my events
+                                </label>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={isSavingContact}
+                            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isSavingContact ? 'Saving...' : 'Save Contact Details'}
                         </button>
                     </form>
                 </div>

@@ -43,7 +43,15 @@ Updates the authenticated user's profile.
 */
 export async function updateProfile(
     token: string,
-    updates: { name?: string; bio?: string; avatar_url?: string }
+    updates: {
+        name?: string;
+        bio?: string;
+        avatar_url?: string;
+        contact_mobile?: string;
+        contact_email?: string;
+        show_mobile_to_guests?: boolean;
+        show_email_to_guests?: boolean;
+    }
 ): Promise<ApiResult<User>> {
     const response = await apiCall('/api/users/update_profile', updates, token);
 

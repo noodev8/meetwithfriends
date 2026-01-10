@@ -17,6 +17,10 @@ Success Response:
     "email": "user@example.com",
     "bio": "Food enthusiast",
     "avatar_url": "https://...",
+    "contact_mobile": "+61412345678",
+    "contact_email": "contact@...",
+    "show_mobile_to_guests": true,
+    "show_email_to_guests": true,
     "created_at": "2026-01-01T00:00:00Z"
   }
 }
@@ -45,7 +49,7 @@ router.get('/', verifyToken, async (req, res) => {
         // Fetch user profile from database
         // =======================================================================
         const result = await query(
-            `SELECT id, name, email, bio, avatar_url, created_at
+            `SELECT id, name, email, bio, avatar_url, contact_mobile, contact_email, show_mobile_to_guests, show_email_to_guests, created_at
              FROM app_user
              WHERE id = $1`,
             [userId]
@@ -72,6 +76,10 @@ router.get('/', verifyToken, async (req, res) => {
                 email: user.email,
                 bio: user.bio,
                 avatar_url: user.avatar_url,
+                contact_mobile: user.contact_mobile,
+                contact_email: user.contact_email,
+                show_mobile_to_guests: user.show_mobile_to_guests,
+                show_email_to_guests: user.show_email_to_guests,
                 created_at: user.created_at
             }
         });

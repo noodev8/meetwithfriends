@@ -485,17 +485,8 @@ export default function Dashboard() {
 
                         {/* Your Groups - Compact thumbnails */}
                         <section className="mb-8">
-                            <div className="flex justify-between items-center mb-3">
+                            <div className="mb-3">
                                 <h2 className="font-display text-sm font-semibold text-stone-500 uppercase tracking-wide">Your Groups</h2>
-                                <Link
-                                    href="/groups/create"
-                                    className="text-amber-600 hover:text-amber-700 font-medium text-sm flex items-center gap-1"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    Create Group
-                                </Link>
                             </div>
                             <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:-mx-8 sm:px-8 scrollbar-hide">
                                 {[...organiserGroups, ...memberGroups].map((group) => (

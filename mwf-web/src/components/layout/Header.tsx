@@ -23,6 +23,7 @@ export default function Header() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const mobileMenuRef = useRef<HTMLDivElement>(null);
+    const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
 
     // =======================================================================
     // Close menus when clicking outside
@@ -32,7 +33,9 @@ export default function Header() {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
                 setMenuOpen(false);
             }
-            if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+            // Don't close mobile menu if clicking the hamburger button (it handles its own toggle)
+            if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node) &&
+                mobileMenuButtonRef.current && !mobileMenuButtonRef.current.contains(event.target as Node)) {
                 setMobileMenuOpen(false);
             }
         }
@@ -118,6 +121,13 @@ export default function Header() {
                             {menuOpen && (
                                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-stone-200 py-1 z-50">
                                     <Link
+                                        href="/groups/create"
+                                        onClick={() => setMenuOpen(false)}
+                                        className="block px-4 py-2.5 text-stone-700 hover:bg-stone-50 transition"
+                                    >
+                                        Create Group
+                                    </Link>
+                                    <Link
                                         href="/profile"
                                         onClick={() => setMenuOpen(false)}
                                         className="block px-4 py-2.5 text-stone-700 hover:bg-stone-50 transition"
@@ -154,6 +164,7 @@ export default function Header() {
 
                 {/* Mobile Menu Button */}
                 <button
+                    ref={mobileMenuButtonRef}
                     className="md:hidden p-2 text-stone-600 hover:text-stone-900 transition"
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                     aria-label="Toggle menu"
@@ -188,26 +199,19 @@ export default function Header() {
                                 >
                                     Your Events
                                 </Link>
-                                <div className="border-t border-stone-100 my-2" />
+                                <Link
+                                    href="/groups/create"
+                                    onClick={closeMobileMenu}
+                                    className="px-4 py-3 text-stone-700 hover:bg-stone-50 transition font-medium"
+                                >
+                                    Create Group
+                                </Link>
                                 <Link
                                     href="/profile"
                                     onClick={closeMobileMenu}
-                                    className="px-4 py-3 text-stone-700 hover:bg-stone-50 transition flex items-center gap-3"
+                                    className="px-4 py-3 text-stone-700 hover:bg-stone-50 transition font-medium"
                                 >
-                                    {user.avatar_url ? (
-                                        <img
-                                            src={user.avatar_url}
-                                            alt={user.name}
-                                            className="w-8 h-8 rounded-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                                            <span className="text-sm font-medium text-amber-600">
-                                                {user.name.charAt(0).toUpperCase()}
-                                            </span>
-                                        </div>
-                                    )}
-                                    <span className="font-medium">{user.name}</span>
+                                    Profile
                                 </Link>
                                 <button
                                     onClick={handleLogout}
