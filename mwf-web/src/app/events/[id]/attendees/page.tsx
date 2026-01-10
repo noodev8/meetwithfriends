@@ -16,6 +16,7 @@ import {
     getEvent,
     getAttendees,
     getHosts,
+    manageAttendee,
     EventWithDetails,
     Attendee,
     NotGoingAttendee,
@@ -40,8 +41,10 @@ export default function AttendeesPage() {
     const [waitlistCount, setWaitlistCount] = useState(0);
     const [notGoingCount, setNotGoingCount] = useState(0);
     const [canViewAttendees, setCanViewAttendees] = useState(false);
+    const [canManageAttendees, setCanManageAttendees] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [actionLoading, setActionLoading] = useState<number | null>(null);
 
     // UI state
     const [activeTab, setActiveTab] = useState<Tab>('going');
@@ -65,6 +68,7 @@ export default function AttendeesPage() {
 
             if (eventResult.success && eventResult.data) {
                 setEvent(eventResult.data.event);
+                setCanManageAttendees(eventResult.data.can_edit);
             } else {
                 setError(eventResult.error || 'Event not found');
             }
@@ -123,6 +127,41 @@ export default function AttendeesPage() {
                 minute: '2-digit',
             }),
         };
+    };
+
+    // =======================================================================
+    // Manage attendee actions
+    // =======================================================================
+    const handleManageAttendee = async (userId: number, action: 'remove' | 'demote' | 'promote') => {
+        if (!token || !event) return;
+
+        const actionLabels = {
+            remove: 'remove from event',
+            demote: 'move to waitlist',
+            promote: 'move to going',
+        };
+
+        if (!confirm(`Are you sure you want to ${actionLabels[action]} this person?`)) return;
+
+        setActionLoading(userId);
+        const result = await manageAttendee(token, event.id, userId, action);
+        setActionLoading(null);
+
+        if (result.success) {
+            // Refresh the attendees list
+            const attendeesResult = await getAttendees(event.id, token);
+            if (attendeesResult.success && attendeesResult.data) {
+                setAttending(attendeesResult.data.attending);
+                setWaitlist(attendeesResult.data.waitlist);
+                setNotGoing(attendeesResult.data.not_going);
+                setAttendingCount(attendeesResult.data.attending_count);
+                setTotalGuestCount(attendeesResult.data.total_guest_count);
+                setWaitlistCount(attendeesResult.data.waitlist_count);
+                setNotGoingCount(attendeesResult.data.not_going_count);
+            }
+        } else {
+            alert(result.error || 'Failed to update attendee');
+        }
     };
 
     // =======================================================================
@@ -285,67 +324,99 @@ export default function AttendeesPage() {
                     <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-6">
                         {/* List view for Going tab when pre-orders are enabled */}
                         {activeTab === 'going' && event.preorders_enabled ? (
-                            <div className="space-y-4">
+                            <div className="space-y-2">
                                 {currentList.map((person) => {
                                     const attendee = person as Attendee;
                                     const isHostUser = isHost(person.user_id);
+                                    const isLoading = actionLoading === person.user_id;
 
                                     return (
-                                        <button
+                                        <div
                                             key={person.user_id}
-                                            onClick={() => setSelectedAttendee(person)}
-                                            className="w-full flex items-start gap-4 p-3 rounded-xl hover:bg-stone-50 transition text-left"
+                                            className="flex items-start gap-4 p-3 rounded-xl hover:bg-stone-50 transition"
                                         >
-                                            {/* Avatar */}
-                                            <div className="relative flex-shrink-0">
-                                                {person.avatar_url ? (
-                                                    <img
-                                                        src={person.avatar_url}
-                                                        alt={person.name}
-                                                        className="w-12 h-12 rounded-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                                                        <span className="text-lg font-medium text-amber-600">
-                                                            {person.name.charAt(0).toUpperCase()}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {isHostUser && (
-                                                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-medium rounded">
-                                                        Host
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            {/* Name and Order */}
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-medium text-stone-900">
-                                                        {person.name}
-                                                    </span>
-                                                    {attendee.guest_count > 0 && (
-                                                        <span className="text-xs text-stone-500">
-                                                            +{attendee.guest_count} guest{attendee.guest_count > 1 ? 's' : ''}
+                                            {/* Clickable area for profile */}
+                                            <button
+                                                onClick={() => setSelectedAttendee(person)}
+                                                className="flex items-start gap-4 flex-1 min-w-0 text-left"
+                                            >
+                                                {/* Avatar */}
+                                                <div className="relative flex-shrink-0">
+                                                    {person.avatar_url ? (
+                                                        <img
+                                                            src={person.avatar_url}
+                                                            alt={person.name}
+                                                            className="w-12 h-12 rounded-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
+                                                            <span className="text-lg font-medium text-amber-600">
+                                                                {person.name.charAt(0).toUpperCase()}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {isHostUser && (
+                                                        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-medium rounded">
+                                                            Host
                                                         </span>
                                                     )}
                                                 </div>
-                                                {attendee.food_order ? (
-                                                    <p className="text-sm text-stone-600 mt-0.5">
-                                                        {attendee.food_order}
-                                                    </p>
-                                                ) : (
-                                                    <p className="text-sm text-stone-400 mt-0.5 italic">
-                                                        No order submitted
-                                                    </p>
-                                                )}
-                                                {attendee.dietary_notes && (
-                                                    <p className="text-xs text-orange-600 mt-0.5">
-                                                        {attendee.dietary_notes}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </button>
+
+                                                {/* Name and Order */}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-medium text-stone-900">
+                                                            {person.name}
+                                                        </span>
+                                                        {attendee.guest_count > 0 && (
+                                                            <span className="text-xs text-stone-500">
+                                                                +{attendee.guest_count} guest{attendee.guest_count > 1 ? 's' : ''}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {attendee.food_order ? (
+                                                        <p className="text-sm text-stone-600 mt-0.5">
+                                                            {attendee.food_order}
+                                                        </p>
+                                                    ) : (
+                                                        <p className="text-sm text-stone-400 mt-0.5 italic">
+                                                            No order submitted
+                                                        </p>
+                                                    )}
+                                                    {attendee.dietary_notes && (
+                                                        <p className="text-xs text-orange-600 mt-0.5">
+                                                            {attendee.dietary_notes}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </button>
+
+                                            {/* Action buttons for hosts/organisers */}
+                                            {canManageAttendees && (
+                                                <div className="flex items-center gap-1 flex-shrink-0">
+                                                    <button
+                                                        onClick={() => handleManageAttendee(person.user_id, 'demote')}
+                                                        disabled={isLoading}
+                                                        className="p-1.5 text-stone-400 hover:text-yellow-600 hover:bg-yellow-50 rounded transition disabled:opacity-50"
+                                                        title="Move to waitlist"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleManageAttendee(person.user_id, 'remove')}
+                                                        disabled={isLoading}
+                                                        className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded transition disabled:opacity-50"
+                                                        title="Remove from event"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     );
                                 })}
                             </div>
@@ -355,15 +426,18 @@ export default function AttendeesPage() {
                                 {currentList.map((person) => {
                                     const attendee = person as Attendee;
                                     const isHostUser = isHost(person.user_id);
+                                    const isLoading = actionLoading === person.user_id;
 
                                     return (
-                                        <button
+                                        <div
                                             key={person.user_id}
-                                            onClick={() => setSelectedAttendee(person)}
-                                            className="flex flex-col items-center text-center hover:opacity-80 transition group"
+                                            className="flex flex-col items-center text-center group"
                                         >
-                                            {/* Avatar */}
-                                            <div className="relative mb-2">
+                                            {/* Avatar - clickable */}
+                                            <button
+                                                onClick={() => setSelectedAttendee(person)}
+                                                className="relative mb-2 hover:opacity-80 transition"
+                                            >
                                                 {person.avatar_url ? (
                                                     <img
                                                         src={person.avatar_url}
@@ -387,10 +461,10 @@ export default function AttendeesPage() {
                                                         #{attendee.waitlist_position}
                                                     </span>
                                                 )}
-                                            </div>
+                                            </button>
 
                                             {/* Name */}
-                                            <span className="text-sm font-medium text-stone-900 group-hover:text-amber-600 transition">
+                                            <span className="text-sm font-medium text-stone-900">
                                                 {person.name}
                                             </span>
 
@@ -401,7 +475,47 @@ export default function AttendeesPage() {
                                                     ? `+${attendee.guest_count} guest${attendee.guest_count > 1 ? 's' : ''}`
                                                     : 'Member'}
                                             </span>
-                                        </button>
+
+                                            {/* Action buttons for hosts/organisers */}
+                                            {canManageAttendees && activeTab !== 'not_going' && (
+                                                <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    {activeTab === 'going' && (
+                                                        <button
+                                                            onClick={() => handleManageAttendee(person.user_id, 'demote')}
+                                                            disabled={isLoading}
+                                                            className="p-1 text-stone-400 hover:text-yellow-600 hover:bg-yellow-50 rounded transition disabled:opacity-50"
+                                                            title="Move to waitlist"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                            </svg>
+                                                        </button>
+                                                    )}
+                                                    {activeTab === 'waitlist' && (
+                                                        <button
+                                                            onClick={() => handleManageAttendee(person.user_id, 'promote')}
+                                                            disabled={isLoading}
+                                                            className="p-1 text-stone-400 hover:text-green-600 hover:bg-green-50 rounded transition disabled:opacity-50"
+                                                            title="Move to going"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                                            </svg>
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() => handleManageAttendee(person.user_id, 'remove')}
+                                                        disabled={isLoading}
+                                                        className="p-1 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded transition disabled:opacity-50"
+                                                        title="Remove from event"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     );
                                 })}
                             </div>
