@@ -179,6 +179,36 @@ See [PREORDER-FEATURE.md](./PREORDER-FEATURE.md) for detailed specification.
 - [ ] Event templates
 - [ ] Attendance history/stats
 - [ ] Mobile app (Flutter)
+- [ ] User activity tracking (see below)
+
+### User Activity Tracking
+Track user engagement for hosts/organisers to identify inactive members.
+
+**Requirements:**
+1. **Last login** - Record when a user logs into the system
+   - Update `app_user.last_login_at` on successful login
+
+2. **Last group visit** - Record when a user accesses a group
+   - New table or field to track per-user, per-group visits
+   - Update when user views group page or group events
+
+3. **Display on member list** - Show "Last active" on group member list
+   - Helps hosts identify engaged vs inactive members
+   - Format: "Active today", "3 days ago", "2 weeks ago", etc.
+
+**Database changes needed:**
+```sql
+-- Add to app_user
+ALTER TABLE app_user ADD COLUMN last_login_at TIMESTAMP;
+
+-- New table for group visits
+CREATE TABLE group_visit (
+    group_id INTEGER REFERENCES group_list(id),
+    user_id INTEGER REFERENCES app_user(id),
+    last_visit_at TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (group_id, user_id)
+);
+```
 
 ---
 
