@@ -3,12 +3,12 @@
 API Route: add_comment
 =======================================================================================================================================
 Method: POST
-Purpose: Adds a comment to an event. User must be an active member of the group the event belongs to.
+Purpose: Adds a comment to an event. User must be attending or on the waitlist for the event.
 =======================================================================================================================================
 Request Payload:
 {
   "event_id": 1,                       // integer, required - ID of the event
-  "content": "Looking forward to it!"  // string, required - Comment text (max 2000 chars)
+  "content": "Looking forward to it!"  // string, required - Comment text (max 280 chars)
 }
 
 Success Response:
@@ -30,7 +30,7 @@ Return Codes:
 "MISSING_FIELDS"
 "CONTENT_TOO_LONG"
 "EVENT_NOT_FOUND"
-"NOT_GROUP_MEMBER"
+"NOT_ATTENDING"
 "SERVER_ERROR"
 =======================================================================================================================================
 */
@@ -77,11 +77,14 @@ router.post('/', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
-        // Fetch event to get group_id and verify it exists
+        // Verify event exists and user is attending or on waitlist
         // =======================================================================
         const eventResult = await query(
-            `SELECT id, group_id FROM event_list WHERE id = $1`,
-            [event_id]
+            `SELECT e.id, er.status AS rsvp_status
+             FROM event_list e
+             LEFT JOIN event_rsvp er ON e.id = er.event_id AND er.user_id = $2
+             WHERE e.id = $1`,
+            [event_id, userId]
         );
 
         if (eventResult.rows.length === 0) {
@@ -91,21 +94,15 @@ router.post('/', verifyToken, async (req, res) => {
             });
         }
 
-        const groupId = eventResult.rows[0].group_id;
+        const rsvpStatus = eventResult.rows[0].rsvp_status;
 
         // =======================================================================
-        // Verify user is an active member of the group
+        // Verify user is attending or on waitlist
         // =======================================================================
-        const membershipResult = await query(
-            `SELECT id FROM group_member
-             WHERE group_id = $1 AND user_id = $2 AND status = 'active'`,
-            [groupId, userId]
-        );
-
-        if (membershipResult.rows.length === 0) {
+        if (rsvpStatus !== 'attending' && rsvpStatus !== 'waitlist') {
             return res.json({
-                return_code: 'NOT_GROUP_MEMBER',
-                message: 'You must be a group member to comment'
+                return_code: 'NOT_ATTENDING',
+                message: 'You must be attending or on the waitlist to comment'
             });
         }
 

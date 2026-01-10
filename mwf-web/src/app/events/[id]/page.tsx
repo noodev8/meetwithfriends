@@ -780,8 +780,8 @@ export default function EventDetailPage() {
                             {/* Members can view and participate in discussion */}
                             {canViewComments ? (
                                 <>
-                                    {/* Add Comment Form */}
-                                    {isGroupMember && user && (
+                                    {/* Add Comment Form - only for attendees and waitlist */}
+                                    {user && rsvp && (rsvp.status === 'attending' || rsvp.status === 'waitlist') ? (
                                         <form onSubmit={handleAddComment} className="mb-6">
                                             <div className="flex gap-3">
                                                 {user.avatar_url ? (
@@ -821,7 +821,13 @@ export default function EventDetailPage() {
                                                 </div>
                                             </div>
                                         </form>
-                                    )}
+                                    ) : user && isGroupMember ? (
+                                        <div className="mb-6 p-4 bg-stone-50 rounded-xl text-center">
+                                            <p className="text-sm text-stone-600">
+                                                RSVP to join the discussion
+                                            </p>
+                                        </div>
+                                    ) : null}
 
                                     {/* Comments List */}
                                     {comments.length > 0 ? (
@@ -869,7 +875,9 @@ export default function EventDetailPage() {
                                         </div>
                                     ) : (
                                         <p className="text-stone-500 text-center py-4">
-                                            No comments yet. Be the first to start the discussion!
+                                            {rsvp && (rsvp.status === 'attending' || rsvp.status === 'waitlist')
+                                                ? 'No comments yet. Be the first to start the discussion!'
+                                                : 'No comments yet.'}
                                         </p>
                                     )}
                                 </>
