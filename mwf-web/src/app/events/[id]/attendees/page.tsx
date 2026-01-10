@@ -523,55 +523,56 @@ export default function AttendeesPage() {
                 )}
             </div>
 
-            {/* Profile Modal - Focus on the face */}
+            {/* Profile Modal */}
             {selectedAttendee && (() => {
                 const isInGoing = attending.some(a => a.user_id === selectedAttendee.user_id);
                 const isInWaitlist = waitlist.some(a => a.user_id === selectedAttendee.user_id);
                 const isLoading = actionLoading === selectedAttendee.user_id;
+                const showOrderForm = canManageAttendees && isInGoing && event?.preorders_enabled;
 
                 return (
                     <div
-                        className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
+                        className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
                         onClick={() => setSelectedAttendee(null)}
                     >
                         <div
-                            className="relative"
+                            className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {/* Close button */}
-                            <button
-                                onClick={() => setSelectedAttendee(null)}
-                                className="absolute -top-12 right-0 p-2 text-white/70 hover:text-white transition"
-                                aria-label="Close"
-                            >
-                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-
-                            {/* Large photo */}
-                            {selectedAttendee.avatar_url ? (
-                                <img
-                                    src={selectedAttendee.avatar_url}
-                                    alt={selectedAttendee.name}
-                                    className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl object-cover shadow-2xl"
-                                />
-                            ) : (
-                                <div className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center shadow-2xl">
-                                    <span className="text-8xl font-bold text-white">
-                                        {selectedAttendee.name.charAt(0).toUpperCase()}
-                                    </span>
+                            {/* Header with photo and name */}
+                            <div className="p-5 flex items-center gap-4 border-b border-stone-100">
+                                {selectedAttendee.avatar_url ? (
+                                    <img
+                                        src={selectedAttendee.avatar_url}
+                                        alt={selectedAttendee.name}
+                                        className="w-16 h-16 rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center">
+                                        <span className="text-2xl font-bold text-white">
+                                            {selectedAttendee.name.charAt(0).toUpperCase()}
+                                        </span>
+                                    </div>
+                                )}
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-semibold text-stone-900">{selectedAttendee.name}</h3>
+                                    <p className="text-sm text-stone-500">
+                                        {isInGoing ? 'Going' : isInWaitlist ? 'Waitlist' : 'Not going'}
+                                    </p>
                                 </div>
-                            )}
+                                <button
+                                    onClick={() => setSelectedAttendee(null)}
+                                    className="p-1 text-stone-400 hover:text-stone-600 transition"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
 
-                            {/* Name below */}
-                            <p className="text-center mt-4 text-xl font-medium text-white">
-                                {selectedAttendee.name}
-                            </p>
-
-                            {/* Order editing for hosts/organisers */}
-                            {canManageAttendees && isInGoing && event?.preorders_enabled && (
-                                <div className="mt-4 bg-white rounded-xl p-4 w-72 sm:w-80">
+                            {/* Order form for hosts/organisers */}
+                            {showOrderForm && (
+                                <div className="p-5 border-b border-stone-100">
                                     <div className="space-y-3">
                                         <div>
                                             <label className="block text-xs font-medium text-stone-600 mb-1">
@@ -610,12 +611,12 @@ export default function AttendeesPage() {
 
                             {/* Action buttons for hosts/organisers */}
                             {canManageAttendees && (isInGoing || isInWaitlist) && (
-                                <div className="flex justify-center gap-3 mt-4">
+                                <div className="p-4 bg-stone-50 flex flex-wrap justify-center gap-2">
                                     {isInGoing && (
                                         <button
                                             onClick={() => handleManageAttendee(selectedAttendee.user_id, 'demote')}
                                             disabled={isLoading}
-                                            className="px-4 py-2 bg-yellow-500 text-white text-sm font-medium rounded-lg hover:bg-yellow-600 transition disabled:opacity-50"
+                                            className="px-3 py-1.5 text-sm text-yellow-700 hover:bg-yellow-100 rounded-lg transition disabled:opacity-50"
                                         >
                                             {isLoading ? 'Moving...' : 'Move to waitlist'}
                                         </button>
@@ -624,7 +625,7 @@ export default function AttendeesPage() {
                                         <button
                                             onClick={() => handleManageAttendee(selectedAttendee.user_id, 'promote')}
                                             disabled={isLoading}
-                                            className="px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 transition disabled:opacity-50"
+                                            className="px-3 py-1.5 text-sm text-green-700 hover:bg-green-100 rounded-lg transition disabled:opacity-50"
                                         >
                                             {isLoading ? 'Moving...' : 'Move to going'}
                                         </button>
@@ -632,7 +633,7 @@ export default function AttendeesPage() {
                                     <button
                                         onClick={() => handleManageAttendee(selectedAttendee.user_id, 'remove')}
                                         disabled={isLoading}
-                                        className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition disabled:opacity-50"
+                                        className="px-3 py-1.5 text-sm text-red-700 hover:bg-red-100 rounded-lg transition disabled:opacity-50"
                                     >
                                         {isLoading ? 'Removing...' : 'Remove'}
                                     </button>
