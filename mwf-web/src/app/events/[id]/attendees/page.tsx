@@ -207,7 +207,7 @@ export default function AttendeesPage() {
 
             {/* Event Header */}
             <div className="bg-white border-b border-stone-200">
-                <div className="max-w-3xl mx-auto px-4 sm:px-8 py-6">
+                <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
                     <Link
                         href={`/events/${event.id}`}
                         className="inline-flex items-center gap-2 text-amber-600 hover:text-amber-700 mb-3 transition-colors text-sm"
