@@ -67,7 +67,7 @@ sendEmail
 Core email sending function with test mode and daily limit handling
 =======================================================================================================================================
 */
-async function sendEmail(to, subject, html, emailType, relatedId = null) {
+async function sendEmail(to, subject, html, emailType, relatedId = null, replyTo = null) {
     const isTestEmail = to.toLowerCase().endsWith('@test.com');
 
     // Check daily limit for real emails
@@ -91,12 +91,19 @@ async function sendEmail(to, subject, html, emailType, relatedId = null) {
     }
 
     try {
-        const { data, error } = await resend.emails.send({
+        const emailOptions = {
             from: `${config.email.fromName} <${config.email.from}>`,
             to: actualRecipient,
             subject: actualSubject,
             html: html
-        });
+        };
+
+        // Add reply-to header if provided
+        if (replyTo) {
+            emailOptions.reply_to = replyTo;
+        }
+
+        const { data, error } = await resend.emails.send(emailOptions);
 
         if (error) {
             console.error('Resend error:', error);
@@ -524,7 +531,7 @@ async function sendContactOrganiserEmail(email, organiserName, senderName, sende
         ${emailLink(config.frontendUrl + '/groups/' + group.id, 'View Group')}
     `);
 
-    return sendEmail(email, `Message from ${senderName} about ${group.name}`, html, 'contact_organiser', group.id);
+    return sendEmail(email, `Message from ${senderName} about ${group.name}`, html, 'contact_organiser', group.id, senderEmail);
 }
 
 /*
@@ -552,7 +559,7 @@ async function sendContactHostEmail(email, hostName, senderName, senderEmail, ev
         ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event')}
     `);
 
-    return sendEmail(email, `Message from ${senderName} about ${event.title}`, html, 'contact_host', event.id);
+    return sendEmail(email, `Message from ${senderName} about ${event.title}`, html, 'contact_host', event.id, senderEmail);
 }
 
 module.exports = {
