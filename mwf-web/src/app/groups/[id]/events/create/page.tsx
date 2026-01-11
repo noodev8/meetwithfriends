@@ -10,11 +10,11 @@ Two-column layout with form on left and tips sidebar on right.
 */
 
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getGroup, GroupWithCount, GroupMembership } from '@/lib/api/groups';
-import { createEvent } from '@/lib/api/events';
+import { createEvent, getEvent } from '@/lib/api/events';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 import ImageUpload from '@/components/ui/ImageUpload';
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -23,12 +23,15 @@ export default function CreateEventPage() {
     const { token, isLoading: authLoading } = useAuth();
     const router = useRouter();
     const params = useParams();
+    const searchParams = useSearchParams();
+    const duplicateFromId = searchParams.get('from');
 
     const [group, setGroup] = useState<GroupWithCount | null>(null);
     const [membership, setMembership] = useState<GroupMembership | null>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isDuplicate, setIsDuplicate] = useState(false);
 
     // Form state
     const [title, setTitle] = useState('');
@@ -81,6 +84,37 @@ export default function CreateEventPage() {
         }
         fetchGroup();
     }, [params.id, token, authLoading]);
+
+    // =======================================================================
+    // Pre-fill form if duplicating from another event
+    // =======================================================================
+    useEffect(() => {
+        async function fetchSourceEvent() {
+            if (!duplicateFromId || !token) return;
+
+            const result = await getEvent(Number(duplicateFromId), token);
+            if (result.success && result.data) {
+                const evt = result.data.event;
+                setIsDuplicate(true);
+                setTitle(evt.title);
+                setDescription(evt.description || '');
+                setLocation(evt.location || '');
+                setCapacity(evt.capacity ? String(evt.capacity) : '');
+                setImageUrl(evt.image_url || null);
+                setImagePosition(evt.image_position || 'center');
+                setAllowGuests(evt.allow_guests || false);
+                setMaxGuestsPerRsvp(evt.max_guests_per_rsvp || 1);
+                setPreordersEnabled(evt.preorders_enabled || false);
+                setMenuLink(evt.menu_link || '');
+                // Expand sections that have values
+                if (evt.image_url) setImageExpanded(true);
+                if (evt.capacity) setCapacityExpanded(true);
+                if (evt.allow_guests) setGuestsExpanded(true);
+                if (evt.preorders_enabled) setRequestsExpanded(true);
+            }
+        }
+        fetchSourceEvent();
+    }, [duplicateFromId, token]);
 
     // =======================================================================
     // Handle form submission
@@ -209,8 +243,12 @@ export default function CreateEventPage() {
                 </div>
 
                 <div className="mb-6 sm:mb-8">
-                    <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-800">Create Event</h1>
-                    <p className="text-slate-500 mt-1">for {group.name}</p>
+                    <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-800">
+                        {isDuplicate ? 'Duplicate Event' : 'Create Event'}
+                    </h1>
+                    <p className="text-slate-500 mt-1">
+                        {isDuplicate ? 'Set a new date and adjust details as needed' : `for ${group.name}`}
+                    </p>
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
