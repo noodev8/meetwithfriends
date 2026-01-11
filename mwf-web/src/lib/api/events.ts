@@ -328,13 +328,13 @@ export async function updateEvent(
 =======================================================================================================================================
 cancelEvent
 =======================================================================================================================================
-Cancels an event. Only event creator or group organiser can cancel.
+Deletes an event. Only event creator or group organiser can delete.
 =======================================================================================================================================
 */
 export async function cancelEvent(
     token: string,
     eventId: number
-): Promise<ApiResult<{ message: string }>> {
+): Promise<ApiResult<{ message: string; group_id: number }>> {
     const response = await apiCall(`/api/events/${eventId}/cancel`, {}, token);
 
     if (response.return_code === 'SUCCESS') {
@@ -342,42 +342,14 @@ export async function cancelEvent(
             success: true,
             data: {
                 message: response.message as string,
+                group_id: response.group_id as unknown as number,
             },
         };
     }
 
     return {
         success: false,
-        error: (response.message as string) || 'Failed to cancel event',
-        return_code: response.return_code,
-    };
-}
-
-/*
-=======================================================================================================================================
-restoreEvent
-=======================================================================================================================================
-Restores a cancelled event. Only event creator or group organiser can restore.
-=======================================================================================================================================
-*/
-export async function restoreEvent(
-    token: string,
-    eventId: number
-): Promise<ApiResult<{ message: string }>> {
-    const response = await apiCall(`/api/events/${eventId}/restore`, {}, token);
-
-    if (response.return_code === 'SUCCESS') {
-        return {
-            success: true,
-            data: {
-                message: response.message as string,
-            },
-        };
-    }
-
-    return {
-        success: false,
-        error: (response.message as string) || 'Failed to restore event',
+        error: (response.message as string) || 'Failed to delete event',
         return_code: response.return_code,
     };
 }

@@ -38,6 +38,7 @@ export default function CreateEventPage() {
     const [time, setTime] = useState('');
     const [capacity, setCapacity] = useState('');
     const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [imagePosition, setImagePosition] = useState<'top' | 'center' | 'bottom'>('center');
     const [allowGuests, setAllowGuests] = useState(false);
     const [maxGuestsPerRsvp, setMaxGuestsPerRsvp] = useState(1);
     const [preordersEnabled, setPreordersEnabled] = useState(false);
@@ -133,6 +134,7 @@ export default function CreateEventPage() {
             date_time: dateTime.toISOString(),
             capacity: capacity ? parseInt(capacity, 10) : undefined,
             image_url: imageUrl || undefined,
+            image_position: imageUrl ? imagePosition : undefined,
             allow_guests: allowGuests,
             max_guests_per_rsvp: allowGuests ? maxGuestsPerRsvp : undefined,
             preorders_enabled: preordersEnabled,
@@ -465,7 +467,7 @@ export default function CreateEventPage() {
                                                     </svg>
                                                 </div>
                                                 <div>
-                                                    <span className="font-medium text-slate-800">Attendee Requests</span>
+                                                    <span className="font-medium text-slate-800">Pre Orders or Requests</span>
                                                     <span className="text-slate-400 mx-2">·</span>
                                                     <span className="text-sm text-slate-500">
                                                         {preordersEnabled ? 'On' : 'Off'}
@@ -622,6 +624,8 @@ export default function CreateEventPage() {
                                                     <ImageUpload
                                                         value={imageUrl}
                                                         onChange={setImageUrl}
+                                                        imagePosition={imagePosition}
+                                                        onPositionChange={setImagePosition}
                                                     />
                                                 </div>
                                             </div>

@@ -135,23 +135,18 @@ function wrapEmail(content) {
             <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
             <p style="color: #999; font-size: 12px; text-align: center;">
                 Meet With Friends<br>
-                <a href="${config.frontendUrl}" style="color: #d97706;">Visit our website</a>
+                <a href="${config.frontendUrl}" style="color: #666;">Visit our website</a>
             </p>
         </div>
     `;
 }
 
-// Button style helper
-function emailButton(url, text) {
+// Simple text link helper
+function emailLink(url, text) {
     return `
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="${url}"
-               style="background-color: #f59e0b; color: white; padding: 12px 24px;
-                      text-decoration: none; border-radius: 8px; font-weight: bold;
-                      display: inline-block;">
-                ${text}
-            </a>
-        </div>
+        <p style="margin: 20px 0;">
+            <a href="${url}" style="color: #4f46e5;">${text}</a>
+        </p>
     `;
 }
 
@@ -171,10 +166,10 @@ async function sendWelcomeEmail(email, userName) {
         <p style="color: #666; font-size: 16px;">
             Thanks for joining! You're now ready to discover groups and events near you.
         </p>
-        ${emailButton(config.frontendUrl + '/dashboard', 'Go to Dashboard')}
         <p style="color: #666; font-size: 16px;">
             Start by joining a group or browsing upcoming events.
         </p>
+        ${emailLink(config.frontendUrl + '/dashboard', 'Go to Dashboard')}
     `);
 
     return sendEmail(email, 'Welcome to Meet With Friends', html, 'welcome');
@@ -203,12 +198,11 @@ async function sendRsvpConfirmedEmail(email, userName, event) {
         <p style="color: #666; font-size: 16px;">
             Your RSVP for <strong>${event.title}</strong> has been confirmed.
         </p>
-        <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #92400e;"><strong>${event.title}</strong></p>
-            <p style="margin: 5px 0 0; color: #92400e;">${eventDate} at ${eventTime}</p>
-            ${event.location ? `<p style="margin: 5px 0 0; color: #92400e;">${event.location}</p>` : ''}
-        </div>
-        ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Event')}
+        <p style="color: #666; font-size: 16px;">
+            <strong>${event.title}</strong><br>
+            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
+        </p>
+        ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event')}
     `);
 
     return sendEmail(email, `RSVP confirmed: ${event.title}`, html, 'rsvp_confirmed', event.id);
@@ -222,6 +216,13 @@ Sent when a host/organiser removes or demotes a user from an event
 =======================================================================================================================================
 */
 async function sendRemovedFromEventEmail(email, userName, event, reason) {
+    const eventDate = new Date(event.date_time).toLocaleDateString('en-GB', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+    const eventTime = new Date(event.date_time).toLocaleTimeString('en-GB', {
+        hour: '2-digit', minute: '2-digit'
+    });
+
     const reasonText = reason === 'demoted'
         ? 'You have been moved to the waitlist.'
         : 'You have been removed from the event.';
@@ -234,13 +235,14 @@ async function sendRemovedFromEventEmail(email, userName, event, reason) {
         <p style="color: #666; font-size: 16px;">
             ${reasonText}
         </p>
-        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #374151;"><strong>${event.title}</strong></p>
-        </div>
+        <p style="color: #666; font-size: 16px;">
+            <strong>${event.title}</strong><br>
+            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
+        </p>
         <p style="color: #666; font-size: 16px;">
             If you have any questions, please contact the event host.
         </p>
-        ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Event')}
+        ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event')}
     `);
 
     return sendEmail(email, `Update: ${event.title}`, html, 'removed_from_event', event.id);
@@ -269,12 +271,11 @@ async function sendPromotedFromWaitlistEmail(email, userName, event) {
         <p style="color: #666; font-size: 16px;">
             A spot has opened up and you've been moved from the waitlist to attending!
         </p>
-        <div style="background-color: #d1fae5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #065f46;"><strong>${event.title}</strong></p>
-            <p style="margin: 5px 0 0; color: #065f46;">${eventDate} at ${eventTime}</p>
-            ${event.location ? `<p style="margin: 5px 0 0; color: #065f46;">${event.location}</p>` : ''}
-        </div>
-        ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Event')}
+        <p style="color: #666; font-size: 16px;">
+            <strong>${event.title}</strong><br>
+            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
+        </p>
+        ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event')}
     `);
 
     return sendEmail(email, `You're in: ${event.title}`, html, 'promoted_from_waitlist', event.id);
@@ -291,6 +292,9 @@ async function sendEventCancelledEmail(email, userName, event) {
     const eventDate = new Date(event.date_time).toLocaleDateString('en-GB', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
+    const eventTime = new Date(event.date_time).toLocaleTimeString('en-GB', {
+        hour: '2-digit', minute: '2-digit'
+    });
 
     const html = wrapEmail(`
         <h2 style="color: #333;">Event Cancelled</h2>
@@ -300,10 +304,10 @@ async function sendEventCancelledEmail(email, userName, event) {
         <p style="color: #666; font-size: 16px;">
             Unfortunately, the following event has been cancelled:
         </p>
-        <div style="background-color: #fee2e2; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #991b1b;"><strong>${event.title}</strong></p>
-            <p style="margin: 5px 0 0; color: #991b1b;">${eventDate}</p>
-        </div>
+        <p style="color: #666; font-size: 16px;">
+            <strong>${event.title}</strong><br>
+            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
+        </p>
         <p style="color: #666; font-size: 16px;">
             If you have any questions, please contact the event host.
         </p>
@@ -328,7 +332,7 @@ async function sendNewJoinRequestEmail(email, hostName, requesterName, group) {
         <p style="color: #666; font-size: 16px;">
             <strong>${requesterName}</strong> has requested to join <strong>${group.name}</strong>.
         </p>
-        ${emailButton(config.frontendUrl + '/groups/' + group.id + '/members', 'Review Request')}
+        ${emailLink(config.frontendUrl + '/groups/' + group.id + '/members', 'Review Request')}
     `);
 
     return sendEmail(email, `New join request: ${group.name}`, html, 'new_join_request', group.id);
@@ -353,7 +357,7 @@ async function sendJoinedGroupEmail(email, userName, group) {
         <p style="color: #666; font-size: 16px;">
             You can now see all members, RSVP to events, and join discussions.
         </p>
-        ${emailButton(config.frontendUrl + '/groups/' + group.id, 'View Group')}
+        ${emailLink(config.frontendUrl + '/groups/' + group.id, 'View Group')}
     `);
 
     return sendEmail(email, `Welcome to ${group.name}`, html, 'joined_group', group.id);
@@ -366,7 +370,7 @@ sendNewEventEmail
 Sent to group members when a new event is created
 =======================================================================================================================================
 */
-async function sendNewEventEmail(email, userName, event, group) {
+async function sendNewEventEmail(email, userName, event, group, hostName) {
     const eventDate = new Date(event.date_time).toLocaleDateString('en-GB', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
@@ -380,14 +384,13 @@ async function sendNewEventEmail(email, userName, event, group) {
             Hi ${userName},
         </p>
         <p style="color: #666; font-size: 16px;">
-            A new event has been created:
+            <strong>${hostName}</strong> has created a new event:
         </p>
-        <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #92400e;"><strong>${event.title}</strong></p>
-            <p style="margin: 5px 0 0; color: #92400e;">${eventDate} at ${eventTime}</p>
-            ${event.location ? `<p style="margin: 5px 0 0; color: #92400e;">${event.location}</p>` : ''}
-        </div>
-        ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Event & RSVP')}
+        <p style="color: #666; font-size: 16px;">
+            <strong>${event.title}</strong><br>
+            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
+        </p>
+        ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event & RSVP')}
     `);
 
     return sendEmail(email, `New event: ${event.title}`, html, 'new_event', event.id);
@@ -411,10 +414,9 @@ async function sendEventReminderEmail(email, userName, event, isHost = false, at
     let summarySection = '';
     if (isHost && attendeeSummary) {
         summarySection = `
-            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <p style="margin: 0 0 10px; color: #374151;"><strong>Attendee Summary</strong></p>
-                <p style="margin: 0; color: #374151;">${attendeeSummary.attending} attending${attendeeSummary.waitlist > 0 ? `, ${attendeeSummary.waitlist} on waitlist` : ''}</p>
-            </div>
+            <p style="color: #666; font-size: 16px;">
+                <strong>Attendee Summary:</strong> ${attendeeSummary.attending} attending${attendeeSummary.waitlist > 0 ? `, ${attendeeSummary.waitlist} on waitlist` : ''}
+            </p>
         `;
     }
 
@@ -426,13 +428,12 @@ async function sendEventReminderEmail(email, userName, event, isHost = false, at
         <p style="color: #666; font-size: 16px;">
             Just a reminder that you have an event coming up tomorrow:
         </p>
-        <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #92400e;"><strong>${event.title}</strong></p>
-            <p style="margin: 5px 0 0; color: #92400e;">${eventDate} at ${eventTime}</p>
-            ${event.location ? `<p style="margin: 5px 0 0; color: #92400e;">${event.location}</p>` : ''}
-        </div>
+        <p style="color: #666; font-size: 16px;">
+            <strong>${event.title}</strong><br>
+            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
+        </p>
         ${summarySection}
-        ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Event')}
+        ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event')}
     `);
 
     const subject = isHost ? `Tomorrow: ${event.title} (${attendeeSummary?.attending || 0} attending)` : `Reminder: ${event.title} is tomorrow`;
@@ -455,15 +456,15 @@ async function sendPasswordResetEmail(email, token) {
             You requested to reset your password for your Meet With Friends account.
         </p>
         <p style="color: #666; font-size: 16px;">
-            Click the button below to set a new password. This link will expire in 1 hour.
+            Click the link below to set a new password. This link will expire in 1 hour.
         </p>
-        ${emailButton(resetUrl, 'Reset Password')}
+        ${emailLink(resetUrl, 'Reset Password')}
         <p style="color: #999; font-size: 14px;">
             If you didn't request this, you can safely ignore this email.
         </p>
         <p style="color: #999; font-size: 12px;">
-            If the button doesn't work, copy and paste this link into your browser:<br>
-            <a href="${resetUrl}" style="color: #d97706;">${resetUrl}</a>
+            If the link doesn't work, copy and paste this URL into your browser:<br>
+            <a href="${resetUrl}" style="color: #666;">${resetUrl}</a>
         </p>
     `);
 
@@ -489,10 +490,10 @@ async function sendNewCommentEmail(email, userName, event, commenterName, commen
         <p style="color: #666; font-size: 16px;">
             <strong>${commenterName}</strong> commented:
         </p>
-        <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-            <p style="margin: 0; color: #374151; font-style: italic;">"${truncatedComment}"</p>
-        </div>
-        ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Conversation')}
+        <p style="color: #666; font-size: 16px; font-style: italic;">
+            "${truncatedComment}"
+        </p>
+        ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Conversation')}
     `);
 
     return sendEmail(email, `New comment on ${event.title}`, html, 'new_comment', event.id);

@@ -113,27 +113,27 @@ router.post('/', verifyToken, async (req, res) => {
         );
 
         // =======================================================================
-        // Send email to hosts/organisers for pending requests
+        // Send email to organisers for pending requests
         // =======================================================================
         if (newStatus === 'pending') {
             // Get requesting user's name
             const userResult = await query('SELECT name FROM app_user WHERE id = $1', [userId]);
             const requesterName = userResult.rows[0]?.name || 'A user';
 
-            // Get hosts and organisers emails
-            const hostsResult = await query(
+            // Get organisers emails (only organisers can approve, not hosts)
+            const organisersResult = await query(
                 `SELECT u.email, u.name
                  FROM group_member gm
                  JOIN app_user u ON gm.user_id = u.id
                  WHERE gm.group_id = $1
                  AND gm.status = 'active'
-                 AND gm.role IN ('organiser', 'host')`,
+                 AND gm.role = 'organiser'`,
                 [group_id]
             );
 
-            // Send email to each host/organiser (async - don't wait)
-            hostsResult.rows.forEach(host => {
-                sendNewJoinRequestEmail(host.email, host.name, requesterName, group).catch(err => {
+            // Send email to each organiser (async - don't wait)
+            organisersResult.rows.forEach(organiser => {
+                sendNewJoinRequestEmail(organiser.email, organiser.name, requesterName, group).catch(err => {
                     console.error('Failed to send join request email:', err);
                 });
             });

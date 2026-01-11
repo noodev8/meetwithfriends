@@ -15,7 +15,6 @@ const getEvent = require('./get_event');
 const createEvent = require('./create_event');
 const updateEvent = require('./update_event');
 const cancelEvent = require('./cancel_event');
-const restoreEvent = require('./restore_event');
 const rsvp = require('./rsvp');
 const updateRsvp = require('./update_rsvp');
 const getAttendees = require('./get_attendees');
@@ -32,8 +31,7 @@ const updateOrder = require('./update_order');
 router.use('/', listEvents);      // GET /api/events - list all upcoming events (with optional ?group_id=)
 router.use('/', createEvent);     // POST /api/events/create - create new event
 router.use('/', updateEvent);     // POST /api/events/:id/update - update event (organiser/creator only)
-router.use('/', cancelEvent);     // POST /api/events/:id/cancel - cancel event (organiser/creator only)
-router.use('/', restoreEvent);    // POST /api/events/:id/restore - restore cancelled event (organiser/creator only)
+router.use('/', cancelEvent);     // POST /api/events/:id/cancel - delete event (organiser/creator only)
 router.use('/', rsvp);            // POST /api/events/:id/rsvp - join or leave event
 router.use('/', updateRsvp);      // POST /api/events/:id/rsvp/update - update guest count
 router.use('/', getAttendees);    // GET /api/events/:id/attendees - list attendees

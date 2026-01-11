@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getEvent, updateEvent, cancelEvent, restoreEvent, EventWithDetails } from '@/lib/api/events';
+import { getEvent, updateEvent, cancelEvent, EventWithDetails } from '@/lib/api/events';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 import ImageUpload from '@/components/ui/ImageUpload';
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -205,35 +205,20 @@ export default function EditEventPage() {
     };
 
     // =======================================================================
-    // Cancel / Restore Event
+    // Delete Event
     // =======================================================================
-    const handleCancelEvent = async () => {
+    const handleDeleteEvent = async () => {
         if (!token || !event) return;
-        if (!confirm('Are you sure you want to cancel this event? Attendees will be notified.')) return;
+        if (!confirm('Are you sure you want to delete this event? This cannot be undone. Attendees will be notified.')) return;
 
         setCancelLoading(true);
         const result = await cancelEvent(token, event.id);
         setCancelLoading(false);
 
         if (result.success) {
-            setEvent({ ...event, status: 'cancelled' });
+            router.push('/dashboard');
         } else {
-            setError(result.error || 'Failed to cancel event');
-        }
-    };
-
-    const handleRestoreEvent = async () => {
-        if (!token || !event) return;
-        if (!confirm('Are you sure you want to restore this event?')) return;
-
-        setCancelLoading(true);
-        const result = await restoreEvent(token, event.id);
-        setCancelLoading(false);
-
-        if (result.success) {
-            setEvent({ ...event, status: 'published' });
-        } else {
-            setError(result.error || 'Failed to restore event');
+            setError(result.error || 'Failed to delete event');
         }
     };
 
@@ -760,26 +745,16 @@ export default function EditEventPage() {
                         </form>
 
                         {/* ============================================================
-                            EVENT STATUS
+                            DELETE EVENT
                         ============================================================ */}
                         <div className="mt-6 pt-6 border-t border-slate-200">
-                            {event.status === 'cancelled' ? (
-                                <button
-                                    onClick={handleRestoreEvent}
-                                    disabled={cancelLoading}
-                                    className="text-sm text-green-600 hover:text-green-700 transition disabled:opacity-50"
-                                >
-                                    {cancelLoading ? 'Restoring...' : 'Restore this event'}
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={handleCancelEvent}
-                                    disabled={cancelLoading}
-                                    className="text-sm text-slate-500 hover:text-red-600 transition disabled:opacity-50"
-                                >
-                                    {cancelLoading ? 'Cancelling...' : 'Cancel this event'}
-                                </button>
-                            )}
+                            <button
+                                onClick={handleDeleteEvent}
+                                disabled={cancelLoading}
+                                className="text-sm text-slate-500 hover:text-red-600 transition disabled:opacity-50"
+                            >
+                                {cancelLoading ? 'Deleting...' : 'Delete this event'}
+                            </button>
                         </div>
                     </div>
 
@@ -802,9 +777,7 @@ export default function EditEventPage() {
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-slate-500">Status</span>
-                                        <span className={`font-medium ${event.status === 'cancelled' ? 'text-red-600' : 'text-green-600'}`}>
-                                            {event.status === 'cancelled' ? 'Cancelled' : 'Active'}
-                                        </span>
+                                        <span className="font-medium text-green-600">Active</span>
                                     </div>
                                 </div>
                             </div>

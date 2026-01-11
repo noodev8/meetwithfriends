@@ -3,8 +3,8 @@
 API Route: cancel_event
 =======================================================================================================================================
 Method: POST
-Purpose: Cancels an event. Only event hosts or group organisers can cancel.
-         Cancelled events remain visible but cannot accept new RSVPs.
+Purpose: Deletes an event and all related data. Only event hosts or group organisers can delete.
+         Sends cancellation emails to attendees before deletion.
 =======================================================================================================================================
 Request Payload:
 None (event ID from URL parameter)
@@ -12,14 +12,14 @@ None (event ID from URL parameter)
 Success Response:
 {
   "return_code": "SUCCESS",
-  "message": "Event has been cancelled"
+  "message": "Event has been deleted",
+  "group_id": 1
 }
 =======================================================================================================================================
 Return Codes:
 "SUCCESS"
 "NOT_FOUND"
 "FORBIDDEN"
-"ALREADY_CANCELLED"
 "SERVER_ERROR"
 =======================================================================================================================================
 */
@@ -89,27 +89,7 @@ router.post('/:id/cancel', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
-        // Check event is not already cancelled
-        // =======================================================================
-        if (event.status === 'cancelled') {
-            return res.json({
-                return_code: 'ALREADY_CANCELLED',
-                message: 'This event is already cancelled'
-            });
-        }
-
-        // =======================================================================
-        // Cancel the event
-        // =======================================================================
-        await query(
-            `UPDATE event_list
-             SET status = 'cancelled', updated_at = NOW()
-             WHERE id = $1`,
-            [id]
-        );
-
-        // =======================================================================
-        // Send cancellation emails to all attendees and waitlist
+        // Get attendees BEFORE deleting (for cancellation emails)
         // =======================================================================
         const attendeesResult = await query(
             `SELECT u.email, u.name
@@ -120,6 +100,14 @@ router.post('/:id/cancel', verifyToken, async (req, res) => {
             [id]
         );
 
+        // =======================================================================
+        // Delete the event (cascades to event_rsvp, event_host, event_comment)
+        // =======================================================================
+        await query('DELETE FROM event_list WHERE id = $1', [id]);
+
+        // =======================================================================
+        // Send cancellation emails to all attendees and waitlist
+        // =======================================================================
         attendeesResult.rows.forEach(attendee => {
             sendEventCancelledEmail(attendee.email, attendee.name, event).catch(err => {
                 console.error('Failed to send event cancelled email:', err);
@@ -128,7 +116,8 @@ router.post('/:id/cancel', verifyToken, async (req, res) => {
 
         return res.json({
             return_code: 'SUCCESS',
-            message: 'Event has been cancelled'
+            message: 'Event has been deleted',
+            group_id: event.group_id
         });
 
     } catch (error) {

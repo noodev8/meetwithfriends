@@ -142,9 +142,6 @@ function GroupCard({ group }: { group: MyGroup | GroupWithCount }) {
     const upcomingCount = ('upcoming_event_count' in group ? group.upcoming_event_count : 0) || 0;
     const memberCount = group.member_count || 0;
 
-    // Generate placeholder member avatars
-    const memberSeeds = [group.id, group.id + 50, group.id + 100, group.id + 150];
-
     return (
         <Link
             href={`/groups/${group.id}`}
@@ -172,25 +169,11 @@ function GroupCard({ group }: { group: MyGroup | GroupWithCount }) {
                 </div>
             </div>
 
-            {/* Footer: Member avatars + count */}
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                <div className="flex -space-x-2">
-                    {memberSeeds.slice(0, Math.min(4, memberCount)).map((seed, i) => (
-                        <div
-                            key={i}
-                            className="w-7 h-7 rounded-full border-2 border-white bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center"
-                        >
-                            <span className="text-xs font-medium text-slate-500">
-                                {String.fromCharCode(65 + (seed % 26))}
-                            </span>
-                        </div>
-                    ))}
-                    {memberCount > 4 && (
-                        <div className="w-7 h-7 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center">
-                            <span className="text-[10px] font-bold text-slate-500">+{memberCount - 4}</span>
-                        </div>
-                    )}
-                </div>
+            {/* Footer: Member count */}
+            <div className="flex items-center pt-4 border-t border-slate-100">
+                <svg className="w-4 h-4 text-slate-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
                 <span className="text-sm font-medium text-slate-500">
                     {memberCount} {memberCount === 1 ? 'member' : 'members'}
                 </span>
@@ -205,9 +188,6 @@ function GroupCard({ group }: { group: MyGroup | GroupWithCount }) {
 function EventCard({ event }: { event: EventWithDetails }) {
     const isFull = event.capacity != null && (event.attendee_count || 0) >= event.capacity;
     const attendeeCount = event.attendee_count || 0;
-
-    // Generate placeholder avatars for the stack (in real app, these would be actual attendee avatars)
-    const avatarSeeds = [event.id, event.id + 100, event.id + 200];
 
     return (
         <Link
@@ -235,9 +215,9 @@ function EventCard({ event }: { event: EventWithDetails }) {
                             Cancelled
                         </span>
                     )}
-                    {isFull && event.status !== 'cancelled' && (
-                        <span className="px-2 py-0.5 text-xs font-semibold text-rose-700 bg-rose-100 rounded-full">
-                            Full
+                    {isFull && event.status !== 'cancelled' && event.rsvp_status !== 'attending' && event.rsvp_status !== 'waitlist' && (
+                        <span className="px-2 py-0.5 text-xs font-semibold text-amber-700 bg-amber-100 rounded-full">
+                            Waitlist open
                         </span>
                     )}
                 </div>
@@ -274,22 +254,16 @@ function EventCard({ event }: { event: EventWithDetails }) {
                 </div>
             )}
 
-            {/* Footer: Avatar stack + count */}
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                <div className="flex -space-x-2">
-                    {avatarSeeds.slice(0, Math.min(3, attendeeCount || 1)).map((seed, i) => (
-                        <div
-                            key={i}
-                            className="w-7 h-7 rounded-full border-2 border-white bg-gradient-to-br from-indigo-100 to-violet-200 flex items-center justify-center"
-                        >
-                            <span className="text-xs font-medium text-indigo-600">
-                                {String.fromCharCode(65 + (seed % 26))}
-                            </span>
-                        </div>
-                    ))}
-                </div>
+            {/* Footer: Attendee count */}
+            <div className="flex items-center pt-4 border-t border-slate-100">
+                <svg className="w-4 h-4 text-slate-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
                 <span className="text-sm font-medium text-slate-500">
                     {attendeeCount} going
+                    {event.capacity && event.capacity > attendeeCount && (
+                        <span className="text-slate-400 ml-2">· {event.capacity - attendeeCount} spots left</span>
+                    )}
                 </span>
             </div>
         </Link>
@@ -439,7 +413,7 @@ export default function Dashboard() {
                         {/* Header: Welcome + New Event button */}
                         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
                             <div>
-                                <h1 className="text-3xl font-bold text-slate-800">
+                                <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">
                                     Hello, {user.name.split(' ')[0]}!
                                 </h1>
                                 <p className="text-slate-500 mt-1">
@@ -557,7 +531,7 @@ export default function Dashboard() {
                                 {organiserGroups.length > 0 && (
                                     <section className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl p-6 text-white shadow-xl shadow-indigo-200 relative overflow-hidden">
                                         <div className="relative z-10">
-                                            <h3 className="font-bold text-xl mb-2">New Event</h3>
+                                            <h3 className="font-bold text-xl mb-2">+ New Event</h3>
                                             <p className="text-indigo-100 text-sm mb-5 leading-relaxed">
                                                 Plan your next dinner, coffee meetup, or group activity.
                                             </p>

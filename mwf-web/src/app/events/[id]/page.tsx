@@ -69,6 +69,9 @@ export default function EventDetailPage() {
     // Profile modal state
     const [selectedAttendee, setSelectedAttendee] = useState<Attendee | null>(null);
 
+    // Cancel RSVP confirmation modal
+    const [showCancelModal, setShowCancelModal] = useState(false);
+
     // =======================================================================
     // Fetch event details, attendees, and comments
     // =======================================================================
@@ -724,14 +727,14 @@ export default function EventDetailPage() {
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
                                     <h2 className="text-xl font-bold text-slate-900 font-display">Attendees</h2>
-                                    <span className="px-2.5 py-0.5 bg-slate-100 text-slate-600 text-sm font-medium rounded-full">
-                                        {attendingCount}
+                                    <span className="text-sm text-slate-500">
+                                        {attendingCount} going
+                                        {event.capacity && (
+                                            <span className={spotsRemaining === 0 ? 'text-amber-600 font-medium' : 'text-slate-400'}>
+                                                {' '}· {spotsRemaining === 0 ? 'Waitlist open' : `${spotsRemaining} spots left`}
+                                            </span>
+                                        )}
                                     </span>
-                                    {event.capacity && (
-                                        <span className={`text-sm ${spotsRemaining === 0 ? 'text-red-600 font-medium' : 'text-slate-400'}`}>
-                                            {spotsRemaining === 0 ? 'Full' : `${spotsRemaining} spots left`}
-                                        </span>
-                                    )}
                                 </div>
                                 {canViewAttendees && (attendingCount > 0 || waitlistCount > 0) && (
                                     <Link
@@ -746,7 +749,7 @@ export default function EventDetailPage() {
                             {canViewAttendees ? (
                                 <>
                                     {attending.length > 0 || hosts.length > 0 ? (
-                                        <div className="flex flex-wrap gap-6 sm:gap-8">
+                                        <div className="flex flex-wrap gap-4 sm:gap-6 md:gap-8">
                                             {/* Build display list: hosts first, then others */}
                                             {(() => {
                                                 const displayList: Array<{ user_id: number; name: string; avatar_url: string | null | undefined; isHost: boolean; guest_count: number }> = [];
@@ -795,11 +798,11 @@ export default function EventDetailPage() {
                                                                             <img
                                                                                 src={person.avatar_url}
                                                                                 alt={person.name}
-                                                                                className="w-20 h-20 rounded-full object-cover"
+                                                                                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover"
                                                                             />
                                                                         ) : (
-                                                                            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center">
-                                                                                <span className="text-2xl font-medium text-indigo-600">
+                                                                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center">
+                                                                                <span className="text-xl sm:text-2xl font-medium text-indigo-600">
                                                                                     {person.name.charAt(0).toUpperCase()}
                                                                                 </span>
                                                                             </div>
@@ -901,7 +904,7 @@ export default function EventDetailPage() {
                                 <div className="text-center py-4">
                                     <p className="text-slate-500 mb-2">
                                         {attendingCount > 0
-                                            ? `${attendingCount} ${attendingCount === 1 ? 'person is' : 'people are'} going`
+                                            ? `${attendingCount} going${event.capacity ? ` · ${spotsRemaining} spots left` : ''}`
                                             : 'No attendees yet'}
                                     </p>
                                     <p className="text-sm text-slate-400">
@@ -1071,10 +1074,10 @@ export default function EventDetailPage() {
                             <img
                                 src={selectedAttendee.avatar_url}
                                 alt={selectedAttendee.name}
-                                className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl object-cover shadow-2xl"
+                                className="w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-2xl object-cover shadow-2xl"
                             />
                         ) : (
-                            <div className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl bg-gradient-to-br from-indigo-200 to-violet-300 flex items-center justify-center shadow-2xl">
+                            <div className="w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-2xl bg-gradient-to-br from-indigo-200 to-violet-300 flex items-center justify-center shadow-2xl">
                                 <span className="text-8xl font-bold text-white">
                                     {selectedAttendee.name.charAt(0).toUpperCase()}
                                 </span>
@@ -1148,11 +1151,11 @@ export default function EventDetailPage() {
                                 )}
 
                                 <button
-                                    onClick={() => handleRsvp('leave')}
+                                    onClick={() => setShowCancelModal(true)}
                                     disabled={rsvpLoading}
                                     className="px-6 py-2.5 text-slate-500 hover:text-slate-700 font-medium transition disabled:opacity-50"
                                 >
-                                    {rsvpLoading ? 'Updating...' : "Can't make it"}
+                                    Can't make it
                                 </button>
                             </div>
                         ) : (
@@ -1177,13 +1180,54 @@ export default function EventDetailPage() {
                                 >
                                     {rsvpLoading ? 'Updating...' : spotsRemaining === 0 ? 'Join Waitlist' : 'Count me in'}
                                 </button>
-                                {event.capacity && (
-                                    <span className="text-sm text-slate-400">
-                                        {spotsRemaining === 0 ? 'Full' : `${spotsRemaining} spots left`}
-                                    </span>
-                                )}
+                                <span className="text-sm text-slate-500">
+                                    {attendingCount} going
+                                    {event.capacity && (
+                                        <span className={spotsRemaining === 0 ? 'text-amber-600' : 'text-slate-400'}>
+                                            {' '}· {spotsRemaining === 0 ? 'Waitlist open' : `${spotsRemaining} spots left`}
+                                        </span>
+                                    )}
+                                </span>
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Cancel RSVP Confirmation Modal */}
+            {showCancelModal && (
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                    onClick={() => setShowCancelModal(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className="text-lg font-bold text-slate-900 font-display mb-2">
+                            Cancel your RSVP?
+                        </h3>
+                        <p className="text-sm text-slate-600 mb-6">
+                            Are you sure you can't make it to this event?
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowCancelModal(false)}
+                                className="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition font-medium"
+                            >
+                                Keep RSVP
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowCancelModal(false);
+                                    handleRsvp('leave');
+                                }}
+                                disabled={rsvpLoading}
+                                className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition font-medium disabled:opacity-50"
+                            >
+                                {rsvpLoading ? 'Cancelling...' : "Can't make it"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

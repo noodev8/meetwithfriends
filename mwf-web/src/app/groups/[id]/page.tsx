@@ -66,7 +66,7 @@ export default function GroupDetailPage() {
     }, [group?.description]);
 
     // =======================================================================
-    // Fetch pending members (for organisers/hosts)
+    // Fetch pending members (for organisers only)
     // =======================================================================
     const fetchPendingMembers = useCallback(async () => {
         if (!params.id || !token) return;
@@ -109,13 +109,13 @@ export default function GroupDetailPage() {
     }, [params.id, token]);
 
     // =======================================================================
-    // Fetch pending members when user is organiser/host
+    // Fetch pending members when user is organiser
     // =======================================================================
     useEffect(() => {
-        if (canManageMembers) {
+        if (isOrganiser) {
             fetchPendingMembers();
         }
-    }, [canManageMembers, fetchPendingMembers]);
+    }, [isOrganiser, fetchPendingMembers]);
 
     // =======================================================================
     // Fetch all members for sidebar preview
@@ -344,8 +344,8 @@ export default function GroupDetailPage() {
                 <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
                     {/* Left Column - Main Content */}
                     <div className="flex-1 lg:flex-[3] space-y-6">
-                        {/* Pending Members Alert - Only visible to organisers/hosts */}
-                        {canManageMembers && pendingMembers.length > 0 && (
+                        {/* Pending Members Alert - Only visible to organisers */}
+                        {isOrganiser && pendingMembers.length > 0 && (
                             <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-5">
                                 <div className="flex items-center justify-between mb-4">
                                     <h2 className="font-display text-lg font-semibold text-slate-800 flex items-center gap-2">
@@ -389,14 +389,14 @@ export default function GroupDetailPage() {
                                                 <button
                                                     onClick={() => handleApproveMember(member.id)}
                                                     disabled={processingMember === member.id}
-                                                    className="px-3 py-1.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                                                    className="px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition disabled:opacity-50"
                                                 >
                                                     Approve
                                                 </button>
                                                 <button
                                                     onClick={() => handleRejectMember(member.id)}
                                                     disabled={processingMember === member.id}
-                                                    className="px-3 py-1.5 bg-slate-200 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-300 transition disabled:opacity-50"
+                                                    className="px-4 py-2.5 bg-slate-200 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-300 transition disabled:opacity-50"
                                                 >
                                                     Decline
                                                 </button>
@@ -457,9 +457,9 @@ export default function GroupDetailPage() {
                                                                 Cancelled
                                                             </span>
                                                         )}
-                                                        {isFull && event.status !== 'cancelled' && (
-                                                            <span className="px-2 py-0.5 text-xs font-semibold text-rose-700 bg-rose-100 rounded-full">
-                                                                Full
+                                                        {isFull && event.status !== 'cancelled' && event.rsvp_status !== 'attending' && event.rsvp_status !== 'waitlist' && (
+                                                            <span className="px-2 py-0.5 text-xs font-semibold text-amber-700 bg-amber-100 rounded-full">
+                                                                Waitlist open
                                                             </span>
                                                         )}
                                                     </div>
@@ -490,23 +490,14 @@ export default function GroupDetailPage() {
                                                 )}
 
                                                 {/* Footer: Attendee count */}
-                                                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                                                    <div className="flex -space-x-2">
-                                                        {[event.id, event.id + 100, event.id + 200].slice(0, Math.min(3, attendeeCount || 1)).map((seed, i) => (
-                                                            <div
-                                                                key={i}
-                                                                className="w-7 h-7 rounded-full border-2 border-white bg-gradient-to-br from-indigo-100 to-violet-200 flex items-center justify-center"
-                                                            >
-                                                                <span className="text-xs font-medium text-indigo-600">
-                                                                    {String.fromCharCode(65 + (seed % 26))}
-                                                                </span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
+                                                <div className="flex items-center pt-4 border-t border-slate-100">
+                                                    <svg className="w-4 h-4 text-slate-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                    </svg>
                                                     <span className="text-sm font-medium text-slate-500">
                                                         {attendeeCount} going
                                                         {event.capacity && event.capacity > attendeeCount && (
-                                                            <span className="text-slate-400 ml-2">{event.capacity - attendeeCount} spots left</span>
+                                                            <span className="text-slate-400 ml-2">· {event.capacity - attendeeCount} spots left</span>
                                                         )}
                                                     </span>
                                                 </div>

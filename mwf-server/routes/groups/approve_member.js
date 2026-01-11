@@ -3,7 +3,7 @@
 API Route: approve_member
 =======================================================================================================================================
 Method: POST
-Purpose: Approves a pending member request. Only organisers and hosts can approve members.
+Purpose: Approves a pending member request. Only organisers can approve members.
 =======================================================================================================================================
 Request Payload:
 {
@@ -75,7 +75,7 @@ router.post('/:id/members/approve', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
-        // Check if the current user is an organiser or host of this group
+        // Check if the current user is an organiser of this group
         // =======================================================================
         const userRoleResult = await query(
             `SELECT role FROM group_member
@@ -91,10 +91,10 @@ router.post('/:id/members/approve', verifyToken, async (req, res) => {
         }
 
         const userRole = userRoleResult.rows[0].role;
-        if (userRole !== 'organiser' && userRole !== 'host') {
+        if (userRole !== 'organiser') {
             return res.json({
                 return_code: 'FORBIDDEN',
-                message: 'Only organisers and hosts can approve members'
+                message: 'Only organisers can approve members'
             });
         }
 

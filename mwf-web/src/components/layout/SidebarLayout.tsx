@@ -170,7 +170,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     {/* Mobile menu button */}
                     <button
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="p-2 text-slate-600 hover:text-slate-900 transition"
+                        className="p-3 text-slate-600 hover:text-slate-900 transition"
                         aria-label="Toggle menu"
                     >
                         {mobileMenuOpen ? (

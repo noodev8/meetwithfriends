@@ -277,6 +277,7 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
 
                 const wasAttending = existingRsvp.rows[0].status === 'attending';
                 const wasWaitlistPosition = existingRsvp.rows[0].waitlist_position;
+                const freedGuests = existingRsvp.rows[0].guest_count || 0;
 
                 // Update to not_going status (keep record for history, update timestamp)
                 await client.query(
@@ -286,9 +287,64 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                     [id, userId]
                 );
 
-                // If was attending and there's a waitlist, promote first person
-                let promotedUserId = null;
-                if (wasAttending) {
+                // If was attending and there's a waitlist, promote people to fill freed spots
+                const promotedUserIds = [];
+                if (wasAttending && event.capacity) {
+                    // Get current spots used (after this person left)
+                    const spotsResult = await client.query(
+                        `SELECT COALESCE(SUM(1 + guest_count), 0) AS total_spots_used
+                         FROM event_rsvp
+                         WHERE event_id = $1 AND status = 'attending'`,
+                        [id]
+                    );
+                    let spotsUsed = parseInt(spotsResult.rows[0].total_spots_used, 10);
+
+                    // Get all waitlisted people in order
+                    const waitlistResult = await client.query(
+                        `SELECT id, user_id, guest_count
+                         FROM event_rsvp
+                         WHERE event_id = $1 AND status = 'waitlist'
+                         ORDER BY waitlist_position ASC`,
+                        [id]
+                    );
+
+                    // Promote people while there's room
+                    for (const waitlistPerson of waitlistResult.rows) {
+                        const spotsNeeded = 1 + (waitlistPerson.guest_count || 0);
+
+                        if (spotsUsed + spotsNeeded <= event.capacity) {
+                            // Promote this person
+                            await client.query(
+                                `UPDATE event_rsvp
+                                 SET status = 'attending', waitlist_position = NULL, created_at = NOW()
+                                 WHERE id = $1`,
+                                [waitlistPerson.id]
+                            );
+
+                            spotsUsed += spotsNeeded;
+                            promotedUserIds.push(waitlistPerson.user_id);
+                        } else {
+                            // No more room
+                            break;
+                        }
+                    }
+
+                    // Reorder remaining waitlist positions
+                    if (promotedUserIds.length > 0) {
+                        await client.query(
+                            `UPDATE event_rsvp
+                             SET waitlist_position = sub.new_position
+                             FROM (
+                                 SELECT id, ROW_NUMBER() OVER (ORDER BY waitlist_position) AS new_position
+                                 FROM event_rsvp
+                                 WHERE event_id = $1 AND status = 'waitlist'
+                             ) sub
+                             WHERE event_rsvp.id = sub.id`,
+                            [id]
+                        );
+                    }
+                } else if (wasAttending && !event.capacity) {
+                    // Unlimited capacity - promote first waitlisted person (shouldn't normally have waitlist with unlimited)
                     const firstWaitlist = await client.query(
                         `SELECT id, user_id
                          FROM event_rsvp
@@ -299,17 +355,15 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                     );
 
                     if (firstWaitlist.rows.length > 0) {
-                        promotedUserId = firstWaitlist.rows[0].user_id;
-
-                        // Promote to attending (update timestamp to reflect promotion time)
                         await client.query(
                             `UPDATE event_rsvp
                              SET status = 'attending', waitlist_position = NULL, created_at = NOW()
                              WHERE id = $1`,
                             [firstWaitlist.rows[0].id]
                         );
+                        promotedUserIds.push(firstWaitlist.rows[0].user_id);
 
-                        // Reorder remaining waitlist positions
+                        // Reorder remaining waitlist
                         await client.query(
                             `UPDATE event_rsvp
                              SET waitlist_position = waitlist_position - 1
@@ -331,7 +385,7 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                     return_code: 'SUCCESS',
                     rsvp: null,
                     message: "You've cancelled your RSVP",
-                    _emailData: promotedUserId ? { type: 'promoted', promotedUserId, event } : null
+                    _emailData: promotedUserIds.length > 0 ? { type: 'promoted_multiple', promotedUserIds, event } : null
                 };
             }
         });
@@ -351,14 +405,16 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                         console.error('Failed to send RSVP confirmation email:', err);
                     });
                 }
-            } else if (emailData.type === 'promoted') {
-                // Get promoted user details and send promotion email
-                const userResult = await query('SELECT name, email FROM app_user WHERE id = $1', [emailData.promotedUserId]);
-                if (userResult.rows.length > 0) {
-                    const user = userResult.rows[0];
-                    sendPromotedFromWaitlistEmail(user.email, user.name, emailData.event).catch(err => {
-                        console.error('Failed to send waitlist promotion email:', err);
-                    });
+            } else if (emailData.type === 'promoted_multiple') {
+                // Send promotion emails to all promoted users
+                for (const promotedUserId of emailData.promotedUserIds) {
+                    const userResult = await query('SELECT name, email FROM app_user WHERE id = $1', [promotedUserId]);
+                    if (userResult.rows.length > 0) {
+                        const user = userResult.rows[0];
+                        sendPromotedFromWaitlistEmail(user.email, user.name, emailData.event).catch(err => {
+                            console.error('Failed to send waitlist promotion email:', err);
+                        });
+                    }
                 }
             }
 

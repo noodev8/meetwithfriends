@@ -48,6 +48,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
+const { sendPromotedFromWaitlistEmail } = require('../../services/email');
 
 router.post('/:id/update', verifyToken, async (req, res) => {
     try {
@@ -274,9 +275,88 @@ router.post('/:id/update', verifyToken, async (req, res) => {
             values
         );
 
+        const updatedEvent = updateResult.rows[0];
+
+        // =======================================================================
+        // Promote waitlisted people if capacity increased
+        // =======================================================================
+        if (capacity !== undefined) {
+            const newCapacity = updatedEvent.capacity;
+
+            // Only process if there's a capacity (not unlimited)
+            if (newCapacity !== null) {
+                // Get current attendee count including guests
+                const attendeeCountResult = await query(
+                    `SELECT COALESCE(SUM(1 + guest_count), 0) AS total_spots_used
+                     FROM event_rsvp
+                     WHERE event_id = $1 AND status = 'attending'`,
+                    [id]
+                );
+                let spotsUsed = parseInt(attendeeCountResult.rows[0].total_spots_used, 10);
+
+                // Get waitlisted people in order
+                const waitlistResult = await query(
+                    `SELECT er.id, er.user_id, er.guest_count, u.name, u.email
+                     FROM event_rsvp er
+                     JOIN app_user u ON er.user_id = u.id
+                     WHERE er.event_id = $1 AND er.status = 'waitlist'
+                     ORDER BY er.waitlist_position ASC`,
+                    [id]
+                );
+
+                const promotedUsers = [];
+
+                // Promote people while there's room
+                for (const waitlistPerson of waitlistResult.rows) {
+                    const spotsNeeded = 1 + (waitlistPerson.guest_count || 0);
+
+                    if (spotsUsed + spotsNeeded <= newCapacity) {
+                        // Promote this person
+                        await query(
+                            `UPDATE event_rsvp
+                             SET status = 'attending', waitlist_position = NULL
+                             WHERE id = $1`,
+                            [waitlistPerson.id]
+                        );
+
+                        spotsUsed += spotsNeeded;
+                        promotedUsers.push({
+                            email: waitlistPerson.email,
+                            name: waitlistPerson.name
+                        });
+                    } else {
+                        // No more room, stop promoting
+                        break;
+                    }
+                }
+
+                // Reorder remaining waitlist positions
+                if (promotedUsers.length > 0) {
+                    await query(
+                        `UPDATE event_rsvp
+                         SET waitlist_position = sub.new_position
+                         FROM (
+                             SELECT id, ROW_NUMBER() OVER (ORDER BY waitlist_position) AS new_position
+                             FROM event_rsvp
+                             WHERE event_id = $1 AND status = 'waitlist'
+                         ) sub
+                         WHERE event_rsvp.id = sub.id`,
+                        [id]
+                    );
+
+                    // Send promotion emails (async - don't wait)
+                    promotedUsers.forEach(user => {
+                        sendPromotedFromWaitlistEmail(user.email, user.name, updatedEvent).catch(err => {
+                            console.error('Failed to send waitlist promotion email:', err);
+                        });
+                    });
+                }
+            }
+        }
+
         return res.json({
             return_code: 'SUCCESS',
-            event: updateResult.rows[0]
+            event: updatedEvent
         });
 
     } catch (error) {
