@@ -7,32 +7,28 @@ Prioritized list of incomplete features. Work through these with Claude.
 ## Phase 1: Foundation Gaps (High Priority)
 
 ### REQ-001: Privacy Policy Page
-**Status:** Not Started
+**Status:** COMPLETE
 **Effort:** Small
 
 Create the Privacy Policy page at `/privacy`. Help page already links to it.
 
-**Acceptance Criteria:**
-- Page exists at `/privacy` route
-- Contains privacy policy content specific to MWF
-- Responsive design matching site styling
-
-**Notes:** Need business details from user (entity name, data practices, contact).
+**Implementation:**
+- Page at `/privacy` with full privacy policy
+- Covers: data collection, third parties (Cloudinary, Resend, Stripe), retention, GDPR rights
+- Operated by Noodev8 Ltd, contact noodev8@gmail.com
 
 ---
 
 ### REQ-002: Terms of Service Page
-**Status:** Not Started
+**Status:** COMPLETE
 **Effort:** Small
 
 Create the Terms of Service page at `/terms`. Help page already links to it.
 
-**Acceptance Criteria:**
-- Page exists at `/terms` route
-- Contains ToS content specific to MWF
-- Responsive design matching site styling
-
-**Notes:** Need business rules/liability preferences from user.
+**Implementation:**
+- Page at `/terms` with full terms of service
+- Covers: acceptable use, platform disclaimer, liability, account termination
+- UK jurisdiction, Noodev8 Ltd
 
 ---
 
@@ -122,21 +118,12 @@ Create UI for attendees to submit food orders.
 ---
 
 ### REQ-007: Pre-Order Host View
-**Status:** Not Started
+**Status:** COMPLETE
 **Effort:** Small-Medium
 
 Create UI for hosts to view all submitted orders.
 
-**Requires:**
-- Orders list on event management page
-- Shows: attendee name, order details, dietary notes
-- "Not ordered yet" indicators
-- Copy-to-clipboard button for all orders
-
-**Acceptance Criteria:**
-- Hosts can see all orders
-- Can identify who hasn't ordered
-- Can copy formatted list to clipboard
+**Implementation:** Already implemented on event management/attendees page.
 
 ---
 
@@ -235,13 +222,13 @@ Allow hosts to save and reuse event configurations.
 
 | REQ | Name | Phase | Effort | Status |
 |-----|------|-------|--------|--------|
-| 001 | Privacy Policy | 1 | Small | Not Started |
-| 002 | Terms of Service | 1 | Small | Not Started |
+| 001 | Privacy Policy | 1 | Small | COMPLETE |
+| 002 | Terms of Service | 1 | Small | COMPLETE |
 | 003 | Broadcast Opt-Out | 1 | Medium | Not Started |
 | 004 | Member→Organiser Msg | 1 | Medium | Not Started |
 | 005 | Guest→Host Msg | 1 | Medium | Not Started |
 | 006 | Pre-Order Submit UI | 2 | Medium | Not Started |
-| 007 | Pre-Order Host View | 2 | Small-Medium | Not Started |
+| 007 | Pre-Order Host View | 2 | Small-Medium | COMPLETE |
 | 008 | Event Form Pre-Order | 2 | Small | COMPLETE |
 | 009 | Stripe Connect | 3 | Large | Blocked |
 | 010 | Event Deposits | 3 | Large | Blocked |
@@ -259,7 +246,3 @@ Allow hosts to save and reuse event configurations.
 
 **Complete Phase 2:**
 3. REQ-006 - Pre-Order Submit UI
-4. REQ-007 - Pre-Order Host View
-
-**Legal pages when ready:**
-- REQ-001/002 - Need your input on content
