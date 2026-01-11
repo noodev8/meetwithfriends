@@ -197,6 +197,22 @@ Allow hosts to save and reuse event configurations.
 
 ---
 
+### REQ-014: Duplicate Event
+**Status:** COMPLETE
+**Effort:** Small
+
+Allow hosts to duplicate an existing event to create a new one with the same settings.
+
+**Implementation:**
+- "Duplicate" button on event page (next to Edit, visible to hosts)
+- Links to `/groups/{id}/events/create?from={eventId}`
+- Create page detects `from` param and pre-fills form
+- Copies: title, description, location, capacity, image, guest settings, pre-order settings
+- Does NOT copy: date/time, preorder cutoff, RSVPs, comments, hosts
+- Page title changes to "Duplicate Event" with hint to set new date
+
+---
+
 ## Summary
 
 | REQ | Name | Phase | Effort | Status |
@@ -214,6 +230,7 @@ Allow hosts to save and reuse event configurations.
 | 011 | Last Login Tracking | 5 | Small | COMPLETE |
 | 012 | Recurring Events | 5 | Large | Not Started |
 | 013 | Event Templates | 5 | Medium | Not Started |
+| 014 | Duplicate Event | 5 | Small | COMPLETE |
 
 ---
 
