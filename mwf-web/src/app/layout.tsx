@@ -1,16 +1,11 @@
 import type { Metadata } from 'next'
-import { DM_Sans, Fraunces } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css'
 import Providers from '@/components/Providers'
 
-const dmSans = DM_Sans({
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-body',
-})
-
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  variable: '--font-display',
 })
 
 export const metadata: Metadata = {
@@ -25,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${dmSans.variable} ${fraunces.variable} ${dmSans.className}`}>
+      <body className={`${inter.variable} ${inter.className}`}>
         <Providers>
           {children}
         </Providers>

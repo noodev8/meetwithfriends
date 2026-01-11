@@ -60,16 +60,16 @@ export default function Header() {
     };
 
     return (
-        <header className="bg-white/80 backdrop-blur-sm border-b border-stone-200/50 relative z-20">
+        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 relative z-20">
             <div className="flex justify-between items-center px-4 sm:px-8 py-4 max-w-7xl mx-auto">
                 {/* Logo */}
                 <Link href={user ? '/dashboard' : '/'} className="flex items-center gap-2">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm">
+                    <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-sm">
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                     </div>
-                    <span className="font-display text-xl font-bold text-stone-800">
+                    <span className="font-display text-xl font-bold text-slate-800">
                         Meet With Friends
                     </span>
                 </Link>
@@ -80,7 +80,7 @@ export default function Header() {
                     {user && (
                         <Link
                             href="/your-events"
-                            className="text-stone-600 hover:text-stone-900 transition font-medium"
+                            className="text-slate-600 hover:text-slate-900 transition font-medium"
                         >
                             Your Events
                         </Link>
@@ -91,17 +91,17 @@ export default function Header() {
                         <div className="relative" ref={menuRef}>
                             <button
                                 onClick={() => setMenuOpen(!menuOpen)}
-                                className="flex items-center gap-2 text-stone-700 hover:text-stone-900 transition"
+                                className="flex items-center gap-2 text-slate-700 hover:text-slate-900 transition"
                             >
                                 {user.avatar_url ? (
                                     <img
                                         src={user.avatar_url}
                                         alt={user.name}
-                                        className="w-8 h-8 rounded-full object-cover ring-2 ring-stone-100"
+                                        className="w-8 h-8 rounded-full object-cover ring-2 ring-slate-100"
                                     />
                                 ) : (
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center ring-2 ring-stone-100">
-                                        <span className="text-sm font-medium text-amber-600">
+                                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center ring-2 ring-slate-100">
+                                        <span className="text-sm font-medium text-indigo-600">
                                             {user.name.charAt(0).toUpperCase()}
                                         </span>
                                     </div>
@@ -119,24 +119,24 @@ export default function Header() {
 
                             {/* Dropdown */}
                             {menuOpen && (
-                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-stone-200 py-1 z-50">
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-50">
                                     <Link
                                         href="/groups/create"
                                         onClick={() => setMenuOpen(false)}
-                                        className="block px-4 py-2.5 text-stone-700 hover:bg-stone-50 transition"
+                                        className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition"
                                     >
                                         Create Group
                                     </Link>
                                     <Link
                                         href="/profile"
                                         onClick={() => setMenuOpen(false)}
-                                        className="block px-4 py-2.5 text-stone-700 hover:bg-stone-50 transition"
+                                        className="block px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition"
                                     >
                                         Profile
                                     </Link>
                                     <button
                                         onClick={handleLogout}
-                                        className="block w-full text-left px-4 py-2.5 text-stone-700 hover:bg-stone-50 transition"
+                                        className="block w-full text-left px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition"
                                     >
                                         Log out
                                     </button>
@@ -148,13 +148,13 @@ export default function Header() {
                         <div className="flex items-center gap-3">
                             <Link
                                 href="/login"
-                                className="px-4 py-2 text-stone-600 hover:text-stone-900 font-medium transition"
+                                className="px-4 py-2 text-slate-600 hover:text-slate-900 font-medium transition"
                             >
                                 Log in
                             </Link>
                             <Link
                                 href="/register"
-                                className="px-5 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-full hover:from-amber-600 hover:to-orange-600 transition-all shadow-sm hover:shadow-md"
+                                className="px-5 py-2 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all shadow-sm hover:shadow-md"
                             >
                                 Sign up
                             </Link>
@@ -165,7 +165,7 @@ export default function Header() {
                 {/* Mobile Menu Button */}
                 <button
                     ref={mobileMenuButtonRef}
-                    className="md:hidden p-2 text-stone-600 hover:text-stone-900 transition"
+                    className="md:hidden p-2 text-slate-600 hover:text-slate-900 transition"
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                     aria-label="Toggle menu"
                 >
@@ -187,7 +187,7 @@ export default function Header() {
             {mobileMenuOpen && (
                 <div
                     ref={mobileMenuRef}
-                    className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-stone-200 shadow-lg z-50"
+                    className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-lg z-50"
                 >
                     <nav className="flex flex-col py-2">
                         {user ? (
@@ -195,27 +195,27 @@ export default function Header() {
                                 <Link
                                     href="/your-events"
                                     onClick={closeMobileMenu}
-                                    className="px-4 py-3 text-stone-700 hover:bg-stone-50 transition font-medium"
+                                    className="px-4 py-3 text-slate-700 hover:bg-slate-50 transition font-medium"
                                 >
                                     Your Events
                                 </Link>
                                 <Link
                                     href="/groups/create"
                                     onClick={closeMobileMenu}
-                                    className="px-4 py-3 text-stone-700 hover:bg-stone-50 transition font-medium"
+                                    className="px-4 py-3 text-slate-700 hover:bg-slate-50 transition font-medium"
                                 >
                                     Create Group
                                 </Link>
                                 <Link
                                     href="/profile"
                                     onClick={closeMobileMenu}
-                                    className="px-4 py-3 text-stone-700 hover:bg-stone-50 transition font-medium"
+                                    className="px-4 py-3 text-slate-700 hover:bg-slate-50 transition font-medium"
                                 >
                                     Profile
                                 </Link>
                                 <button
                                     onClick={handleLogout}
-                                    className="px-4 py-3 text-left text-stone-700 hover:bg-stone-50 transition"
+                                    className="px-4 py-3 text-left text-slate-700 hover:bg-slate-50 transition"
                                 >
                                     Log out
                                 </button>
@@ -225,14 +225,14 @@ export default function Header() {
                                 <Link
                                     href="/login"
                                     onClick={closeMobileMenu}
-                                    className="px-4 py-3 text-stone-700 hover:bg-stone-50 transition"
+                                    className="px-4 py-3 text-slate-700 hover:bg-slate-50 transition"
                                 >
                                     Log in
                                 </Link>
                                 <Link
                                     href="/register"
                                     onClick={closeMobileMenu}
-                                    className="px-4 py-3 text-amber-600 font-semibold hover:bg-stone-50 transition"
+                                    className="px-4 py-3 text-indigo-600 font-semibold hover:bg-slate-50 transition"
                                 >
                                     Sign up
                                 </Link>
