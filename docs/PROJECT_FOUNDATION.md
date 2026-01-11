@@ -106,209 +106,42 @@ Target: 8 months maximum (phased delivery)
 
 ---
 
-# Feature Phases (Draft)
+# Feature Phases
 
-## Phase 1: Foundation (MVP)
+## Phase 1: Foundation (MVP) - COMPLETE
 *Goal: Replace basic Meetup functionality for existing groups*
-*Value proposition: "Bring your group together. The simple way to organise group events."*
 
-### Accounts & Profiles
-- [ ] User accounts (email/password)
-- [ ] User profiles (name, bio, profile picture)
-- [ ] Browse without registration (events visible, attendee COUNT only for non-members)
-- [ ] Registration required to join group or RSVP
+Implemented: User accounts, profiles, groups, events, RSVPs, waitlists, comments, legal pages, direct messaging (member→organiser, guest→host), broadcast opt-out.
 
-### Groups
-- [ ] Create group
-- [ ] Group settings (name, description, image)
-- [ ] Join group (auto-approve or manual approval - organiser's choice)
-- [ ] Member directory (see who's in the group)
-- [ ] Assign Host role to members
-- [ ] Remove member from group (host/organiser)
-
-### Events
-- [ ] Create event (title, date, time, location, description, capacity)
-- [ ] Event RSVP (Attending / cancel RSVP)
-- [ ] View attendee list
-- [ ] Edit/cancel event
-- [ ] Waitlist when capacity reached
-- [ ] Auto-promote from waitlist when spot opens
-- [ ] Host can remove RSVP
-
-### Communication
-- [ ] Discussion section on event page (event-level only, not group-level)
-- [ ] Flat comments (chronological, no threading)
-- [ ] Any group member can post/reply
-- [ ] Visible to anyone (including non-members browsing)
-- [ ] Basic moderation (host/organiser can delete comments)
-
-### Legal & Support
-- [ ] Privacy Policy page
-- [ ] Terms of Service page
-- [ ] Registration: checkbox to accept Terms & Privacy Policy (required to register)
-- [ ] Help / Contact form (simple form that emails support)
-
-### Direct Messaging (Email-Based)
-Allow users to contact each other via the platform. Emails use the sender's real email address as reply-to, enabling recipients to continue the conversation directly via their own email client (saves email credits).
-
-**Messaging Scenarios:**
-- [ ] Member → Organiser (contact group organiser)
-- [ ] Organiser → All Members (broadcast to group)
-- [ ] Guest → Host (contact event host, e.g., dietary questions)
-- [ ] Member → Member (contact another group member)
-
-**Key Behaviour:**
-- Platform sends email on behalf of sender
-- Reply-to header set to sender's actual email address
-- Recipient can reply directly - conversation moves to personal email
-- Simple text-only message (no attachments, no rich text)
-- No message history stored in platform (fire and forget)
-- Members can opt out of broadcast messages (Organiser → All) via profile setting
-  - Global toggle: YES/NO (not per-group)
-  - Only affects broadcasts, not direct messages to them
-  - Default: opted IN (receives broadcasts)
-
-**Backend Requirements:**
-- New endpoint(s) for sending messages
-- Validate sender has permission for the message type (e.g., must be group member)
-- Rate limiting to prevent abuse
-- Use Resend with dynamic reply-to
-
-**Frontend Requirements:**
-- "Contact" or "Message" buttons in appropriate locations:
-  - Group page: "Contact Organiser" (visible to members)
-  - Event page: "Contact Host" (visible to attendees/members)
-  - Member list: "Message" button per member (visible to fellow members)
-  - Group management: "Message All Members" (organiser only)
-- Simple modal/dialog with text area and send button
-- Profile settings: "Receive group broadcasts" toggle (on/off)
-
-## Phase 2: Menu & Pre-orders
+## Phase 2: Menu & Pre-orders - COMPLETE
 *Goal: Restaurant coordination*
 
-See [PREORDER-FEATURE.md](./PREORDER-FEATURE.md) for detailed specification.
+Implemented: Menu link on events, pre-order cutoff, food order submission, dietary notes, host order view.
 
-- [ ] Menu link field on events
-- [ ] Pre-order cutoff date/time
-- [ ] Guest food order submission (free text)
-- [ ] Dietary requirements/notes
-- [ ] Host view of all orders
-- [ ] Export orders for venue
-
-## Phase 3: Payments & Deposits
+## Phase 3: Payments & Deposits - BLOCKED
 *Goal: Core differentiator - deposit handling*
 
-- [ ] Stripe Connect integration
-- [ ] Organiser connects Stripe account
-- [ ] Deposit requirement per event
-- [ ] Payment collection from guests
-- [ ] Refund handling
-- [ ] Payment status visibility
+Requires Stripe account setup. Features: Stripe Connect, deposits, payment collection, refunds.
 
-## Phase 4: Multi-Group & Monetization
+## Phase 4: Multi-Group & Monetization - FUTURE
 *Goal: Platform scaling*
 
-- [ ] Multiple groups per organiser
-- [ ] Host subscription billing
-- [ ] Group privacy settings
+Features: Multiple groups per organiser, subscription billing, group privacy settings.
 
-## Phase 5: Polish & Advanced
+## Phase 5: Polish & Advanced - PARTIAL
 *Goal: Quality of life improvements*
 
-- [ ] Advanced waitlist management (manual reorder, bulk actions)
-- [ ] Recurring events
-- [ ] Event templates
-- [ ] Attendance history/stats
-- [ ] Mobile app (Flutter)
-- [ ] User activity tracking (see below)
+Implemented: User activity tracking (last login, group visits), duplicate event.
 
-### User Activity Tracking
-Track user engagement for hosts/organisers to identify inactive members.
-
-**Requirements:**
-1. **Last login** - Record when a user logs into the system
-   - Update `app_user.last_login_at` on successful login
-
-2. **Last group visit** - Record when a user accesses a group
-   - New table or field to track per-user, per-group visits
-   - Update when user views group page or group events
-
-3. **Display on member list** - Show "Last active" on group member list
-   - Helps hosts identify engaged vs inactive members
-   - Format: "Active today", "3 days ago", "2 weeks ago", etc.
-
-**Database changes needed:**
-```sql
--- Add to app_user
-ALTER TABLE app_user ADD COLUMN last_login_at TIMESTAMP;
-
--- New table for group visits
-CREATE TABLE group_visit (
-    group_id INTEGER REFERENCES group_list(id),
-    user_id INTEGER REFERENCES app_user(id),
-    last_visit_at TIMESTAMP DEFAULT NOW(),
-    PRIMARY KEY (group_id, user_id)
-);
-```
+Future: Advanced waitlist management, attendance stats, mobile app (Flutter).
 
 ---
 
-# Email Notification Plan
+# Email Notifications - COMPLETE
 
-Email notifications at strategic points to keep members engaged and informed. All emails sent via Resend.
+All email notifications implemented. See `docs/EMAIL-IMPLEMENTATION.md` for details.
 
-## Priority 1: Critical (Build with Phase 3)
-These are essential for the platform to function properly.
-
-| Trigger | Recipient | Purpose |
-|---------|-----------|---------|
-| Password reset requested | User | Security - already implemented |
-| Promoted from waitlist | User | They now have a spot - need to know immediately |
-| Removed from event by host | User | Clarity on status change |
-| Event cancelled | All attendees | Critical - plans changed |
-| Payment confirmed | User | Receipt / confirmation (Phase 3) |
-| Refund processed | User | Money matters (Phase 3) |
-
-## Priority 2: Engagement (Build after Phase 3)
-These improve the experience and reduce manual chasing.
-
-| Trigger | Recipient | Purpose |
-|---------|-----------|---------|
-| Welcome email | New user | Onboarding, set expectations |
-| RSVP confirmation | User | Confirmation of their booking |
-| Event reminder (24h before) | Attendees | Reduce no-shows |
-| Pre-order reminder | Attendees without order | Sent X hours before cutoff |
-| New event created | Group members | Drive RSVPs (opt-in?) |
-| Join request approved | User | Welcome to the group |
-
-## Priority 3: Host/Organiser Notifications
-Help hosts manage their groups without constantly checking the app.
-
-| Trigger | Recipient | Purpose |
-|---------|-----------|---------|
-| New join request | Organiser + Hosts | Action needed |
-| Pre-order cutoff approaching | Event host | Reminder to chase/export orders |
-| Event tomorrow summary | Event host | Attendee count, order status |
-
-## Design Principles
-- **Minimal by default**: Don't spam. Each email should have clear value.
-- **Action-oriented**: Every email should tell the recipient what to do (or confirm what happened).
-- **Mobile-friendly**: Simple, clean templates that work on phones.
-- **Unsubscribe**: Members can opt out of non-critical emails.
-- **Organiser control**: Future option for organisers to customise which emails their group sends.
-
-## Email Templates Needed
-1. Transactional (password reset, payment receipt) - plain, functional
-2. Event notifications (reminder, cancellation) - include event details, location, time
-3. Status changes (waitlist promoted, removed) - clear explanation of what changed
-4. Welcome/onboarding - warm, explain next steps
-
-## Future: Push Notifications (Mobile App)
-When Flutter app launches, mirror key emails as push notifications:
-- Event reminder
-- Promoted from waitlist
-- Event cancelled
-- Payment confirmed
+Implemented: Welcome, RSVP confirmed, removed from event, promoted from waitlist, event cancelled, new join request, joined group, new event, event reminder (24h), new comment.
 
 ---
 

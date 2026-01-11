@@ -1,10 +1,12 @@
-# Meet With Friends - Outstanding Requirements
+# Meet With Friends - Requirements Tracker
 
-Prioritized list of incomplete features. Work through these with Claude.
+Single source of truth for feature status. See PROJECT_FOUNDATION.md for vision/architecture.
+
+**Status:** 10/12 complete, 2 blocked (Stripe)
 
 ---
 
-## Phase 1: Foundation Gaps (High Priority)
+## Phase 1: Foundation - COMPLETE
 
 ### REQ-001: Privacy Policy Page
 **Status:** COMPLETE
@@ -78,7 +80,7 @@ Allow event attendees to contact the event host via email.
 
 ---
 
-## Phase 2: Pre-Orders Frontend (Medium Priority)
+## Phase 2: Pre-Orders - COMPLETE
 
 ### REQ-006: Pre-Order Submission UI (Attendee)
 **Status:** COMPLETE
@@ -119,7 +121,7 @@ Add pre-order configuration to event create/edit forms.
 
 ---
 
-## Phase 3: Payments (Future)
+## Phase 3: Payments - BLOCKED
 
 ### REQ-009: Stripe Connect Integration
 **Status:** Not Started
@@ -151,7 +153,7 @@ Allow hosts to require deposits for event attendance.
 
 ---
 
-## Phase 5: Polish (Lower Priority)
+## Phase 5: Polish - COMPLETE
 
 ### REQ-011: Last Login & Group Visit Tracking
 **Status:** COMPLETE
