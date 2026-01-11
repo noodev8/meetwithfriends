@@ -136,47 +136,6 @@ function EmptyState({ userName, discoverableGroups, GroupCard }: {
 }
 
 // =======================================================================
-// Compact Group Thumbnail Component - for dashboard header
-// =======================================================================
-function CompactGroupCard({ group }: { group: MyGroup | GroupWithCount }) {
-    const upcomingCount = ('upcoming_event_count' in group ? group.upcoming_event_count : 0) || 0;
-
-    return (
-        <Link
-            href={`/groups/${group.id}`}
-            className="group flex-shrink-0 flex items-center gap-3 bg-white px-3 py-2.5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-200"
-        >
-            {/* Icon/Initial */}
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-100 to-violet-200 flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-bold text-indigo-600">
-                    {group.name.charAt(0).toUpperCase()}
-                </span>
-            </div>
-            {/* Info */}
-            <div className="min-w-0">
-                <h3 className="font-semibold text-slate-800 text-sm truncate group-hover:text-indigo-600 transition-colors max-w-[100px]">
-                    {group.name}
-                </h3>
-                <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-400">
-                    <span className="flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                        {group.member_count}
-                    </span>
-                    <span className="flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        {upcomingCount}
-                    </span>
-                </div>
-            </div>
-        </Link>
-    );
-}
-
-// =======================================================================
 // Group Card Component (larger - for discover section)
 // =======================================================================
 function GroupCard({ group }: { group: MyGroup | GroupWithCount }) {
