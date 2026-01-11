@@ -520,6 +520,16 @@ export default function GroupDetailPage() {
                                     )}
                                 </div>
                             )}
+
+                            {/* Past events link */}
+                            <div className="mt-4 pt-4 border-t border-slate-100 text-center">
+                                <Link
+                                    href={`/groups/${group.id}/past-events`}
+                                    className="text-sm text-slate-400 hover:text-slate-600 transition"
+                                >
+                                    View past events
+                                </Link>
+                            </div>
                         </div>
                     </div>
 

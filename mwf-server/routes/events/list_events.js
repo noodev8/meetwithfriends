@@ -3,35 +3,23 @@
 API Route: list_events
 =======================================================================================================================================
 Method: GET
-Purpose: Retrieves upcoming published events with their attendee counts and group info.
+Purpose: Retrieves events with their attendee counts and group info.
+         By default returns upcoming events. Use past=true for past events.
          If authenticated, also includes user's RSVP status for each event.
 =======================================================================================================================================
 Request Payload:
 None (GET request)
 Query params:
   - group_id: number (optional, filters events by group)
+  - past: boolean (optional, if true returns past events instead of upcoming)
+  - limit: number (optional, for pagination, default unlimited for upcoming, 10 for past)
+  - offset: number (optional, for pagination)
 
 Success Response:
 {
   "return_code": "SUCCESS",
-  "events": [
-    {
-      "id": 1,
-      "group_id": 1,
-      "group_name": "Brookfield Socials",
-      "created_by": 5,
-      "title": "Mid Week Evening Meal",
-      "description": "Join us for a relaxed evening meal",
-      "location": "The Beacon Hotel, Copthorne",
-      "date_time": "2026-01-15T18:30:00.000Z",
-      "capacity": 20,
-      "status": "published",
-      "attendee_count": 12,
-      "waitlist_count": 3,
-      "rsvp_status": "attending",     // Only if authenticated: "attending", "waitlist", or null
-      "created_at": "2026-01-01T00:00:00.000Z"
-    }
-  ]
+  "events": [...],
+  "has_more": true  // Only included when using limit/offset
 }
 =======================================================================================================================================
 Return Codes:
@@ -47,8 +35,11 @@ const { optionalAuth } = require('../../middleware/auth');
 
 router.get('/', optionalAuth, async (req, res) => {
     try {
-        const { group_id } = req.query;
+        const { group_id, past, limit, offset } = req.query;
         const userId = req.user?.id || null;
+        const isPast = past === 'true';
+        const queryLimit = limit ? parseInt(limit, 10) : (isPast ? 10 : null);
+        const queryOffset = offset ? parseInt(offset, 10) : 0;
 
         // =======================================================================
         // Build query with optional group filter and user RSVP status
@@ -97,8 +88,14 @@ router.get('/', optionalAuth, async (req, res) => {
             paramIndex++;
         }
 
-        queryText += `
+        // Filter by past or upcoming
+        if (isPast) {
+            queryText += `
+             WHERE e.date_time < NOW()`;
+        } else {
+            queryText += `
              WHERE e.date_time >= NOW()`;
+        }
 
         // Add group filter if provided
         if (group_id && !isNaN(parseInt(group_id, 10))) {
@@ -114,15 +111,29 @@ router.get('/', optionalAuth, async (req, res) => {
             queryText += `, user_rsvp.status`;
         }
 
+        // Order: upcoming ASC (soonest first), past DESC (most recent first)
         queryText += `
-             ORDER BY e.date_time ASC`;
+             ORDER BY e.date_time ${isPast ? 'DESC' : 'ASC'}`;
+
+        // Add pagination if limit specified
+        if (queryLimit) {
+            queryParams.push(queryLimit + 1); // Fetch one extra to check if there's more
+            queryText += ` LIMIT $${paramIndex}`;
+            paramIndex++;
+
+            if (queryOffset > 0) {
+                queryParams.push(queryOffset);
+                queryText += ` OFFSET $${paramIndex}`;
+                paramIndex++;
+            }
+        }
 
         const result = await query(queryText, queryParams);
 
         // =======================================================================
         // Transform results to ensure counts are numbers
         // =======================================================================
-        const events = result.rows.map(event => ({
+        let events = result.rows.map(event => ({
             ...event,
             attendee_count: parseInt(event.attendee_count, 10) || 0,
             total_guest_count: parseInt(event.total_guest_count, 10) || 0,
@@ -130,12 +141,27 @@ router.get('/', optionalAuth, async (req, res) => {
         }));
 
         // =======================================================================
+        // Check if there are more results (for pagination)
+        // =======================================================================
+        let hasMore = false;
+        if (queryLimit && events.length > queryLimit) {
+            hasMore = true;
+            events = events.slice(0, queryLimit); // Remove the extra item
+        }
+
+        // =======================================================================
         // Return success response
         // =======================================================================
-        return res.json({
+        const response = {
             return_code: 'SUCCESS',
             events
-        });
+        };
+
+        if (queryLimit) {
+            response.has_more = hasMore;
+        }
+
+        return res.json(response);
 
     } catch (error) {
         console.error('List events error:', error);

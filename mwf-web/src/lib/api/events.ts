@@ -113,6 +113,56 @@ export async function getAllEvents(token?: string, groupId?: number): Promise<Ap
 
 /*
 =======================================================================================================================================
+listEvents
+=======================================================================================================================================
+Fetches events with pagination support. Can fetch past or upcoming events.
+=======================================================================================================================================
+*/
+interface ListEventsOptions {
+    group_id?: number;
+    past?: boolean;
+    limit?: number;
+    offset?: number;
+}
+
+interface ListEventsResult {
+    events: EventWithDetails[];
+    has_more: boolean;
+}
+
+export async function listEvents(
+    token?: string,
+    options?: ListEventsOptions
+): Promise<ApiResult<ListEventsResult>> {
+    const params = new URLSearchParams();
+
+    if (options?.group_id) params.append('group_id', String(options.group_id));
+    if (options?.past) params.append('past', 'true');
+    if (options?.limit) params.append('limit', String(options.limit));
+    if (options?.offset) params.append('offset', String(options.offset));
+
+    const url = `/api/events${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await apiGet(url, token);
+
+    if (response.return_code === 'SUCCESS' && response.events) {
+        return {
+            success: true,
+            data: {
+                events: response.events as unknown as EventWithDetails[],
+                has_more: (response.has_more as unknown as boolean) || false,
+            },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to get events',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
 getEvent
 =======================================================================================================================================
 Fetches a single event by ID with user's RSVP status if logged in.
