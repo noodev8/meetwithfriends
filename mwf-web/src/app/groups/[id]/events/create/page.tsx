@@ -321,48 +321,6 @@ export default function CreateEventPage() {
                                 <h2 className="text-sm font-medium text-slate-500 uppercase tracking-wide mb-4">Options</h2>
 
                                 <div className="space-y-3">
-                                    {/* Featured Image Card */}
-                                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                                        <button
-                                            type="button"
-                                            onClick={() => setImageExpanded(!imageExpanded)}
-                                            className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition text-left"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
-                                                    <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <span className="font-medium text-slate-800">Featured Image</span>
-                                                    <span className="text-slate-400 mx-2">·</span>
-                                                    <span className="text-sm text-slate-500">
-                                                        {imageUrl ? 'Added' : 'None'}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <svg
-                                                className={`w-5 h-5 text-slate-400 transition-transform ${imageExpanded ? 'rotate-180' : ''}`}
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </button>
-                                        {imageExpanded && (
-                                            <div className="px-4 pb-4 border-t border-slate-100">
-                                                <div className="pt-4">
-                                                    <ImageUpload
-                                                        value={imageUrl}
-                                                        onChange={setImageUrl}
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
                                     {/* Capacity Card */}
                                     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                                         <button
@@ -623,6 +581,48 @@ export default function CreateEventPage() {
                                                             <p className="mt-2 text-sm text-slate-400">Set event date first</p>
                                                         )}
                                                     </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Featured Image Card */}
+                                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                                        <button
+                                            type="button"
+                                            onClick={() => setImageExpanded(!imageExpanded)}
+                                            className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition text-left"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                                                    <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <span className="font-medium text-slate-800">Featured Image</span>
+                                                    <span className="text-slate-400 mx-2">·</span>
+                                                    <span className="text-sm text-slate-500">
+                                                        {imageUrl ? 'Added' : 'None'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <svg
+                                                className={`w-5 h-5 text-slate-400 transition-transform ${imageExpanded ? 'rotate-180' : ''}`}
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                        {imageExpanded && (
+                                            <div className="px-4 pb-4 border-t border-slate-100">
+                                                <div className="pt-4">
+                                                    <ImageUpload
+                                                        value={imageUrl}
+                                                        onChange={setImageUrl}
+                                                    />
                                                 </div>
                                             </div>
                                         )}
