@@ -525,9 +525,6 @@ async function sendContactOrganiserEmail(email, organiserName, senderName, sende
         <div style="background: #f8f9fa; border-left: 4px solid #4f46e5; padding: 16px; margin: 20px 0; border-radius: 4px;">
             <p style="color: #333; font-size: 16px; margin: 0; white-space: pre-wrap;">${message}</p>
         </div>
-        <p style="color: #666; font-size: 14px;">
-            <strong>Reply to:</strong> <a href="mailto:${senderEmail}" style="color: #4f46e5;">${senderEmail}</a>
-        </p>
         ${emailLink(config.frontendUrl + '/groups/' + group.id, 'View Group')}
     `);
 
@@ -553,9 +550,6 @@ async function sendContactHostEmail(email, hostName, senderName, senderEmail, ev
         <div style="background: #f8f9fa; border-left: 4px solid #4f46e5; padding: 16px; margin: 20px 0; border-radius: 4px;">
             <p style="color: #333; font-size: 16px; margin: 0; white-space: pre-wrap;">${message}</p>
         </div>
-        <p style="color: #666; font-size: 14px;">
-            <strong>Reply to:</strong> <a href="mailto:${senderEmail}" style="color: #4f46e5;">${senderEmail}</a>
-        </p>
         ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event')}
     `);
 
