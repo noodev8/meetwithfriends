@@ -22,6 +22,7 @@ export default function RegisterPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isRedirecting, setIsRedirecting] = useState(false);
@@ -50,6 +51,11 @@ export default function RegisterPage() {
 
         if (password !== confirmPassword) {
             setError('Passwords do not match');
+            return;
+        }
+
+        if (!acceptedTerms) {
+            setError('Please accept the Terms of Service and Privacy Policy');
             return;
         }
 
@@ -165,6 +171,26 @@ export default function RegisterPage() {
                                 className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
                                 placeholder="Confirm your password"
                             />
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                            <input
+                                type="checkbox"
+                                id="acceptTerms"
+                                checked={acceptedTerms}
+                                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                                className="mt-1 w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                            />
+                            <label htmlFor="acceptTerms" className="text-sm text-slate-600">
+                                I agree to the{' '}
+                                <Link href="/terms" className="text-indigo-600 hover:text-indigo-700">
+                                    Terms of Service
+                                </Link>
+                                {' '}and{' '}
+                                <Link href="/privacy" className="text-indigo-600 hover:text-indigo-700">
+                                    Privacy Policy
+                                </Link>
+                            </label>
                         </div>
 
                         <button
