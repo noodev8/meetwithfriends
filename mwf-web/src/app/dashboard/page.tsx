@@ -557,7 +557,7 @@ export default function Dashboard() {
                                 {organiserGroups.length > 0 && (
                                     <section className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl p-6 text-white shadow-xl shadow-indigo-200 relative overflow-hidden">
                                         <div className="relative z-10">
-                                            <h3 className="font-bold text-xl mb-2">Create an Event</h3>
+                                            <h3 className="font-bold text-xl mb-2">New Event</h3>
                                             <p className="text-indigo-100 text-sm mb-5 leading-relaxed">
                                                 Plan your next dinner, coffee meetup, or group activity.
                                             </p>
