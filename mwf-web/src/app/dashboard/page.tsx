@@ -448,17 +448,15 @@ export default function Dashboard() {
                                         : "Here's what's happening with your groups"}
                                 </p>
                             </div>
-                            {organiserGroups.length > 0 && (
-                                <Link
-                                    href={`/groups/${organiserGroups[0].id}/events/create`}
-                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-95"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    New Event
-                                </Link>
-                            )}
+                            <Link
+                                href="/groups/create"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-95"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                New Group
+                            </Link>
                         </div>
 
                         {/* Two column grid */}
@@ -555,24 +553,26 @@ export default function Dashboard() {
                                     </div>
                                 </section>
 
-                                {/* CTA Card */}
-                                <section className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl p-6 text-white shadow-xl shadow-indigo-200 relative overflow-hidden">
-                                    <div className="relative z-10">
-                                        <h3 className="font-bold text-xl mb-2">Create a Group</h3>
-                                        <p className="text-indigo-100 text-sm mb-5 leading-relaxed">
-                                            Start your own dinner club, hiking crew, or any regular meetup.
-                                        </p>
-                                        <Link
-                                            href="/groups/create"
-                                            className="inline-block bg-white text-indigo-600 px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-95"
-                                        >
-                                            Get Started
-                                        </Link>
-                                    </div>
-                                    {/* Decorative circles */}
-                                    <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full"></div>
-                                    <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-black/10 rounded-full"></div>
-                                </section>
+                                {/* CTA Card - Create Event */}
+                                {organiserGroups.length > 0 && (
+                                    <section className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl p-6 text-white shadow-xl shadow-indigo-200 relative overflow-hidden">
+                                        <div className="relative z-10">
+                                            <h3 className="font-bold text-xl mb-2">Create an Event</h3>
+                                            <p className="text-indigo-100 text-sm mb-5 leading-relaxed">
+                                                Plan your next dinner, coffee meetup, or group activity.
+                                            </p>
+                                            <Link
+                                                href={`/groups/${organiserGroups[0].id}/events/create`}
+                                                className="inline-block bg-white text-indigo-600 px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-95"
+                                            >
+                                                Get Started
+                                            </Link>
+                                        </div>
+                                        {/* Decorative circles */}
+                                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full"></div>
+                                        <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-black/10 rounded-full"></div>
+                                    </section>
+                                )}
                             </div>
                         </div>
                     </>
