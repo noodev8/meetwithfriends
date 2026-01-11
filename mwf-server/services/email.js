@@ -499,6 +499,62 @@ async function sendNewCommentEmail(email, userName, event, commenterName, commen
     return sendEmail(email, `New comment on ${event.title}`, html, 'new_comment', event.id);
 }
 
+/*
+=======================================================================================================================================
+sendContactOrganiserEmail
+=======================================================================================================================================
+Sent to group organiser when a member contacts them via the group page
+=======================================================================================================================================
+*/
+async function sendContactOrganiserEmail(email, organiserName, senderName, senderEmail, group, message) {
+    const html = wrapEmail(`
+        <h2 style="color: #333;">Message from ${senderName}</h2>
+        <p style="color: #666; font-size: 16px;">
+            Hi ${organiserName},
+        </p>
+        <p style="color: #666; font-size: 16px;">
+            You've received a message from <strong>${senderName}</strong> regarding <strong>${group.name}</strong>:
+        </p>
+        <div style="background: #f8f9fa; border-left: 4px solid #4f46e5; padding: 16px; margin: 20px 0; border-radius: 4px;">
+            <p style="color: #333; font-size: 16px; margin: 0; white-space: pre-wrap;">${message}</p>
+        </div>
+        <p style="color: #666; font-size: 14px;">
+            <strong>Reply to:</strong> <a href="mailto:${senderEmail}" style="color: #4f46e5;">${senderEmail}</a>
+        </p>
+        ${emailLink(config.frontendUrl + '/groups/' + group.id, 'View Group')}
+    `);
+
+    return sendEmail(email, `Message from ${senderName} about ${group.name}`, html, 'contact_organiser', group.id);
+}
+
+/*
+=======================================================================================================================================
+sendContactHostEmail
+=======================================================================================================================================
+Sent to event host(s) when an attendee contacts them via the event page
+=======================================================================================================================================
+*/
+async function sendContactHostEmail(email, hostName, senderName, senderEmail, event, message) {
+    const html = wrapEmail(`
+        <h2 style="color: #333;">Message from ${senderName}</h2>
+        <p style="color: #666; font-size: 16px;">
+            Hi ${hostName},
+        </p>
+        <p style="color: #666; font-size: 16px;">
+            You've received a message from <strong>${senderName}</strong> regarding <strong>${event.title}</strong>:
+        </p>
+        <div style="background: #f8f9fa; border-left: 4px solid #4f46e5; padding: 16px; margin: 20px 0; border-radius: 4px;">
+            <p style="color: #333; font-size: 16px; margin: 0; white-space: pre-wrap;">${message}</p>
+        </div>
+        <p style="color: #666; font-size: 14px;">
+            <strong>Reply to:</strong> <a href="mailto:${senderEmail}" style="color: #4f46e5;">${senderEmail}</a>
+        </p>
+        ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event')}
+    `);
+
+    return sendEmail(email, `Message from ${senderName} about ${event.title}`, html, 'contact_host', event.id);
+}
+
 module.exports = {
     sendEmail,
     sendWelcomeEmail,
@@ -511,5 +567,7 @@ module.exports = {
     sendNewEventEmail,
     sendEventReminderEmail,
     sendPasswordResetEmail,
-    sendNewCommentEmail
+    sendNewCommentEmail,
+    sendContactOrganiserEmail,
+    sendContactHostEmail
 };

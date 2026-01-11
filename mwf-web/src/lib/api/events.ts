@@ -650,3 +650,32 @@ export async function updateOrder(
         return_code: response.return_code,
     };
 }
+
+/*
+=======================================================================================================================================
+contactHost
+=======================================================================================================================================
+Sends a message to the event host(s). Only attendees and waitlisted users can use this feature.
+Rate limited to 3 messages per hour per event.
+=======================================================================================================================================
+*/
+export async function contactHost(
+    token: string,
+    eventId: number,
+    message: string
+): Promise<ApiResult<{ message: string }>> {
+    const response = await apiCall(`/api/events/${eventId}/contact-host`, { message }, token);
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: { message: response.message as string },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to send message',
+        return_code: response.return_code,
+    };
+}

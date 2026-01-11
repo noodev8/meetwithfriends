@@ -21,6 +21,7 @@ import {
     getGroupMembers,
     approveMember,
     rejectMember,
+    contactOrganiser,
     GroupWithCount,
     GroupMembership,
     GroupMember,
@@ -48,6 +49,10 @@ export default function GroupDetailPage() {
     const [events, setEvents] = useState<EventWithDetails[]>([]);
     const [copied, setCopied] = useState(false);
     const [showLeaveModal, setShowLeaveModal] = useState(false);
+    const [showContactModal, setShowContactModal] = useState(false);
+    const [contactMessage, setContactMessage] = useState('');
+    const [contactLoading, setContactLoading] = useState(false);
+    const [contactSuccess, setContactSuccess] = useState(false);
 
     // =======================================================================
     // Check if user can manage members (organiser or host)
@@ -227,6 +232,32 @@ export default function GroupDetailPage() {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
+
+    // =======================================================================
+    // Handle contact organiser
+    // =======================================================================
+    const handleContactOrganiser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!token || !group || !contactMessage.trim()) return;
+
+        setContactLoading(true);
+        const result = await contactOrganiser(token, group.id, contactMessage.trim());
+        setContactLoading(false);
+
+        if (result.success) {
+            setContactSuccess(true);
+            setContactMessage('');
+            setTimeout(() => {
+                setShowContactModal(false);
+                setContactSuccess(false);
+            }, 2000);
+        } else {
+            alert(result.error || 'Failed to send message');
+        }
+    };
+
+    // Check if user can contact organiser (active member who is not the organiser)
+    const canContactOrganiser = membership?.status === 'active' && membership?.role !== 'organiser';
 
     // =======================================================================
     // Find organiser from members
@@ -597,11 +628,22 @@ export default function GroupDetailPage() {
                                             </span>
                                         </div>
                                     )}
-                                    <div>
+                                    <div className="flex-1">
                                         <p className="font-medium text-slate-800">{organiser.name}</p>
                                         <p className="text-sm text-slate-500">Group organiser</p>
                                     </div>
                                 </div>
+                                {canContactOrganiser && (
+                                    <button
+                                        onClick={() => setShowContactModal(true)}
+                                        className="w-full mt-4 px-4 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition flex items-center justify-center gap-2"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                        Contact
+                                    </button>
+                                )}
                             </div>
                         )}
 
@@ -726,6 +768,96 @@ export default function GroupDetailPage() {
                                 {leaving ? 'Leaving...' : 'Leave'}
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Contact Organiser Modal */}
+            {showContactModal && organiser && (
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                    onClick={() => !contactLoading && setShowContactModal(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-slate-900 font-display">
+                                Contact {organiser.name}
+                            </h3>
+                            <button
+                                onClick={() => setShowContactModal(false)}
+                                disabled={contactLoading}
+                                className="text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50"
+                            >
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {contactSuccess ? (
+                            <div className="p-8 text-center">
+                                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <p className="text-lg font-semibold text-slate-900">Message sent!</p>
+                                <p className="text-sm text-slate-500 mt-1">
+                                    {organiser.name} will receive your message via email.
+                                </p>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleContactOrganiser} className="p-6 space-y-5">
+                                <p className="text-sm text-slate-600">
+                                    Send a message to the group organiser. They will receive it via email and can reply directly to you.
+                                </p>
+
+                                <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label htmlFor="contactMessage" className="block text-sm font-medium text-slate-700">
+                                            Your message
+                                        </label>
+                                        <span className={`text-xs ${contactMessage.length > 900 ? 'text-indigo-600' : 'text-slate-400'}`}>
+                                            {contactMessage.length}/1000
+                                        </span>
+                                    </div>
+                                    <textarea
+                                        id="contactMessage"
+                                        value={contactMessage}
+                                        onChange={(e) => setContactMessage(e.target.value)}
+                                        placeholder="Hi, I have a question about..."
+                                        rows={6}
+                                        maxLength={1000}
+                                        minLength={10}
+                                        required
+                                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 resize-none transition text-base"
+                                    />
+                                    <p className="text-xs text-slate-400 mt-2">Minimum 10 characters</p>
+                                </div>
+
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowContactModal(false)}
+                                        disabled={contactLoading}
+                                        className="flex-1 px-5 py-3 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={contactLoading || contactMessage.trim().length < 10}
+                                        className="flex-1 px-5 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all shadow-md disabled:opacity-50"
+                                    >
+                                        {contactLoading ? 'Sending...' : 'Send Message'}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
                     </div>
                 </div>
             )}

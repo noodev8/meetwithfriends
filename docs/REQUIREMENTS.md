@@ -47,44 +47,34 @@ Add toggle to profile settings for users to opt out of broadcast emails.
 ---
 
 ### REQ-004: Direct Messaging - Member to Organiser
-**Status:** Not Started
+**Status:** COMPLETE
 **Effort:** Medium
 
 Allow group members to contact the group organiser via email.
 
-**Requires:**
-- "Contact Organiser" button on group page (visible to members)
-- Modal with message textarea
+**Implementation:**
+- "Contact" button in Organiser Card on group page (visible to active members, not organiser)
+- Modal with message textarea (10-1000 chars)
 - Backend endpoint `POST /api/groups/:id/contact-organiser`
-- Rate limiting to prevent spam
-- Email sent via Resend, logged to email_log
-
-**Acceptance Criteria:**
-- Button visible to group members
-- Modal allows composing message
-- Email delivered to organiser
-- Rate limiting prevents abuse
+- Rate limiting: 3 messages per hour per user per group (in-memory)
+- Email sent via Resend with `sendContactOrganiserEmail`, includes reply-to sender's email
+- Logged to email_log with type 'contact_organiser'
 
 ---
 
 ### REQ-005: Direct Messaging - Guest to Host
-**Status:** Not Started
+**Status:** COMPLETE
 **Effort:** Medium
 
 Allow event attendees to contact the event host via email.
 
-**Requires:**
-- "Contact Host" button on event page (visible to attendees)
-- Modal with message textarea
+**Implementation:**
+- "Contact" button next to host info in event hero (visible to attendees/waitlist)
+- Modal with message textarea (10-1000 chars)
 - Backend endpoint `POST /api/events/:id/contact-host`
-- Rate limiting to prevent spam
-- Email sent via Resend, logged to email_log
-
-**Acceptance Criteria:**
-- Button visible to event attendees
-- Modal allows composing message
-- Email delivered to host(s)
-- Rate limiting prevents abuse
+- Rate limiting: 3 messages per hour per user per event (in-memory)
+- Email sent to ALL hosts via Resend with `sendContactHostEmail`, includes reply-to sender's email
+- Logged to email_log with type 'contact_host'
 
 ---
 
@@ -220,8 +210,8 @@ Allow hosts to save and reuse event configurations.
 | 001 | Privacy Policy | 1 | Small | COMPLETE |
 | 002 | Terms of Service | 1 | Small | COMPLETE |
 | 003 | Broadcast Opt-Out | 1 | Medium | COMPLETE |
-| 004 | Member→Organiser Msg | 1 | Medium | Not Started |
-| 005 | Guest→Host Msg | 1 | Medium | Not Started |
+| 004 | Member→Organiser Msg | 1 | Medium | COMPLETE |
+| 005 | Guest→Host Msg | 1 | Medium | COMPLETE |
 | 006 | Pre-Order Submit UI | 2 | Medium | Not Started |
 | 007 | Pre-Order Host View | 2 | Small-Medium | COMPLETE |
 | 008 | Event Form Pre-Order | 2 | Small | COMPLETE |
@@ -235,9 +225,11 @@ Allow hosts to save and reuse event configurations.
 
 ## Suggested Order
 
-**Phase 1 gaps:**
-1. REQ-003 - Broadcast Opt-Out Toggle
-2. REQ-004/005 - Messaging features
+**Phase 1:** COMPLETE
 
-**Complete Phase 2:**
-3. REQ-006 - Pre-Order Submit UI
+**Phase 2 gaps:**
+1. REQ-006 - Pre-Order Submit UI (backend already exists)
+
+**Phase 5 (when ready):**
+2. REQ-012 - Recurring Events
+3. REQ-013 - Event Templates

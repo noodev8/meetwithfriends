@@ -487,3 +487,32 @@ export async function leaveGroup(
         return_code: response.return_code,
     };
 }
+
+/*
+=======================================================================================================================================
+contactOrganiser
+=======================================================================================================================================
+Sends a message to the group organiser. Only active members can use this feature.
+Rate limited to 3 messages per hour per group.
+=======================================================================================================================================
+*/
+export async function contactOrganiser(
+    token: string,
+    groupId: number,
+    message: string
+): Promise<ApiResult<{ message: string }>> {
+    const response = await apiCall(`/api/groups/${groupId}/contact-organiser`, { message }, token);
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: { message: response.message as string },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to send message',
+        return_code: response.return_code,
+    };
+}

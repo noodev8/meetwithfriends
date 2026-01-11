@@ -24,6 +24,7 @@ const addHost = require('./add_host');
 const removeHost = require('./remove_host');
 const submitOrder = require('./submit_order');
 const updateOrder = require('./update_order');
+const contactHost = require('./contact_host');
 
 // =======================================================================
 // Route definitions
@@ -41,6 +42,7 @@ router.use('/', addHost);         // POST /api/events/:id/hosts/add - add a host
 router.use('/', removeHost);      // POST /api/events/:id/hosts/remove - remove a host or step down
 router.use('/', submitOrder);     // POST /api/events/:id/submit-order - submit food order
 router.use('/', updateOrder);     // POST /api/events/:id/update-order - host updates another's order
+router.use('/', contactHost);     // POST /api/events/:id/contact-host - contact event host(s)
 router.use('/', getEvent);        // GET /api/events/:id - get single event (must be last)
 
 module.exports = router;
