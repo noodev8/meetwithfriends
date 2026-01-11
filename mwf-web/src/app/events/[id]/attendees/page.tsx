@@ -571,39 +571,46 @@ export default function AttendeesPage() {
                             className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {/* Header with photo and name */}
-                            <div className="p-5 flex items-center gap-4 border-b border-stone-100">
-                                {selectedAttendee.avatar_url ? (
-                                    <img
-                                        src={selectedAttendee.avatar_url}
-                                        alt={selectedAttendee.name}
-                                        className="w-16 h-16 rounded-full object-cover cursor-pointer hover:opacity-80 transition"
-                                        onClick={() => setViewingLargePhoto(true)}
-                                    />
-                                ) : (
-                                    <div
-                                        className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center cursor-pointer hover:opacity-80 transition"
-                                        onClick={() => setViewingLargePhoto(true)}
+                            {/* Header with large photo */}
+                            <div className="p-5 border-b border-stone-100">
+                                {/* Close button */}
+                                <div className="flex justify-end mb-3">
+                                    <button
+                                        onClick={() => setSelectedAttendee(null)}
+                                        className="p-1 text-stone-400 hover:text-stone-600 transition"
                                     >
-                                        <span className="text-2xl font-bold text-white">
-                                            {selectedAttendee.name.charAt(0).toUpperCase()}
-                                        </span>
-                                    </div>
-                                )}
-                                <div className="flex-1">
-                                    <h3 className="text-lg font-semibold text-stone-900">{selectedAttendee.name}</h3>
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                {/* Large avatar - centered */}
+                                <div className="flex flex-col items-center">
+                                    {selectedAttendee.avatar_url ? (
+                                        <img
+                                            src={selectedAttendee.avatar_url}
+                                            alt={selectedAttendee.name}
+                                            className="w-40 h-40 rounded-2xl object-cover cursor-pointer hover:opacity-90 transition shadow-md"
+                                            onClick={() => setViewingLargePhoto(true)}
+                                        />
+                                    ) : (
+                                        <div
+                                            className="w-40 h-40 rounded-2xl bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center cursor-pointer hover:opacity-90 transition shadow-md"
+                                            onClick={() => setViewingLargePhoto(true)}
+                                        >
+                                            <span className="text-5xl font-bold text-white">
+                                                {selectedAttendee.name.charAt(0).toUpperCase()}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Name and status below photo */}
+                                    <h3 className="text-xl font-semibold text-stone-900 mt-4">{selectedAttendee.name}</h3>
                                     <p className="text-sm text-stone-500">
                                         {isInGoing ? 'Going' : isInWaitlist ? 'Waitlist' : 'Not going'}
                                     </p>
                                 </div>
-                                <button
-                                    onClick={() => setSelectedAttendee(null)}
-                                    className="p-1 text-stone-400 hover:text-stone-600 transition"
-                                >
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
                             </div>
 
                             {/* Order form for hosts/organisers */}

@@ -916,7 +916,7 @@ export default function EventDetailPage() {
                         {/* Discussion Section */}
                         <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
                             <h2 className="text-lg font-bold text-stone-900 mb-4 font-display">
-                                Discussion ({commentCount})
+                                Discussion
                             </h2>
 
                             {/* Members can view and participate in discussion */}

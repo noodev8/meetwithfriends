@@ -142,6 +142,47 @@ Target: 8 months maximum (phased delivery)
 - [ ] Visible to anyone (including non-members browsing)
 - [ ] Basic moderation (host/organiser can delete comments)
 
+### Legal & Support
+- [ ] Privacy Policy page
+- [ ] Terms of Service page
+- [ ] Registration: checkbox to accept Terms & Privacy Policy (required to register)
+- [ ] Help / Contact form (simple form that emails support)
+
+### Direct Messaging (Email-Based)
+Allow users to contact each other via the platform. Emails use the sender's real email address as reply-to, enabling recipients to continue the conversation directly via their own email client (saves email credits).
+
+**Messaging Scenarios:**
+- [ ] Member → Organiser (contact group organiser)
+- [ ] Organiser → All Members (broadcast to group)
+- [ ] Guest → Host (contact event host, e.g., dietary questions)
+- [ ] Member → Member (contact another group member)
+
+**Key Behaviour:**
+- Platform sends email on behalf of sender
+- Reply-to header set to sender's actual email address
+- Recipient can reply directly - conversation moves to personal email
+- Simple text-only message (no attachments, no rich text)
+- No message history stored in platform (fire and forget)
+- Members can opt out of broadcast messages (Organiser → All) via profile setting
+  - Global toggle: YES/NO (not per-group)
+  - Only affects broadcasts, not direct messages to them
+  - Default: opted IN (receives broadcasts)
+
+**Backend Requirements:**
+- New endpoint(s) for sending messages
+- Validate sender has permission for the message type (e.g., must be group member)
+- Rate limiting to prevent abuse
+- Use Resend with dynamic reply-to
+
+**Frontend Requirements:**
+- "Contact" or "Message" buttons in appropriate locations:
+  - Group page: "Contact Organiser" (visible to members)
+  - Event page: "Contact Host" (visible to attendees/members)
+  - Member list: "Message" button per member (visible to fellow members)
+  - Group management: "Message All Members" (organiser only)
+- Simple modal/dialog with text area and send button
+- Profile settings: "Receive group broadcasts" toggle (on/off)
+
 ## Phase 2: Menu & Pre-orders
 *Goal: Restaurant coordination*
 
@@ -285,6 +326,7 @@ When Flutter app launches, mirror key emails as push notifications:
 │ name            │
 │ bio             │
 │ avatar_url      │
+│ receive_broadcasts │  BOOLEAN DEFAULT TRUE
 │ created_at      │
 │ updated_at      │
 └─────────────────┘
@@ -533,6 +575,9 @@ When Flutter app launches, mirror key emails as push notifications:
 | 2026-01-08 | Group visibility toggle | Groups have `visibility` field: listed/unlisted. Controls appearance in Discover Groups only, not access. |
 | 2026-01-08 | Visibility is not privacy | Unlisted groups still accessible via direct link. This is discoverability, not access control. |
 | 2026-01-08 | Visibility is flexible | Organisers can toggle listed/unlisted at any time. No restriction on changing back. |
+| 2026-01-11 | Direct messaging via email | Users can contact each other (member→organiser, organiser→all, guest→host, member→member). Reply-to uses sender's email so conversation continues outside platform. Saves email credits. |
+| 2026-01-11 | Broadcast opt-out | Members can disable group broadcasts in profile. Global toggle, not per-group. Direct messages still delivered. |
+| 2026-01-11 | Legal & support pages | Privacy Policy, Terms of Service, Help/Contact form. Registration requires accepting terms. |
 
 ---
 
@@ -582,9 +627,11 @@ meetwithfriends/
 │   │   │   ├── rsvp.js
 │   │   │   ├── cancel_rsvp.js
 │   │   │   └── remove_rsvp.js
-│   │   └── comments/
-│   │       ├── add_comment.js
-│   │       └── delete_comment.js
+│   │   ├── comments/
+│   │   │   ├── add_comment.js
+│   │   │   └── delete_comment.js
+│   │   └── messages/
+│   │       └── send.js              # Email-based messaging
 │   ├── utils/
 │   │   └── transaction.js         # withTransaction wrapper
 │   ├── database.js                # PostgreSQL pool
@@ -705,6 +752,11 @@ meetwithfriends/
 |----------|--------|------|---------|
 | /api/comments/add_comment | POST | verifyToken (member) | Add comment to event |
 | /api/comments/delete_comment | POST | verifyToken (host+ or owner) | Delete comment |
+
+### Messages (Email-Based)
+| Endpoint | Method | Auth | Purpose |
+|----------|--------|------|---------|
+| /api/messages/send | POST | verifyToken | Send message to user(s). Body includes recipient type, IDs, and message text. Reply-to set to sender's email. |
 
 ## External Services
 

@@ -37,18 +37,18 @@ These fire immediately when an action happens in existing endpoints.
 
 ---
 
-## Phase B: Broadcast Triggers (Medium)
+## Phase B: Broadcast Triggers (Medium) ✅ Complete
 
 These send to multiple recipients. Need to handle the 100/day limit.
 
 | # | Email | Endpoint Modified | Status |
 |---|-------|-------------------|--------|
 | 2 | New event in your group | `events/create_event.js` | ✅ |
-| 10 | New comment on event | `comments/add_comment.js` | ⏳ Pending |
+| 10 | New comment on event | `comments/add_comment.js` | ✅ |
 
 ### Email #10: New Comment
 - **Recipients:** All attendees + waitlist, except the person who posted the comment
-- **Content:** Show commenter name, comment text (truncated if long), link to event page
+- **Content:** Show commenter name, comment text (truncated to 200 chars), link to event page
 - **Note:** Could generate many emails for active discussions - consider batching or rate limiting per event
 
 ---
@@ -110,3 +110,33 @@ CREATE INDEX idx_email_log_sent_at ON email_log(sent_at);
 | Date | Change |
 |------|--------|
 | 2026-01-10 | Initial implementation complete - all 9 email types implemented |
+| 2026-01-10 | Added email #10: New comment notification to attendees + waitlist |
+
+---
+
+## Future Enhancements
+
+### Email Priority/Ranking System (Low Priority)
+
+**Problem:** Broadcast emails (new event, new comment) go to all group members, wasting credits on inactive users who likely won't engage.
+
+**Solution:** Implement activity-based email ranking to prioritize active users.
+
+**Criteria for "active" user:**
+- Last login within X days (e.g., 30 days)
+- Last group visit within X days
+- Has RSVP'd to an event in the past X days
+- Has commented recently
+
+**Implementation ideas:**
+1. Add `last_login_at` and `last_group_visit_at` to track activity (see PROJECT_FOUNDATION.md)
+2. Create helper function `isActiveUser(userId, groupId)` that checks activity thresholds
+3. Filter broadcast recipients to only active users
+4. Consider tiered approach: always email hosts/organisers, then active members only
+
+**Affected emails:**
+- #2: New event in your group
+- #10: New comment on event (already limited to attendees/waitlist)
+
+**Dependencies:**
+- Requires user activity tracking to be implemented first

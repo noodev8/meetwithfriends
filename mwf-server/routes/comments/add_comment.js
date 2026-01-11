@@ -39,6 +39,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
+const { sendNewCommentEmail } = require('../../services/email');
 
 // Maximum comment length
 const MAX_COMMENT_LENGTH = 280;
@@ -82,6 +83,7 @@ router.post('/', verifyToken, async (req, res) => {
         const eventResult = await query(
             `SELECT
                 e.id,
+                e.title,
                 e.group_id,
                 er.status AS rsvp_status,
                 gm.role AS member_role,
@@ -136,6 +138,35 @@ router.post('/', verifyToken, async (req, res) => {
         );
 
         const user = userResult.rows[0];
+        const event = eventResult.rows[0];
+
+        // =======================================================================
+        // Send notification emails to attendees and waitlist (except commenter)
+        // =======================================================================
+        const recipientsResult = await query(
+            `SELECT u.email, u.name
+             FROM event_rsvp er
+             JOIN app_user u ON er.user_id = u.id
+             WHERE er.event_id = $1
+             AND er.status IN ('attending', 'waitlist')
+             AND er.user_id != $2`,
+            [event_id, userId]
+        );
+
+        // For test mode, only send one email (not one per recipient)
+        let testEmailSent = false;
+        recipientsResult.rows.forEach(recipient => {
+            const isTestEmail = recipient.email.toLowerCase().endsWith('@test.com');
+            if (isTestEmail && testEmailSent) {
+                return; // Skip duplicate test emails
+            }
+            if (isTestEmail) {
+                testEmailSent = true;
+            }
+            sendNewCommentEmail(recipient.email, recipient.name, event, user.name, trimmedContent).catch(err => {
+                console.error('Failed to send new comment email:', err);
+            });
+        });
 
         // =======================================================================
         // Return success with the new comment

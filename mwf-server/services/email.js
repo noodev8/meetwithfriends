@@ -470,6 +470,34 @@ async function sendPasswordResetEmail(email, token) {
     return sendEmail(email, 'Reset Your Password', html, 'password_reset');
 }
 
+/*
+=======================================================================================================================================
+sendNewCommentEmail
+=======================================================================================================================================
+Sent to attendees and waitlist when someone posts a comment on the event
+=======================================================================================================================================
+*/
+async function sendNewCommentEmail(email, userName, event, commenterName, commentContent) {
+    // Truncate comment if too long
+    const maxLength = 200;
+    const truncatedComment = commentContent.length > maxLength
+        ? commentContent.substring(0, maxLength) + '...'
+        : commentContent;
+
+    const html = wrapEmail(`
+        <h2 style="color: #333;">New comment on ${event.title}</h2>
+        <p style="color: #666; font-size: 16px;">
+            <strong>${commenterName}</strong> commented:
+        </p>
+        <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+            <p style="margin: 0; color: #374151; font-style: italic;">"${truncatedComment}"</p>
+        </div>
+        ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Conversation')}
+    `);
+
+    return sendEmail(email, `New comment on ${event.title}`, html, 'new_comment', event.id);
+}
+
 module.exports = {
     sendEmail,
     sendWelcomeEmail,
@@ -481,5 +509,6 @@ module.exports = {
     sendJoinedGroupEmail,
     sendNewEventEmail,
     sendEventReminderEmail,
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    sendNewCommentEmail
 };
