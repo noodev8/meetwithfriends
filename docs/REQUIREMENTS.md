@@ -81,24 +81,18 @@ Allow event attendees to contact the event host via email.
 ## Phase 2: Pre-Orders Frontend (Medium Priority)
 
 ### REQ-006: Pre-Order Submission UI (Attendee)
-**Status:** Not Started (Backend exists)
+**Status:** COMPLETE
 **Effort:** Medium
 
 Create UI for attendees to submit food orders.
 
-**Backend already exists:** `POST /api/events/:id/submit-order`
-
-**Requires:**
-- Order form on event page when `preorders_enabled=true`
-- Menu link display (if provided)
-- Order textarea + dietary notes textarea
-- Cutoff deadline display
-- Read-only state after cutoff
-
-**Acceptance Criteria:**
-- Form visible on events with pre-orders enabled
-- Submits to existing endpoint
-- Respects cutoff deadline
+**Implementation:**
+- Pre-order section on event page when `preorders_enabled=true` and user has RSVP'd
+- Shows menu link if provided
+- Order textarea + dietary notes textarea in modal
+- "Add Order" / "Edit Order" button
+- Submits via `POST /api/events/:id/submit-order`
+- Displays current order inline when submitted
 
 ---
 
@@ -212,7 +206,7 @@ Allow hosts to save and reuse event configurations.
 | 003 | Broadcast Opt-Out | 1 | Medium | COMPLETE |
 | 004 | Member→Organiser Msg | 1 | Medium | COMPLETE |
 | 005 | Guest→Host Msg | 1 | Medium | COMPLETE |
-| 006 | Pre-Order Submit UI | 2 | Medium | Not Started |
+| 006 | Pre-Order Submit UI | 2 | Medium | COMPLETE |
 | 007 | Pre-Order Host View | 2 | Small-Medium | COMPLETE |
 | 008 | Event Form Pre-Order | 2 | Small | COMPLETE |
 | 009 | Stripe Connect | 3 | Large | Blocked |
@@ -226,10 +220,10 @@ Allow hosts to save and reuse event configurations.
 ## Suggested Order
 
 **Phase 1:** COMPLETE
+**Phase 2:** COMPLETE
 
-**Phase 2 gaps:**
-1. REQ-006 - Pre-Order Submit UI (backend already exists)
+**Phase 3:** Blocked (needs Stripe account setup)
 
 **Phase 5 (when ready):**
-2. REQ-012 - Recurring Events
-3. REQ-013 - Event Templates
+1. REQ-012 - Recurring Events (Large)
+2. REQ-013 - Event Templates (Medium)
