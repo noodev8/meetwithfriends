@@ -14,6 +14,7 @@ import { ApiResult, Group } from '@/types';
 export interface GroupWithCount extends Group {
     member_count: number;
     visibility?: 'listed' | 'unlisted';
+    invite_code?: string; // Only included for organisers
     upcoming_event_count?: number;
 }
 
@@ -64,10 +65,12 @@ export async function getAllGroups(token?: string): Promise<ApiResult<GroupWithC
 getGroup
 =======================================================================================================================================
 Fetches a single group by ID, including user's membership status if logged in.
+For unlisted groups, requires invite code if user is not a member.
 =======================================================================================================================================
 */
-export async function getGroup(id: number, token?: string): Promise<ApiResult<GroupWithMembership>> {
-    const response = await apiGet(`/api/groups/${id}`, token);
+export async function getGroup(id: number, token?: string, inviteCode?: string): Promise<ApiResult<GroupWithMembership>> {
+    const url = inviteCode ? `/api/groups/${id}?code=${encodeURIComponent(inviteCode)}` : `/api/groups/${id}`;
+    const response = await apiGet(url, token);
 
     if (response.return_code === 'SUCCESS' && response.group) {
         return {
@@ -135,6 +138,7 @@ export async function updateGroup(
         image_url?: string | null;
         image_position?: 'top' | 'center' | 'bottom';
         join_policy?: 'auto' | 'approval';
+        visibility?: 'listed' | 'unlisted';
     }
 ): Promise<ApiResult<Group>> {
     const response = await apiCall(`/api/groups/${groupId}/update`, data, token);
@@ -166,13 +170,19 @@ joinGroup
 Requests to join a group. Behavior depends on group's join_policy:
 - "auto": User is added immediately as active member
 - "approval": User is added as pending, awaiting approval
+For unlisted groups, requires invite_code.
 =======================================================================================================================================
 */
 export async function joinGroup(
     token: string,
-    groupId: number
+    groupId: number,
+    inviteCode?: string
 ): Promise<ApiResult<JoinGroupResponse>> {
-    const response = await apiCall('/api/groups/join', { group_id: groupId }, token);
+    const payload: { group_id: number; invite_code?: string } = { group_id: groupId };
+    if (inviteCode) {
+        payload.invite_code = inviteCode;
+    }
+    const response = await apiCall('/api/groups/join', payload, token);
 
     if (response.return_code === 'SUCCESS') {
         return {
@@ -513,6 +523,33 @@ export async function contactOrganiser(
     return {
         success: false,
         error: (response.message as string) || 'Failed to send message',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+regenerateInviteCode
+=======================================================================================================================================
+Regenerates the invite code for a group. Only the organiser can do this.
+=======================================================================================================================================
+*/
+export async function regenerateInviteCode(
+    token: string,
+    groupId: number
+): Promise<ApiResult<{ invite_code: string }>> {
+    const response = await apiCall(`/api/groups/${groupId}/regenerate-code`, {}, token);
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: { invite_code: response.invite_code as string },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to regenerate invite code',
         return_code: response.return_code,
     };
 }

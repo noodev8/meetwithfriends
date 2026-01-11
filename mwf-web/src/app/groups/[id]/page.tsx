@@ -10,7 +10,7 @@ Hero image, main content on left, sidebar on right with organiser info, members,
 */
 
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import DOMPurify from 'dompurify';
 import { useAuth } from '@/context/AuthContext';
@@ -37,6 +37,8 @@ export default function GroupDetailPage() {
     const { user, token } = useAuth();
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const inviteCode = searchParams.get('code') || undefined;
     const [group, setGroup] = useState<GroupWithCount | null>(null);
     const [membership, setMembership] = useState<GroupMembership | null>(null);
     const [pendingMembers, setPendingMembers] = useState<GroupMember[]>([]);
@@ -101,7 +103,7 @@ export default function GroupDetailPage() {
         async function fetchGroup() {
             if (!params.id) return;
 
-            const result = await getGroup(Number(params.id), token || undefined);
+            const result = await getGroup(Number(params.id), token || undefined, inviteCode);
             if (result.success && result.data) {
                 setGroup(result.data.group);
                 setMembership(result.data.membership);
@@ -111,7 +113,7 @@ export default function GroupDetailPage() {
             setLoading(false);
         }
         fetchGroup();
-    }, [params.id, token]);
+    }, [params.id, token, inviteCode]);
 
     // =======================================================================
     // Fetch pending members when user is organiser
@@ -151,7 +153,7 @@ export default function GroupDetailPage() {
         if (!token || !group) return;
 
         setJoining(true);
-        const result = await joinGroup(token, group.id);
+        const result = await joinGroup(token, group.id, inviteCode);
         setJoining(false);
 
         if (result.success && result.data) {
@@ -227,7 +229,11 @@ export default function GroupDetailPage() {
     // Handle copy link
     // =======================================================================
     const handleCopyLink = async () => {
-        const url = window.location.href;
+        // For unlisted groups, always include the invite code in the share link
+        let url = `${window.location.origin}/groups/${group?.id}`;
+        if (group?.visibility === 'unlisted' && group?.invite_code) {
+            url += `?code=${group.invite_code}`;
+        }
         await navigator.clipboard.writeText(url);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);

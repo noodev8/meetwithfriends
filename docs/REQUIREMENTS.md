@@ -2,7 +2,7 @@
 
 Single source of truth for feature status. See PROJECT_FOUNDATION.md for vision/architecture.
 
-**Status:** 10/12 complete, 2 blocked (Stripe)
+**Status:** 11/11 complete
 
 ---
 
@@ -121,38 +121,6 @@ Add pre-order configuration to event create/edit forms.
 
 ---
 
-## Phase 3: Payments - BLOCKED
-
-### REQ-009: Stripe Connect Integration
-**Status:** Not Started
-**Effort:** Large
-**Blocked:** Needs Stripe account setup
-
-Allow group organisers to connect Stripe for receiving payments.
-
-**Requires:**
-- Stripe Connect OAuth flow
-- `stripe_account` table (group_id, stripe_account_id, connected_at)
-- Connection status in group settings
-
----
-
-### REQ-010: Event Deposits
-**Status:** Not Started
-**Effort:** Large
-**Blocked:** Depends on REQ-009
-
-Allow hosts to require deposits for event attendance.
-
-**Requires:**
-- Deposit amount field on event creation
-- Payment required to confirm RSVP
-- Stripe Checkout integration
-- Payment status tracking
-- Refund handling
-
----
-
 ## Phase 5: Polish - COMPLETE
 
 ### REQ-011: Last Login & Group Visit Tracking
@@ -187,6 +155,25 @@ Allow hosts to duplicate an existing event to create a new one with the same set
 
 ---
 
+### REQ-013: Group Visibility (Unlisted Groups)
+**Status:** COMPLETE
+**Effort:** Medium
+
+Allow group organisers to make groups unlisted (invite-only) so they can't be discovered by browsing.
+
+**Implementation:**
+- Added `invite_code VARCHAR(12)` column to `group_list` - 8-char random hex code
+- Added `visibility` column (already existed) with values: "listed", "unlisted"
+- Listed groups: appear in discover, accessible by anyone
+- Unlisted groups: require `?code=XXXXXXXX` URL param to view/join (unless already a member)
+- Group edit page: visibility toggle (listed/unlisted)
+- When unlisted: shows invite link with copy button and "Regenerate code" option
+- `POST /api/groups/:id/regenerate-code` endpoint for organisers
+- Share button on group page includes invite code in URL for unlisted groups (organiser only)
+- Returns NOT_FOUND (not a different error) for missing/invalid codes to prevent enumeration
+
+---
+
 ## Summary
 
 | REQ | Name | Phase | Effort | Status |
@@ -199,17 +186,10 @@ Allow hosts to duplicate an existing event to create a new one with the same set
 | 006 | Pre-Order Submit UI | 2 | Medium | COMPLETE |
 | 007 | Pre-Order Host View | 2 | Small-Medium | COMPLETE |
 | 008 | Event Form Pre-Order | 2 | Small | COMPLETE |
-| 009 | Stripe Connect | 3 | Large | Blocked |
-| 010 | Event Deposits | 3 | Large | Blocked |
 | 011 | Last Login Tracking | 5 | Small | COMPLETE |
 | 012 | Duplicate Event | 5 | Small | COMPLETE |
+| 013 | Group Visibility | 5 | Medium | COMPLETE |
 
 ---
 
-## Suggested Order
-
-**Phase 1:** COMPLETE
-**Phase 2:** COMPLETE
-**Phase 5:** COMPLETE
-
-**Phase 3:** Blocked (needs Stripe account setup)
+**All phases complete.**

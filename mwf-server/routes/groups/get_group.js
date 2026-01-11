@@ -4,9 +4,10 @@ API Route: get_group
 =======================================================================================================================================
 Method: GET
 Purpose: Retrieves a single group by ID with member count. Uses optional auth to include user's membership status.
+         For unlisted groups, requires ?code=XXXXXXXX query param unless user is a member.
 =======================================================================================================================================
 Request Payload:
-None (GET request with :id URL parameter)
+None (GET request with :id URL parameter, optional ?code query param for unlisted groups)
 
 Success Response:
 {
@@ -19,6 +20,7 @@ Success Response:
     "image_position": "center",
     "join_policy": "approval",
     "visibility": "listed",
+    "invite_code": "A1B2C3D4",       // Only included for organisers
     "member_count": 42,
     "created_at": "2026-01-01T00:00:00.000Z"
   },
@@ -30,7 +32,7 @@ Success Response:
 =======================================================================================================================================
 Return Codes:
 "SUCCESS"
-"NOT_FOUND"
+"NOT_FOUND"                          // Also returned for unlisted groups with missing/invalid code
 "SERVER_ERROR"
 =======================================================================================================================================
 */
@@ -43,6 +45,7 @@ const { optionalAuth } = require('../../middleware/auth');
 router.get('/:id', optionalAuth, async (req, res) => {
     try {
         const { id } = req.params;
+        const { code } = req.query;
         const userId = req.user?.id || null;
 
         // =======================================================================
@@ -67,6 +70,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
                 g.image_position,
                 g.join_policy,
                 g.visibility,
+                g.invite_code,
                 g.created_at,
                 COUNT(gm.id) FILTER (WHERE gm.status = 'active') AS member_count
              FROM group_list g
@@ -123,11 +127,36 @@ router.get('/:id', optionalAuth, async (req, res) => {
         }
 
         // =======================================================================
+        // For unlisted groups, require invite code if user is not a member
+        // =======================================================================
+        const isMember = membership && (membership.status === 'active' || membership.status === 'pending');
+
+        if (group.visibility === 'unlisted' && !isMember) {
+            // Require valid invite code
+            if (!code || code.toUpperCase() !== group.invite_code) {
+                return res.json({
+                    return_code: 'NOT_FOUND',
+                    message: 'Group not found'
+                });
+            }
+        }
+
+        // =======================================================================
+        // Build response - only include invite_code for organisers
+        // =======================================================================
+        const isOrganiser = membership && membership.role === 'organiser';
+        const responseGroup = { ...group };
+
+        if (!isOrganiser) {
+            delete responseGroup.invite_code;
+        }
+
+        // =======================================================================
         // Return success response
         // =======================================================================
         return res.json({
             return_code: 'SUCCESS',
-            group,
+            group: responseGroup,
             membership
         });
 

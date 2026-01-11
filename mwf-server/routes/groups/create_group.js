@@ -26,6 +26,7 @@ Success Response:
     "image_position": "center",
     "join_policy": "approval",
     "visibility": "listed",
+    "invite_code": "A1B2C3D4",
     "created_at": "2026-01-01T00:00:00.000Z"
   }
 }
@@ -44,8 +45,14 @@ Return Codes:
 
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
+
+// Generate a random 8-character invite code
+function generateInviteCode() {
+    return crypto.randomBytes(4).toString('hex').toUpperCase();
+}
 
 router.post('/', verifyToken, async (req, res) => {
     try {
@@ -114,13 +121,14 @@ router.post('/', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
-        // Create the group
+        // Create the group with invite code
         // =======================================================================
+        const inviteCode = generateInviteCode();
         const groupResult = await query(
-            `INSERT INTO group_list (name, description, image_url, image_position, join_policy, visibility)
-             VALUES ($1, $2, $3, $4, $5, $6)
-             RETURNING id, name, description, image_url, image_position, join_policy, visibility, created_at`,
-            [name.trim(), description || null, image_url || null, image_position || 'center', finalJoinPolicy, finalVisibility]
+            `INSERT INTO group_list (name, description, image_url, image_position, join_policy, visibility, invite_code)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
+             RETURNING id, name, description, image_url, image_position, join_policy, visibility, invite_code, created_at`,
+            [name.trim(), description || null, image_url || null, image_position || 'center', finalJoinPolicy, finalVisibility, inviteCode]
         );
 
         const group = groupResult.rows[0];

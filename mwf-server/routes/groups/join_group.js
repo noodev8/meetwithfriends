@@ -6,10 +6,12 @@ Method: POST
 Purpose: Request to join a group. Behavior depends on group's join_policy:
          - "auto": User is added immediately as active member
          - "approval": User is added as pending, awaiting approval
+         For unlisted groups, requires invite_code.
 =======================================================================================================================================
 Request Payload:
 {
-  "group_id": 1  // number, required
+  "group_id": 1,         // number, required
+  "invite_code": "ABC123" // string, required for unlisted groups
 }
 
 Success Response (auto-approved):
@@ -29,7 +31,7 @@ Success Response (pending approval):
 Return Codes:
 "SUCCESS"
 "MISSING_FIELDS"
-"NOT_FOUND"
+"NOT_FOUND"                  // Also returned for unlisted groups with missing/invalid code
 "ALREADY_MEMBER"
 "ALREADY_PENDING"
 "UNAUTHORIZED"
@@ -45,7 +47,7 @@ const { sendNewJoinRequestEmail } = require('../../services/email');
 
 router.post('/', verifyToken, async (req, res) => {
     try {
-        const { group_id } = req.body;
+        const { group_id, invite_code } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -59,10 +61,10 @@ router.post('/', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
-        // Check if group exists and get join_policy
+        // Check if group exists and get join_policy, visibility, invite_code
         // =======================================================================
         const groupResult = await query(
-            'SELECT id, name, join_policy FROM group_list WHERE id = $1',
+            'SELECT id, name, join_policy, visibility, invite_code FROM group_list WHERE id = $1',
             [group_id]
         );
 
@@ -74,6 +76,18 @@ router.post('/', verifyToken, async (req, res) => {
         }
 
         const group = groupResult.rows[0];
+
+        // =======================================================================
+        // For unlisted groups, require valid invite code
+        // =======================================================================
+        if (group.visibility === 'unlisted') {
+            if (!invite_code || invite_code.toUpperCase() !== group.invite_code) {
+                return res.json({
+                    return_code: 'NOT_FOUND',
+                    message: 'Group not found'
+                });
+            }
+        }
 
         // =======================================================================
         // Check if user is already a member or has pending request

@@ -5,7 +5,7 @@
 -- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 17.4
 
--- Started on 2026-01-11 20:30:34
+-- Started on 2026-01-11 21:42:58
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -362,6 +362,7 @@ CREATE TABLE public.group_list (
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     visibility character varying(10) DEFAULT 'listed'::character varying,
     image_position character varying(10) DEFAULT 'center'::character varying,
+    invite_code character varying(12) NOT NULL,
     CONSTRAINT group_image_position_check CHECK (((image_position)::text = ANY ((ARRAY['top'::character varying, 'center'::character varying, 'bottom'::character varying])::text[]))),
     CONSTRAINT user_group_join_policy_check CHECK (((join_policy)::text = ANY ((ARRAY['auto'::character varying, 'approval'::character varying])::text[])))
 );
@@ -923,7 +924,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENC
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO meetwithfriends_user;
 
 
--- Completed on 2026-01-11 20:30:36
+-- Completed on 2026-01-11 21:43:00
 
 --
 -- PostgreSQL database dump complete

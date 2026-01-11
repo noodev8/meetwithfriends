@@ -23,6 +23,7 @@ const removeMember = require('./remove_member');
 const assignRole = require('./assign_role');
 const leaveGroup = require('./leave_group');
 const contactOrganiser = require('./contact_organiser');
+const regenerateInviteCode = require('./regenerate_invite_code');
 
 // =======================================================================
 // Route definitions
@@ -39,6 +40,7 @@ router.use('/', removeMember);         // POST /api/groups/:id/members/remove - 
 router.use('/', assignRole);           // POST /api/groups/:id/members/role - assign role (organiser only)
 router.use('/', leaveGroup);           // POST /api/groups/:id/leave - leave a group (members only)
 router.use('/', contactOrganiser);     // POST /api/groups/:id/contact-organiser - contact group organiser
+router.use('/', regenerateInviteCode); // POST /api/groups/:id/regenerate-code - regenerate invite code (organiser only)
 router.use('/', getGroup);             // GET /api/groups/:id - get single group (must be last)
 
 module.exports = router;
