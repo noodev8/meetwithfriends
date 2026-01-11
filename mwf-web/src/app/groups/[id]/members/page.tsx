@@ -21,7 +21,7 @@ import {
     GroupMembership,
     GroupMember,
 } from '@/lib/api/groups';
-import Header from '@/components/layout/Header';
+import SidebarLayout from '@/components/layout/SidebarLayout';
 
 // Number of members to load per batch
 const PAGE_SIZE = 20;
@@ -200,9 +200,9 @@ export default function GroupMembersPage() {
     // =======================================================================
     if (loading && !group) {
         return (
-            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-stone-50">
-                <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-stone-600 mt-4">Loading...</p>
+            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50">
+                <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-slate-600 mt-4">Loading...</p>
             </main>
         );
     }
@@ -212,19 +212,18 @@ export default function GroupMembersPage() {
     // =======================================================================
     if (error || !group) {
         return (
-            <main className="min-h-screen flex flex-col bg-stone-50">
-                <Header />
+            <SidebarLayout>
                 <div className="flex-1 flex flex-col items-center justify-center p-8">
                     <div className="text-6xl mb-4">👥</div>
-                    <p className="text-stone-600 mb-4">{error || 'Group not found'}</p>
+                    <p className="text-slate-600 mb-4">{error || 'Group not found'}</p>
                     <Link
                         href="/groups"
-                        className="text-amber-600 hover:text-amber-700 font-medium"
+                        className="text-indigo-600 hover:text-indigo-700 font-medium"
                     >
                         Back to groups
                     </Link>
                 </div>
-            </main>
+            </SidebarLayout>
         );
     }
 
@@ -232,15 +231,14 @@ export default function GroupMembersPage() {
     // Members page view
     // =======================================================================
     return (
-        <main className="min-h-screen flex flex-col bg-stone-50">
-            <Header />
+        <SidebarLayout>
 
             {/* Page Header */}
-            <div className="bg-white border-b border-stone-200">
+            <div className="bg-white border-b border-slate-200">
                 <div className="max-w-3xl mx-auto px-4 sm:px-8 py-6">
                     <Link
                         href={`/groups/${group.id}`}
-                        className="inline-flex items-center gap-2 text-amber-600 hover:text-amber-700 mb-3 transition-colors text-sm"
+                        className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-3 transition-colors text-sm"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -248,10 +246,10 @@ export default function GroupMembersPage() {
                         Back to {group.name}
                     </Link>
 
-                    <h1 className="text-xl sm:text-2xl font-bold text-stone-900 font-display">
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 font-display">
                         Members
                     </h1>
-                    <p className="text-stone-500 mt-1">
+                    <p className="text-slate-500 mt-1">
                         {totalCount} member{totalCount !== 1 ? 's' : ''}
                         {searchQuery && ` matching "${searchQuery}"`}
                     </p>
@@ -259,12 +257,12 @@ export default function GroupMembersPage() {
             </div>
 
             {/* Search */}
-            <div className="bg-white border-b border-stone-200">
+            <div className="bg-white border-b border-slate-200">
                 <div className="max-w-3xl mx-auto px-4 sm:px-8 py-4">
                     <form onSubmit={handleSearch} className="flex gap-2">
                         <div className="flex-1 relative">
                             <svg
-                                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400"
+                                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -276,12 +274,12 @@ export default function GroupMembersPage() {
                                 value={searchInput}
                                 onChange={(e) => setSearchInput(e.target.value)}
                                 placeholder="Search members..."
-                                className="w-full pl-10 pr-4 py-2.5 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
                             />
                         </div>
                         <button
                             type="submit"
-                            className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition font-medium"
+                            className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl hover:from-indigo-600 hover:to-violet-700 transition font-medium"
                         >
                             Search
                         </button>
@@ -289,7 +287,7 @@ export default function GroupMembersPage() {
                             <button
                                 type="button"
                                 onClick={handleClearSearch}
-                                className="px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl hover:bg-stone-200 transition"
+                                className="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition"
                             >
                                 Clear
                             </button>
@@ -302,14 +300,14 @@ export default function GroupMembersPage() {
             <div className="flex-1 px-4 sm:px-8 py-6 max-w-3xl mx-auto w-full">
                 {loading ? (
                     <div className="text-center py-8">
-                        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                        <p className="text-stone-600 mt-4">Loading members...</p>
+                        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                        <p className="text-slate-600 mt-4">Loading members...</p>
                     </div>
                 ) : members.length > 0 ? (
                     <>
-                        <div className="bg-white rounded-2xl border border-stone-200 shadow-sm divide-y divide-stone-100">
+                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm divide-y divide-slate-100">
                             {members.map(member => (
-                                <div key={member.id} className="p-4 hover:bg-stone-50 transition">
+                                <div key={member.id} className="p-4 hover:bg-slate-50 transition">
                                     <div className="flex items-center gap-4">
                                         {/* Avatar */}
                                         <button
@@ -323,7 +321,7 @@ export default function GroupMembersPage() {
                                                     className="w-12 h-12 rounded-full object-cover"
                                                 />
                                             ) : (
-                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center">
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-200 to-violet-300 flex items-center justify-center">
                                                     <span className="text-lg font-bold text-white">
                                                         {member.name.charAt(0).toUpperCase()}
                                                     </span>
@@ -336,22 +334,22 @@ export default function GroupMembersPage() {
                                             <div className="flex items-center gap-2">
                                                 <button
                                                     onClick={() => setSelectedMember(member)}
-                                                    className="font-medium text-stone-900 hover:text-amber-600 transition text-left truncate"
+                                                    className="font-medium text-slate-900 hover:text-indigo-600 transition text-left truncate"
                                                 >
                                                     {member.name}
                                                 </button>
                                                 {member.role === 'organiser' && (
-                                                    <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+                                                    <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full">
                                                         Organiser
                                                     </span>
                                                 )}
                                                 {member.role === 'host' && (
-                                                    <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">
+                                                    <span className="px-2 py-0.5 bg-violet-100 text-violet-700 text-xs font-medium rounded-full">
                                                         Host
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-sm text-stone-500 mt-0.5">
+                                            <p className="text-sm text-slate-500 mt-0.5">
                                                 Joined {formatJoinedDate(member.joined_at)}
                                             </p>
                                         </div>
@@ -364,7 +362,7 @@ export default function GroupMembersPage() {
                                                     <button
                                                         onClick={() => handleAssignRole(member, 'host')}
                                                         disabled={updatingRole === member.id}
-                                                        className="px-3 py-1.5 text-sm text-amber-600 hover:bg-amber-50 rounded-lg transition disabled:opacity-50"
+                                                        className="px-3 py-1.5 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition disabled:opacity-50"
                                                     >
                                                         {updatingRole === member.id ? '...' : 'Give Host Role'}
                                                     </button>
@@ -372,7 +370,7 @@ export default function GroupMembersPage() {
                                                     <button
                                                         onClick={() => handleAssignRole(member, 'member')}
                                                         disabled={updatingRole === member.id}
-                                                        className="px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100 rounded-lg transition disabled:opacity-50"
+                                                        className="px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition disabled:opacity-50"
                                                     >
                                                         {updatingRole === member.id ? '...' : 'Remove Host Role'}
                                                     </button>
@@ -397,7 +395,7 @@ export default function GroupMembersPage() {
                                 <button
                                     onClick={loadMore}
                                     disabled={loadingMore}
-                                    className="px-6 py-3 bg-white border border-stone-300 rounded-xl text-stone-700 hover:bg-stone-50 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                                    className="px-6 py-3 bg-white border border-slate-300 rounded-xl text-slate-700 hover:bg-slate-50 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                                 >
                                     {loadingMore ? 'Loading...' : `Load more (${members.length} of ${totalCount})`}
                                 </button>
@@ -405,9 +403,9 @@ export default function GroupMembersPage() {
                         )}
                     </>
                 ) : (
-                    <div className="bg-white rounded-2xl border border-stone-200 p-12 text-center">
+                    <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
                         <div className="text-4xl mb-3">👥</div>
-                        <p className="text-stone-500">
+                        <p className="text-slate-500">
                             {searchQuery
                                 ? `No members found matching "${searchQuery}"`
                                 : 'No members yet.'}
@@ -415,7 +413,7 @@ export default function GroupMembersPage() {
                         {searchQuery && (
                             <button
                                 onClick={handleClearSearch}
-                                className="mt-4 text-amber-600 hover:text-amber-700 font-medium"
+                                className="mt-4 text-indigo-600 hover:text-indigo-700 font-medium"
                             >
                                 Clear search
                             </button>
@@ -451,7 +449,7 @@ export default function GroupMembersPage() {
                                 className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl object-cover shadow-2xl"
                             />
                         ) : (
-                            <div className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center shadow-2xl">
+                            <div className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl bg-gradient-to-br from-indigo-200 to-violet-300 flex items-center justify-center shadow-2xl">
                                 <span className="text-8xl font-bold text-white">
                                     {selectedMember.name.charAt(0).toUpperCase()}
                                 </span>
@@ -475,17 +473,17 @@ export default function GroupMembersPage() {
                         className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <h3 className="text-lg font-bold text-stone-900 font-display mb-2">
+                        <h3 className="text-lg font-bold text-slate-900 font-display mb-2">
                             Remove {memberToRemove.name}?
                         </h3>
-                        <p className="text-sm text-stone-600 mb-6">
+                        <p className="text-sm text-slate-600 mb-6">
                             They will lose access to this group and its events. They can request to rejoin later.
                         </p>
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setMemberToRemove(null)}
                                 disabled={removing}
-                                className="flex-1 px-4 py-2.5 border border-stone-300 text-stone-700 rounded-xl hover:bg-stone-50 transition font-medium disabled:opacity-50"
+                                className="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition font-medium disabled:opacity-50"
                             >
                                 Cancel
                             </button>
@@ -500,6 +498,6 @@ export default function GroupMembersPage() {
                     </div>
                 </div>
             )}
-        </main>
+        </SidebarLayout>
     );
 }

@@ -555,7 +555,11 @@ export default function Dashboard() {
                                 <section>
                                     <h3 className="text-lg font-bold text-slate-800 mb-4">Your Groups</h3>
                                     <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3">
-                                        {[...organiserGroups, ...memberGroups].slice(0, 4).map((group) => (
+                                        {/* Combine groups with role tracking - organisers first */}
+                                        {[
+                                            ...organiserGroups.map(g => ({ ...g, role: 'organiser' as const })),
+                                            ...memberGroups.map(g => ({ ...g, role: 'member' as const }))
+                                        ].slice(0, 4).map((group) => (
                                             <Link
                                                 key={group.id}
                                                 href={`/groups/${group.id}`}
@@ -567,9 +571,16 @@ export default function Dashboard() {
                                                     </span>
                                                 </div>
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="text-sm font-semibold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
-                                                        {group.name}
-                                                    </p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-sm font-semibold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
+                                                            {group.name}
+                                                        </p>
+                                                        {group.role === 'organiser' && (
+                                                            <span className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-indigo-100 text-indigo-600 rounded">
+                                                                Organiser
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <p className="text-xs text-slate-400">
                                                         {group.member_count} members
                                                     </p>

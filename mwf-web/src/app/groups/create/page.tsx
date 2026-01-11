@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { createGroup } from '@/lib/api/groups';
-import Header from '@/components/layout/Header';
+import SidebarLayout from '@/components/layout/SidebarLayout';
 import ImageUpload from '@/components/ui/ImageUpload';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 
@@ -124,8 +124,8 @@ export default function CreateGroupPage() {
     // =======================================================================
     if (isLoading || !user) {
         return (
-            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-stone-50">
-                <div className="w-8 h-8 border-2 border-amber-300 border-t-amber-600 rounded-full animate-spin" />
+            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50">
+                <div className="w-8 h-8 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin" />
             </main>
         );
     }
@@ -134,16 +134,14 @@ export default function CreateGroupPage() {
     // Create group form with tips sidebar
     // =======================================================================
     return (
-        <main className="min-h-screen flex flex-col bg-stone-50">
-            <Header />
-
-            <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-5xl mx-auto w-full">
-                <h1 className="font-display text-2xl sm:text-3xl font-bold text-stone-800 mb-6 sm:mb-8">Create a Group</h1>
+        <SidebarLayout>
+            <div className="px-4 sm:px-8 py-6 sm:py-8 max-w-5xl mx-auto w-full">
+                <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-800 mb-6 sm:mb-8">Create a Group</h1>
 
                 <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
                     {/* Form Column */}
                     <div className="flex-1 lg:flex-[3]">
-                        <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-stone-200 p-6">
+                        <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200 p-6">
                             {error && (
                                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
                                     {error}
@@ -151,7 +149,7 @@ export default function CreateGroupPage() {
                             )}
 
                             <div className="mb-6">
-                                <label htmlFor="name" className="block text-sm font-medium text-stone-700 mb-2">
+                                <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-2">
                                     Group Name *
                                 </label>
                                 <input
@@ -159,7 +157,7 @@ export default function CreateGroupPage() {
                                     id="name"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
                                     placeholder="e.g., Brookfield Socials"
                                     maxLength={100}
                                     required
@@ -167,7 +165,7 @@ export default function CreateGroupPage() {
                             </div>
 
                             <div className="mb-6">
-                                <label className="block text-sm font-medium text-stone-700 mb-2">
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
                                     Description
                                 </label>
                                 <RichTextEditor
@@ -178,7 +176,7 @@ export default function CreateGroupPage() {
                             </div>
 
                             <div className="mb-6">
-                                <label className="block text-sm font-medium text-stone-700 mb-2">
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
                                     Group Image
                                 </label>
                                 <ImageUpload
@@ -190,36 +188,36 @@ export default function CreateGroupPage() {
                             </div>
 
                             <div className="mb-6">
-                                <label className="block text-sm font-medium text-stone-700 mb-2">
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
                                     Join Policy
                                 </label>
                                 <div className="space-y-2">
-                                    <label className="flex items-center gap-3 p-3 border border-stone-200 rounded-lg cursor-pointer hover:bg-stone-50 transition">
+                                    <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100 transition">
                                         <input
                                             type="radio"
                                             name="joinPolicy"
                                             value="approval"
                                             checked={joinPolicy === 'approval'}
                                             onChange={() => setJoinPolicy('approval')}
-                                            className="text-amber-600 focus:ring-amber-500"
+                                            className="text-indigo-600 focus:ring-indigo-500"
                                         />
                                         <div>
-                                            <p className="font-medium text-stone-800">Require Approval</p>
-                                            <p className="text-sm text-stone-500">New members must be approved by an organiser</p>
+                                            <p className="font-medium text-slate-800">Require Approval</p>
+                                            <p className="text-sm text-slate-500">New members must be approved by an organiser</p>
                                         </div>
                                     </label>
-                                    <label className="flex items-center gap-3 p-3 border border-stone-200 rounded-lg cursor-pointer hover:bg-stone-50 transition">
+                                    <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100 transition">
                                         <input
                                             type="radio"
                                             name="joinPolicy"
                                             value="auto"
                                             checked={joinPolicy === 'auto'}
                                             onChange={() => setJoinPolicy('auto')}
-                                            className="text-amber-600 focus:ring-amber-500"
+                                            className="text-indigo-600 focus:ring-indigo-500"
                                         />
                                         <div>
-                                            <p className="font-medium text-stone-800">Auto Approve</p>
-                                            <p className="text-sm text-stone-500">Anyone can join immediately</p>
+                                            <p className="font-medium text-slate-800">Auto Approve</p>
+                                            <p className="text-sm text-slate-500">Anyone can join immediately</p>
                                         </div>
                                     </label>
                                 </div>
@@ -229,13 +227,13 @@ export default function CreateGroupPage() {
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50"
+                                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-violet-700 transition-all disabled:opacity-50"
                                 >
                                     {submitting ? 'Creating...' : 'Create Group'}
                                 </button>
                                 <Link
                                     href="/dashboard"
-                                    className="px-6 py-3 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition text-center"
+                                    className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-100 transition text-center"
                                 >
                                     Cancel
                                 </Link>
@@ -246,24 +244,24 @@ export default function CreateGroupPage() {
                     {/* Tips Sidebar - Hidden on mobile, shown on lg+ */}
                     <aside className="hidden lg:block lg:flex-[2]">
                         <div className="sticky top-8 space-y-4">
-                            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-200/50 p-5">
+                            <div className="bg-gradient-to-br from-indigo-50 to-violet-50 rounded-2xl border border-indigo-200/50 p-5">
                                 <div className="flex items-center gap-2 mb-4">
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
                                         <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                                         </svg>
                                     </div>
-                                    <h2 className="font-display text-lg font-semibold text-stone-800">Tips</h2>
+                                    <h2 className="font-display text-lg font-semibold text-slate-800">Tips</h2>
                                 </div>
                                 <div className="space-y-4">
                                     {tips.map((tip) => (
                                         <div key={tip.id} className="flex gap-3">
-                                            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/80 flex items-center justify-center text-amber-600">
+                                            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/80 flex items-center justify-center text-indigo-600">
                                                 {tip.icon}
                                             </div>
                                             <div>
-                                                <h3 className="font-medium text-stone-800 text-sm">{tip.title}</h3>
-                                                <p className="text-sm text-stone-600 mt-0.5">{tip.description}</p>
+                                                <h3 className="font-medium text-slate-800 text-sm">{tip.title}</h3>
+                                                <p className="text-sm text-slate-600 mt-0.5">{tip.description}</p>
                                             </div>
                                         </div>
                                     ))}
@@ -273,6 +271,6 @@ export default function CreateGroupPage() {
                     </aside>
                 </div>
             </div>
-        </main>
+        </SidebarLayout>
     );
 }

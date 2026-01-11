@@ -29,8 +29,7 @@ import {
     deleteComment,
     CommentWithDetails,
 } from '@/lib/api/comments';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+import SidebarLayout from '@/components/layout/SidebarLayout';
 import DOMPurify from 'dompurify';
 
 export default function EventDetailPage() {
@@ -317,10 +316,12 @@ export default function EventDetailPage() {
     // =======================================================================
     if (loading) {
         return (
-            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-stone-50">
-                <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-stone-600 mt-4">Loading event...</p>
-            </main>
+            <SidebarLayout>
+                <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50">
+                    <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-slate-600 mt-4">Loading event...</p>
+                </div>
+            </SidebarLayout>
         );
     }
 
@@ -329,22 +330,21 @@ export default function EventDetailPage() {
     // =======================================================================
     if (error || !event) {
         return (
-            <main className="min-h-screen flex flex-col bg-stone-50">
-                <Header />
-                <div className="flex-1 flex flex-col items-center justify-center p-8">
+            <SidebarLayout>
+                <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50">
                     <div className="text-center">
                         <div className="text-6xl mb-4">🎫</div>
-                        <h1 className="text-2xl font-bold text-stone-900 mb-2">Event not found</h1>
-                        <p className="text-stone-600 mb-6">{error || 'This event may have been removed or doesn\'t exist.'}</p>
+                        <h1 className="text-2xl font-bold text-slate-900 mb-2">Event not found</h1>
+                        <p className="text-slate-600 mb-6">{error || 'This event may have been removed or doesn\'t exist.'}</p>
                         <Link
                             href="/dashboard"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-600 hover:to-violet-700 transition-all shadow-md"
                         >
                             Back to dashboard
                         </Link>
                     </div>
                 </div>
-            </main>
+            </SidebarLayout>
         );
     }
 
@@ -353,16 +353,14 @@ export default function EventDetailPage() {
     const spotsRemaining = event.capacity ? event.capacity - totalSpotsUsed : null;
 
     return (
-        <main className="min-h-screen flex flex-col bg-stone-50">
-            <Header />
-
+        <SidebarLayout>
             {/* Hero Section */}
-            <div className="bg-white border-b border-stone-200">
+            <div className="bg-white border-b border-slate-200">
                 <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
                     {/* Breadcrumb */}
                     <Link
                         href={`/groups/${event.group_id}`}
-                        className="inline-flex items-center gap-2 text-amber-600 hover:text-amber-700 mb-4 transition-colors"
+                        className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-4 transition-colors"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -375,7 +373,7 @@ export default function EventDetailPage() {
                         {/* Featured Image */}
                         {event.image_url && (
                             <div className="lg:w-96 flex-shrink-0">
-                                <div className="aspect-[16/10] rounded-2xl overflow-hidden bg-stone-100 shadow-md">
+                                <div className="aspect-[16/10] rounded-2xl overflow-hidden bg-slate-100 shadow-md">
                                     <img
                                         src={event.image_url}
                                         alt={event.title}
@@ -397,29 +395,29 @@ export default function EventDetailPage() {
                                         </span>
                                     )}
                                     {isPastEvent && event.status !== 'cancelled' && (
-                                        <span className="px-3 py-1 text-sm font-medium text-stone-600 bg-stone-100 rounded-full">
+                                        <span className="px-3 py-1 text-sm font-medium text-slate-600 bg-slate-100 rounded-full">
                                             Past Event
                                         </span>
                                     )}
                                 </div>
                             )}
 
-                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900 mb-3 font-display">
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-3 font-display">
                                 {event.title}
                             </h1>
 
                             {/* Date/Time/Location quick info */}
                             <div className="space-y-2 mb-4">
-                                <div className="flex items-center gap-3 text-stone-700">
+                                <div className="flex items-center gap-3 text-slate-700">
                                     <span className="text-xl">📅</span>
                                     <div>
                                         <span className="font-medium">{date}</span>
-                                        <span className="text-stone-400 mx-2">•</span>
+                                        <span className="text-slate-400 mx-2">•</span>
                                         <span>{time}</span>
                                     </div>
                                 </div>
                                 {event.location && (
-                                    <div className="flex items-center gap-3 text-stone-700">
+                                    <div className="flex items-center gap-3 text-slate-700">
                                         <span className="text-xl">📍</span>
                                         <span>{event.location}</span>
                                     </div>
@@ -444,27 +442,27 @@ export default function EventDetailPage() {
                                                 ) : (
                                                     <div
                                                         key={h.user_id}
-                                                        className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center border-2 border-white"
+                                                        className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-200 to-violet-300 flex items-center justify-center border-2 border-white"
                                                         style={{ zIndex: 2 - i }}
                                                     >
-                                                        <span className="text-sm font-medium text-amber-800">
+                                                        <span className="text-sm font-medium text-indigo-800">
                                                             {h.name.charAt(0).toUpperCase()}
                                                         </span>
                                                     </div>
                                                 )
                                             ))}
                                         </div>
-                                        <p className="text-stone-500">
+                                        <p className="text-slate-500">
                                             Hosted by{' '}
-                                            <span className="font-medium text-stone-700">
+                                            <span className="font-medium text-slate-700">
                                                 {hosts[0].name}
                                                 {hosts.length > 1 && ` +${hosts.length - 1} other${hosts.length > 2 ? 's' : ''}`}
                                             </span>
                                         </p>
                                     </>
                                 ) : (
-                                    <p className="text-stone-500">
-                                        Hosted by <span className="font-medium text-stone-700">{event.creator_name}</span>
+                                    <p className="text-slate-500">
+                                        Hosted by <span className="font-medium text-slate-700">{event.creator_name}</span>
                                     </p>
                                 )}
                             </div>
@@ -475,7 +473,7 @@ export default function EventDetailPage() {
                                     <span className="px-3 py-1 bg-red-50 text-red-700 rounded-full text-sm font-medium">Cancelled</span>
                                 )}
                                 {isPastEvent && event.status !== 'cancelled' && (
-                                    <span className="px-3 py-1 bg-stone-100 text-stone-500 rounded-full text-sm">Ended</span>
+                                    <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-sm">Ended</span>
                                 )}
                                 {rsvp && rsvp.status !== 'not_going' && !isPastEvent && event.status !== 'cancelled' && (
                                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -489,7 +487,7 @@ export default function EventDetailPage() {
                                 {canEdit && (
                                     <Link
                                         href={`/events/${event.id}/edit`}
-                                        className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium text-stone-600 hover:text-amber-700 hover:bg-amber-50 rounded-full transition-colors"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-full transition-colors"
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -508,10 +506,10 @@ export default function EventDetailPage() {
                 <div className="space-y-6">
                         {/* Description */}
                         {event.description && (
-                            <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
-                                <h2 className="text-lg font-bold text-stone-900 mb-4 font-display">About this event</h2>
+                            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                                <h2 className="text-lg font-bold text-slate-900 mb-4 font-display">About this event</h2>
                                 <div
-                                    className="text-stone-600 prose prose-sm max-w-none prose-a:text-amber-600 prose-a:no-underline hover:prose-a:underline"
+                                    className="text-slate-600 prose prose-sm max-w-none prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline"
                                     dangerouslySetInnerHTML={{
                                         __html: DOMPurify.sanitize(event.description)
                                     }}
@@ -521,9 +519,9 @@ export default function EventDetailPage() {
 
                         {/* Pre-order Section - visible to attendees when pre-orders are enabled */}
                         {event.preorders_enabled && rsvp && (
-                            <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+                            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-lg font-bold text-stone-900 font-display">Your Order</h2>
+                                    <h2 className="text-lg font-bold text-slate-900 font-display">Your Order</h2>
                                     {orderSuccess && (
                                         <span className="text-sm text-green-600 font-medium">{orderSuccess}</span>
                                     )}
@@ -534,22 +532,22 @@ export default function EventDetailPage() {
                                             <div className="space-y-2">
                                                 {rsvp.food_order && (
                                                     <div>
-                                                        <span className="text-sm font-medium text-stone-700">Order: </span>
-                                                        <span className="text-stone-600">{rsvp.food_order}</span>
+                                                        <span className="text-sm font-medium text-slate-700">Order: </span>
+                                                        <span className="text-slate-600">{rsvp.food_order}</span>
                                                     </div>
                                                 )}
                                                 {rsvp.dietary_notes && (
                                                     <div>
-                                                        <span className="text-sm font-medium text-stone-700">Notes: </span>
-                                                        <span className="text-stone-600">{rsvp.dietary_notes}</span>
+                                                        <span className="text-sm font-medium text-slate-700">Notes: </span>
+                                                        <span className="text-slate-600">{rsvp.dietary_notes}</span>
                                                     </div>
                                                 )}
-                                                <p className="text-sm text-stone-500 mt-2">
+                                                <p className="text-sm text-slate-500 mt-2">
                                                     Order deadline has passed. Contact a host if you need to make changes.
                                                 </p>
                                             </div>
                                         ) : (
-                                            <p className="text-stone-500">
+                                            <p className="text-slate-500">
                                                 Order deadline has passed. You did not submit an order.
                                             </p>
                                         )}
@@ -561,19 +559,19 @@ export default function EventDetailPage() {
                                             <div className="space-y-2 mb-4">
                                                 {rsvp.food_order && (
                                                     <div>
-                                                        <span className="text-sm font-medium text-stone-700">Order: </span>
-                                                        <span className="text-stone-600">{rsvp.food_order}</span>
+                                                        <span className="text-sm font-medium text-slate-700">Order: </span>
+                                                        <span className="text-slate-600">{rsvp.food_order}</span>
                                                     </div>
                                                 )}
                                                 {rsvp.dietary_notes && (
                                                     <div>
-                                                        <span className="text-sm font-medium text-stone-700">Notes: </span>
-                                                        <span className="text-stone-600">{rsvp.dietary_notes}</span>
+                                                        <span className="text-sm font-medium text-slate-700">Notes: </span>
+                                                        <span className="text-slate-600">{rsvp.dietary_notes}</span>
                                                     </div>
                                                 )}
                                             </div>
                                         ) : (
-                                            <p className="text-stone-500 mb-4">
+                                            <p className="text-slate-500 mb-4">
                                                 You haven&apos;t submitted an order yet.
                                             </p>
                                         )}
@@ -582,7 +580,7 @@ export default function EventDetailPage() {
                                         <div className="flex flex-wrap items-center gap-3">
                                             <button
                                                 onClick={() => setShowOrderModal(true)}
-                                                className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
+                                                className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-600 hover:to-violet-700 transition-all shadow-md"
                                             >
                                                 {rsvp.food_order || rsvp.dietary_notes ? 'Edit Order' : 'Add Order'}
                                             </button>
@@ -591,7 +589,7 @@ export default function EventDetailPage() {
                                                     href={event.menu_link}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="px-4 py-2.5 text-amber-600 hover:text-amber-700 font-medium transition"
+                                                    className="px-4 py-2.5 text-indigo-600 hover:text-indigo-700 font-medium transition"
                                                 >
                                                     View Menu →
                                                 </a>
@@ -600,7 +598,7 @@ export default function EventDetailPage() {
 
                                         {/* Deadline info */}
                                         {event.preorder_cutoff && (
-                                            <p className="text-sm text-stone-500 mt-3">
+                                            <p className="text-sm text-slate-500 mt-3">
                                                 Order by {new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at {new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}.
                                             </p>
                                         )}
@@ -619,11 +617,11 @@ export default function EventDetailPage() {
                             >
                                 <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
                                     {/* Header */}
-                                    <div className="px-6 py-4 border-b border-stone-200 flex items-center justify-between">
-                                        <h3 className="text-lg font-bold text-stone-900 font-display">Your Order</h3>
+                                    <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                                        <h3 className="text-lg font-bold text-slate-900 font-display">Your Order</h3>
                                         <button
                                             onClick={() => setShowOrderModal(false)}
-                                            className="text-stone-400 hover:text-stone-600 transition-colors"
+                                            className="text-slate-400 hover:text-slate-600 transition-colors"
                                         >
                                             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -635,12 +633,12 @@ export default function EventDetailPage() {
                                     <form onSubmit={handleSubmitOrder} className="p-6 space-y-5">
                                         {/* Menu link */}
                                         {event.menu_link && (
-                                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                                            <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
                                                 <a
                                                     href={event.menu_link}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="text-amber-700 hover:text-amber-800 font-medium flex items-center gap-2"
+                                                    className="text-indigo-700 hover:text-indigo-800 font-medium flex items-center gap-2"
                                                 >
                                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -653,10 +651,10 @@ export default function EventDetailPage() {
                                         {/* Order textarea */}
                                         <div>
                                             <div className="flex items-center justify-between mb-2">
-                                                <label htmlFor="modalFoodOrder" className="block text-sm font-medium text-stone-700">
+                                                <label htmlFor="modalFoodOrder" className="block text-sm font-medium text-slate-700">
                                                     Your Order
                                                 </label>
-                                                <span className={`text-xs ${foodOrder.length > 450 ? 'text-amber-600' : 'text-stone-400'}`}>
+                                                <span className={`text-xs ${foodOrder.length > 450 ? 'text-indigo-600' : 'text-slate-400'}`}>
                                                     {foodOrder.length}/500
                                                 </span>
                                             </div>
@@ -667,17 +665,17 @@ export default function EventDetailPage() {
                                                 placeholder="e.g., Chicken Caesar Salad, no croutons"
                                                 rows={4}
                                                 maxLength={500}
-                                                className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-none transition text-base"
+                                                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 resize-none transition text-base"
                                             />
                                         </div>
 
                                         {/* Notes textarea */}
                                         <div>
                                             <div className="flex items-center justify-between mb-2">
-                                                <label htmlFor="modalDietaryNotes" className="block text-sm font-medium text-stone-700">
+                                                <label htmlFor="modalDietaryNotes" className="block text-sm font-medium text-slate-700">
                                                     Notes / Preferences
                                                 </label>
-                                                <span className={`text-xs ${dietaryNotes.length > 180 ? 'text-amber-600' : 'text-stone-400'}`}>
+                                                <span className={`text-xs ${dietaryNotes.length > 180 ? 'text-indigo-600' : 'text-slate-400'}`}>
                                                     {dietaryNotes.length}/200
                                                 </span>
                                             </div>
@@ -688,13 +686,13 @@ export default function EventDetailPage() {
                                                 placeholder="e.g., Vegetarian, nut allergy, extra spicy"
                                                 rows={2}
                                                 maxLength={200}
-                                                className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-none transition text-base"
+                                                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 resize-none transition text-base"
                                             />
                                         </div>
 
                                         {/* Deadline notice */}
                                         {event.preorder_cutoff && (
-                                            <p className="text-sm text-amber-600">
+                                            <p className="text-sm text-indigo-600">
                                                 Order by {new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at {new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                                             </p>
                                         )}
@@ -704,14 +702,14 @@ export default function EventDetailPage() {
                                             <button
                                                 type="button"
                                                 onClick={() => setShowOrderModal(false)}
-                                                className="flex-1 px-5 py-3 border border-stone-300 text-stone-700 font-medium rounded-xl hover:bg-stone-50 transition-colors"
+                                                className="flex-1 px-5 py-3 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors"
                                             >
                                                 Cancel
                                             </button>
                                             <button
                                                 type="submit"
                                                 disabled={orderLoading}
-                                                className="flex-1 px-5 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md disabled:opacity-50"
+                                                className="flex-1 px-5 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-600 hover:to-violet-700 transition-all shadow-md disabled:opacity-50"
                                             >
                                                 {orderLoading ? 'Saving...' : 'Save Order'}
                                             </button>
@@ -722,15 +720,15 @@ export default function EventDetailPage() {
                         )}
 
                         {/* Attendees Section - Meetup style */}
-                        <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+                        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
-                                    <h2 className="text-xl font-bold text-stone-900 font-display">Attendees</h2>
-                                    <span className="px-2.5 py-0.5 bg-stone-100 text-stone-600 text-sm font-medium rounded-full">
+                                    <h2 className="text-xl font-bold text-slate-900 font-display">Attendees</h2>
+                                    <span className="px-2.5 py-0.5 bg-slate-100 text-slate-600 text-sm font-medium rounded-full">
                                         {attendingCount}
                                     </span>
                                     {event.capacity && (
-                                        <span className={`text-sm ${spotsRemaining === 0 ? 'text-red-600 font-medium' : 'text-stone-400'}`}>
+                                        <span className={`text-sm ${spotsRemaining === 0 ? 'text-red-600 font-medium' : 'text-slate-400'}`}>
                                             {spotsRemaining === 0 ? 'Full' : `${spotsRemaining} spots left`}
                                         </span>
                                     )}
@@ -738,7 +736,7 @@ export default function EventDetailPage() {
                                 {canViewAttendees && (attendingCount > 0 || waitlistCount > 0) && (
                                     <Link
                                         href={`/events/${event.id}/attendees`}
-                                        className="text-sm text-amber-600 hover:text-amber-700 font-medium"
+                                        className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                                     >
                                         See all
                                     </Link>
@@ -800,22 +798,22 @@ export default function EventDetailPage() {
                                                                                 className="w-20 h-20 rounded-full object-cover"
                                                                             />
                                                                         ) : (
-                                                                            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                                                                                <span className="text-2xl font-medium text-amber-600">
+                                                                            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center">
+                                                                                <span className="text-2xl font-medium text-indigo-600">
                                                                                     {person.name.charAt(0).toUpperCase()}
                                                                                 </span>
                                                                             </div>
                                                                         )}
                                                                         {person.isHost && (
-                                                                            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-amber-500 text-white text-xs font-medium rounded">
+                                                                            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-indigo-600 text-white text-xs font-medium rounded">
                                                                                 Host
                                                                             </span>
                                                                         )}
                                                                     </div>
-                                                                    <span className="text-sm font-medium text-stone-900">
+                                                                    <span className="text-sm font-medium text-slate-900">
                                                                         {person.name}
                                                                     </span>
-                                                                    <span className="text-xs text-stone-500">
+                                                                    <span className="text-xs text-slate-500">
                                                                         {person.isHost ? 'Event Host' : 'Member'}
                                                                     </span>
                                                                 </button>
@@ -842,16 +840,16 @@ export default function EventDetailPage() {
                                                                             ) : (
                                                                                 <div
                                                                                     key={person.user_id}
-                                                                                    className="w-full h-full rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center"
+                                                                                    className="w-full h-full rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center"
                                                                                 >
-                                                                                    <span className="text-xs font-medium text-amber-600">
+                                                                                    <span className="text-xs font-medium text-indigo-600">
                                                                                         {person.name.charAt(0).toUpperCase()}
                                                                                     </span>
                                                                                 </div>
                                                                             )
                                                                         ))}
                                                                         {remaining.length > 3 && (
-                                                                            <div className="w-full h-full rounded-full bg-amber-500 flex items-center justify-center">
+                                                                            <div className="w-full h-full rounded-full bg-indigo-600 flex items-center justify-center">
                                                                                 <span className="text-xs font-bold text-white">
                                                                                     +{remaining.length - 3}
                                                                                 </span>
@@ -864,7 +862,7 @@ export default function EventDetailPage() {
                                                                         )}
                                                                     </div>
                                                                 </div>
-                                                                <span className="text-sm font-medium text-stone-900">
+                                                                <span className="text-sm font-medium text-slate-900">
                                                                     +{remaining.length} more
                                                                 </span>
                                                                 {waitlistCount > 0 && (
@@ -886,7 +884,7 @@ export default function EventDetailPage() {
                                                                         {waitlistCount}
                                                                     </span>
                                                                 </div>
-                                                                <span className="text-sm font-medium text-stone-900">
+                                                                <span className="text-sm font-medium text-slate-900">
                                                                     Waitlist
                                                                 </span>
                                                             </Link>
@@ -896,17 +894,17 @@ export default function EventDetailPage() {
                                             })()}
                                         </div>
                                     ) : (
-                                        <p className="text-stone-500">No attendees yet. Be the first to RSVP!</p>
+                                        <p className="text-slate-500">No attendees yet. Be the first to RSVP!</p>
                                     )}
                                 </>
                             ) : (
                                 <div className="text-center py-4">
-                                    <p className="text-stone-500 mb-2">
+                                    <p className="text-slate-500 mb-2">
                                         {attendingCount > 0
                                             ? `${attendingCount} ${attendingCount === 1 ? 'person is' : 'people are'} going`
                                             : 'No attendees yet'}
                                     </p>
-                                    <p className="text-sm text-stone-400">
+                                    <p className="text-sm text-slate-400">
                                         Join this group to see who's attending
                                     </p>
                                 </div>
@@ -914,8 +912,8 @@ export default function EventDetailPage() {
                         </div>
 
                         {/* Discussion Section */}
-                        <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
-                            <h2 className="text-lg font-bold text-stone-900 mb-4 font-display">
+                        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                            <h2 className="text-lg font-bold text-slate-900 mb-4 font-display">
                                 Discussion
                             </h2>
 
@@ -933,8 +931,8 @@ export default function EventDetailPage() {
                                                         className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                                                     />
                                                 ) : (
-                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center flex-shrink-0">
-                                                        <span className="text-sm font-medium text-amber-600">
+                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center flex-shrink-0">
+                                                        <span className="text-sm font-medium text-indigo-600">
                                                             {user.name.charAt(0).toUpperCase()}
                                                         </span>
                                                     </div>
@@ -946,16 +944,16 @@ export default function EventDetailPage() {
                                                         placeholder="Add a comment..."
                                                         rows={2}
                                                         maxLength={280}
-                                                        className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-none transition"
+                                                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 resize-none transition"
                                                     />
                                                     <div className="flex justify-between items-center mt-2">
-                                                        <span className="text-xs text-stone-400">
+                                                        <span className="text-xs text-slate-400">
                                                             {newComment.length}/280
                                                         </span>
                                                         <button
                                                             type="submit"
                                                             disabled={commentLoading || !newComment.trim()}
-                                                            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-medium rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                            className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-lg hover:from-indigo-600 hover:to-violet-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                                         >
                                                             {commentLoading ? 'Posting...' : 'Post'}
                                                         </button>
@@ -964,8 +962,8 @@ export default function EventDetailPage() {
                                             </div>
                                         </form>
                                     ) : user && isGroupMember && !canEdit ? (
-                                        <div className="mb-6 p-4 bg-stone-50 rounded-xl text-center">
-                                            <p className="text-sm text-stone-600">
+                                        <div className="mb-6 p-4 bg-slate-50 rounded-xl text-center">
+                                            <p className="text-sm text-slate-600">
                                                 RSVP to join the discussion
                                             </p>
                                         </div>
@@ -983,32 +981,32 @@ export default function EventDetailPage() {
                                                             className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                                                         />
                                                     ) : (
-                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center flex-shrink-0">
-                                                            <span className="text-sm font-medium text-amber-600">
+                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center flex-shrink-0">
+                                                            <span className="text-sm font-medium text-indigo-600">
                                                                 {comment.user_name.charAt(0).toUpperCase()}
                                                             </span>
                                                         </div>
                                                     )}
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-2 flex-wrap">
-                                                            <span className="font-medium text-stone-900 text-sm">
+                                                            <span className="font-medium text-slate-900 text-sm">
                                                                 {comment.user_name}
                                                             </span>
-                                                            <span className="text-xs text-stone-400">
+                                                            <span className="text-xs text-slate-400">
                                                                 {formatCommentDate(comment.created_at)}
                                                             </span>
                                                             {comment.can_delete && (
                                                                 <button
                                                                     onClick={() => handleDeleteComment(comment.id)}
                                                                     disabled={deletingComment === comment.id}
-                                                                    className="text-xs text-stone-400 hover:text-red-600 transition disabled:opacity-50"
+                                                                    className="text-xs text-slate-400 hover:text-red-600 transition disabled:opacity-50"
                                                                     title="Delete comment"
                                                                 >
                                                                     {deletingComment === comment.id ? '...' : 'Delete'}
                                                                 </button>
                                                             )}
                                                         </div>
-                                                        <p className="text-stone-700 text-sm mt-1 whitespace-pre-wrap break-words">
+                                                        <p className="text-slate-700 text-sm mt-1 whitespace-pre-wrap break-words">
                                                             {comment.content}
                                                         </p>
                                                     </div>
@@ -1016,7 +1014,7 @@ export default function EventDetailPage() {
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="text-stone-500 text-center py-4">
+                                        <p className="text-slate-500 text-center py-4">
                                             {(rsvp && (rsvp.status === 'attending' || rsvp.status === 'waitlist')) || canEdit
                                                 ? 'No comments yet. Be the first to start the discussion!'
                                                 : 'No comments yet.'}
@@ -1027,16 +1025,16 @@ export default function EventDetailPage() {
                                 /* Non-members only see count */
                                 <div className="text-center py-6">
                                     <div className="text-4xl mb-3">💬</div>
-                                    <p className="text-stone-500 mb-2">
+                                    <p className="text-slate-500 mb-2">
                                         {commentCount > 0
                                             ? `${commentCount} ${commentCount === 1 ? 'comment' : 'comments'}`
                                             : 'No comments yet'}
                                     </p>
-                                    <p className="text-sm text-stone-400">
+                                    <p className="text-sm text-slate-400">
                                         {user
                                             ? 'Join this group to view and participate in the discussion'
                                             : <>
-                                                <Link href="/login" className="text-amber-600 hover:text-amber-700">Log in</Link>
+                                                <Link href="/login" className="text-indigo-600 hover:text-indigo-700">Log in</Link>
                                                 {' '}and join this group to view the discussion
                                               </>
                                         }
@@ -1076,7 +1074,7 @@ export default function EventDetailPage() {
                                 className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl object-cover shadow-2xl"
                             />
                         ) : (
-                            <div className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center shadow-2xl">
+                            <div className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl bg-gradient-to-br from-indigo-200 to-violet-300 flex items-center justify-center shadow-2xl">
                                 <span className="text-8xl font-bold text-white">
                                     {selectedAttendee.name.charAt(0).toUpperCase()}
                                 </span>
@@ -1093,16 +1091,16 @@ export default function EventDetailPage() {
 
             {/* Bottom RSVP Section */}
             {event && !isPastEvent && event.status !== 'cancelled' && (
-                <div className="bg-white border-t border-stone-200 py-8 px-4 sm:px-8">
+                <div className="bg-white border-t border-slate-200 py-8 px-4 sm:px-8">
                     <div className="max-w-2xl mx-auto">
                         {!user ? (
                             /* Not logged in */
                             <div className="text-center">
-                                <h3 className="text-xl font-bold text-stone-900 font-display mb-2">Want to attend?</h3>
-                                <p className="text-stone-500 mb-6">Log in to RSVP to this event</p>
+                                <h3 className="text-xl font-bold text-slate-900 font-display mb-2">Want to attend?</h3>
+                                <p className="text-slate-500 mb-6">Log in to RSVP to this event</p>
                                 <Link
                                     href="/login"
-                                    className="inline-block px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg text-lg"
+                                    className="inline-block px-8 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-xl hover:from-indigo-600 hover:to-violet-700 transition-all shadow-lg text-lg"
                                 >
                                     Log in to RSVP
                                 </Link>
@@ -1110,11 +1108,11 @@ export default function EventDetailPage() {
                         ) : !isGroupMember ? (
                             /* Not a group member */
                             <div className="text-center">
-                                <h3 className="text-xl font-bold text-stone-900 font-display mb-2">Want to attend?</h3>
-                                <p className="text-stone-500 mb-6">Join the group first to RSVP to events</p>
+                                <h3 className="text-xl font-bold text-slate-900 font-display mb-2">Want to attend?</h3>
+                                <p className="text-slate-500 mb-6">Join the group first to RSVP to events</p>
                                 <Link
                                     href={`/groups/${event.group_id}`}
-                                    className="inline-block px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg text-lg"
+                                    className="inline-block px-8 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-xl hover:from-indigo-600 hover:to-violet-700 transition-all shadow-lg text-lg"
                                 >
                                     Join Group to RSVP
                                 </Link>
@@ -1141,7 +1139,7 @@ export default function EventDetailPage() {
                                         value={selectedGuestCount}
                                         onChange={(e) => handleUpdateGuests(parseInt(e.target.value, 10))}
                                         disabled={rsvpLoading}
-                                        className="px-4 py-2.5 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 bg-white text-stone-700"
+                                        className="px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-50 bg-white text-slate-700"
                                     >
                                         {Array.from({ length: (event.max_guests_per_rsvp || 1) + 1 }, (_, i) => (
                                             <option key={i} value={i}>{i === 0 ? 'Just me' : `+ ${i} guest${i > 1 ? 's' : ''}`}</option>
@@ -1152,7 +1150,7 @@ export default function EventDetailPage() {
                                 <button
                                     onClick={() => handleRsvp('leave')}
                                     disabled={rsvpLoading}
-                                    className="px-6 py-2.5 text-stone-500 hover:text-stone-700 font-medium transition disabled:opacity-50"
+                                    className="px-6 py-2.5 text-slate-500 hover:text-slate-700 font-medium transition disabled:opacity-50"
                                 >
                                     {rsvpLoading ? 'Updating...' : "Can't make it"}
                                 </button>
@@ -1165,7 +1163,7 @@ export default function EventDetailPage() {
                                         value={selectedGuestCount}
                                         onChange={(e) => setSelectedGuestCount(parseInt(e.target.value, 10))}
                                         disabled={rsvpLoading}
-                                        className="px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 bg-white text-stone-700"
+                                        className="px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-50 bg-white text-slate-700"
                                     >
                                         {Array.from({ length: (event.max_guests_per_rsvp || 1) + 1 }, (_, i) => (
                                             <option key={i} value={i}>{i === 0 ? 'Just me' : `Me + ${i} guest${i > 1 ? 's' : ''}`}</option>
@@ -1175,12 +1173,12 @@ export default function EventDetailPage() {
                                 <button
                                     onClick={() => handleRsvp('join', selectedGuestCount)}
                                     disabled={rsvpLoading}
-                                    className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg disabled:opacity-50"
+                                    className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-xl hover:from-indigo-600 hover:to-violet-700 transition-all shadow-lg disabled:opacity-50"
                                 >
                                     {rsvpLoading ? 'Updating...' : spotsRemaining === 0 ? 'Join Waitlist' : 'Count me in'}
                                 </button>
                                 {event.capacity && (
-                                    <span className="text-sm text-stone-400">
+                                    <span className="text-sm text-slate-400">
                                         {spotsRemaining === 0 ? 'Full' : `${spotsRemaining} spots left`}
                                     </span>
                                 )}
@@ -1190,7 +1188,6 @@ export default function EventDetailPage() {
                 </div>
             )}
 
-            <Footer />
-        </main>
+        </SidebarLayout>
     );
 }

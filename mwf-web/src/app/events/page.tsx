@@ -19,8 +19,8 @@ export default function EventsPage() {
     }, [router]);
 
     return (
-        <main className="min-h-screen flex items-center justify-center">
-            <p className="text-gray-500">Redirecting...</p>
+        <main className="min-h-screen flex items-center justify-center bg-slate-50">
+            <p className="text-slate-500">Redirecting...</p>
         </main>
     );
 }

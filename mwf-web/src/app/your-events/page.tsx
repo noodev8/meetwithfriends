@@ -14,8 +14,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getMyRsvps, EventWithDetails } from '@/lib/api/events';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+import SidebarLayout from '@/components/layout/SidebarLayout';
 
 export default function YourEventsPage() {
     const { user, token, isLoading } = useAuth();
@@ -56,9 +55,9 @@ export default function YourEventsPage() {
     // =======================================================================
     if (isLoading || !user) {
         return (
-            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-stone-50">
-                <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-stone-600 mt-4">Loading...</p>
+            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50">
+                <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-slate-600 mt-4">Loading...</p>
             </main>
         );
     }
@@ -67,29 +66,27 @@ export default function YourEventsPage() {
     // Render
     // =======================================================================
     return (
-        <main className="min-h-screen flex flex-col bg-stone-50">
-            <Header />
-
-            <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-3xl mx-auto w-full">
-                <h1 className="text-2xl sm:text-3xl font-bold text-stone-900 font-display mb-6 sm:mb-8">
+        <SidebarLayout>
+            <div className="px-4 sm:px-8 py-6 sm:py-8 max-w-4xl mx-auto w-full">
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display mb-6 sm:mb-8">
                     Your Events
                 </h1>
 
                 {loading ? (
                     <div className="text-center py-12">
-                        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                        <p className="text-stone-500 mt-4">Loading your events...</p>
+                        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                        <p className="text-slate-500 mt-4">Loading your events...</p>
                     </div>
                 ) : events.length === 0 ? (
-                    <div className="bg-white rounded-2xl border border-stone-200 p-12 text-center shadow-sm">
+                    <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm">
                         <div className="text-6xl mb-4">📅</div>
-                        <h2 className="text-xl font-bold text-stone-900 font-display mb-2">No upcoming events</h2>
-                        <p className="text-stone-500 mb-6">
+                        <h2 className="text-xl font-bold text-slate-900 font-display mb-2">No upcoming events</h2>
+                        <p className="text-slate-500 mb-6">
                             Events you RSVP to will appear here.
                         </p>
                         <Link
                             href="/dashboard"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all shadow-md"
                         >
                             Browse events
                         </Link>
@@ -99,33 +96,19 @@ export default function YourEventsPage() {
                         {events.map(event => {
                             const eventDate = new Date(event.date_time);
                             const isWaitlist = event.rsvp_status === 'waitlist';
-                            const imageUrl = event.image_url || event.group_image_url;
 
                             return (
                                 <Link
                                     key={event.id}
                                     href={`/events/${event.id}`}
-                                    className="group bg-white rounded-2xl border border-stone-200 hover:border-amber-300 hover:shadow-md transition-all shadow-sm overflow-hidden"
+                                    className="group bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200"
                                 >
-                                    {/* Image header */}
-                                    <div className="relative h-36 bg-stone-100">
-                                        {imageUrl ? (
-                                            <img
-                                                src={imageUrl}
-                                                alt={event.title}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                style={{ objectPosition: event.image_url ? (event.image_position || 'center') : 'center' }}
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                                                <svg className="w-10 h-10 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
-                                            </div>
-                                        )}
-
-                                        {/* Status badge overlay */}
-                                        <span className={`absolute top-3 left-3 inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full shadow-sm ${
+                                    {/* Header: Group badge + status */}
+                                    <div className="flex justify-between items-start mb-3">
+                                        <span className="px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider bg-indigo-100 text-indigo-700">
+                                            {event.group_name}
+                                        </span>
+                                        <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full ${
                                             isWaitlist
                                                 ? 'text-yellow-800 bg-yellow-100'
                                                 : 'text-green-800 bg-green-100'
@@ -135,7 +118,7 @@ export default function YourEventsPage() {
                                                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                                                     </svg>
-                                                    On waitlist
+                                                    Waitlist
                                                 </>
                                             ) : (
                                                 <>
@@ -148,29 +131,38 @@ export default function YourEventsPage() {
                                         </span>
                                     </div>
 
-                                    {/* Content */}
-                                    <div className="p-4">
-                                        <p className="text-xs text-amber-600 font-medium uppercase tracking-wide mb-1">
-                                            {event.group_name}
-                                        </p>
-                                        <h3 className="text-base font-semibold text-stone-900 group-hover:text-amber-700 transition-colors line-clamp-1">
-                                            {event.title}
-                                        </h3>
-                                        <p className="text-sm text-stone-500 mt-1">
-                                            {eventDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} · {eventDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                                        </p>
-                                        {event.location && (
-                                            <p className="text-stone-500 text-sm mt-1 flex items-center gap-1.5 line-clamp-1">
-                                                <svg className="w-4 h-4 text-stone-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                </svg>
-                                                {event.location}
-                                            </p>
-                                        )}
-                                        <p className="text-xs text-stone-400 mt-2">
-                                            {event.attendee_count || 0} attending
-                                        </p>
+                                    {/* Title */}
+                                    <h3 className="text-lg font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors mb-2">
+                                        {event.title}
+                                    </h3>
+
+                                    {/* Date & Time */}
+                                    <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
+                                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        {eventDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} · {eventDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                    </div>
+
+                                    {/* Location */}
+                                    {event.location && (
+                                        <div className="flex items-center gap-2 text-sm text-slate-500">
+                                            <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                            <span className="line-clamp-1">{event.location}</span>
+                                        </div>
+                                    )}
+
+                                    {/* Footer: Attendee count */}
+                                    <div className="flex items-center justify-between pt-4 mt-4 border-t border-slate-100">
+                                        <span className="text-sm font-medium text-slate-500">
+                                            {event.attendee_count || 0} going
+                                        </span>
+                                        <svg className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
                                     </div>
                                 </Link>
                             );
@@ -178,8 +170,6 @@ export default function YourEventsPage() {
                     </div>
                 )}
             </div>
-
-            <Footer />
-        </main>
+        </SidebarLayout>
     );
 }

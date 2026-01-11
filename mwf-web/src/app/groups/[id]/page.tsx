@@ -27,8 +27,7 @@ import {
 } from '@/lib/api/groups';
 import { getAllEvents, EventWithDetails } from '@/lib/api/events';
 
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+import SidebarLayout from '@/components/layout/SidebarLayout';
 
 // Number of pending members to show before "View all" link
 const PENDING_PREVIEW_LIMIT = 3;
@@ -239,8 +238,8 @@ export default function GroupDetailPage() {
     // =======================================================================
     if (loading) {
         return (
-            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-stone-50">
-                <div className="w-8 h-8 border-2 border-amber-300 border-t-amber-600 rounded-full animate-spin" />
+            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50">
+                <div className="w-8 h-8 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin" />
             </main>
         );
     }
@@ -250,15 +249,14 @@ export default function GroupDetailPage() {
     // =======================================================================
     if (error || !group) {
         return (
-            <main className="min-h-screen flex flex-col bg-stone-50">
-                <Header />
+            <SidebarLayout>
                 <div className="flex-1 flex flex-col items-center justify-center p-8">
-                    <p className="text-stone-600 mb-4">{error || 'Group not found'}</p>
-                    <Link href="/dashboard" className="text-amber-600 hover:text-amber-700">
+                    <p className="text-slate-600 mb-4">{error || 'Group not found'}</p>
+                    <Link href="/dashboard" className="text-indigo-600 hover:text-indigo-700">
                         Back to dashboard
                     </Link>
                 </div>
-            </main>
+            </SidebarLayout>
         );
     }
 
@@ -266,11 +264,10 @@ export default function GroupDetailPage() {
     // Group detail view
     // =======================================================================
     return (
-        <main className="min-h-screen flex flex-col bg-stone-50">
-            <Header />
+        <SidebarLayout>
 
             {/* Hero Section */}
-            <div className="bg-white border-b border-stone-200">
+            <div className="bg-white border-b border-slate-200">
                 <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
                     <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
                         {/* Group Image */}
@@ -284,7 +281,7 @@ export default function GroupDetailPage() {
                                 />
                             </div>
                         ) : (
-                            <div className="w-full lg:w-96 h-48 sm:h-56 lg:h-64 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg flex-shrink-0">
+                            <div className="w-full lg:w-96 h-48 sm:h-56 lg:h-64 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg flex-shrink-0">
                                 <span className="text-6xl sm:text-7xl text-white/80 font-display font-bold">
                                     {group.name.charAt(0).toUpperCase()}
                                 </span>
@@ -293,18 +290,18 @@ export default function GroupDetailPage() {
 
                         {/* Group Info */}
                         <div className="flex-1 flex flex-col justify-center">
-                            <h1 className="font-display text-3xl sm:text-4xl font-bold text-stone-800 mb-3">
+                            <h1 className="font-display text-3xl sm:text-4xl font-bold text-slate-800 mb-3">
                                 {group.name}
                             </h1>
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-stone-600 mb-4">
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-slate-600 mb-4">
                                 <span className="flex items-center gap-1.5">
-                                    <svg className="w-5 h-5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                     </svg>
                                     {group.member_count} {group.member_count === 1 ? 'member' : 'members'}
                                 </span>
                                 <span className="flex items-center gap-1.5">
-                                    <svg className="w-5 h-5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                     </svg>
                                     {group.join_policy === 'auto' ? 'Public group' : 'Private group'}
@@ -316,7 +313,7 @@ export default function GroupDetailPage() {
                                 {isOrganiser && (
                                     <Link
                                         href={`/groups/${group.id}/edit`}
-                                        className="inline-flex items-center gap-2 px-4 py-2.5 border border-stone-300 text-stone-700 font-medium rounded-xl hover:bg-stone-50 transition"
+                                        className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition"
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -328,7 +325,7 @@ export default function GroupDetailPage() {
                                 {canManageMembers && (
                                     <Link
                                         href={`/groups/${group.id}/events/create`}
-                                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition shadow-sm"
+                                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-violet-700 transition shadow-sm"
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -349,21 +346,21 @@ export default function GroupDetailPage() {
                     <div className="flex-1 lg:flex-[3] space-y-6">
                         {/* Pending Members Alert - Only visible to organisers/hosts */}
                         {canManageMembers && pendingMembers.length > 0 && (
-                            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
+                            <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-5">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h2 className="font-display text-lg font-semibold text-stone-800 flex items-center gap-2">
-                                        <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <h2 className="font-display text-lg font-semibold text-slate-800 flex items-center gap-2">
+                                        <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                         Pending Requests
-                                        <span className="px-2 py-0.5 bg-amber-200 text-amber-800 text-sm rounded-full">
+                                        <span className="px-2 py-0.5 bg-indigo-200 text-indigo-800 text-sm rounded-full">
                                             {pendingMembers.length}
                                         </span>
                                     </h2>
                                     {pendingMembers.length > PENDING_PREVIEW_LIMIT && (
                                         <Link
                                             href={`/groups/${group.id}/members?tab=pending`}
-                                            className="text-sm text-amber-600 hover:text-amber-700 font-medium"
+                                            className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                                         >
                                             View all
                                         </Link>
@@ -379,14 +376,14 @@ export default function GroupDetailPage() {
                                                     className="w-10 h-10 rounded-full object-cover"
                                                 />
                                             ) : (
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                                                    <span className="text-sm font-medium text-amber-600">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center">
+                                                    <span className="text-sm font-medium text-indigo-600">
                                                         {member.name.charAt(0).toUpperCase()}
                                                     </span>
                                                 </div>
                                             )}
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-stone-800 truncate">{member.name}</p>
+                                                <p className="font-medium text-slate-800 truncate">{member.name}</p>
                                             </div>
                                             <div className="flex gap-2">
                                                 <button
@@ -399,7 +396,7 @@ export default function GroupDetailPage() {
                                                 <button
                                                     onClick={() => handleRejectMember(member.id)}
                                                     disabled={processingMember === member.id}
-                                                    className="px-3 py-1.5 bg-stone-200 text-stone-700 text-sm font-medium rounded-lg hover:bg-stone-300 transition disabled:opacity-50"
+                                                    className="px-3 py-1.5 bg-slate-200 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-300 transition disabled:opacity-50"
                                                 >
                                                     Decline
                                                 </button>
@@ -412,10 +409,10 @@ export default function GroupDetailPage() {
 
                         {/* About Section */}
                         {sanitizedDescription && (
-                            <div className="bg-white rounded-2xl border border-stone-200 p-5 sm:p-6">
-                                <h2 className="font-display text-lg font-semibold text-stone-800 mb-4">About</h2>
+                            <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6">
+                                <h2 className="font-display text-lg font-semibold text-slate-800 mb-4">About</h2>
                                 <div
-                                    className="prose prose-stone prose-sm max-w-none"
+                                    className="prose prose-slate prose-sm max-w-none"
                                     dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
                                 />
                             </div>
@@ -423,10 +420,10 @@ export default function GroupDetailPage() {
 
                         {/* Upcoming Events Section */}
                         <div>
-                            <h2 className="font-display text-xl font-bold text-stone-800 mb-4">
+                            <h2 className="font-display text-xl font-bold text-slate-800 mb-4">
                                 Upcoming Events
                                 {events.length > 0 && (
-                                    <span className="ml-2 text-stone-400 font-normal text-lg">{events.length}</span>
+                                    <span className="ml-2 text-slate-400 font-normal text-lg">{events.length}</span>
                                 )}
                             </h2>
 
@@ -441,10 +438,10 @@ export default function GroupDetailPage() {
                                             <Link
                                                 key={event.id}
                                                 href={`/events/${event.id}`}
-                                                className="group bg-white rounded-2xl border border-stone-200 hover:border-amber-200 hover:shadow-lg transition-all duration-300 overflow-hidden"
+                                                className="group bg-white rounded-2xl border border-slate-200 hover:border-indigo-200 hover:shadow-lg transition-all duration-300 overflow-hidden"
                                             >
                                                 {/* Image header */}
-                                                <div className="relative h-36 bg-stone-100">
+                                                <div className="relative h-36 bg-slate-100">
                                                     {imageUrl ? (
                                                         <img
                                                             src={imageUrl}
@@ -453,8 +450,8 @@ export default function GroupDetailPage() {
                                                             style={{ objectPosition: event.image_url ? (event.image_position || 'center') : 'center' }}
                                                         />
                                                     ) : (
-                                                        <div className="w-full h-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                                                            <svg className="w-10 h-10 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <div className="w-full h-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center">
+                                                            <svg className="w-10 h-10 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                             </svg>
                                                         </div>
@@ -466,7 +463,7 @@ export default function GroupDetailPage() {
                                                             <span className={`px-2.5 py-1 text-xs font-semibold rounded-full shadow-sm ${
                                                                 event.rsvp_status === 'attending'
                                                                     ? 'text-green-800 bg-green-100'
-                                                                    : 'text-amber-800 bg-amber-100'
+                                                                    : 'text-amber-800 bg-indigo-100'
                                                             }`}>
                                                                 {event.rsvp_status === 'attending' ? 'Going' : 'On waitlist'}
                                                             </span>
@@ -487,22 +484,22 @@ export default function GroupDetailPage() {
 
                                                 {/* Content */}
                                                 <div className="p-4">
-                                                    <h3 className="font-semibold text-stone-800 group-hover:text-amber-700 transition-colors line-clamp-1">
+                                                    <h3 className="font-semibold text-slate-800 group-hover:text-indigo-700 transition-colors line-clamp-1">
                                                         {event.title}
                                                     </h3>
-                                                    <p className="text-sm text-stone-500 mt-1">
+                                                    <p className="text-sm text-slate-500 mt-1">
                                                         {eventDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} · {eventDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                                                     </p>
                                                     {event.location && (
-                                                        <p className="text-stone-500 text-sm mt-1 flex items-center gap-1.5 line-clamp-1">
-                                                            <svg className="w-4 h-4 text-stone-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <p className="text-slate-500 text-sm mt-1 flex items-center gap-1.5 line-clamp-1">
+                                                            <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                                             </svg>
                                                             {event.location}
                                                         </p>
                                                     )}
-                                                    <div className="flex items-center gap-3 mt-2 text-xs text-stone-400">
+                                                    <div className="flex items-center gap-3 mt-2 text-xs text-slate-400">
                                                         <span className="flex items-center gap-1">
                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -522,15 +519,15 @@ export default function GroupDetailPage() {
                                     })}
                                 </div>
                             ) : (
-                                <div className="bg-white rounded-2xl border border-stone-200 p-8 text-center">
-                                    <div className="w-12 h-12 rounded-xl bg-stone-100 flex items-center justify-center mx-auto mb-4">
-                                        <svg className="w-6 h-6 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+                                    <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                                        <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
                                     </div>
-                                    <p className="text-stone-600 font-medium">No upcoming events</p>
+                                    <p className="text-slate-600 font-medium">No upcoming events</p>
                                     {canManageMembers && (
-                                        <p className="text-stone-500 text-sm mt-1">
+                                        <p className="text-slate-500 text-sm mt-1">
                                             Create an event to get your group together!
                                         </p>
                                     )}
@@ -542,24 +539,24 @@ export default function GroupDetailPage() {
                     {/* Right Column - Sidebar */}
                     <aside className="lg:flex-[1.2] space-y-4">
                         {/* Join/Status Card */}
-                        <div className="bg-white rounded-2xl border border-stone-200 p-5">
+                        <div className="bg-white rounded-2xl border border-slate-200 p-5">
                             {!user ? (
                                 <button
                                     onClick={() => router.push('/login')}
-                                    className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-sm"
+                                    className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all shadow-sm"
                                 >
                                     Log in to join
                                 </button>
                             ) : membership ? (
                                 membership.status === 'pending' ? (
                                     <div className="text-center">
-                                        <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center mx-auto mb-3">
-                                            <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center mx-auto mb-3">
+                                            <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
                                         </div>
-                                        <p className="font-semibold text-stone-800">Request Pending</p>
-                                        <p className="text-sm text-stone-500 mt-1">Waiting for organiser approval</p>
+                                        <p className="font-semibold text-slate-800">Request Pending</p>
+                                        <p className="text-sm text-slate-500 mt-1">Waiting for organiser approval</p>
                                     </div>
                                 ) : (
                                     <div className="text-center">
@@ -568,17 +565,17 @@ export default function GroupDetailPage() {
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                             </svg>
                                         </div>
-                                        <p className="font-semibold text-stone-800">
+                                        <p className="font-semibold text-slate-800">
                                             {membership.role === 'organiser' ? 'Organiser' : membership.role === 'host' ? 'Host' : 'Member'}
                                         </p>
-                                        <p className="text-sm text-stone-500 mt-1">You're part of this group</p>
+                                        <p className="text-sm text-slate-500 mt-1">You're part of this group</p>
                                     </div>
                                 )
                             ) : (
                                 <button
                                     onClick={handleJoinGroup}
                                     disabled={joining}
-                                    className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-sm disabled:opacity-50"
+                                    className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all shadow-sm disabled:opacity-50"
                                 >
                                     {joining ? 'Joining...' : group.join_policy === 'auto' ? 'Join Group' : 'Request to Join'}
                                 </button>
@@ -587,40 +584,40 @@ export default function GroupDetailPage() {
 
                         {/* Organiser Card */}
                         {organiser && (
-                            <div className="bg-white rounded-2xl border border-stone-200 p-5">
-                                <h3 className="font-display font-semibold text-stone-800 mb-3">Organiser</h3>
+                            <div className="bg-white rounded-2xl border border-slate-200 p-5">
+                                <h3 className="font-display font-semibold text-slate-800 mb-3">Organiser</h3>
                                 <div className="flex items-center gap-3">
                                     {organiser.avatar_url ? (
                                         <img
                                             src={organiser.avatar_url}
                                             alt={organiser.name}
-                                            className="w-12 h-12 rounded-full object-cover ring-2 ring-amber-100"
+                                            className="w-12 h-12 rounded-full object-cover ring-2 ring-indigo-100"
                                         />
                                     ) : (
-                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center ring-2 ring-amber-100">
-                                            <span className="text-lg font-medium text-amber-600">
+                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center ring-2 ring-indigo-100">
+                                            <span className="text-lg font-medium text-indigo-600">
                                                 {organiser.name.charAt(0).toUpperCase()}
                                             </span>
                                         </div>
                                     )}
                                     <div>
-                                        <p className="font-medium text-stone-800">{organiser.name}</p>
-                                        <p className="text-sm text-stone-500">Group organiser</p>
+                                        <p className="font-medium text-slate-800">{organiser.name}</p>
+                                        <p className="text-sm text-slate-500">Group organiser</p>
                                     </div>
                                 </div>
                             </div>
                         )}
 
                         {/* Members Preview Card */}
-                        <div className="bg-white rounded-2xl border border-stone-200 p-5">
+                        <div className="bg-white rounded-2xl border border-slate-200 p-5">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-display font-semibold text-stone-800">
+                                <h3 className="font-display font-semibold text-slate-800">
                                     Members
-                                    <span className="ml-2 text-stone-400 font-normal">{group.member_count}</span>
+                                    <span className="ml-2 text-slate-400 font-normal">{group.member_count}</span>
                                 </h3>
                                 <Link
                                     href={`/groups/${group.id}/members`}
-                                    className="text-sm text-amber-600 hover:text-amber-700 font-medium"
+                                    className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                                 >
                                     See all
                                 </Link>
@@ -640,33 +637,33 @@ export default function GroupDetailPage() {
                                             <div
                                                 key={member.id}
                                                 title={member.name}
-                                                className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center"
+                                                className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center"
                                             >
-                                                <span className="text-sm font-medium text-amber-600">
+                                                <span className="text-sm font-medium text-indigo-600">
                                                     {member.name.charAt(0).toUpperCase()}
                                                 </span>
                                             </div>
                                         )
                                     ))}
                                     {group.member_count > 12 && (
-                                        <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center">
-                                            <span className="text-xs font-medium text-stone-500">
+                                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                                            <span className="text-xs font-medium text-slate-500">
                                                 +{group.member_count - 12}
                                             </span>
                                         </div>
                                     )}
                                 </div>
                             ) : (
-                                <p className="text-sm text-stone-500">No members yet</p>
+                                <p className="text-sm text-slate-500">No members yet</p>
                             )}
                         </div>
 
                         {/* Share Card */}
-                        <div className="bg-white rounded-2xl border border-stone-200 p-5">
-                            <h3 className="font-display font-semibold text-stone-800 mb-3">Share</h3>
+                        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+                            <h3 className="font-display font-semibold text-slate-800 mb-3">Share</h3>
                             <button
                                 onClick={handleCopyLink}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-stone-200 rounded-xl hover:bg-stone-50 transition text-stone-700"
+                                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition text-slate-700"
                             >
                                 {copied ? (
                                     <>
@@ -691,7 +688,7 @@ export default function GroupDetailPage() {
                             <div className="text-center pt-4">
                                 <button
                                     onClick={() => setShowLeaveModal(true)}
-                                    className="text-xs text-stone-400 hover:text-stone-600 transition"
+                                    className="text-xs text-slate-400 hover:text-slate-700 transition"
                                 >
                                     Leave group
                                 </button>
@@ -711,16 +708,16 @@ export default function GroupDetailPage() {
                         className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <h3 className="text-lg font-bold text-stone-900 font-display mb-2">
+                        <h3 className="text-lg font-bold text-slate-900 font-display mb-2">
                             Leave {group?.name}?
                         </h3>
-                        <p className="text-sm text-stone-600 mb-6">
+                        <p className="text-sm text-slate-600 mb-6">
                             You'll lose access to events and discussions. You can rejoin later if the group allows it.
                         </p>
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setShowLeaveModal(false)}
-                                className="flex-1 px-4 py-2.5 border border-stone-300 text-stone-700 rounded-xl hover:bg-stone-50 transition font-medium"
+                                className="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition font-medium"
                             >
                                 Cancel
                             </button>
@@ -736,7 +733,6 @@ export default function GroupDetailPage() {
                 </div>
             )}
 
-            <Footer />
-        </main>
+        </SidebarLayout>
     );
 }

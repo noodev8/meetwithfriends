@@ -23,7 +23,7 @@ import {
     NotGoingAttendee,
 } from '@/lib/api/events';
 import { EventHost } from '@/types';
-import Header from '@/components/layout/Header';
+import SidebarLayout from '@/components/layout/SidebarLayout';
 
 type Tab = 'going' | 'waitlist' | 'not_going';
 type SortBy = 'rsvp_time' | 'name';
@@ -266,10 +266,12 @@ export default function AttendeesPage() {
     // =======================================================================
     if (loading) {
         return (
-            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-stone-50">
-                <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-stone-600 mt-4">Loading attendees...</p>
-            </main>
+            <SidebarLayout>
+                <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50">
+                    <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-slate-600 mt-4">Loading attendees...</p>
+                </div>
+            </SidebarLayout>
         );
     }
 
@@ -278,22 +280,21 @@ export default function AttendeesPage() {
     // =======================================================================
     if (error || !event) {
         return (
-            <main className="min-h-screen flex flex-col bg-stone-50">
-                <Header />
-                <div className="flex-1 flex flex-col items-center justify-center p-8">
+            <SidebarLayout>
+                <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50">
                     <div className="text-center">
                         <div className="text-6xl mb-4">🎫</div>
-                        <h1 className="text-2xl font-bold text-stone-900 mb-2">Event not found</h1>
-                        <p className="text-stone-600 mb-6">{error || 'This event may have been removed.'}</p>
+                        <h1 className="text-2xl font-bold text-slate-900 mb-2">Event not found</h1>
+                        <p className="text-slate-600 mb-6">{error || 'This event may have been removed.'}</p>
                         <Link
                             href="/dashboard"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all shadow-md"
                         >
                             Back to dashboard
                         </Link>
                     </div>
                 </div>
-            </main>
+            </SidebarLayout>
         );
     }
 
@@ -302,22 +303,21 @@ export default function AttendeesPage() {
     // =======================================================================
     if (!canViewAttendees) {
         return (
-            <main className="min-h-screen flex flex-col bg-stone-50">
-                <Header />
-                <div className="flex-1 flex flex-col items-center justify-center p-8">
+            <SidebarLayout>
+                <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50">
                     <div className="text-center">
                         <div className="text-6xl mb-4">👥</div>
-                        <h1 className="text-2xl font-bold text-stone-900 mb-2">Members only</h1>
-                        <p className="text-stone-600 mb-6">Join this group to see who's attending.</p>
+                        <h1 className="text-2xl font-bold text-slate-900 mb-2">Members only</h1>
+                        <p className="text-slate-600 mb-6">Join this group to see who's attending.</p>
                         <Link
                             href={`/events/${event.id}`}
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all shadow-md"
                         >
                             Back to event
                         </Link>
                     </div>
                 </div>
-            </main>
+            </SidebarLayout>
         );
     }
 
@@ -338,15 +338,13 @@ export default function AttendeesPage() {
     const currentList = getCurrentList();
 
     return (
-        <main className="min-h-screen flex flex-col bg-stone-50">
-            <Header />
-
+        <SidebarLayout>
             {/* Event Header */}
-            <div className="bg-white border-b border-stone-200">
+            <div className="bg-white border-b border-slate-200">
                 <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
                     <Link
                         href={`/events/${event.id}`}
-                        className="inline-flex items-center gap-2 text-amber-600 hover:text-amber-700 mb-3 transition-colors text-sm"
+                        className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-3 transition-colors text-sm"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -356,12 +354,12 @@ export default function AttendeesPage() {
 
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <h1 className="text-xl sm:text-2xl font-bold text-stone-900 font-display mb-2">
+                            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 font-display mb-2">
                                 {event.title}
                             </h1>
-                            <p className="text-stone-600">
+                            <p className="text-slate-600">
                                 {date} at {time}
-                                {event.location && <span className="text-stone-400"> • {event.location}</span>}
+                                {event.location && <span className="text-slate-400"> • {event.location}</span>}
                             </p>
                         </div>
 
@@ -369,7 +367,7 @@ export default function AttendeesPage() {
                         {canViewAttendees && event.preorders_enabled && (
                             <button
                                 onClick={() => setShowOrderSummary(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-xl hover:bg-amber-600 transition shadow-sm"
+                                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-600 transition shadow-sm"
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -393,7 +391,7 @@ export default function AttendeesPage() {
                             className={`px-4 py-2 rounded-full text-sm font-medium transition ${
                                 activeTab === 'going'
                                     ? 'bg-green-100 text-green-700'
-                                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                             }`}
                         >
                             Going ({attendingCount}{totalGuestCount > 0 ? ` +${totalGuestCount}` : ''})
@@ -403,7 +401,7 @@ export default function AttendeesPage() {
                             className={`px-4 py-2 rounded-full text-sm font-medium transition ${
                                 activeTab === 'waitlist'
                                     ? 'bg-yellow-100 text-yellow-700'
-                                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                             }`}
                         >
                             Waitlist ({waitlistCount})
@@ -412,8 +410,8 @@ export default function AttendeesPage() {
                             onClick={() => setActiveTab('not_going')}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition ${
                                 activeTab === 'not_going'
-                                    ? 'bg-stone-200 text-stone-700'
-                                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                    ? 'bg-slate-200 text-slate-700'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                             }`}
                         >
                             Not Going ({notGoingCount})
@@ -422,11 +420,11 @@ export default function AttendeesPage() {
 
                     {/* Sort */}
                     <div className="flex items-center gap-2">
-                        <span className="text-sm text-stone-500">Sort:</span>
+                        <span className="text-sm text-slate-500">Sort:</span>
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value as SortBy)}
-                            className="px-3 py-1.5 bg-white border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                            className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
                         >
                             <option value="rsvp_time">RSVP time</option>
                             <option value="name">Name</option>
@@ -436,7 +434,7 @@ export default function AttendeesPage() {
 
                 {/* Attendee Grid */}
                 {currentList.length > 0 ? (
-                    <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-6">
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                         <div className="flex flex-wrap gap-6 sm:gap-8">
                                 {currentList.map((person) => {
                                     const attendee = person as Attendee;
@@ -457,14 +455,14 @@ export default function AttendeesPage() {
                                                         className="w-20 h-20 rounded-full object-cover"
                                                     />
                                                 ) : (
-                                                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                                                        <span className="text-2xl font-medium text-amber-600">
+                                                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center">
+                                                        <span className="text-2xl font-medium text-indigo-600">
                                                             {person.name.charAt(0).toUpperCase()}
                                                         </span>
                                                     </div>
                                                 )}
                                                 {isHostUser && (
-                                                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-amber-500 text-white text-xs font-medium rounded">
+                                                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-indigo-600 text-white text-xs font-medium rounded">
                                                         Host
                                                     </span>
                                                 )}
@@ -476,12 +474,12 @@ export default function AttendeesPage() {
                                             </div>
 
                                             {/* Name */}
-                                            <span className="text-sm font-medium text-stone-900">
+                                            <span className="text-sm font-medium text-slate-900">
                                                 {person.name}
                                             </span>
 
                                             {/* Role/Guest info */}
-                                            <span className="text-xs text-stone-500">
+                                            <span className="text-xs text-slate-500">
                                                 {isHostUser ? 'Event Host' :
                                                  activeTab === 'going' && attendee.guest_count > 0
                                                     ? `+${attendee.guest_count} guest${attendee.guest_count > 1 ? 's' : ''}`
@@ -489,7 +487,7 @@ export default function AttendeesPage() {
                                             </span>
 
                                             {/* RSVP time */}
-                                            <span className="text-xs text-stone-400">
+                                            <span className="text-xs text-slate-400">
                                                 {formatRsvpTime(person.rsvp_at)}
                                             </span>
                                         </button>
@@ -498,13 +496,13 @@ export default function AttendeesPage() {
                         </div>
                     </div>
                 ) : (
-                    <div className="bg-white rounded-2xl border border-stone-200 p-12 text-center">
+                    <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
                         <div className="text-4xl mb-3">
                             {activeTab === 'going' && '👥'}
                             {activeTab === 'waitlist' && '⏳'}
                             {activeTab === 'not_going' && '👋'}
                         </div>
-                        <p className="text-stone-500">
+                        <p className="text-slate-500">
                             {activeTab === 'going' && 'No one is going yet'}
                             {activeTab === 'waitlist' && 'No one on the waitlist'}
                             {activeTab === 'not_going' && 'No one has cancelled'}
@@ -545,7 +543,7 @@ export default function AttendeesPage() {
                                     />
                                 ) : (
                                     <div
-                                        className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center shadow-2xl cursor-pointer"
+                                        className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl bg-gradient-to-br from-indigo-200 to-violet-300 flex items-center justify-center shadow-2xl cursor-pointer"
                                         onClick={() => setViewingLargePhoto(false)}
                                     >
                                         <span className="text-8xl font-bold text-white">
@@ -572,12 +570,12 @@ export default function AttendeesPage() {
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Header with large photo */}
-                            <div className="p-5 border-b border-stone-100">
+                            <div className="p-5 border-b border-slate-100">
                                 {/* Close button */}
                                 <div className="flex justify-end mb-3">
                                     <button
                                         onClick={() => setSelectedAttendee(null)}
-                                        className="p-1 text-stone-400 hover:text-stone-600 transition"
+                                        className="p-1 text-slate-400 hover:text-slate-600 transition"
                                     >
                                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -596,7 +594,7 @@ export default function AttendeesPage() {
                                         />
                                     ) : (
                                         <div
-                                            className="w-40 h-40 rounded-2xl bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center cursor-pointer hover:opacity-90 transition shadow-md"
+                                            className="w-40 h-40 rounded-2xl bg-gradient-to-br from-indigo-200 to-violet-300 flex items-center justify-center cursor-pointer hover:opacity-90 transition shadow-md"
                                             onClick={() => setViewingLargePhoto(true)}
                                         >
                                             <span className="text-5xl font-bold text-white">
@@ -606,8 +604,8 @@ export default function AttendeesPage() {
                                     )}
 
                                     {/* Name and status below photo */}
-                                    <h3 className="text-xl font-semibold text-stone-900 mt-4">{selectedAttendee.name}</h3>
-                                    <p className="text-sm text-stone-500">
+                                    <h3 className="text-xl font-semibold text-slate-900 mt-4">{selectedAttendee.name}</h3>
+                                    <p className="text-sm text-slate-500">
                                         {isInGoing ? 'Going' : isInWaitlist ? 'Waitlist' : 'Not going'}
                                     </p>
                                 </div>
@@ -615,10 +613,10 @@ export default function AttendeesPage() {
 
                             {/* Order form for hosts/organisers */}
                             {showOrderForm && (
-                                <div className="p-5 border-b border-stone-100">
+                                <div className="p-5 border-b border-slate-100">
                                     <div className="space-y-3">
                                         <div>
-                                            <label className="block text-xs font-medium text-stone-600 mb-1">
+                                            <label className="block text-xs font-medium text-slate-600 mb-1">
                                                 Order
                                             </label>
                                             <input
@@ -626,11 +624,11 @@ export default function AttendeesPage() {
                                                 value={editFoodOrder}
                                                 onChange={(e) => setEditFoodOrder(e.target.value)}
                                                 placeholder="e.g., Chicken Caesar Salad"
-                                                className="w-full px-3 py-2 text-sm border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-medium text-stone-600 mb-1">
+                                            <label className="block text-xs font-medium text-slate-600 mb-1">
                                                 Notes
                                             </label>
                                             <input
@@ -638,13 +636,13 @@ export default function AttendeesPage() {
                                                 value={editDietaryNotes}
                                                 onChange={(e) => setEditDietaryNotes(e.target.value)}
                                                 placeholder="e.g., No nuts, gluten free"
-                                                className="w-full px-3 py-2 text-sm border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
                                             />
                                         </div>
                                         <button
                                             onClick={handleSaveOrder}
                                             disabled={orderSaving}
-                                            className="w-full px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition disabled:opacity-50"
+                                            className="w-full px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 transition disabled:opacity-50"
                                         >
                                             {orderSaving ? 'Saving...' : 'Save Order'}
                                         </button>
@@ -654,7 +652,7 @@ export default function AttendeesPage() {
 
                             {/* Action buttons for hosts/organisers */}
                             {canManageAttendees && (isInGoing || isInWaitlist) && (
-                                <div className="p-4 bg-stone-50 flex flex-wrap justify-center gap-2">
+                                <div className="p-4 bg-slate-50 flex flex-wrap justify-center gap-2">
                                     {isInGoing && (
                                         <button
                                             onClick={() => handleManageAttendee(selectedAttendee.user_id, 'demote')}
@@ -698,11 +696,11 @@ export default function AttendeesPage() {
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className="px-6 py-4 border-b border-stone-200 flex items-center justify-between flex-shrink-0">
-                            <h3 className="text-lg font-bold text-stone-900 font-display">Orders</h3>
+                        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
+                            <h3 className="text-lg font-bold text-slate-900 font-display">Orders</h3>
                             <button
                                 onClick={() => setShowOrderSummary(false)}
-                                className="p-1 text-stone-400 hover:text-stone-600 transition"
+                                className="p-1 text-slate-400 hover:text-slate-600 transition"
                             >
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -715,15 +713,15 @@ export default function AttendeesPage() {
                             {attending.length > 0 ? (
                                 <div className="space-y-4">
                                     {attending.map((person) => (
-                                        <div key={person.user_id} className="pb-4 border-b border-stone-100 last:border-0 last:pb-0">
-                                            <p className="font-semibold text-stone-900">{person.name}</p>
+                                        <div key={person.user_id} className="pb-4 border-b border-slate-100 last:border-0 last:pb-0">
+                                            <p className="font-semibold text-slate-900">{person.name}</p>
                                             {person.food_order ? (
-                                                <p className="text-stone-700 mt-1">{person.food_order}</p>
+                                                <p className="text-slate-700 mt-1">{person.food_order}</p>
                                             ) : (
-                                                <p className="text-stone-400 italic mt-1">No order submitted</p>
+                                                <p className="text-slate-400 italic mt-1">No order submitted</p>
                                             )}
                                             {person.dietary_notes && (
-                                                <p className="text-sm text-orange-600 mt-1">
+                                                <p className="text-sm text-violet-600 mt-1">
                                                     Notes: {person.dietary_notes}
                                                 </p>
                                             )}
@@ -731,15 +729,15 @@ export default function AttendeesPage() {
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-center text-stone-500 py-8">No attendees yet</p>
+                                <p className="text-center text-slate-500 py-8">No attendees yet</p>
                             )}
                         </div>
 
                         {/* Footer with copy button */}
-                        <div className="px-6 py-4 border-t border-stone-200 flex-shrink-0">
+                        <div className="px-6 py-4 border-t border-slate-200 flex-shrink-0">
                             <button
                                 onClick={handleCopyOrders}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-stone-100 text-stone-700 font-medium rounded-xl hover:bg-stone-200 transition"
+                                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition"
                             >
                                 {copiedOrders ? (
                                     <>
@@ -761,6 +759,6 @@ export default function AttendeesPage() {
                     </div>
                 </div>
             )}
-        </main>
+        </SidebarLayout>
     );
 }
