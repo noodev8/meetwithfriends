@@ -33,21 +33,16 @@ Create the Terms of Service page at `/terms`. Help page already links to it.
 ---
 
 ### REQ-003: Broadcast Opt-Out Toggle
-**Status:** Not Started
+**Status:** COMPLETE
 **Effort:** Medium
 
 Add toggle to profile settings for users to opt out of broadcast emails.
 
-**Requires:**
-- Add `receive_broadcasts BOOLEAN DEFAULT TRUE` column to `app_user`
-- Update `update_profile.js` backend to handle field
-- Add toggle to profile page Contact Details section
-- Update email service to check field before sending broadcasts
-
-**Acceptance Criteria:**
-- Toggle visible in profile settings
-- Persists to database
-- Email service respects the setting
+**Implementation:**
+- Added `receive_broadcasts BOOLEAN DEFAULT TRUE` column to `app_user`
+- Updated `update_profile.js` to handle the field
+- Added toggle in profile page under "Email Preferences"
+- Updated `create_event.js` to filter out users with `receive_broadcasts = false` when sending new event notifications
 
 ---
 
@@ -224,7 +219,7 @@ Allow hosts to save and reuse event configurations.
 |-----|------|-------|--------|--------|
 | 001 | Privacy Policy | 1 | Small | COMPLETE |
 | 002 | Terms of Service | 1 | Small | COMPLETE |
-| 003 | Broadcast Opt-Out | 1 | Medium | Not Started |
+| 003 | Broadcast Opt-Out | 1 | Medium | COMPLETE |
 | 004 | Member→Organiser Msg | 1 | Medium | Not Started |
 | 005 | Guest→Host Msg | 1 | Medium | Not Started |
 | 006 | Pre-Order Submit UI | 2 | Medium | Not Started |

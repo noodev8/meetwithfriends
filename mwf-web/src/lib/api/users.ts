@@ -51,6 +51,7 @@ export async function updateProfile(
         contact_email?: string;
         show_mobile_to_guests?: boolean;
         show_email_to_guests?: boolean;
+        receive_broadcasts?: boolean;
     }
 ): Promise<ApiResult<User>> {
     const response = await apiCall('/api/users/update_profile', updates, token);

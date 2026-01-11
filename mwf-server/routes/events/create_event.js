@@ -218,14 +218,15 @@ router.post('/create', verifyToken, async (req, res) => {
         const creatorResult = await query('SELECT name FROM app_user WHERE id = $1', [userId]);
         const hostName = creatorResult.rows[0]?.name || 'Someone';
 
-        // Get all active group members except the event creator
+        // Get all active group members except the event creator (respecting broadcast preferences)
         const membersResult = await query(
             `SELECT u.email, u.name
              FROM group_member gm
              JOIN app_user u ON gm.user_id = u.id
              WHERE gm.group_id = $1
              AND gm.status = 'active'
-             AND gm.user_id != $2`,
+             AND gm.user_id != $2
+             AND u.receive_broadcasts != false`,
             [group_id, userId]
         );
 

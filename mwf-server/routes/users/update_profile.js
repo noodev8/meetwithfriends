@@ -16,7 +16,8 @@ Request Payload:
   "contact_mobile": "+61412345678",    // string, optional (can be empty)
   "contact_email": "contact@...",      // string, optional (can be empty)
   "show_mobile_to_guests": true,       // boolean, optional
-  "show_email_to_guests": true         // boolean, optional
+  "show_email_to_guests": true,        // boolean, optional
+  "receive_broadcasts": true           // boolean, optional
 }
 
 Success Response:
@@ -31,7 +32,8 @@ Success Response:
     "contact_mobile": "+61412345678",
     "contact_email": "contact@...",
     "show_mobile_to_guests": true,
-    "show_email_to_guests": true
+    "show_email_to_guests": true,
+    "receive_broadcasts": true
   }
 }
 =======================================================================================================================================
@@ -52,7 +54,7 @@ const { verifyToken } = require('../../middleware/auth');
 router.post('/', verifyToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        const { name, bio, avatar_url, contact_mobile, contact_email, show_mobile_to_guests, show_email_to_guests } = req.body;
+        const { name, bio, avatar_url, contact_mobile, contact_email, show_mobile_to_guests, show_email_to_guests, receive_broadcasts } = req.body;
 
         // =======================================================================
         // Validate name if provided - must not be empty
@@ -114,10 +116,16 @@ router.post('/', verifyToken, async (req, res) => {
             paramIndex++;
         }
 
+        if (receive_broadcasts !== undefined) {
+            updates.push(`receive_broadcasts = $${paramIndex}`);
+            values.push(Boolean(receive_broadcasts));
+            paramIndex++;
+        }
+
         // If no fields to update, just return current profile
         if (updates.length === 0) {
             const result = await query(
-                `SELECT id, name, email, bio, avatar_url, contact_mobile, contact_email, show_mobile_to_guests, show_email_to_guests
+                `SELECT id, name, email, bio, avatar_url, contact_mobile, contact_email, show_mobile_to_guests, show_email_to_guests, receive_broadcasts
                  FROM app_user WHERE id = $1`,
                 [userId]
             );
@@ -143,7 +151,7 @@ router.post('/', verifyToken, async (req, res) => {
             UPDATE app_user
             SET ${updates.join(', ')}
             WHERE id = $${paramIndex}
-            RETURNING id, name, email, bio, avatar_url, contact_mobile, contact_email, show_mobile_to_guests, show_email_to_guests
+            RETURNING id, name, email, bio, avatar_url, contact_mobile, contact_email, show_mobile_to_guests, show_email_to_guests, receive_broadcasts
         `;
 
         const result = await query(updateQuery, values);

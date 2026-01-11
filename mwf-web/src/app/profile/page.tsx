@@ -41,6 +41,7 @@ export default function ProfilePage() {
     const [contactEmail, setContactEmail] = useState('');
     const [showMobileToGuests, setShowMobileToGuests] = useState(false);
     const [showEmailToGuests, setShowEmailToGuests] = useState(false);
+    const [receiveBroadcasts, setReceiveBroadcasts] = useState(true);
     const [contactError, setContactError] = useState('');
     const [contactSuccess, setContactSuccess] = useState('');
     const [isSavingContact, setIsSavingContact] = useState(false);
@@ -84,6 +85,7 @@ export default function ProfilePage() {
             setContactEmail(user.contact_email || '');
             setShowMobileToGuests(user.show_mobile_to_guests || false);
             setShowEmailToGuests(user.show_email_to_guests || false);
+            setReceiveBroadcasts(user.receive_broadcasts !== false);
         }
     }, [user]);
 
@@ -233,7 +235,8 @@ export default function ProfilePage() {
             contact_mobile: contactMobile,
             contact_email: contactEmail,
             show_mobile_to_guests: showMobileToGuests,
-            show_email_to_guests: showEmailToGuests
+            show_email_to_guests: showEmailToGuests,
+            receive_broadcasts: receiveBroadcasts
         });
 
         if (result.success && result.data) {
@@ -533,6 +536,26 @@ export default function ProfilePage() {
                                     Show email to guests on my events
                                 </label>
                             </div>
+                        </div>
+
+                        {/* Email Preferences */}
+                        <div className="pt-4 border-t border-slate-200">
+                            <h3 className="text-sm font-medium text-slate-700 mb-3">Email Preferences</h3>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    id="receiveBroadcasts"
+                                    checked={receiveBroadcasts}
+                                    onChange={(e) => setReceiveBroadcasts(e.target.checked)}
+                                    className="w-4 h-4 text-indigo-500 border-slate-300 rounded focus:ring-indigo-500"
+                                />
+                                <label htmlFor="receiveBroadcasts" className="text-sm text-slate-600">
+                                    Receive group announcements and updates
+                                </label>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-1 ml-6">
+                                Uncheck to stop receiving broadcast emails from group organisers
+                            </p>
                         </div>
 
                         <button

@@ -17,6 +17,7 @@ export interface User {
     contact_email?: string;
     show_mobile_to_guests?: boolean;
     show_email_to_guests?: boolean;
+    receive_broadcasts?: boolean;
 }
 
 // Group
