@@ -5,7 +5,7 @@
 -- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 17.4
 
--- Started on 2026-01-10 21:53:12
+-- Started on 2026-01-11 20:06:56
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -84,7 +84,8 @@ CREATE TABLE public.app_user (
     contact_mobile character varying(50),
     contact_email character varying(255),
     show_mobile_to_guests boolean DEFAULT false,
-    show_email_to_guests boolean DEFAULT false
+    show_email_to_guests boolean DEFAULT false,
+    last_login_at timestamp with time zone
 );
 
 
@@ -404,6 +405,7 @@ CREATE TABLE public.group_member (
     role character varying(20) DEFAULT 'member'::character varying NOT NULL,
     status character varying(20) DEFAULT 'pending'::character varying NOT NULL,
     joined_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    last_visited_at timestamp with time zone,
     CONSTRAINT group_member_role_check CHECK (((role)::text = ANY ((ARRAY['organiser'::character varying, 'host'::character varying, 'member'::character varying])::text[]))),
     CONSTRAINT group_member_status_check CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'pending'::character varying])::text[])))
 );
@@ -920,7 +922,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENC
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO meetwithfriends_user;
 
 
--- Completed on 2026-01-10 21:53:14
+-- Completed on 2026-01-11 20:06:58
 
 --
 -- PostgreSQL database dump complete

@@ -277,7 +277,6 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
 
                 const wasAttending = existingRsvp.rows[0].status === 'attending';
                 const wasWaitlistPosition = existingRsvp.rows[0].waitlist_position;
-                const freedGuests = existingRsvp.rows[0].guest_count || 0;
 
                 // Update to not_going status (keep record for history, update timestamp)
                 await client.query(

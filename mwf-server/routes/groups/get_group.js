@@ -111,6 +111,14 @@ router.get('/:id', optionalAuth, async (req, res) => {
                     status: memberResult.rows[0].status,
                     role: memberResult.rows[0].role
                 };
+
+                // Update last_visited_at for active members
+                if (memberResult.rows[0].status === 'active') {
+                    await query(
+                        'UPDATE group_member SET last_visited_at = NOW() WHERE group_id = $1 AND user_id = $2',
+                        [id, userId]
+                    );
+                }
             }
         }
 

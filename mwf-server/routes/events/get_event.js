@@ -201,6 +201,14 @@ router.get('/:id', optionalAuth, async (req, res) => {
             // Can manage/edit if organiser or event host
             const isOrganiser = membershipResult.rows[0]?.role === 'organiser';
             canManageAttendees = isOrganiser || isHost;
+
+            // Update group last_visited_at for members (browsing shows interest)
+            if (isGroupMember) {
+                query(
+                    'UPDATE group_member SET last_visited_at = NOW() WHERE group_id = $1 AND user_id = $2',
+                    [event.group_id, userId]
+                );
+            }
         }
 
         // Can edit if can manage AND event not cancelled

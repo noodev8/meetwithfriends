@@ -184,11 +184,10 @@ export default function CreateEventPage() {
     }
 
     // =======================================================================
-    // Get min date (tomorrow)
+    // Get min date (today) - time validation ensures event is in the future
     // =======================================================================
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const minDate = tomorrow.toISOString().split('T')[0];
+    const today = new Date();
+    const minDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
     // =======================================================================
     // Create event form
@@ -532,9 +531,9 @@ export default function CreateEventPage() {
                                                         <div className="flex flex-wrap gap-2">
                                                             {[1, 2, 3].map((days) => {
                                                                 const cutoffDate = date ? (() => {
-                                                                    const d = new Date(date);
+                                                                    const d = new Date(date + 'T12:00:00'); // Use noon to avoid timezone issues
                                                                     d.setDate(d.getDate() - days);
-                                                                    return d.toISOString().split('T')[0];
+                                                                    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                                                                 })() : '';
                                                                 const isSelected = preorderCutoffDate === cutoffDate && cutoffDate !== '';
                                                                 return (

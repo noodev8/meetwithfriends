@@ -77,9 +77,12 @@ export default function EditEventPage() {
                 setDescription(evt.description || '');
                 setLocation(evt.location || '');
 
-                // Parse date and time
+                // Parse date and time (use local date, not UTC)
                 const eventDate = new Date(evt.date_time);
-                setDate(eventDate.toISOString().split('T')[0]);
+                const year = eventDate.getFullYear();
+                const month = String(eventDate.getMonth() + 1).padStart(2, '0');
+                const day = String(eventDate.getDate()).padStart(2, '0');
+                setDate(`${year}-${month}-${day}`);
                 setTime(eventDate.toTimeString().slice(0, 5));
 
                 setCapacity(evt.capacity?.toString() || '');
@@ -90,10 +93,13 @@ export default function EditEventPage() {
                 setPreordersEnabled(evt.preorders_enabled || false);
                 setMenuLink(evt.menu_link || '');
 
-                // Parse preorder cutoff date and time
+                // Parse preorder cutoff date and time (use local date, not UTC)
                 if (evt.preorder_cutoff) {
                     const cutoffDate = new Date(evt.preorder_cutoff);
-                    setPreorderCutoffDate(cutoffDate.toISOString().split('T')[0]);
+                    const cutoffYear = cutoffDate.getFullYear();
+                    const cutoffMonth = String(cutoffDate.getMonth() + 1).padStart(2, '0');
+                    const cutoffDay = String(cutoffDate.getDate()).padStart(2, '0');
+                    setPreorderCutoffDate(`${cutoffYear}-${cutoffMonth}-${cutoffDay}`);
                     setPreorderCutoffTime(cutoffDate.toTimeString().slice(0, 5));
                 }
             } else {
@@ -266,7 +272,8 @@ export default function EditEventPage() {
     // =======================================================================
     // Get min date (today)
     // =======================================================================
-    const minDate = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const minDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
     // =======================================================================
     // Edit event form
@@ -666,9 +673,9 @@ export default function EditEventPage() {
                                                         <div className="flex flex-wrap gap-2">
                                                             {[1, 2, 3].map((days) => {
                                                                 const cutoffDate = date ? (() => {
-                                                                    const d = new Date(date);
+                                                                    const d = new Date(date + 'T12:00:00'); // Use noon to avoid timezone issues
                                                                     d.setDate(d.getDate() - days);
-                                                                    return d.toISOString().split('T')[0];
+                                                                    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                                                                 })() : '';
                                                                 const isSelected = preorderCutoffDate === cutoffDate && cutoffDate !== '';
                                                                 return (
