@@ -169,35 +169,7 @@ Track user activity for analytics and email targeting.
 
 ---
 
-### REQ-012: Recurring Events
-**Status:** Not Started
-**Effort:** Large
-
-Allow hosts to create recurring events.
-
-**Requires:**
-- Recurrence fields: `recurrence_rule`, `parent_event_id`
-- Pattern selector (none, weekly, biweekly, monthly)
-- Generate future event instances
-- Edit single vs all future instances
-
----
-
-### REQ-013: Event Templates
-**Status:** Not Started
-**Effort:** Medium
-
-Allow hosts to save and reuse event configurations.
-
-**Requires:**
-- `event_template` table (group_id, name, template_data JSON)
-- "Save as Template" button on events
-- Template list in group settings
-- "Create from Template" option
-
----
-
-### REQ-014: Duplicate Event
+### REQ-012: Duplicate Event
 **Status:** COMPLETE
 **Effort:** Small
 
@@ -228,9 +200,7 @@ Allow hosts to duplicate an existing event to create a new one with the same set
 | 009 | Stripe Connect | 3 | Large | Blocked |
 | 010 | Event Deposits | 3 | Large | Blocked |
 | 011 | Last Login Tracking | 5 | Small | COMPLETE |
-| 012 | Recurring Events | 5 | Large | Not Started |
-| 013 | Event Templates | 5 | Medium | Not Started |
-| 014 | Duplicate Event | 5 | Small | COMPLETE |
+| 012 | Duplicate Event | 5 | Small | COMPLETE |
 
 ---
 
@@ -238,9 +208,6 @@ Allow hosts to duplicate an existing event to create a new one with the same set
 
 **Phase 1:** COMPLETE
 **Phase 2:** COMPLETE
+**Phase 5:** COMPLETE
 
 **Phase 3:** Blocked (needs Stripe account setup)
-
-**Phase 5 (when ready):**
-1. REQ-012 - Recurring Events (Large)
-2. REQ-013 - Event Templates (Medium)
