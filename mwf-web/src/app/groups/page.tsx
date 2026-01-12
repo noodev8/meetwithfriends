@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { getAllGroups, GroupWithCount } from '@/lib/api/groups';
 import SidebarLayout from '@/components/layout/SidebarLayout';
+import { getGroupTheme, getGroupInitials } from '@/lib/groupThemes';
 
 export default function GroupsPage() {
     const { user, token, isLoading } = useAuth();
@@ -49,19 +50,7 @@ export default function GroupsPage() {
         return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
     };
 
-    // Generate a color based on group name for the initial badge
-    const getColorClass = (name: string) => {
-        const colors = [
-            'bg-indigo-100 text-indigo-600',
-            'bg-violet-100 text-violet-600',
-            'bg-purple-100 text-purple-600',
-            'bg-blue-100 text-blue-600',
-            'bg-cyan-100 text-cyan-600',
-            'bg-teal-100 text-teal-600',
-        ];
-        const colorIndex = name.charCodeAt(0) % colors.length;
-        return colors[colorIndex];
-    };
+    // getColorClass removed - now using theme colors from groupThemes.ts
 
     // Loading state
     if (isLoading || !user) {
@@ -108,7 +97,9 @@ export default function GroupsPage() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {groups.map((group) => (
+                        {groups.map((group) => {
+                            const theme = getGroupTheme(group.theme_color);
+                            return (
                             <Link
                                 key={group.id}
                                 href={`/groups/${group.id}`}
@@ -116,9 +107,9 @@ export default function GroupsPage() {
                             >
                                 <div className="flex items-start gap-4">
                                     {/* Initial badge */}
-                                    <div className={`w-12 h-12 rounded-xl ${getColorClass(group.name)} flex items-center justify-center flex-shrink-0`}>
-                                        <span className="text-lg font-bold">
-                                            {group.name.charAt(0).toUpperCase()}
+                                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${theme.gradientLight} flex items-center justify-center flex-shrink-0`}>
+                                        <span className={`text-lg font-bold ${theme.textColor}`}>
+                                            {getGroupInitials(group.name)}
                                         </span>
                                     </div>
 
@@ -140,7 +131,8 @@ export default function GroupsPage() {
                                     </div>
                                 </div>
                             </Link>
-                        ))}
+                        );
+                        })}
                     </div>
                 )}
             </div>

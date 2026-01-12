@@ -104,6 +104,8 @@ export async function createGroup(
         image_url?: string;
         image_position?: 'top' | 'center' | 'bottom';
         join_policy?: 'auto' | 'approval';
+        theme_color?: 'indigo' | 'emerald' | 'rose' | 'amber' | 'cyan' | 'violet';
+        icon?: string;
     }
 ): Promise<ApiResult<Group>> {
     const response = await apiCall('/api/groups/create', data, token);
@@ -139,6 +141,8 @@ export async function updateGroup(
         image_position?: 'top' | 'center' | 'bottom';
         join_policy?: 'auto' | 'approval';
         visibility?: 'listed' | 'unlisted';
+        theme_color?: 'indigo' | 'emerald' | 'rose' | 'amber' | 'cyan' | 'violet';
+        icon?: string | null;
     }
 ): Promise<ApiResult<Group>> {
     const response = await apiCall(`/api/groups/${groupId}/update`, data, token);

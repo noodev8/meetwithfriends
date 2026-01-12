@@ -15,8 +15,9 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { createGroup } from '@/lib/api/groups';
 import SidebarLayout from '@/components/layout/SidebarLayout';
-import ImageUpload from '@/components/ui/ImageUpload';
+// import ImageUpload from '@/components/ui/ImageUpload'; // Hidden - using theme colors instead
 import RichTextEditor from '@/components/ui/RichTextEditor';
+import { THEME_OPTIONS, GroupThemeColor, getGroupInitials } from '@/lib/groupThemes';
 
 // =======================================================================
 // Tips data for sidebar
@@ -69,8 +70,9 @@ export default function CreateGroupPage() {
     const router = useRouter();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
-    const [imagePosition, setImagePosition] = useState<'top' | 'center' | 'bottom'>('center');
+    // const [imageUrl, setImageUrl] = useState<string | null>(null); // Hidden - using theme colors
+    // const [imagePosition, setImagePosition] = useState<'top' | 'center' | 'bottom'>('center'); // Hidden
+    const [themeColor, setThemeColor] = useState<GroupThemeColor>('indigo');
     const [joinPolicy, setJoinPolicy] = useState<'auto' | 'approval'>('approval');
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -106,8 +108,7 @@ export default function CreateGroupPage() {
         const result = await createGroup(token, {
             name: name.trim(),
             description: description.trim() || undefined,
-            image_url: imageUrl || undefined,
-            image_position: imageUrl ? imagePosition : undefined,
+            theme_color: themeColor,
             join_policy: joinPolicy,
         });
 
@@ -175,16 +176,26 @@ export default function CreateGroupPage() {
                                 />
                             </div>
 
+                            {/* Theme Color Selector */}
                             <div className="mb-6">
                                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    Group Image
+                                    Theme Color
                                 </label>
-                                <ImageUpload
-                                    value={imageUrl}
-                                    onChange={setImageUrl}
-                                    imagePosition={imagePosition}
-                                    onPositionChange={setImagePosition}
-                                />
+                                <div className="flex flex-wrap gap-2">
+                                    {THEME_OPTIONS.map((theme) => (
+                                        <button
+                                            key={theme.key}
+                                            type="button"
+                                            onClick={() => setThemeColor(theme.key)}
+                                            className={`w-10 h-10 rounded-xl ${theme.bgColor} transition-all ${
+                                                themeColor === theme.key
+                                                    ? 'ring-2 ring-offset-2 ring-slate-900 scale-110'
+                                                    : 'hover:scale-105'
+                                            }`}
+                                            title={theme.label}
+                                        />
+                                    ))}
+                                </div>
                             </div>
 
                             <div className="mb-6">

@@ -71,6 +71,8 @@ router.get('/:id', optionalAuth, async (req, res) => {
                 g.join_policy,
                 g.visibility,
                 g.invite_code,
+                g.theme_color,
+                g.icon,
                 g.created_at,
                 COUNT(gm.id) FILTER (WHERE gm.status = 'active') AS member_count
              FROM group_list g

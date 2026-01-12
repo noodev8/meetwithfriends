@@ -15,8 +15,9 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getGroup, updateGroup, regenerateInviteCode, GroupWithCount } from '@/lib/api/groups';
 import SidebarLayout from '@/components/layout/SidebarLayout';
-import ImageUpload from '@/components/ui/ImageUpload';
+// import ImageUpload from '@/components/ui/ImageUpload'; // Hidden - using theme colors instead
 import RichTextEditor from '@/components/ui/RichTextEditor';
+import { THEME_OPTIONS, GroupThemeColor } from '@/lib/groupThemes';
 
 export default function EditGroupPage() {
     const { user, token, isLoading } = useAuth();
@@ -27,9 +28,10 @@ export default function EditGroupPage() {
     const [loading, setLoading] = useState(true);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
-    const [imagePosition, setImagePosition] = useState<'top' | 'center' | 'bottom'>('center');
-    const [imageSaving, setImageSaving] = useState(false);
+    // const [imageUrl, setImageUrl] = useState<string | null>(null); // Hidden - using theme colors
+    // const [imagePosition, setImagePosition] = useState<'top' | 'center' | 'bottom'>('center'); // Hidden
+    // const [imageSaving, setImageSaving] = useState(false); // Hidden
+    const [themeColor, setThemeColor] = useState<GroupThemeColor>('indigo');
     const [joinPolicy, setJoinPolicy] = useState<'auto' | 'approval'>('approval');
     const [visibility, setVisibility] = useState<'listed' | 'unlisted'>('listed');
     const [inviteCode, setInviteCode] = useState<string | null>(null);
@@ -66,8 +68,9 @@ export default function EditGroupPage() {
                 setGroup(groupData);
                 setName(groupData.name);
                 setDescription(groupData.description || '');
-                setImageUrl(groupData.image_url || null);
-                setImagePosition(groupData.image_position || 'center');
+                // setImageUrl(groupData.image_url || null); // Hidden
+                // setImagePosition(groupData.image_position || 'center'); // Hidden
+                setThemeColor((groupData.theme_color as GroupThemeColor) || 'indigo');
                 setJoinPolicy(groupData.join_policy as 'auto' | 'approval');
                 setVisibility(groupData.visibility || 'listed');
                 setInviteCode(groupData.invite_code || null);
@@ -81,6 +84,7 @@ export default function EditGroupPage() {
         fetchGroup();
     }, [params.id, token, user, isLoading, router]);
 
+    /* Hidden - using theme colors instead
     // =======================================================================
     // Handle image change - auto-save to database
     // =======================================================================
@@ -106,6 +110,7 @@ export default function EditGroupPage() {
         await updateGroup(token, group.id, { image_position: position });
         setImageSaving(false);
     };
+    */
 
     // =======================================================================
     // Handle regenerate invite code
@@ -158,8 +163,7 @@ export default function EditGroupPage() {
         const result = await updateGroup(token, group.id, {
             name: name.trim(),
             description: description.trim() || null,
-            image_url: imageUrl,
-            image_position: imagePosition,
+            theme_color: themeColor,
             join_policy: joinPolicy,
             visibility: visibility,
         });
@@ -257,19 +261,26 @@ export default function EditGroupPage() {
                                 />
                             </div>
 
+                            {/* Theme Color Selector */}
                             <div className="mb-6">
                                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    Group Image
-                                    {imageSaving && (
-                                        <span className="ml-2 text-xs text-indigo-600">Saving...</span>
-                                    )}
+                                    Theme Color
                                 </label>
-                                <ImageUpload
-                                    value={imageUrl}
-                                    onChange={handleImageChange}
-                                    imagePosition={imagePosition}
-                                    onPositionChange={handlePositionChange}
-                                />
+                                <div className="flex flex-wrap gap-2">
+                                    {THEME_OPTIONS.map((theme) => (
+                                        <button
+                                            key={theme.key}
+                                            type="button"
+                                            onClick={() => setThemeColor(theme.key)}
+                                            className={`w-10 h-10 rounded-xl ${theme.bgColor} transition-all ${
+                                                themeColor === theme.key
+                                                    ? 'ring-2 ring-offset-2 ring-slate-900 scale-110'
+                                                    : 'hover:scale-105'
+                                            }`}
+                                            title={theme.label}
+                                        />
+                                    ))}
+                                </div>
                             </div>
 
                             <div className="mb-6">

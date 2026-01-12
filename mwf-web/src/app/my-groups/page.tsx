@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getMyGroups, MyGroup } from '@/lib/api/groups';
 import SidebarLayout from '@/components/layout/SidebarLayout';
+import { getGroupTheme, getGroupInitials } from '@/lib/groupThemes';
 
 export default function MyGroupsPage() {
     const { user, token, isLoading } = useAuth();
@@ -130,22 +131,11 @@ export default function MyGroupsPage() {
 }
 
 // =======================================================================
-// Group Card Component - Compact style without images
+// Group Card Component - Compact style with theme colors
 // =======================================================================
 function GroupCard({ group }: { group: MyGroup }) {
     const upcomingCount = group.upcoming_event_count || 0;
-
-    // Generate a color based on group name for the initial badge
-    const colors = [
-        'bg-indigo-100 text-indigo-600',
-        'bg-violet-100 text-violet-600',
-        'bg-purple-100 text-purple-600',
-        'bg-blue-100 text-blue-600',
-        'bg-cyan-100 text-cyan-600',
-        'bg-teal-100 text-teal-600',
-    ];
-    const colorIndex = group.name.charCodeAt(0) % colors.length;
-    const badgeColor = colors[colorIndex];
+    const theme = getGroupTheme(group.theme_color);
 
     return (
         <Link
@@ -154,9 +144,9 @@ function GroupCard({ group }: { group: MyGroup }) {
         >
             <div className="flex items-start gap-4">
                 {/* Initial badge */}
-                <div className={`w-12 h-12 rounded-xl ${badgeColor} flex items-center justify-center flex-shrink-0`}>
-                    <span className="text-lg font-bold">
-                        {group.name.charAt(0).toUpperCase()}
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${theme.gradientLight} flex items-center justify-center flex-shrink-0`}>
+                    <span className={`text-lg font-bold ${theme.textColor}`}>
+                        {getGroupInitials(group.name)}
                     </span>
                 </div>
 

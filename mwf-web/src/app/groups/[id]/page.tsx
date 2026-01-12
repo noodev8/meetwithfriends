@@ -31,6 +31,7 @@ import { getAllEvents, EventWithDetails } from '@/lib/api/events';
 
 import SidebarLayout from '@/components/layout/SidebarLayout';
 import EventCard from '@/components/ui/EventCard';
+import { getGroupTheme, getGroupInitials } from '@/lib/groupThemes';
 
 // Number of pending members to show before "View all" link
 const PENDING_PREVIEW_LIMIT = 3;
@@ -309,25 +310,17 @@ export default function GroupDetailPage() {
             <div className="bg-white border-b border-slate-200">
                 <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
                     <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-                        {/* Group Image - Hidden for now, using gradient placeholder for visual consistency
-                        {group.image_url ? (
-                            <div className="relative w-full lg:w-96 h-48 sm:h-56 lg:h-64 rounded-2xl overflow-hidden shadow-lg flex-shrink-0">
-                                <Image
-                                    src={group.image_url}
-                                    alt={group.name}
-                                    fill
-                                    className="object-cover"
-                                    style={{ objectPosition: group.image_position || 'center' }}
-                                />
-                            </div>
-                        ) : (
-                        */}
-                        <div className="w-full lg:w-96 h-48 sm:h-56 lg:h-64 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg flex-shrink-0">
-                            <span className="text-6xl sm:text-7xl text-white/80 font-display font-bold">
-                                {group.name.charAt(0).toUpperCase()}
-                            </span>
-                        </div>
-                        {/* )} */}
+                        {/* Group Theme Gradient with Initials */}
+                        {(() => {
+                            const theme = getGroupTheme(group.theme_color);
+                            return (
+                                <div className={`w-full lg:w-96 h-48 sm:h-56 lg:h-64 rounded-2xl bg-gradient-to-br ${theme.gradient} flex items-center justify-center shadow-lg flex-shrink-0`}>
+                                    <span className="text-6xl sm:text-7xl text-white/80 font-display font-bold">
+                                        {getGroupInitials(group.name)}
+                                    </span>
+                                </div>
+                            );
+                        })()}
 
                         {/* Group Info */}
                         <div className="flex-1 flex flex-col justify-center">

@@ -56,7 +56,7 @@ function generateInviteCode() {
 
 router.post('/', verifyToken, async (req, res) => {
     try {
-        const { name, description, image_url, image_position, join_policy, visibility } = req.body;
+        const { name, description, image_url, image_position, join_policy, visibility, theme_color, icon } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -121,14 +121,27 @@ router.post('/', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
+        // Validate theme_color if provided
+        // =======================================================================
+        const validThemeColors = ['indigo', 'emerald', 'rose', 'amber', 'cyan', 'violet'];
+        const finalThemeColor = theme_color || 'indigo';
+
+        if (!validThemeColors.includes(finalThemeColor)) {
+            return res.json({
+                return_code: 'INVALID_THEME_COLOR',
+                message: 'Invalid theme color'
+            });
+        }
+
+        // =======================================================================
         // Create the group with invite code
         // =======================================================================
         const inviteCode = generateInviteCode();
         const groupResult = await query(
-            `INSERT INTO group_list (name, description, image_url, image_position, join_policy, visibility, invite_code)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)
-             RETURNING id, name, description, image_url, image_position, join_policy, visibility, invite_code, created_at`,
-            [name.trim(), description || null, image_url || null, image_position || 'center', finalJoinPolicy, finalVisibility, inviteCode]
+            `INSERT INTO group_list (name, description, image_url, image_position, join_policy, visibility, invite_code, theme_color, icon)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+             RETURNING id, name, description, image_url, image_position, join_policy, visibility, invite_code, theme_color, icon, created_at`,
+            [name.trim(), description || null, image_url || null, image_position || 'center', finalJoinPolicy, finalVisibility, inviteCode, finalThemeColor, icon || null]
         );
 
         const group = groupResult.rows[0];

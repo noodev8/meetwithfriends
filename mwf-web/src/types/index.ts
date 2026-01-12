@@ -28,6 +28,8 @@ export interface Group {
     image_url?: string;
     image_position?: 'top' | 'center' | 'bottom';
     join_policy: 'auto' | 'approval';
+    theme_color?: 'indigo' | 'emerald' | 'rose' | 'amber' | 'cyan' | 'violet';
+    icon?: string;
     created_at: string;
 }
 

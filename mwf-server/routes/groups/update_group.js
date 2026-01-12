@@ -51,7 +51,7 @@ const { verifyToken } = require('../../middleware/auth');
 router.post('/:id/update', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, description, image_url, image_position, join_policy, visibility } = req.body;
+        const { name, description, image_url, image_position, join_policy, visibility, theme_color, icon } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -68,7 +68,7 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         // Check if group exists
         // =======================================================================
         const groupResult = await query(
-            'SELECT id, name, description, image_url, image_position, join_policy, visibility FROM group_list WHERE id = $1',
+            'SELECT id, name, description, image_url, image_position, join_policy, visibility, theme_color, icon FROM group_list WHERE id = $1',
             [id]
         );
 
@@ -160,21 +160,35 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
+        // Validate theme_color if provided
+        // =======================================================================
+        const validThemeColors = ['indigo', 'emerald', 'rose', 'amber', 'cyan', 'violet'];
+        const finalThemeColor = theme_color !== undefined ? theme_color : currentGroup.theme_color;
+
+        if (finalThemeColor && !validThemeColors.includes(finalThemeColor)) {
+            return res.json({
+                return_code: 'INVALID_THEME_COLOR',
+                message: 'Invalid theme color'
+            });
+        }
+
+        // =======================================================================
         // Determine final values (use provided value or keep current)
         // =======================================================================
         const finalDescription = description !== undefined ? description : currentGroup.description;
         const finalImageUrl = image_url !== undefined ? image_url : currentGroup.image_url;
         const finalImagePosition = image_position !== undefined ? image_position : currentGroup.image_position;
+        const finalIcon = icon !== undefined ? icon : currentGroup.icon;
 
         // =======================================================================
         // Update the group
         // =======================================================================
         const updateResult = await query(
             `UPDATE group_list
-             SET name = $1, description = $2, image_url = $3, image_position = $4, join_policy = $5, visibility = $6, updated_at = CURRENT_TIMESTAMP
-             WHERE id = $7
-             RETURNING id, name, description, image_url, image_position, join_policy, visibility, created_at, updated_at`,
-            [finalName.trim(), finalDescription, finalImageUrl, finalImagePosition, finalJoinPolicy, finalVisibility, id]
+             SET name = $1, description = $2, image_url = $3, image_position = $4, join_policy = $5, visibility = $6, theme_color = $7, icon = $8, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $9
+             RETURNING id, name, description, image_url, image_position, join_policy, visibility, theme_color, icon, created_at, updated_at`,
+            [finalName.trim(), finalDescription, finalImageUrl, finalImagePosition, finalJoinPolicy, finalVisibility, finalThemeColor || 'indigo', finalIcon, id]
         );
 
         const updatedGroup = updateResult.rows[0];

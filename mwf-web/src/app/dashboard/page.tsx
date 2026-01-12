@@ -18,6 +18,7 @@ import { getMyGroups, discoverGroups, MyGroup, GroupWithCount } from '@/lib/api/
 import { getMyEvents, EventWithDetails } from '@/lib/api/events';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 import EventCard from '@/components/ui/EventCard';
+import { getGroupTheme, getGroupInitials } from '@/lib/groupThemes';
 
 // =======================================================================
 // Empty State Component - Warm onboarding for new users
@@ -142,17 +143,18 @@ function EmptyState({ userName, discoverableGroups, GroupCard }: {
 function GroupCard({ group }: { group: MyGroup | GroupWithCount }) {
     const upcomingCount = ('upcoming_event_count' in group ? group.upcoming_event_count : 0) || 0;
     const memberCount = group.member_count || 0;
+    const theme = getGroupTheme(group.theme_color);
 
     return (
         <Link
             href={`/groups/${group.id}`}
             className="group bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200"
         >
-            {/* Header: Icon + Name */}
+            {/* Header: Initials + Name */}
             <div className="flex items-start gap-4 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-100 to-violet-200 flex items-center justify-center flex-shrink-0">
-                    <span className="text-lg font-bold text-indigo-600">
-                        {group.name.charAt(0).toUpperCase()}
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${theme.gradientLight} flex items-center justify-center flex-shrink-0`}>
+                    <span className={`text-lg font-bold ${theme.textColor}`}>
+                        {getGroupInitials(group.name)}
                     </span>
                 </div>
                 <div className="min-w-0 flex-1">
@@ -403,15 +405,17 @@ export default function Dashboard() {
                                         {[
                                             ...organiserGroups.map(g => ({ ...g, role: 'organiser' as const })),
                                             ...memberGroups.map(g => ({ ...g, role: 'member' as const }))
-                                        ].slice(0, 4).map((group) => (
+                                        ].slice(0, 4).map((group) => {
+                                            const theme = getGroupTheme(group.theme_color);
+                                            return (
                                             <Link
                                                 key={group.id}
                                                 href={`/groups/${group.id}`}
                                                 className="flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-slate-50 transition-colors group"
                                             >
-                                                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-100 to-violet-200 flex items-center justify-center flex-shrink-0">
-                                                    <span className="text-sm font-bold text-indigo-600">
-                                                        {group.name.charAt(0).toUpperCase()}
+                                                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${theme.gradientLight} flex items-center justify-center flex-shrink-0`}>
+                                                    <span className={`text-sm font-bold ${theme.textColor}`}>
+                                                        {getGroupInitials(group.name)}
                                                     </span>
                                                 </div>
                                                 <div className="min-w-0 flex-1">
@@ -430,7 +434,8 @@ export default function Dashboard() {
                                                     </p>
                                                 </div>
                                             </Link>
-                                        ))}
+                                        );
+                                        })}
                                         <Link
                                             href="/my-groups"
                                             className="block w-full py-2 text-sm font-semibold text-slate-500 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-colors text-center mt-2"

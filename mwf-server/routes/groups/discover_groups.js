@@ -52,6 +52,8 @@ router.get('/', verifyToken, async (req, res) => {
                 g.image_url,
                 g.image_position,
                 g.join_policy,
+                g.theme_color,
+                g.icon,
                 g.created_at,
                 COUNT(DISTINCT gm.id) FILTER (WHERE gm.status = 'active') AS member_count,
                 COUNT(DISTINCT e.id) FILTER (WHERE e.status = 'published' AND e.date_time > NOW()) AS upcoming_event_count
