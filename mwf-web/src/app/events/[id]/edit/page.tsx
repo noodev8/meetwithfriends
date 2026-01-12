@@ -30,6 +30,7 @@ export default function EditEventPage() {
     const [submitting, setSubmitting] = useState(false);
     const [cancelLoading, setCancelLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     // Form state
     const [title, setTitle] = useState('');
@@ -217,11 +218,10 @@ export default function EditEventPage() {
     };
 
     // =======================================================================
-    // Delete Event
+    // Delete Event (called from modal)
     // =======================================================================
     const handleDeleteEvent = async () => {
         if (!token || !event) return;
-        if (!confirm('Are you sure you want to delete this event? This cannot be undone. Attendees will be notified.')) return;
 
         setCancelLoading(true);
         const result = await cancelEvent(token, event.id);
@@ -230,6 +230,7 @@ export default function EditEventPage() {
         if (result.success) {
             router.push('/dashboard');
         } else {
+            setShowDeleteModal(false);
             setError(result.error || 'Failed to delete event');
         }
     };
@@ -791,11 +792,10 @@ export default function EditEventPage() {
                         ============================================================ */}
                         <div className="mt-6 pt-6 border-t border-slate-200">
                             <button
-                                onClick={handleDeleteEvent}
-                                disabled={cancelLoading}
-                                className="text-sm text-slate-500 hover:text-red-600 transition disabled:opacity-50"
+                                onClick={() => setShowDeleteModal(true)}
+                                className="text-sm text-slate-500 hover:text-red-600 transition"
                             >
-                                {cancelLoading ? 'Deleting...' : 'Delete this event'}
+                                Delete this event
                             </button>
                         </div>
                     </div>
@@ -852,6 +852,49 @@ export default function EditEventPage() {
                     </aside>
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                    onClick={() => !cancelLoading && setShowDeleteModal(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="p-6">
+                            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-900 text-center mb-2">
+                                Delete Event
+                            </h3>
+                            <p className="text-slate-600 text-center mb-6">
+                                Are you sure you want to delete this event? This cannot be undone. All attendees will be notified.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowDeleteModal(false)}
+                                    disabled={cancelLoading}
+                                    className="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleDeleteEvent}
+                                    disabled={cancelLoading}
+                                    className="flex-1 px-4 py-2.5 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition disabled:opacity-50"
+                                >
+                                    {cancelLoading ? 'Deleting...' : 'Delete'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </SidebarLayout>
     );
 }

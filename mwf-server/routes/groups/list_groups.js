@@ -57,6 +57,7 @@ router.get('/', async (req, res) => {
                 COUNT(gm.id) FILTER (WHERE gm.status = 'active') AS member_count
              FROM group_list g
              LEFT JOIN group_member gm ON g.id = gm.group_id
+             WHERE g.visibility = 'listed'
              GROUP BY g.id
              ORDER BY g.created_at DESC`
         );

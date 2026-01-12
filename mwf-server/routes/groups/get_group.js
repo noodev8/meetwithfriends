@@ -129,19 +129,9 @@ router.get('/:id', optionalAuth, async (req, res) => {
         }
 
         // =======================================================================
-        // For unlisted groups, require invite code if user is not a member
+        // Unlisted groups: accessible by direct URL but not shown in public listings
+        // (Similar to YouTube unlisted - anyone with link can view)
         // =======================================================================
-        const isMember = membership && (membership.status === 'active' || membership.status === 'pending');
-
-        if (group.visibility === 'unlisted' && !isMember) {
-            // Require valid invite code
-            if (!code || code.toUpperCase() !== group.invite_code) {
-                return res.json({
-                    return_code: 'NOT_FOUND',
-                    message: 'Group not found'
-                });
-            }
-        }
 
         // =======================================================================
         // Build response - only include invite_code for organisers

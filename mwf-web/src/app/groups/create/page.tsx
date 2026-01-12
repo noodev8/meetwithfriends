@@ -74,6 +74,7 @@ export default function CreateGroupPage() {
     // const [imagePosition, setImagePosition] = useState<'top' | 'center' | 'bottom'>('center'); // Hidden
     const [themeColor, setThemeColor] = useState<GroupThemeColor>('indigo');
     const [joinPolicy, setJoinPolicy] = useState<'auto' | 'approval'>('approval');
+    const [visibility, setVisibility] = useState<'listed' | 'unlisted'>('listed');
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -110,6 +111,7 @@ export default function CreateGroupPage() {
             description: description.trim() || undefined,
             theme_color: themeColor,
             join_policy: joinPolicy,
+            visibility: visibility,
         });
 
         if (result.success && result.data) {
@@ -229,6 +231,42 @@ export default function CreateGroupPage() {
                                         <div>
                                             <p className="font-medium text-slate-800">Auto Approve</p>
                                             <p className="text-sm text-slate-500">Anyone can join immediately</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                    Visibility
+                                </label>
+                                <div className="space-y-2">
+                                    <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100 transition">
+                                        <input
+                                            type="radio"
+                                            name="visibility"
+                                            value="listed"
+                                            checked={visibility === 'listed'}
+                                            onChange={() => setVisibility('listed')}
+                                            className="text-indigo-600 focus:ring-indigo-500"
+                                        />
+                                        <div>
+                                            <p className="font-medium text-slate-800">Listed</p>
+                                            <p className="text-sm text-slate-500">Anyone can find and join your group</p>
+                                        </div>
+                                    </label>
+                                    <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100 transition">
+                                        <input
+                                            type="radio"
+                                            name="visibility"
+                                            value="unlisted"
+                                            checked={visibility === 'unlisted'}
+                                            onChange={() => setVisibility('unlisted')}
+                                            className="text-indigo-600 focus:ring-indigo-500"
+                                        />
+                                        <div>
+                                            <p className="font-medium text-slate-800">Unlisted</p>
+                                            <p className="text-sm text-slate-500">Only people with the invite link can join</p>
                                         </div>
                                     </label>
                                 </div>

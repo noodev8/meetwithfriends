@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getGroup, updateGroup, regenerateInviteCode, GroupWithCount } from '@/lib/api/groups';
+import { getGroup, updateGroup, GroupWithCount } from '@/lib/api/groups';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 // import ImageUpload from '@/components/ui/ImageUpload'; // Hidden - using theme colors instead
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -34,9 +34,6 @@ export default function EditGroupPage() {
     const [themeColor, setThemeColor] = useState<GroupThemeColor>('indigo');
     const [joinPolicy, setJoinPolicy] = useState<'auto' | 'approval'>('approval');
     const [visibility, setVisibility] = useState<'listed' | 'unlisted'>('listed');
-    const [inviteCode, setInviteCode] = useState<string | null>(null);
-    const [regeneratingCode, setRegeneratingCode] = useState(false);
-    const [copied, setCopied] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isOrganiser, setIsOrganiser] = useState(false);
@@ -73,7 +70,6 @@ export default function EditGroupPage() {
                 setThemeColor((groupData.theme_color as GroupThemeColor) || 'indigo');
                 setJoinPolicy(groupData.join_policy as 'auto' | 'approval');
                 setVisibility(groupData.visibility || 'listed');
-                setInviteCode(groupData.invite_code || null);
             } else {
                 setError(result.error || 'Group not found');
             }
@@ -111,35 +107,6 @@ export default function EditGroupPage() {
         setImageSaving(false);
     };
     */
-
-    // =======================================================================
-    // Handle regenerate invite code
-    // =======================================================================
-    const handleRegenerateCode = async () => {
-        if (!token || !group) return;
-
-        setRegeneratingCode(true);
-        const result = await regenerateInviteCode(token, group.id);
-        setRegeneratingCode(false);
-
-        if (result.success && result.data) {
-            setInviteCode(result.data.invite_code);
-        } else {
-            alert(result.error || 'Failed to regenerate invite code');
-        }
-    };
-
-    // =======================================================================
-    // Handle copy invite link
-    // =======================================================================
-    const handleCopyInviteLink = async () => {
-        if (!group || !inviteCode) return;
-
-        const url = `${window.location.origin}/groups/${group.id}?code=${inviteCode}`;
-        await navigator.clipboard.writeText(url);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
 
     // =======================================================================
     // Handle form submission
@@ -354,58 +321,6 @@ export default function EditGroupPage() {
                                     </label>
                                 </div>
                             </div>
-
-                            {/* Invite Link Section - Only shown for unlisted groups */}
-                            {visibility === 'unlisted' && inviteCode && (
-                                <div className="mb-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
-                                    <label className="block text-sm font-medium text-indigo-800 mb-2">
-                                        Invite Link
-                                    </label>
-                                    <p className="text-sm text-indigo-600 mb-3">
-                                        Share this link to invite people to your unlisted group.
-                                    </p>
-                                    <div className="flex flex-col sm:flex-row gap-2">
-                                        <input
-                                            type="text"
-                                            readOnly
-                                            value={`${typeof window !== 'undefined' ? window.location.origin : ''}/groups/${group.id}?code=${inviteCode}`}
-                                            className="flex-1 px-4 py-2.5 bg-white border border-indigo-200 rounded-lg text-sm text-slate-600 font-mono"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={handleCopyInviteLink}
-                                            className="px-4 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-2"
-                                        >
-                                            {copied ? (
-                                                <>
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                    Copied!
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                                    </svg>
-                                                    Copy
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={handleRegenerateCode}
-                                        disabled={regeneratingCode}
-                                        className="mt-3 text-sm text-indigo-600 hover:text-indigo-700 font-medium disabled:opacity-50"
-                                    >
-                                        {regeneratingCode ? 'Regenerating...' : 'Regenerate invite code'}
-                                    </button>
-                                    <p className="text-xs text-indigo-500 mt-1">
-                                        Regenerating will invalidate the old link.
-                                    </p>
-                                </div>
-                            )}
 
                             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                                 <button

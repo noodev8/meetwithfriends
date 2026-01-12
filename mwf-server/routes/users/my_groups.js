@@ -55,6 +55,7 @@ router.get('/my-groups', verifyToken, async (req, res) => {
                 g.image_position,
                 g.join_policy,
                 g.visibility,
+                g.invite_code,
                 g.theme_color,
                 g.icon,
                 g.created_at,

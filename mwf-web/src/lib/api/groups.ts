@@ -106,6 +106,7 @@ export async function createGroup(
         join_policy?: 'auto' | 'approval';
         theme_color?: 'indigo' | 'emerald' | 'rose' | 'amber' | 'cyan' | 'violet';
         icon?: string;
+        visibility?: 'listed' | 'unlisted';
     }
 ): Promise<ApiResult<Group>> {
     const response = await apiCall('/api/groups/create', data, token);
