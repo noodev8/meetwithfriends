@@ -98,9 +98,9 @@ async function sendEmail(to, subject, html, emailType, relatedId = null, replyTo
             html: html
         };
 
-        // Add reply-to header if provided
+        // Add reply-to header if provided (Resend accepts array format)
         if (replyTo) {
-            emailOptions.reply_to = replyTo;
+            emailOptions.reply_to = [replyTo];
         }
 
         const { data, error } = await resend.emails.send(emailOptions);
@@ -306,9 +306,6 @@ async function sendEventCancelledEmail(email, userName, event) {
     const html = wrapEmail(`
         <h2 style="color: #333;">Event Cancelled</h2>
         <p style="color: #666; font-size: 16px;">
-            Hi ${userName},
-        </p>
-        <p style="color: #666; font-size: 16px;">
             Unfortunately, the following event has been cancelled:
         </p>
         <p style="color: #666; font-size: 16px;">
@@ -387,9 +384,6 @@ async function sendNewEventEmail(email, userName, event, group, hostName) {
 
     const html = wrapEmail(`
         <h2 style="color: #333;">New Event in ${group.name}</h2>
-        <p style="color: #666; font-size: 16px;">
-            Hi ${userName},
-        </p>
         <p style="color: #666; font-size: 16px;">
             <strong>${hostName}</strong> has created a new event:
         </p>
@@ -556,6 +550,26 @@ async function sendContactHostEmail(email, hostName, senderName, senderEmail, ev
     return sendEmail(email, `Message from ${senderName} about ${event.title}`, html, 'contact_host', event.id, senderEmail);
 }
 
+/*
+=======================================================================================================================================
+sendContactSupportEmail
+=======================================================================================================================================
+Sent to support when someone submits the contact form
+=======================================================================================================================================
+*/
+async function sendContactSupportEmail(senderName, senderEmail, message) {
+    // Plain text email for support - no fancy formatting
+    const html = `
+        <div style="font-family: Arial, sans-serif;">
+            <p>From: ${senderName} (${senderEmail})</p>
+            <p>Message:</p>
+            <p style="white-space: pre-wrap;">${message}</p>
+        </div>
+    `;
+
+    return sendEmail('noodev8@gmail.com', `Support: ${senderName}`, html, 'contact_support', null, senderEmail);
+}
+
 module.exports = {
     sendEmail,
     sendWelcomeEmail,
@@ -570,5 +584,6 @@ module.exports = {
     sendPasswordResetEmail,
     sendNewCommentEmail,
     sendContactOrganiserEmail,
-    sendContactHostEmail
+    sendContactHostEmail,
+    sendContactSupportEmail
 };
