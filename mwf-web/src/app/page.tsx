@@ -10,6 +10,7 @@ Warm, editorial design for social gatherings of all kinds.
 */
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -184,15 +185,8 @@ export default function Home() {
 
             {/* Header */}
             <header className="relative z-10 flex justify-between items-center px-4 sm:px-8 lg:px-12 py-4 bg-white/80 backdrop-blur-sm border-b border-slate-200/50">
-                <Link href="/" className="flex items-center gap-2">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm">
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                    </div>
-                    <span className="font-display text-xl font-bold text-slate-800">
-                        Meet With Friends
-                    </span>
+                <Link href="/" className="font-display text-xl font-bold text-slate-800">
+                    Meet With Friends
                 </Link>
                 <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
                     <Link
@@ -266,21 +260,17 @@ export default function Home() {
                         </p>
                     </div>
 
-                    {/* Hero illustration - floating activity icons */}
+                    {/* Hero illustration - Logo */}
                     <div className="hidden lg:block absolute top-1/2 right-8 -translate-y-1/2">
-                        <div className="relative w-80 h-80">
-                            <div className={`absolute top-0 right-0 w-24 h-24 bg-white rounded-2xl shadow-lg flex items-center justify-center text-4xl transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0 rotate-6' : 'opacity-0 translate-y-8'}`}>
-                                🥾
-                            </div>
-                            <div className={`absolute top-20 right-24 w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center text-3xl transition-all duration-1000 delay-500 ${mounted ? 'opacity-100 translate-y-0 -rotate-6' : 'opacity-0 translate-y-8'}`}>
-                                🎱
-                            </div>
-                            <div className={`absolute bottom-20 right-8 w-28 h-28 bg-white rounded-2xl shadow-lg flex items-center justify-center text-5xl transition-all duration-1000 delay-700 ${mounted ? 'opacity-100 translate-y-0 rotate-3' : 'opacity-0 translate-y-8'}`}>
-                                🍽️
-                            </div>
-                            <div className={`absolute bottom-0 right-32 w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center text-2xl transition-all duration-1000 delay-900 ${mounted ? 'opacity-100 translate-y-0 -rotate-12' : 'opacity-0 translate-y-8'}`}>
-                                ☕
-                            </div>
+                        <div className={`transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`}>
+                            <Image
+                                src="/logo.png"
+                                alt="Meet With Friends"
+                                width={400}
+                                height={400}
+                                className="w-80 h-auto drop-shadow-xl"
+                                priority
+                            />
                         </div>
                     </div>
                 </div>

@@ -57,7 +57,7 @@ export const EVENT_CATEGORIES: Record<EventCategory, CategoryConfig> = {
     other: {
         key: 'other',
         label: 'Other',
-        emoji: '📅',
+        emoji: '✨',
         gradient: 'from-slate-500 via-gray-400 to-zinc-300',
     },
 };
