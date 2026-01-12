@@ -25,6 +25,7 @@ const leaveGroup = require('./leave_group');
 const contactOrganiser = require('./contact_organiser');
 const regenerateInviteCode = require('./regenerate_invite_code');
 const broadcastMessage = require('./broadcast_message');
+const deleteGroup = require('./delete_group');
 
 // =======================================================================
 // Route definitions
@@ -43,6 +44,7 @@ router.use('/', leaveGroup);           // POST /api/groups/:id/leave - leave a g
 router.use('/', contactOrganiser);     // POST /api/groups/:id/contact-organiser - contact group organiser
 router.use('/', regenerateInviteCode); // POST /api/groups/:id/regenerate-code - regenerate invite code (organiser only)
 router.use('/', broadcastMessage);     // POST /api/groups/:id/broadcast - send broadcast to all members (organiser only)
+router.use('/', deleteGroup);          // POST /api/groups/:id/delete - delete group (organiser only)
 router.use('/', getGroup);             // GET /api/groups/:id - get single group (must be last)
 
 module.exports = router;

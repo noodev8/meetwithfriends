@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getGroup, updateGroup, GroupWithCount } from '@/lib/api/groups';
+import { getGroup, updateGroup, deleteGroup, GroupWithCount } from '@/lib/api/groups';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 // import ImageUpload from '@/components/ui/ImageUpload'; // Hidden - using theme colors instead
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -37,6 +37,8 @@ export default function EditGroupPage() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isOrganiser, setIsOrganiser] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     // =======================================================================
     // Fetch group details
@@ -140,6 +142,24 @@ export default function EditGroupPage() {
         } else {
             setError(result.error || 'Failed to update group');
             setSubmitting(false);
+        }
+    }
+
+    // =======================================================================
+    // Handle delete group
+    // =======================================================================
+    async function handleDeleteGroup() {
+        if (!token || !group) return;
+
+        setDeleting(true);
+        const result = await deleteGroup(token, group.id);
+
+        if (result.success) {
+            router.push('/my-groups');
+        } else {
+            setError(result.error || 'Failed to delete group');
+            setDeleting(false);
+            setShowDeleteModal(false);
         }
     }
 
@@ -337,6 +357,17 @@ export default function EditGroupPage() {
                                     Cancel
                                 </Link>
                             </div>
+
+                            {/* Delete Group */}
+                            <div className="mt-6 pt-6 border-t border-slate-200">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDeleteModal(true)}
+                                    className="text-sm text-slate-500 hover:text-red-600 transition"
+                                >
+                                    Delete this group
+                                </button>
+                            </div>
                         </form>
                     </div>
 
@@ -427,6 +458,49 @@ export default function EditGroupPage() {
                     </aside>
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                    onClick={() => !deleting && setShowDeleteModal(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="p-6">
+                            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-900 text-center mb-2">
+                                Delete Group
+                            </h3>
+                            <p className="text-slate-600 text-center mb-6">
+                                Are you sure you want to delete this group? This will also delete all events, RSVPs, and comments. This cannot be undone.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowDeleteModal(false)}
+                                    disabled={deleting}
+                                    className="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleDeleteGroup}
+                                    disabled={deleting}
+                                    className="flex-1 px-4 py-2.5 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition disabled:opacity-50"
+                                >
+                                    {deleting ? 'Deleting...' : 'Delete'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </SidebarLayout>
     );
 }

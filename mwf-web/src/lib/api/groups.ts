@@ -587,3 +587,30 @@ export async function broadcastMessage(
         return_code: response.return_code,
     };
 }
+
+/*
+=======================================================================================================================================
+deleteGroup
+=======================================================================================================================================
+Deletes a group and all associated data. Only the organiser can delete a group.
+=======================================================================================================================================
+*/
+export async function deleteGroup(
+    token: string,
+    groupId: number
+): Promise<ApiResult<{ message: string }>> {
+    const response = await apiCall(`/api/groups/${groupId}/delete`, {}, token);
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: { message: response.message as string },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to delete group',
+        return_code: response.return_code,
+    };
+}

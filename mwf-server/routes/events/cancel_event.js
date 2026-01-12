@@ -101,6 +101,14 @@ router.post('/:id/cancel', verifyToken, async (req, res) => {
         );
 
         // =======================================================================
+        // Create audit log entry
+        // =======================================================================
+        await query(
+            'INSERT INTO audit_log (user_id, action) VALUES ($1, $2)',
+            [userId, `Deleted event "${event.title}"`]
+        );
+
+        // =======================================================================
         // Delete the event (cascades to event_rsvp, event_host, event_comment)
         // =======================================================================
         await query('DELETE FROM event_list WHERE id = $1', [id]);
