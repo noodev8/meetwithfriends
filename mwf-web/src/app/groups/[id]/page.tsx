@@ -10,6 +10,7 @@ Hero image, main content on left, sidebar on right with organiser info, members,
 */
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import DOMPurify from 'dompurify';
@@ -309,11 +310,12 @@ export default function GroupDetailPage() {
                     <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
                         {/* Group Image */}
                         {group.image_url ? (
-                            <div className="w-full lg:w-96 h-48 sm:h-56 lg:h-64 rounded-2xl overflow-hidden shadow-lg flex-shrink-0">
-                                <img
+                            <div className="relative w-full lg:w-96 h-48 sm:h-56 lg:h-64 rounded-2xl overflow-hidden shadow-lg flex-shrink-0">
+                                <Image
                                     src={group.image_url}
                                     alt={group.name}
-                                    className="w-full h-full object-cover"
+                                    fill
+                                    className="object-cover"
                                     style={{ objectPosition: group.image_position || 'center' }}
                                 />
                             </div>
@@ -407,11 +409,14 @@ export default function GroupDetailPage() {
                                     {pendingMembers.slice(0, PENDING_PREVIEW_LIMIT).map(member => (
                                         <div key={member.id} className="flex items-center gap-3 bg-white rounded-xl p-3">
                                             {member.avatar_url ? (
-                                                <img
-                                                    src={member.avatar_url}
-                                                    alt={member.name}
-                                                    className="w-10 h-10 rounded-full object-cover"
-                                                />
+                                                <div className="relative w-10 h-10">
+                                                    <Image
+                                                        src={member.avatar_url}
+                                                        alt={member.name}
+                                                        fill
+                                                        className="rounded-full object-cover"
+                                                    />
+                                                </div>
                                             ) : (
                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center">
                                                     <span className="text-sm font-medium text-indigo-600">
@@ -457,12 +462,25 @@ export default function GroupDetailPage() {
 
                         {/* Upcoming Events Section */}
                         <div>
-                            <h2 className="font-display text-xl font-bold text-slate-800 mb-4">
-                                Upcoming Events
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="font-display text-xl font-bold text-slate-800">
+                                    Upcoming Events
+                                    {events.length > 0 && (
+                                        <span className="ml-2 text-slate-400 font-normal text-lg">{events.length}</span>
+                                    )}
+                                </h2>
                                 {events.length > 0 && (
-                                    <span className="ml-2 text-slate-400 font-normal text-lg">{events.length}</span>
+                                    <Link
+                                        href={`/groups/${group.id}/events`}
+                                        className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
+                                    >
+                                        See all
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </Link>
                                 )}
-                            </h2>
+                            </div>
 
                             {events.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -503,7 +521,7 @@ export default function GroupDetailPage() {
                                                 </div>
 
                                                 {/* Title */}
-                                                <h4 className="text-lg font-bold text-slate-800 group-hover:text-indigo-600 transition-colors line-clamp-2 mb-2">
+                                                <h4 className="text-lg font-bold text-slate-800 line-clamp-2 mb-2">
                                                     {event.title}
                                                 </h4>
 
@@ -536,6 +554,13 @@ export default function GroupDetailPage() {
                                                         {event.capacity && event.capacity > attendeeCount && (
                                                             <span className="text-slate-400 ml-2">· {event.capacity - attendeeCount} spots left</span>
                                                         )}
+                                                    </span>
+                                                </div>
+
+                                                {/* CTA button */}
+                                                <div className="mt-4">
+                                                    <span className="block w-full py-2.5 text-center text-sm font-semibold text-indigo-600 border border-indigo-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50 transition">
+                                                        Visit Event
                                                     </span>
                                                 </div>
                                             </Link>
@@ -622,11 +647,14 @@ export default function GroupDetailPage() {
                                 <h3 className="font-display font-semibold text-slate-800 mb-3">Organiser</h3>
                                 <div className="flex items-center gap-3">
                                     {organiser.avatar_url ? (
-                                        <img
-                                            src={organiser.avatar_url}
-                                            alt={organiser.name}
-                                            className="w-12 h-12 rounded-full object-cover ring-2 ring-indigo-100"
-                                        />
+                                        <div className="relative w-12 h-12">
+                                            <Image
+                                                src={organiser.avatar_url}
+                                                alt={organiser.name}
+                                                fill
+                                                className="rounded-full object-cover ring-2 ring-indigo-100"
+                                            />
+                                        </div>
                                     ) : (
                                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center ring-2 ring-indigo-100">
                                             <span className="text-lg font-medium text-indigo-600">
@@ -671,13 +699,14 @@ export default function GroupDetailPage() {
                                 <div className="flex flex-wrap gap-1">
                                     {allMembers.slice(0, 12).map(member => (
                                         member.avatar_url ? (
-                                            <img
-                                                key={member.id}
-                                                src={member.avatar_url}
-                                                alt={member.name}
-                                                title={member.name}
-                                                className="w-10 h-10 rounded-full object-cover"
-                                            />
+                                            <div key={member.id} className="relative w-10 h-10" title={member.name}>
+                                                <Image
+                                                    src={member.avatar_url}
+                                                    alt={member.name}
+                                                    fill
+                                                    className="rounded-full object-cover"
+                                                />
+                                            </div>
                                         ) : (
                                             <div
                                                 key={member.id}

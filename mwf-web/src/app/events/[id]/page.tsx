@@ -9,6 +9,7 @@ Shows event details, RSVP functionality, and attendee list.
 */
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -408,12 +409,14 @@ export default function EventDetailPage() {
                     <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
                         {/* Featured Image */}
                         {event.image_url && (
-                            <div className="lg:w-96 flex-shrink-0">
-                                <div className="aspect-[16/10] rounded-2xl overflow-hidden bg-slate-100 shadow-md">
-                                    <img
+                            <div className="w-full lg:w-96 flex-shrink-0">
+                                <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-slate-100 shadow-md">
+                                    <Image
                                         src={event.image_url}
                                         alt={event.title}
-                                        className="w-full h-full object-cover"
+                                        fill
+                                        sizes="(max-width: 1024px) 100vw, 384px"
+                                        className="object-cover"
                                         style={{ objectPosition: event.image_position || 'center' }}
                                     />
                                 </div>
@@ -468,13 +471,14 @@ export default function EventDetailPage() {
                                         <div className="flex -space-x-2">
                                             {hosts.slice(0, 2).map((h, i) => (
                                                 h.avatar_url ? (
-                                                    <img
-                                                        key={h.user_id}
-                                                        src={h.avatar_url}
-                                                        alt={h.name}
-                                                        className="w-8 h-8 rounded-full object-cover border-2 border-white"
-                                                        style={{ zIndex: 2 - i }}
-                                                    />
+                                                    <div key={h.user_id} className="relative w-8 h-8" style={{ zIndex: 2 - i }}>
+                                                        <Image
+                                                            src={h.avatar_url}
+                                                            alt={h.name}
+                                                            fill
+                                                            className="rounded-full object-cover border-2 border-white"
+                                                        />
+                                                    </div>
                                                 ) : (
                                                     <div
                                                         key={h.user_id}
@@ -531,27 +535,27 @@ export default function EventDetailPage() {
                                         {rsvp.status === 'attending' ? "You're going" : `Waitlist #${rsvp.waitlist_position}`}
                                     </span>
                                 )}
+                                {canEdit && !isPastEvent && (
+                                    <Link
+                                        href={`/events/${event.id}/edit`}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-full transition-colors"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        Edit
+                                    </Link>
+                                )}
                                 {canEdit && (
-                                    <>
-                                        <Link
-                                            href={`/events/${event.id}/edit`}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-full transition-colors"
-                                        >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                            </svg>
-                                            Edit
-                                        </Link>
-                                        <Link
-                                            href={`/groups/${event.group_id}/events/create?from=${event.id}`}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-full transition-colors"
-                                        >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                            </svg>
-                                            Duplicate
-                                        </Link>
-                                    </>
+                                    <Link
+                                        href={`/groups/${event.group_id}/events/create?from=${event.id}`}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-full transition-colors"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        </svg>
+                                        Duplicate
+                                    </Link>
                                 )}
                             </div>
                         </div>
@@ -850,11 +854,14 @@ export default function EventDetailPage() {
                                                                 >
                                                                     <div className="relative mb-2">
                                                                         {person.avatar_url ? (
-                                                                            <img
-                                                                                src={person.avatar_url}
-                                                                                alt={person.name}
-                                                                                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover"
-                                                                            />
+                                                                            <div className="relative w-16 h-16 sm:w-20 sm:h-20">
+                                                                                <Image
+                                                                                    src={person.avatar_url}
+                                                                                    alt={person.name}
+                                                                                    fill
+                                                                                    className="rounded-full object-cover"
+                                                                                />
+                                                                            </div>
                                                                         ) : (
                                                                             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center">
                                                                                 <span className="text-xl sm:text-2xl font-medium text-indigo-600">
@@ -889,12 +896,14 @@ export default function EventDetailPage() {
                                                                     <div className="grid grid-cols-2 gap-1 w-full h-full">
                                                                         {remaining.slice(0, 3).map((person) => (
                                                                             person.avatar_url ? (
-                                                                                <img
-                                                                                    key={person.user_id}
-                                                                                    src={person.avatar_url}
-                                                                                    alt={person.name}
-                                                                                    className="w-full h-full rounded-full object-cover"
-                                                                                />
+                                                                                <div key={person.user_id} className="relative w-full h-full">
+                                                                                    <Image
+                                                                                        src={person.avatar_url}
+                                                                                        alt={person.name}
+                                                                                        fill
+                                                                                        className="rounded-full object-cover"
+                                                                                    />
+                                                                                </div>
                                                                             ) : (
                                                                                 <div
                                                                                     key={person.user_id}
@@ -983,11 +992,14 @@ export default function EventDetailPage() {
                                         <form onSubmit={handleAddComment} className="mb-6">
                                             <div className="flex gap-3">
                                                 {user.avatar_url ? (
-                                                    <img
-                                                        src={user.avatar_url}
-                                                        alt={user.name}
-                                                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                                                    />
+                                                    <div className="relative w-10 h-10 flex-shrink-0">
+                                                        <Image
+                                                            src={user.avatar_url}
+                                                            alt={user.name}
+                                                            fill
+                                                            className="rounded-full object-cover"
+                                                        />
+                                                    </div>
                                                 ) : (
                                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center flex-shrink-0">
                                                         <span className="text-sm font-medium text-indigo-600">
@@ -1033,11 +1045,14 @@ export default function EventDetailPage() {
                                             {comments.map(comment => (
                                                 <div key={comment.id} className="flex gap-3">
                                                     {comment.user_avatar_url ? (
-                                                        <img
-                                                            src={comment.user_avatar_url}
-                                                            alt={comment.user_name}
-                                                            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                                                        />
+                                                        <div className="relative w-10 h-10 flex-shrink-0">
+                                                            <Image
+                                                                src={comment.user_avatar_url}
+                                                                alt={comment.user_name}
+                                                                fill
+                                                                className="rounded-full object-cover"
+                                                            />
+                                                        </div>
                                                     ) : (
                                                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center flex-shrink-0">
                                                             <span className="text-sm font-medium text-indigo-600">
@@ -1126,11 +1141,14 @@ export default function EventDetailPage() {
 
                         {/* Large photo */}
                         {selectedAttendee.avatar_url ? (
-                            <img
-                                src={selectedAttendee.avatar_url}
-                                alt={selectedAttendee.name}
-                                className="w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-2xl object-cover shadow-2xl"
-                            />
+                            <div className="relative w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80">
+                                <Image
+                                    src={selectedAttendee.avatar_url}
+                                    alt={selectedAttendee.name}
+                                    fill
+                                    className="rounded-2xl object-cover shadow-2xl"
+                                />
+                            </div>
                         ) : (
                             <div className="w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-2xl bg-gradient-to-br from-indigo-200 to-violet-300 flex items-center justify-center shadow-2xl">
                                 <span className="text-8xl font-bold text-white">

@@ -14,6 +14,7 @@ User profile management page. Allows users to:
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { updateProfile, changePassword, deleteAccount } from '@/lib/api/users';
 import SidebarLayout from '@/components/layout/SidebarLayout';
@@ -368,11 +369,14 @@ export default function ProfilePage() {
                             />
                             <div className="relative">
                                 {avatarUrl ? (
-                                    <img
-                                        src={avatarUrl}
-                                        alt={name || 'Profile'}
-                                        className="w-24 h-24 rounded-full object-cover ring-4 ring-slate-100"
-                                    />
+                                    <div className="relative w-24 h-24">
+                                        <Image
+                                            src={avatarUrl}
+                                            alt={name || 'Profile'}
+                                            fill
+                                            className="rounded-full object-cover ring-4 ring-slate-100"
+                                        />
+                                    </div>
                                 ) : (
                                     <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center ring-4 ring-slate-100">
                                         <span className="text-3xl font-medium text-indigo-600">

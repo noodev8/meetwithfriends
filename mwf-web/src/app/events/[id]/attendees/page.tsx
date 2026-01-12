@@ -9,6 +9,7 @@ Full attendees list with tabs (Going, Waitlist, Not Going) and sorting options.
 */
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -449,11 +450,14 @@ export default function AttendeesPage() {
                                             {/* Avatar */}
                                             <div className="relative mb-2">
                                                 {person.avatar_url ? (
-                                                    <img
-                                                        src={person.avatar_url}
-                                                        alt={person.name}
-                                                        className="w-20 h-20 rounded-full object-cover"
-                                                    />
+                                                    <div className="relative w-20 h-20">
+                                                        <Image
+                                                            src={person.avatar_url}
+                                                            alt={person.name}
+                                                            fill
+                                                            className="rounded-full object-cover"
+                                                        />
+                                                    </div>
                                                 ) : (
                                                     <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center">
                                                         <span className="text-2xl font-medium text-indigo-600">
@@ -535,12 +539,17 @@ export default function AttendeesPage() {
                                     </svg>
                                 </button>
                                 {selectedAttendee.avatar_url ? (
-                                    <img
-                                        src={selectedAttendee.avatar_url}
-                                        alt={selectedAttendee.name}
-                                        className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl object-cover shadow-2xl cursor-pointer"
+                                    <div
+                                        className="relative w-72 h-72 sm:w-80 sm:h-80 cursor-pointer"
                                         onClick={() => setViewingLargePhoto(false)}
-                                    />
+                                    >
+                                        <Image
+                                            src={selectedAttendee.avatar_url}
+                                            alt={selectedAttendee.name}
+                                            fill
+                                            className="rounded-2xl object-cover shadow-2xl"
+                                        />
+                                    </div>
                                 ) : (
                                     <div
                                         className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl bg-gradient-to-br from-indigo-200 to-violet-300 flex items-center justify-center shadow-2xl cursor-pointer"
@@ -586,12 +595,17 @@ export default function AttendeesPage() {
                                 {/* Large avatar - centered */}
                                 <div className="flex flex-col items-center">
                                     {selectedAttendee.avatar_url ? (
-                                        <img
-                                            src={selectedAttendee.avatar_url}
-                                            alt={selectedAttendee.name}
-                                            className="w-40 h-40 rounded-2xl object-cover cursor-pointer hover:opacity-90 transition shadow-md"
+                                        <div
+                                            className="relative w-40 h-40 cursor-pointer hover:opacity-90 transition"
                                             onClick={() => setViewingLargePhoto(true)}
-                                        />
+                                        >
+                                            <Image
+                                                src={selectedAttendee.avatar_url}
+                                                alt={selectedAttendee.name}
+                                                fill
+                                                className="rounded-2xl object-cover shadow-md"
+                                            />
+                                        </div>
                                     ) : (
                                         <div
                                             className="w-40 h-40 rounded-2xl bg-gradient-to-br from-indigo-200 to-violet-300 flex items-center justify-center cursor-pointer hover:opacity-90 transition shadow-md"

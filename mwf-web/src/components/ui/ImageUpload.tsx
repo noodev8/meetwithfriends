@@ -11,6 +11,7 @@ Requires NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRE
 */
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 
 type ImagePosition = 'top' | 'center' | 'bottom';
 
@@ -148,11 +149,12 @@ export default function ImageUpload({ value, onChange, imagePosition = 'center',
 
             {value ? (
                 <div className="space-y-2">
-                    <div className="relative">
-                        <img
+                    <div className="relative w-full h-48">
+                        <Image
                             src={value}
                             alt="Uploaded image"
-                            className="w-full h-48 object-cover rounded-lg"
+                            fill
+                            className="object-cover rounded-lg"
                             style={{ objectPosition: imagePosition }}
                         />
                         <div className="absolute top-2 right-2 flex gap-2">

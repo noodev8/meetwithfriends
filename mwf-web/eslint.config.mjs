@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import reactPlugin from "eslint-plugin-react";
 import hooksPlugin from "eslint-plugin-react-hooks";
+import nextPlugin from "@next/eslint-plugin-next";
 
 export default [
     {
@@ -14,6 +15,7 @@ export default [
         plugins: {
             react: reactPlugin,
             "react-hooks": hooksPlugin,
+            "@next/next": nextPlugin,
         },
         languageOptions: {
             parserOptions: {
@@ -32,6 +34,9 @@ export default [
             "react-hooks/rules-of-hooks": "error",
             "react-hooks/exhaustive-deps": "warn",
             "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+            // Next.js rules
+            "@next/next/no-img-element": "error",
+            "@next/next/no-html-link-for-pages": "error",
         },
     },
 ];

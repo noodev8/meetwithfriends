@@ -9,6 +9,7 @@ Dedicated page for viewing all active members of a group with search and "load m
 */
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -52,6 +53,9 @@ export default function GroupMembersPage() {
 
     // Profile modal state
     const [selectedMember, setSelectedMember] = useState<GroupMember | null>(null);
+
+    // Action menu state (for kebab menu)
+    const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
     // Check if current user is the organiser
     const isOrganiser = membership?.status === 'active' && membership?.role === 'organiser';
@@ -315,11 +319,14 @@ export default function GroupMembersPage() {
                                             className="flex-shrink-0 hover:opacity-80 transition"
                                         >
                                             {member.avatar_url ? (
-                                                <img
-                                                    src={member.avatar_url}
-                                                    alt={member.name}
-                                                    className="w-12 h-12 rounded-full object-cover"
-                                                />
+                                                <div className="relative w-12 h-12">
+                                                    <Image
+                                                        src={member.avatar_url}
+                                                        alt={member.name}
+                                                        fill
+                                                        className="rounded-full object-cover"
+                                                    />
+                                                </div>
                                             ) : (
                                                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-200 to-violet-300 flex items-center justify-center">
                                                     <span className="text-lg font-bold text-white">
@@ -356,32 +363,76 @@ export default function GroupMembersPage() {
 
                                         {/* Actions - only for organisers, not for themselves or other organisers */}
                                         {isOrganiser && member.user_id !== user?.id && member.role !== 'organiser' && (
-                                            <div className="flex items-center gap-1">
-                                                {/* Role toggle */}
-                                                {member.role === 'member' ? (
-                                                    <button
-                                                        onClick={() => handleAssignRole(member, 'host')}
-                                                        disabled={updatingRole === member.id}
-                                                        className="px-3 py-1.5 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition disabled:opacity-50"
-                                                    >
-                                                        {updatingRole === member.id ? '...' : 'Give Host Role'}
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => handleAssignRole(member, 'member')}
-                                                        disabled={updatingRole === member.id}
-                                                        className="px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition disabled:opacity-50"
-                                                    >
-                                                        {updatingRole === member.id ? '...' : 'Remove Host Role'}
-                                                    </button>
-                                                )}
-                                                {/* Remove button */}
+                                            <div className="relative flex-shrink-0">
+                                                {/* Kebab menu button */}
                                                 <button
-                                                    onClick={() => setMemberToRemove(member)}
-                                                    className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                    onClick={() => setOpenMenuId(openMenuId === member.id ? null : member.id)}
+                                                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
+                                                    aria-label="Member actions"
                                                 >
-                                                    Remove
+                                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                        <circle cx="12" cy="5" r="2" />
+                                                        <circle cx="12" cy="12" r="2" />
+                                                        <circle cx="12" cy="19" r="2" />
+                                                    </svg>
                                                 </button>
+
+                                                {/* Dropdown menu */}
+                                                {openMenuId === member.id && (
+                                                    <>
+                                                        {/* Backdrop to close menu */}
+                                                        <div
+                                                            className="fixed inset-0 z-10"
+                                                            onClick={() => setOpenMenuId(null)}
+                                                        />
+                                                        {/* Menu */}
+                                                        <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-20">
+                                                            {/* Role toggle */}
+                                                            {member.role === 'member' ? (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        handleAssignRole(member, 'host');
+                                                                        setOpenMenuId(null);
+                                                                    }}
+                                                                    disabled={updatingRole === member.id}
+                                                                    className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 transition disabled:opacity-50 flex items-center gap-3"
+                                                                >
+                                                                    <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                                                    </svg>
+                                                                    {updatingRole === member.id ? 'Updating...' : 'Give Host Role'}
+                                                                </button>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        handleAssignRole(member, 'member');
+                                                                        setOpenMenuId(null);
+                                                                    }}
+                                                                    disabled={updatingRole === member.id}
+                                                                    className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 transition disabled:opacity-50 flex items-center gap-3"
+                                                                >
+                                                                    <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 12H6" />
+                                                                    </svg>
+                                                                    {updatingRole === member.id ? 'Updating...' : 'Remove Host Role'}
+                                                                </button>
+                                                            )}
+                                                            {/* Remove member */}
+                                                            <button
+                                                                onClick={() => {
+                                                                    setMemberToRemove(member);
+                                                                    setOpenMenuId(null);
+                                                                }}
+                                                                className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition flex items-center gap-3"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                </svg>
+                                                                Remove from Group
+                                                            </button>
+                                                        </div>
+                                                    </>
+                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -443,11 +494,14 @@ export default function GroupMembersPage() {
                         </button>
 
                         {selectedMember.avatar_url ? (
-                            <img
-                                src={selectedMember.avatar_url}
-                                alt={selectedMember.name}
-                                className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl object-cover shadow-2xl"
-                            />
+                            <div className="relative w-72 h-72 sm:w-80 sm:h-80">
+                                <Image
+                                    src={selectedMember.avatar_url}
+                                    alt={selectedMember.name}
+                                    fill
+                                    className="rounded-2xl object-cover shadow-2xl"
+                                />
+                            </div>
                         ) : (
                             <div className="w-72 h-72 sm:w-80 sm:h-80 rounded-2xl bg-gradient-to-br from-indigo-200 to-violet-300 flex items-center justify-center shadow-2xl">
                                 <span className="text-8xl font-bold text-white">

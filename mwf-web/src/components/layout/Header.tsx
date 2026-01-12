@@ -12,6 +12,7 @@ Shared header for all pages. Handles both authenticated and non-authenticated st
 */
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -94,11 +95,14 @@ export default function Header() {
                                 className="flex items-center gap-2 text-slate-700 hover:text-slate-900 transition"
                             >
                                 {user.avatar_url ? (
-                                    <img
-                                        src={user.avatar_url}
-                                        alt={user.name}
-                                        className="w-8 h-8 rounded-full object-cover ring-2 ring-slate-100"
-                                    />
+                                    <div className="relative w-8 h-8">
+                                        <Image
+                                            src={user.avatar_url}
+                                            alt={user.name}
+                                            fill
+                                            className="rounded-full object-cover ring-2 ring-slate-100"
+                                        />
+                                    </div>
                                 ) : (
                                     <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center ring-2 ring-slate-100">
                                         <span className="text-sm font-medium text-indigo-600">

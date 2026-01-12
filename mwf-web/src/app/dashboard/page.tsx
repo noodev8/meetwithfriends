@@ -224,7 +224,7 @@ function EventCard({ event }: { event: EventWithDetails }) {
             </div>
 
             {/* Title */}
-            <h4 className="text-lg font-bold text-slate-800 group-hover:text-indigo-600 transition-colors line-clamp-2 mb-2">
+            <h4 className="text-lg font-bold text-slate-800 line-clamp-2 mb-2">
                 {event.title}
             </h4>
 
@@ -264,6 +264,13 @@ function EventCard({ event }: { event: EventWithDetails }) {
                     {event.capacity && event.capacity > attendeeCount && (
                         <span className="text-slate-400 ml-2">· {event.capacity - attendeeCount} spots left</span>
                     )}
+                </span>
+            </div>
+
+            {/* CTA button */}
+            <div className="mt-4">
+                <span className="block w-full py-2.5 text-center text-sm font-semibold text-indigo-600 border border-indigo-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50 transition">
+                    Visit Event
                 </span>
             </div>
         </Link>
@@ -418,13 +425,13 @@ export default function Dashboard() {
                                 </h1>
                                 <p className="text-slate-500 mt-1">
                                     {events.length > 0
-                                        ? `You have ${events.length} event${events.length === 1 ? '' : 's'} coming up.`
+                                        ? `${events.length} upcoming event${events.length === 1 ? '' : 's'}`
                                         : "Here's what's happening with your groups"}
                                 </p>
                             </div>
                             <Link
                                 href="/groups/create"
-                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-95"
+                                className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-95"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
