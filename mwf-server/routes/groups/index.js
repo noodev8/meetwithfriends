@@ -24,6 +24,7 @@ const assignRole = require('./assign_role');
 const leaveGroup = require('./leave_group');
 const contactOrganiser = require('./contact_organiser');
 const regenerateInviteCode = require('./regenerate_invite_code');
+const broadcastMessage = require('./broadcast_message');
 
 // =======================================================================
 // Route definitions
@@ -41,6 +42,7 @@ router.use('/', assignRole);           // POST /api/groups/:id/members/role - as
 router.use('/', leaveGroup);           // POST /api/groups/:id/leave - leave a group (members only)
 router.use('/', contactOrganiser);     // POST /api/groups/:id/contact-organiser - contact group organiser
 router.use('/', regenerateInviteCode); // POST /api/groups/:id/regenerate-code - regenerate invite code (organiser only)
+router.use('/', broadcastMessage);     // POST /api/groups/:id/broadcast - send broadcast to all members (organiser only)
 router.use('/', getGroup);             // GET /api/groups/:id - get single group (must be last)
 
 module.exports = router;

@@ -17,7 +17,7 @@ import { createGroup } from '@/lib/api/groups';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 // import ImageUpload from '@/components/ui/ImageUpload'; // Hidden - using theme colors instead
 import RichTextEditor from '@/components/ui/RichTextEditor';
-import { THEME_OPTIONS, GroupThemeColor, getGroupInitials } from '@/lib/groupThemes';
+import { THEME_OPTIONS, GroupThemeColor } from '@/lib/groupThemes';
 
 // =======================================================================
 // Tips data for sidebar

@@ -23,6 +23,7 @@ import {
     approveMember,
     rejectMember,
     contactOrganiser,
+    broadcastMessage,
     GroupWithCount,
     GroupMembership,
     GroupMember,
@@ -57,7 +58,9 @@ export default function GroupDetailPage() {
     const [showContactModal, setShowContactModal] = useState(false);
     const [contactMessage, setContactMessage] = useState('');
     const [contactLoading, setContactLoading] = useState(false);
-    const [contactSuccess, setContactSuccess] = useState(false);
+    const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+    const [broadcastMsg, setBroadcastMsg] = useState('');
+    const [broadcastLoading, setBroadcastLoading] = useState(false);
 
     // =======================================================================
     // Check if user can manage members (organiser or host)
@@ -254,19 +257,32 @@ export default function GroupDetailPage() {
         setContactLoading(false);
 
         if (result.success) {
-            setContactSuccess(true);
             setContactMessage('');
-            setTimeout(() => {
-                setShowContactModal(false);
-                setContactSuccess(false);
-            }, 2000);
-        } else {
-            alert(result.error || 'Failed to send message');
+            setShowContactModal(false);
         }
     };
 
     // Check if user can contact organiser (active member who is not the organiser)
     const canContactOrganiser = membership?.status === 'active' && membership?.role !== 'organiser';
+
+    // =======================================================================
+    // Handle broadcast message (organiser only)
+    // =======================================================================
+    const handleBroadcast = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!token || !group || !broadcastMsg.trim()) return;
+
+        setBroadcastLoading(true);
+        const result = await broadcastMessage(token, group.id, broadcastMsg.trim());
+        setBroadcastLoading(false);
+
+        if (result.success) {
+            setBroadcastMsg('');
+            setShowBroadcastModal(false);
+        } else {
+            alert(result.error || 'Failed to send broadcast');
+        }
+    };
 
     // =======================================================================
     // Find organiser from members
@@ -345,16 +361,27 @@ export default function GroupDetailPage() {
                             {/* Action buttons */}
                             <div className="flex flex-wrap items-center gap-3">
                                 {isOrganiser && (
-                                    <Link
-                                        href={`/groups/${group.id}/edit`}
-                                        className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                        Manage Group
-                                    </Link>
+                                    <>
+                                        <Link
+                                            href={`/groups/${group.id}/edit`}
+                                            className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                            Manage Group
+                                        </Link>
+                                        <button
+                                            onClick={() => setShowBroadcastModal(true)}
+                                            className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                                            </svg>
+                                            Broadcast
+                                        </button>
+                                    </>
                                 )}
                                 {canManageMembers && (
                                     <Link
@@ -749,23 +776,26 @@ export default function GroupDetailPage() {
                             </button>
                         </div>
 
-                        {contactSuccess ? (
-                            <div className="p-8 text-center">
-                                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </div>
-                                <p className="text-lg font-semibold text-slate-900">Message sent!</p>
-                                <p className="text-sm text-slate-500 mt-1">
-                                    {organiser.name} will receive your message via email.
-                                </p>
-                            </div>
-                        ) : (
-                            <form onSubmit={handleContactOrganiser} className="p-6 space-y-5">
+                        <form onSubmit={handleContactOrganiser} className="p-6 space-y-5">
                                 <p className="text-sm text-slate-600">
                                     Send a message to the group organiser. They will receive it via email and can reply directly to you.
                                 </p>
+
+                                {/* Show sender's email so they know it will be shared */}
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Your email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={user?.email || ''}
+                                        disabled
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-500 cursor-not-allowed"
+                                    />
+                                    <p className="text-xs text-slate-400 mt-1">
+                                        Your email will be shared so they can reply
+                                    </p>
+                                </div>
 
                                 <div>
                                     <div className="flex items-center justify-between mb-2">
@@ -807,8 +837,83 @@ export default function GroupDetailPage() {
                                         {contactLoading ? 'Sending...' : 'Send Message'}
                                     </button>
                                 </div>
-                            </form>
-                        )}
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Broadcast Modal */}
+            {showBroadcastModal && (
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                    onClick={() => !broadcastLoading && setShowBroadcastModal(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-slate-900 font-display">
+                                Broadcast to Members
+                            </h3>
+                            <button
+                                onClick={() => setShowBroadcastModal(false)}
+                                disabled={broadcastLoading}
+                                className="text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50"
+                            >
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleBroadcast} className="p-6 space-y-5">
+                            <p className="text-sm text-slate-600">
+                                Send a message to all group members. Members who have disabled broadcasts will not receive this message.
+                            </p>
+
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label htmlFor="broadcastMessage" className="block text-sm font-medium text-slate-700">
+                                        Your message
+                                    </label>
+                                    <span className={`text-xs ${broadcastMsg.length > 1800 ? 'text-indigo-600' : 'text-slate-400'}`}>
+                                        {broadcastMsg.length}/2000
+                                    </span>
+                                </div>
+                                <textarea
+                                    id="broadcastMessage"
+                                    value={broadcastMsg}
+                                    onChange={(e) => setBroadcastMsg(e.target.value)}
+                                    placeholder="Hello everyone..."
+                                    rows={6}
+                                    maxLength={2000}
+                                    minLength={10}
+                                    required
+                                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 resize-none transition text-base"
+                                />
+                                <p className="text-xs text-slate-400 mt-2">Minimum 10 characters</p>
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowBroadcastModal(false)}
+                                    disabled={broadcastLoading}
+                                    className="flex-1 px-5 py-3 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={broadcastLoading || broadcastMsg.trim().length < 10}
+                                    className="flex-1 px-5 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all shadow-md disabled:opacity-50"
+                                >
+                                    {broadcastLoading ? 'Sending...' : 'Send Broadcast'}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

@@ -19,7 +19,6 @@ import {
     rsvpEvent,
     updateRsvp,
     submitOrder,
-    contactHost,
     EventWithDetails,
     RsvpStatus,
     Attendee,
@@ -76,12 +75,6 @@ export default function EventDetailPage() {
 
     // Cancel RSVP confirmation modal
     const [showCancelModal, setShowCancelModal] = useState(false);
-
-    // Contact host modal state
-    const [showContactHostModal, setShowContactHostModal] = useState(false);
-    const [contactMessage, setContactMessage] = useState('');
-    const [contactLoading, setContactLoading] = useState(false);
-    const [contactSuccess, setContactSuccess] = useState(false);
 
     // =======================================================================
     // Compute back link based on navigation source
@@ -371,32 +364,6 @@ export default function EventDetailPage() {
     const isPastEvent = event ? new Date(event.date_time) < new Date() : false;
 
     // =======================================================================
-    // Handle contact host
-    // =======================================================================
-    const handleContactHost = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!token || !event || !contactMessage.trim()) return;
-
-        setContactLoading(true);
-        const result = await contactHost(token, event.id, contactMessage.trim());
-        setContactLoading(false);
-
-        if (result.success) {
-            setContactSuccess(true);
-            setContactMessage('');
-            setTimeout(() => {
-                setShowContactHostModal(false);
-                setContactSuccess(false);
-            }, 2000);
-        } else {
-            alert(result.error || 'Failed to send message');
-        }
-    };
-
-    // Check if user can contact hosts (attendee or waitlist)
-    const canContactHost = rsvp && (rsvp.status === 'attending' || rsvp.status === 'waitlist');
-
-    // =======================================================================
     // Loading state
     // =======================================================================
     if (loading) {
@@ -545,17 +512,6 @@ export default function EventDetailPage() {
                                                 {hosts.length > 1 && ` +${hosts.length - 1} other${hosts.length > 2 ? 's' : ''}`}
                                             </span>
                                         </p>
-                                        {canContactHost && (
-                                            <button
-                                                onClick={() => setShowContactHostModal(true)}
-                                                className="ml-auto px-3 py-1.5 text-sm text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition flex items-center gap-1.5"
-                                            >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                </svg>
-                                                Contact
-                                            </button>
-                                        )}
                                     </>
                                 ) : (
                                     <p className="text-slate-500">
@@ -1341,96 +1297,6 @@ export default function EventDetailPage() {
                                 {rsvpLoading ? 'Cancelling...' : "Can't make it"}
                             </button>
                         </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Contact Host Modal */}
-            {showContactHostModal && hosts.length > 0 && (
-                <div
-                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-                    onClick={() => !contactLoading && setShowContactHostModal(false)}
-                >
-                    <div
-                        className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Header */}
-                        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-                            <h3 className="text-lg font-bold text-slate-900 font-display">
-                                Contact {hosts.length === 1 ? hosts[0].name : 'Hosts'}
-                            </h3>
-                            <button
-                                onClick={() => setShowContactHostModal(false)}
-                                disabled={contactLoading}
-                                className="text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50"
-                            >
-                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        {contactSuccess ? (
-                            <div className="p-8 text-center">
-                                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </div>
-                                <p className="text-lg font-semibold text-slate-900">Message sent!</p>
-                                <p className="text-sm text-slate-500 mt-1">
-                                    {hosts.length === 1 ? `${hosts[0].name} will` : 'The hosts will'} receive your message via email.
-                                </p>
-                            </div>
-                        ) : (
-                            <form onSubmit={handleContactHost} className="p-6 space-y-5">
-                                <p className="text-sm text-slate-600">
-                                    Send a message to {hosts.length === 1 ? 'the event host' : 'all event hosts'}. They will receive it via email and can reply directly to you.
-                                </p>
-
-                                <div>
-                                    <div className="flex items-center justify-between mb-2">
-                                        <label htmlFor="contactHostMessage" className="block text-sm font-medium text-slate-700">
-                                            Your message
-                                        </label>
-                                        <span className={`text-xs ${contactMessage.length > 900 ? 'text-indigo-600' : 'text-slate-400'}`}>
-                                            {contactMessage.length}/1000
-                                        </span>
-                                    </div>
-                                    <textarea
-                                        id="contactHostMessage"
-                                        value={contactMessage}
-                                        onChange={(e) => setContactMessage(e.target.value)}
-                                        placeholder="Hi, I have a question about the event..."
-                                        rows={6}
-                                        maxLength={1000}
-                                        minLength={10}
-                                        required
-                                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 resize-none transition text-base"
-                                    />
-                                    <p className="text-xs text-slate-400 mt-2">Minimum 10 characters</p>
-                                </div>
-
-                                <div className="flex gap-3 pt-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowContactHostModal(false)}
-                                        disabled={contactLoading}
-                                        className="flex-1 px-5 py-3 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={contactLoading || contactMessage.trim().length < 10}
-                                        className="flex-1 px-5 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all shadow-md disabled:opacity-50"
-                                    >
-                                        {contactLoading ? 'Sending...' : 'Send Message'}
-                                    </button>
-                                </div>
-                            </form>
-                        )}
                     </div>
                 </div>
             )}

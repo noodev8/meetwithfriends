@@ -557,3 +557,32 @@ export async function regenerateInviteCode(
         return_code: response.return_code,
     };
 }
+
+/*
+=======================================================================================================================================
+broadcastMessage
+=======================================================================================================================================
+Sends a broadcast message to all group members (who have broadcasts enabled).
+Only the organiser can send broadcasts.
+=======================================================================================================================================
+*/
+export async function broadcastMessage(
+    token: string,
+    groupId: number,
+    message: string
+): Promise<ApiResult<{ message: string }>> {
+    const response = await apiCall(`/api/groups/${groupId}/broadcast`, { message }, token);
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: { message: response.message as string },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to send broadcast',
+        return_code: response.return_code,
+    };
+}

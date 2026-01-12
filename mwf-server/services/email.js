@@ -67,7 +67,7 @@ sendEmail
 Core email sending function with test mode and daily limit handling
 =======================================================================================================================================
 */
-async function sendEmail(to, subject, html, emailType, relatedId = null, replyTo = null) {
+async function sendEmail(to, subject, html, emailType, relatedId = null, replyTo = null, text = null) {
     const isTestEmail = to.toLowerCase().endsWith('@test.com');
 
     // Check daily limit for real emails
@@ -95,8 +95,15 @@ async function sendEmail(to, subject, html, emailType, relatedId = null, replyTo
             from: `${config.email.fromName} <${config.email.from}>`,
             to: actualRecipient,
             subject: actualSubject,
-            html: html
         };
+
+        // Support both HTML and plain text emails
+        if (text) {
+            emailOptions.text = text;
+        }
+        if (html) {
+            emailOptions.html = html;
+        }
 
         // Add reply-to header if provided (Resend accepts array format)
         if (replyTo) {
@@ -504,50 +511,54 @@ async function sendNewCommentEmail(email, userName, event, commenterName, commen
 =======================================================================================================================================
 sendContactOrganiserEmail
 =======================================================================================================================================
-Sent to group organiser when a member contacts them via the group page
+Sent to group organiser when a member contacts them via the group page.
+Plain text format with sender email visible for easy reply.
 =======================================================================================================================================
 */
 async function sendContactOrganiserEmail(email, organiserName, senderName, senderEmail, group, message) {
-    const html = wrapEmail(`
-        <h2 style="color: #333;">Message from ${senderName}</h2>
-        <p style="color: #666; font-size: 16px;">
-            Hi ${organiserName},
-        </p>
-        <p style="color: #666; font-size: 16px;">
-            You've received a message from <strong>${senderName}</strong> regarding <strong>${group.name}</strong>:
-        </p>
-        <div style="background: #f8f9fa; border-left: 4px solid #4f46e5; padding: 16px; margin: 20px 0; border-radius: 4px;">
-            <p style="color: #333; font-size: 16px; margin: 0; white-space: pre-wrap;">${message}</p>
-        </div>
-        ${emailLink(config.frontendUrl + '/groups/' + group.id, 'View Group')}
-    `);
+    const text = `Hi ${organiserName},
 
-    return sendEmail(email, `Message from ${senderName} about ${group.name}`, html, 'contact_organiser', group.id, senderEmail);
+You've received a message from ${senderName} regarding ${group.name}.
+
+From: ${senderName}
+Email: ${senderEmail}
+
+Message:
+${message}
+
+---
+View group: ${config.frontendUrl}/groups/${group.id}
+
+Note: You cannot reply directly to this email. Copy the email address above to send them a message.`;
+
+    return sendEmail(email, `Message from ${senderName} about ${group.name}`, null, 'contact_organiser', group.id, senderEmail, text);
 }
 
 /*
 =======================================================================================================================================
 sendContactHostEmail
 =======================================================================================================================================
-Sent to event host(s) when an attendee contacts them via the event page
+Sent to event host(s) when an attendee contacts them via the event page.
+Plain text format with sender email visible for easy reply.
 =======================================================================================================================================
 */
 async function sendContactHostEmail(email, hostName, senderName, senderEmail, event, message) {
-    const html = wrapEmail(`
-        <h2 style="color: #333;">Message from ${senderName}</h2>
-        <p style="color: #666; font-size: 16px;">
-            Hi ${hostName},
-        </p>
-        <p style="color: #666; font-size: 16px;">
-            You've received a message from <strong>${senderName}</strong> regarding <strong>${event.title}</strong>:
-        </p>
-        <div style="background: #f8f9fa; border-left: 4px solid #4f46e5; padding: 16px; margin: 20px 0; border-radius: 4px;">
-            <p style="color: #333; font-size: 16px; margin: 0; white-space: pre-wrap;">${message}</p>
-        </div>
-        ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event')}
-    `);
+    const text = `Hi ${hostName},
 
-    return sendEmail(email, `Message from ${senderName} about ${event.title}`, html, 'contact_host', event.id, senderEmail);
+You've received a message from ${senderName} regarding ${event.title}.
+
+From: ${senderName}
+Email: ${senderEmail}
+
+Message:
+${message}
+
+---
+View event: ${config.frontendUrl}/events/${event.id}
+
+Note: You cannot reply directly to this email. Copy the email address above to send them a message.`;
+
+    return sendEmail(email, `Message from ${senderName} about ${event.title}`, null, 'contact_host', event.id, senderEmail, text);
 }
 
 /*
@@ -570,6 +581,29 @@ async function sendContactSupportEmail(senderName, senderEmail, message) {
     return sendEmail('noodev8@gmail.com', `Support: ${senderName}`, html, 'contact_support', null, senderEmail);
 }
 
+/*
+=======================================================================================================================================
+sendBroadcastEmail
+=======================================================================================================================================
+Sent to group members when the organiser sends a broadcast message.
+Plain text, no reply-to (one-way communication).
+=======================================================================================================================================
+*/
+async function sendBroadcastEmail(email, memberName, organiserName, group, message) {
+    const text = `Hi ${memberName},
+
+${organiserName} sent a message to all members of ${group.name}:
+
+${message}
+
+---
+View group: ${config.frontendUrl}/groups/${group.id}
+
+You received this because you're a member of ${group.name}. To stop receiving broadcasts, update your preferences in your profile settings.`;
+
+    return sendEmail(email, `Message from ${group.name}`, null, 'broadcast', group.id, null, text);
+}
+
 module.exports = {
     sendEmail,
     sendWelcomeEmail,
@@ -585,5 +619,6 @@ module.exports = {
     sendNewCommentEmail,
     sendContactOrganiserEmail,
     sendContactHostEmail,
-    sendContactSupportEmail
+    sendContactSupportEmail,
+    sendBroadcastEmail
 };
