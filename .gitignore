@@ -66,3 +66,4 @@ android/key.jks
 .env.production
 .env.development
 
+tmpclaude-*-cwd

@@ -60,6 +60,7 @@ router.get('/my-events', verifyToken, async (req, res) => {
                 e.location,
                 e.date_time,
                 e.capacity,
+                e.category,
                 e.image_url,
                 e.image_position,
                 e.status,

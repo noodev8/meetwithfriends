@@ -10,8 +10,8 @@ Shows event details, RSVP functionality, and attendee list.
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import {
     getEvent,
@@ -37,6 +37,8 @@ import DOMPurify from 'dompurify';
 export default function EventDetailPage() {
     const { user, token } = useAuth();
     const params = useParams();
+    const searchParams = useSearchParams();
+    const fromParam = searchParams.get('from');
 
     const [event, setEvent] = useState<EventWithDetails | null>(null);
     const [rsvp, setRsvp] = useState<RsvpStatus | null>(null);
@@ -79,6 +81,51 @@ export default function EventDetailPage() {
     const [contactMessage, setContactMessage] = useState('');
     const [contactLoading, setContactLoading] = useState(false);
     const [contactSuccess, setContactSuccess] = useState(false);
+
+    // =======================================================================
+    // Compute back link based on navigation source
+    // =======================================================================
+    const backLink = useMemo(() => {
+        if (!fromParam) {
+            // Default: back to group
+            return event ? {
+                href: `/groups/${event.group_id}`,
+                label: event.group_name
+            } : null;
+        }
+
+        if (fromParam === 'dashboard') {
+            return { href: '/dashboard', label: 'Dashboard' };
+        }
+
+        if (fromParam === 'your-events') {
+            return { href: '/your-events', label: 'Your Events' };
+        }
+
+        // Handle group-{id} format
+        if (fromParam.startsWith('group-') && !fromParam.includes('-events')) {
+            const groupId = fromParam.replace('group-', '');
+            return {
+                href: `/groups/${groupId}`,
+                label: event?.group_name || 'Group'
+            };
+        }
+
+        // Handle group-{id}-events format
+        if (fromParam.startsWith('group-') && fromParam.endsWith('-events')) {
+            const groupId = fromParam.replace('group-', '').replace('-events', '');
+            return {
+                href: `/groups/${groupId}/events`,
+                label: event ? `${event.group_name} Events` : 'Group Events'
+            };
+        }
+
+        // Fallback to group
+        return event ? {
+            href: `/groups/${event.group_id}`,
+            label: event.group_name
+        } : null;
+    }, [fromParam, event]);
 
     // =======================================================================
     // Fetch event details, attendees, and comments
@@ -394,16 +441,18 @@ export default function EventDetailPage() {
             {/* Hero Section */}
             <div className="bg-white border-b border-slate-200">
                 <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
-                    {/* Breadcrumb */}
-                    <Link
-                        href={`/groups/${event.group_id}`}
-                        className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-4 transition-colors"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                        {event.group_name}
-                    </Link>
+                    {/* Breadcrumb - dynamic back link based on navigation source */}
+                    {backLink && (
+                        <Link
+                            href={backLink.href}
+                            className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-4 transition-colors"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                            {backLink.label}
+                        </Link>
+                    )}
 
                     {/* Hero content */}
                     <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">

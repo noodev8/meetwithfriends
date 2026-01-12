@@ -18,6 +18,7 @@ import { createEvent, getEvent } from '@/lib/api/events';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 import ImageUpload from '@/components/ui/ImageUpload';
 import RichTextEditor from '@/components/ui/RichTextEditor';
+import { CATEGORY_OPTIONS, EventCategory } from '@/lib/eventCategories';
 
 export default function CreateEventPage() {
     const { token, isLoading: authLoading } = useAuth();
@@ -40,6 +41,7 @@ export default function CreateEventPage() {
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
     const [capacity, setCapacity] = useState('');
+    const [category, setCategory] = useState<EventCategory>('food');
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [imagePosition, setImagePosition] = useState<'top' | 'center' | 'bottom'>('center');
     const [allowGuests, setAllowGuests] = useState(false);
@@ -100,6 +102,7 @@ export default function CreateEventPage() {
                 setDescription(evt.description || '');
                 setLocation(evt.location || '');
                 setCapacity(evt.capacity ? String(evt.capacity) : '');
+                setCategory((evt.category as EventCategory) || 'food');
                 setImageUrl(evt.image_url || null);
                 setImagePosition(evt.image_position || 'center');
                 setAllowGuests(evt.allow_guests || false);
@@ -125,8 +128,8 @@ export default function CreateEventPage() {
         if (!token || !group) return;
 
         // Validate required fields
-        if (!title.trim() || !date || !time) {
-            setError('Title, date, and time are required');
+        if (!title.trim() || !date || !time || !category) {
+            setError('Title, date, time, and category are required');
             return;
         }
 
@@ -167,6 +170,7 @@ export default function CreateEventPage() {
             location: location.trim() || undefined,
             date_time: dateTime.toISOString(),
             capacity: capacity ? parseInt(capacity, 10) : undefined,
+            category,
             image_url: imageUrl || undefined,
             image_position: imageUrl ? imagePosition : undefined,
             allow_guests: allowGuests,
@@ -322,6 +326,34 @@ export default function CreateEventPage() {
                                                 })
                                             ).flat()}
                                         </select>
+                                    </div>
+                                </div>
+
+                                {/* Event Category */}
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Event Type *
+                                    </label>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                        {CATEGORY_OPTIONS.map((cat) => (
+                                            <button
+                                                key={cat.key}
+                                                type="button"
+                                                onClick={() => setCategory(cat.key)}
+                                                className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${
+                                                    category === cat.key
+                                                        ? 'border-indigo-600 bg-indigo-50'
+                                                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                                                }`}
+                                            >
+                                                <span className="text-2xl">{cat.emoji}</span>
+                                                <span className={`text-xs font-medium ${
+                                                    category === cat.key ? 'text-indigo-700' : 'text-slate-600'
+                                                }`}>
+                                                    {cat.label}
+                                                </span>
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
 

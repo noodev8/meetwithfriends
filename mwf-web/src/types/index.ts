@@ -59,6 +59,7 @@ export interface Event {
     preorders_enabled?: boolean;
     menu_link?: string;
     preorder_cutoff?: string;
+    category?: 'food' | 'outdoor' | 'games' | 'coffee' | 'arts' | 'learning' | 'other';
     status: 'published' | 'cancelled';
     created_at: string;
     attendee_count?: number;

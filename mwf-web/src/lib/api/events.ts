@@ -54,6 +54,7 @@ export interface UpdateEventPayload {
     preorders_enabled?: boolean;
     menu_link?: string | null;
     preorder_cutoff?: string | null;
+    category?: 'food' | 'outdoor' | 'games' | 'coffee' | 'arts' | 'learning' | 'other';
 }
 
 // Attendee type
@@ -83,6 +84,7 @@ export interface CreateEventPayload {
     preorders_enabled?: boolean;
     menu_link?: string;
     preorder_cutoff?: string;
+    category: 'food' | 'outdoor' | 'games' | 'coffee' | 'arts' | 'learning' | 'other';
 }
 
 /*

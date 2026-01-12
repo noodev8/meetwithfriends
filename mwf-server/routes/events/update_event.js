@@ -12,6 +12,7 @@ Request Payload:
   "location": "New Location",              // string, optional
   "date_time": "2026-02-15T19:00:00Z",    // string (ISO 8601), optional, must be in future
   "capacity": 25,                          // number, optional, null for unlimited
+  "category": "food",                      // string, optional (food/outdoor/games/coffee/arts/learning/other)
   "image_url": "https://...",              // string, optional (Cloudinary URL)
   "image_position": "top",                 // string, optional (top/center/bottom)
   "allow_guests": true,                    // boolean, optional
@@ -38,6 +39,7 @@ Return Codes:
 "INVALID_TITLE"
 "INVALID_DATE"
 "INVALID_CAPACITY"
+"INVALID_CATEGORY"
 "INVALID_CUTOFF"
 "EVENT_CANCELLED"
 "SERVER_ERROR"
@@ -50,10 +52,13 @@ const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
 const { sendPromotedFromWaitlistEmail } = require('../../services/email');
 
+// Valid category values
+const VALID_CATEGORIES = ['food', 'outdoor', 'games', 'coffee', 'arts', 'learning', 'other'];
+
 router.post('/:id/update', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, location, date_time, capacity, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, preorder_cutoff } = req.body;
+        const { title, description, location, date_time, capacity, category, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, preorder_cutoff } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -155,6 +160,13 @@ router.post('/:id/update', verifyToken, async (req, res) => {
             }
         }
 
+        if (category !== undefined && !VALID_CATEGORIES.includes(category)) {
+            return res.json({
+                return_code: 'INVALID_CATEGORY',
+                message: 'Invalid category. Must be one of: food, outdoor, games, coffee, arts, learning, other'
+            });
+        }
+
         // =======================================================================
         // Validate preorder_cutoff if provided
         // Must be a valid date and before the event date
@@ -207,6 +219,11 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         if (capacity !== undefined) {
             updates.push(`capacity = $${paramCount++}`);
             values.push(capacity);
+        }
+
+        if (category !== undefined) {
+            updates.push(`category = $${paramCount++}`);
+            values.push(category);
         }
 
         if (image_url !== undefined) {
