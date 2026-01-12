@@ -119,22 +119,11 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     ))}
                 </nav>
 
-                {/* Bottom section: Profile, Logout, User info */}
+                {/* Bottom section: Help, Logout, User info */}
                 {user && (
                     <div className="border-t border-slate-100">
-                        {/* Profile, Help & Logout links */}
+                        {/* Help & Logout links */}
                         <div className="px-4 py-3 space-y-1">
-                            <Link
-                                href="/profile"
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                                    isActive('/profile')
-                                        ? 'bg-indigo-50 text-indigo-600 font-semibold'
-                                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
-                                }`}
-                            >
-                                <NavIcon name="profile" className="w-5 h-5" />
-                                Profile
-                            </Link>
                             <Link
                                 href="/help"
                                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
@@ -155,9 +144,12 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                             </button>
                         </div>
 
-                        {/* User info */}
+                        {/* User info - clickable to go to profile */}
                         <div className="px-4 pb-4">
-                            <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl">
+                            <Link
+                                href="/profile"
+                                className="flex items-center gap-3 px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
+                            >
                                 {user.avatar_url ? (
                                     <div className="relative w-10 h-10">
                                         <Image
@@ -178,7 +170,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                                     <p className="text-sm font-semibold text-slate-800 truncate">{user.name}</p>
                                     <p className="text-xs text-slate-400 truncate">{user.email}</p>
                                 </div>
-                            </div>
+                            </Link>
                         </div>
                     </div>
                 )}
