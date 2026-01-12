@@ -33,6 +33,7 @@ import {
 } from '@/lib/api/comments';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 import DOMPurify from 'dompurify';
+import { getCategoryConfig } from '@/lib/eventCategories';
 
 export default function EventDetailPage() {
     const { user, token } = useAuth();
@@ -438,8 +439,8 @@ export default function EventDetailPage() {
 
     return (
         <SidebarLayout>
-            {/* Hero Section */}
-            <div className="bg-white border-b border-slate-200">
+            {/* Hero Section - Card Style with Category Gradient */}
+            <div className="bg-slate-50 border-b border-slate-200">
                 <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
                     {/* Breadcrumb - dynamic back link based on navigation source */}
                     {backLink && (
@@ -454,48 +455,44 @@ export default function EventDetailPage() {
                         </Link>
                     )}
 
-                    {/* Hero content */}
-                    <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-                        {/* Featured Image */}
-                        {event.image_url && (
-                            <div className="w-full lg:w-96 flex-shrink-0">
-                                <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-slate-100 shadow-md">
-                                    <Image
-                                        src={event.image_url}
-                                        alt={event.title}
-                                        fill
-                                        sizes="(max-width: 1024px) 100vw, 384px"
-                                        className="object-cover"
-                                        style={{ objectPosition: event.image_position || 'center' }}
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Event Info */}
-                        <div className="flex-1 min-w-0">
-                            {/* Status badges */}
-                            {(event.status === 'cancelled' || isPastEvent) && (
-                                <div className="flex flex-wrap gap-2 mb-3">
-                                    {event.status === 'cancelled' && (
-                                        <span className="px-3 py-1 text-sm font-medium text-red-700 bg-red-100 rounded-full">
-                                            Cancelled
-                                        </span>
-                                    )}
-                                    {isPastEvent && event.status !== 'cancelled' && (
-                                        <span className="px-3 py-1 text-sm font-medium text-slate-600 bg-slate-100 rounded-full">
-                                            Past Event
-                                        </span>
+                    {/* Hero Card with Gradient Header */}
+                    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        {/* Category Gradient Header */}
+                        {(() => {
+                            const categoryConfig = getCategoryConfig(event.category);
+                            return (
+                                <div className={`relative h-32 sm:h-40 bg-gradient-to-r ${categoryConfig.gradient}`}>
+                                    {/* Large emoji */}
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <span className="text-7xl sm:text-8xl opacity-80">{categoryConfig.emoji}</span>
+                                    </div>
+                                    {/* Status badges overlay */}
+                                    {(event.status === 'cancelled' || isPastEvent) && (
+                                        <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+                                            {event.status === 'cancelled' && (
+                                                <span className="px-3 py-1 text-sm font-medium text-red-700 bg-red-100 rounded-full shadow-sm">
+                                                    Cancelled
+                                                </span>
+                                            )}
+                                            {isPastEvent && event.status !== 'cancelled' && (
+                                                <span className="px-3 py-1 text-sm font-medium text-slate-600 bg-slate-100 rounded-full shadow-sm">
+                                                    Past Event
+                                                </span>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
-                            )}
+                            );
+                        })()}
 
-                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-3 font-display">
+                        {/* Event Info Content */}
+                        <div className="p-6 sm:p-8">
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4 font-display">
                                 {event.title}
                             </h1>
 
                             {/* Date/Time/Location quick info */}
-                            <div className="space-y-2 mb-4">
+                            <div className="space-y-2 mb-5">
                                 <div className="flex items-center gap-3 text-slate-700">
                                     <span className="text-xl">📅</span>
                                     <div>
@@ -513,7 +510,7 @@ export default function EventDetailPage() {
                             </div>
 
                             {/* Hosted by with avatar */}
-                            <div className="flex items-center gap-3 mb-4">
+                            <div className="flex items-center gap-3 mb-5">
                                 {hosts.length > 0 ? (
                                     <>
                                         {/* Host avatar(s) */}
@@ -569,12 +566,6 @@ export default function EventDetailPage() {
 
                             {/* Status Badges and Edit */}
                             <div className="flex flex-wrap items-center gap-3">
-                                {event.status === 'cancelled' && (
-                                    <span className="px-3 py-1 bg-red-50 text-red-700 rounded-full text-sm font-medium">Cancelled</span>
-                                )}
-                                {isPastEvent && event.status !== 'cancelled' && (
-                                    <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-sm">Ended</span>
-                                )}
                                 {rsvp && rsvp.status !== 'not_going' && !isPastEvent && event.status !== 'cancelled' && (
                                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                                         rsvp.status === 'attending'

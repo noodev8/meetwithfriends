@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getEvent, updateEvent, cancelEvent, EventWithDetails } from '@/lib/api/events';
 import SidebarLayout from '@/components/layout/SidebarLayout';
-import ImageUpload from '@/components/ui/ImageUpload';
+// import ImageUpload from '@/components/ui/ImageUpload'; // Hidden - using category gradients instead
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import { CATEGORY_OPTIONS, EventCategory } from '@/lib/eventCategories';
 
@@ -41,7 +41,7 @@ export default function EditEventPage() {
     const [category, setCategory] = useState<EventCategory>('food');
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [imagePosition, setImagePosition] = useState<'top' | 'center' | 'bottom'>('center');
-    const [imageSaving, setImageSaving] = useState(false);
+    // const [imageSaving, setImageSaving] = useState(false); // Hidden - using category gradients
     const [allowGuests, setAllowGuests] = useState(false);
     const [maxGuestsPerRsvp, setMaxGuestsPerRsvp] = useState(1);
     const [preordersEnabled, setPreordersEnabled] = useState(false);
@@ -50,7 +50,7 @@ export default function EditEventPage() {
     const [preorderCutoffTime, setPreorderCutoffTime] = useState('');
 
     // UI state - individual option card expansion (all collapsed by default)
-    const [imageExpanded, setImageExpanded] = useState(false);
+    // const [imageExpanded, setImageExpanded] = useState(false); // Hidden - using category gradients
     const [capacityExpanded, setCapacityExpanded] = useState(false);
     const [guestsExpanded, setGuestsExpanded] = useState(false);
     const [requestsExpanded, setRequestsExpanded] = useState(false);
@@ -113,6 +113,7 @@ export default function EditEventPage() {
         fetchEvent();
     }, [params.id, token, authLoading]);
 
+    /* Hidden - using category gradients instead
     // =======================================================================
     // Handle image change - auto-save to database
     // =======================================================================
@@ -138,6 +139,7 @@ export default function EditEventPage() {
         await updateEvent(token, event.id, { image_position: position });
         setImageSaving(false);
     };
+    */
 
     // =======================================================================
     // Handle form submission
@@ -440,7 +442,7 @@ export default function EditEventPage() {
                                 <h2 className="text-sm font-medium text-slate-500 uppercase tracking-wide mb-4">Options</h2>
 
                                 <div className="space-y-3">
-                                    {/* Featured Image Card */}
+                                    {/* Featured Image Card - Hidden for now, using category gradients instead
                                     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                                         <button
                                             type="button"
@@ -484,6 +486,7 @@ export default function EditEventPage() {
                                             </div>
                                         )}
                                     </div>
+                                    */}
 
                                     {/* Capacity Card */}
                                     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">

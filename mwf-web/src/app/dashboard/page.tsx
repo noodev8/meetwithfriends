@@ -440,7 +440,7 @@ export default function Dashboard() {
                                     </div>
                                 </section>
 
-                                {/* CTA Card - Create Event */}
+                                {/* CTA Card - Create Event - Hidden for now, needs group selection for multi-group users
                                 {organiserGroups.length > 0 && (
                                     <section className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl p-6 text-white shadow-xl shadow-indigo-200 relative overflow-hidden">
                                         <div className="relative z-10">
@@ -455,11 +455,11 @@ export default function Dashboard() {
                                                 Get Started
                                             </Link>
                                         </div>
-                                        {/* Decorative circles */}
                                         <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full"></div>
                                         <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-black/10 rounded-full"></div>
                                     </section>
                                 )}
+                                */}
                             </div>
                         </div>
                     </>

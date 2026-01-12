@@ -16,7 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getGroup, GroupWithCount, GroupMembership } from '@/lib/api/groups';
 import { createEvent, getEvent } from '@/lib/api/events';
 import SidebarLayout from '@/components/layout/SidebarLayout';
-import ImageUpload from '@/components/ui/ImageUpload';
+// import ImageUpload from '@/components/ui/ImageUpload'; // Hidden - using category gradients instead
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import { CATEGORY_OPTIONS, EventCategory } from '@/lib/eventCategories';
 
@@ -52,7 +52,7 @@ export default function CreateEventPage() {
     const [preorderCutoffTime, setPreorderCutoffTime] = useState('');
 
     // UI state - individual option card expansion (all collapsed by default)
-    const [imageExpanded, setImageExpanded] = useState(false);
+    // const [imageExpanded, setImageExpanded] = useState(false); // Hidden - using category gradients
     const [capacityExpanded, setCapacityExpanded] = useState(false);
     const [guestsExpanded, setGuestsExpanded] = useState(false);
     const [requestsExpanded, setRequestsExpanded] = useState(false);
@@ -110,7 +110,7 @@ export default function CreateEventPage() {
                 setPreordersEnabled(evt.preorders_enabled || false);
                 setMenuLink(evt.menu_link || '');
                 // Expand sections that have values
-                if (evt.image_url) setImageExpanded(true);
+                // if (evt.image_url) setImageExpanded(true); // Hidden - using category gradients
                 if (evt.capacity) setCapacityExpanded(true);
                 if (evt.allow_guests) setGuestsExpanded(true);
                 if (evt.preorders_enabled) setRequestsExpanded(true);
@@ -657,7 +657,7 @@ export default function CreateEventPage() {
                                         )}
                                     </div>
 
-                                    {/* Featured Image Card */}
+                                    {/* Featured Image Card - HIDDEN: Using category gradients instead
                                     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                                         <button
                                             type="button"
@@ -700,6 +700,7 @@ export default function CreateEventPage() {
                                             </div>
                                         )}
                                     </div>
+                                    */}
                                 </div>
                             </div>
 

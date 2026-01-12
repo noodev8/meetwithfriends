@@ -309,7 +309,7 @@ export default function GroupDetailPage() {
             <div className="bg-white border-b border-slate-200">
                 <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
                     <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-                        {/* Group Image */}
+                        {/* Group Image - Hidden for now, using gradient placeholder for visual consistency
                         {group.image_url ? (
                             <div className="relative w-full lg:w-96 h-48 sm:h-56 lg:h-64 rounded-2xl overflow-hidden shadow-lg flex-shrink-0">
                                 <Image
@@ -321,12 +321,13 @@ export default function GroupDetailPage() {
                                 />
                             </div>
                         ) : (
-                            <div className="w-full lg:w-96 h-48 sm:h-56 lg:h-64 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg flex-shrink-0">
-                                <span className="text-6xl sm:text-7xl text-white/80 font-display font-bold">
-                                    {group.name.charAt(0).toUpperCase()}
-                                </span>
-                            </div>
-                        )}
+                        */}
+                        <div className="w-full lg:w-96 h-48 sm:h-56 lg:h-64 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                            <span className="text-6xl sm:text-7xl text-white/80 font-display font-bold">
+                                {group.name.charAt(0).toUpperCase()}
+                            </span>
+                        </div>
+                        {/* )} */}
 
                         {/* Group Info */}
                         <div className="flex-1 flex flex-col justify-center">
