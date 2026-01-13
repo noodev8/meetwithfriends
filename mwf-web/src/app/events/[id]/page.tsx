@@ -33,6 +33,7 @@ import {
 import SidebarLayout from '@/components/layout/SidebarLayout';
 import DOMPurify from 'dompurify';
 import { getCategoryConfig } from '@/lib/eventCategories';
+import { FEATURE_GUESTS_ENABLED } from '@/lib/featureFlags';
 
 export default function EventDetailPage() {
     const { user, token } = useAuth();
@@ -1206,7 +1207,7 @@ export default function EventDetailPage() {
                                     }
                                 </div>
 
-                                {rsvp.status === 'attending' && event.allow_guests && (
+                                {FEATURE_GUESTS_ENABLED && rsvp.status === 'attending' && event.allow_guests && (
                                     <select
                                         value={selectedGuestCount}
                                         onChange={(e) => handleUpdateGuests(parseInt(e.target.value, 10))}
@@ -1230,7 +1231,7 @@ export default function EventDetailPage() {
                         ) : (
                             /* Not RSVP'd - show join options */
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                                {event.allow_guests && (
+                                {FEATURE_GUESTS_ENABLED && event.allow_guests && (
                                     <select
                                         value={selectedGuestCount}
                                         onChange={(e) => setSelectedGuestCount(parseInt(e.target.value, 10))}

@@ -37,10 +37,6 @@ const faqs: FAQItem[] = [
         answer: 'When an event reaches capacity, new RSVPs are added to a waitlist. If someone cancels, the first person on the waitlist is automatically moved to the attending list.',
     },
     {
-        question: 'Can I bring guests to an event?',
-        answer: 'If the event host has enabled guests, you\'ll see an option to add guests when you RSVP. The number of guests you can bring depends on what the host has set (usually 1-5).',
-    },
-    {
         question: 'How do pre-orders work?',
         answer: 'For food-focused events, hosts can enable pre-orders. Attendees can submit their food choices before a cutoff deadline. Hosts can view and manage all orders from the event page.',
     },

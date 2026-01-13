@@ -25,6 +25,7 @@ import {
 } from '@/lib/api/events';
 import { EventHost } from '@/types';
 import SidebarLayout from '@/components/layout/SidebarLayout';
+import { FEATURE_GUESTS_ENABLED } from '@/lib/featureFlags';
 
 type Tab = 'going' | 'waitlist' | 'not_going';
 type SortBy = 'rsvp_time' | 'name';
@@ -395,7 +396,7 @@ export default function AttendeesPage() {
                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                             }`}
                         >
-                            Going ({attendingCount}{totalGuestCount > 0 ? ` +${totalGuestCount}` : ''})
+                            Going ({attendingCount}{FEATURE_GUESTS_ENABLED && totalGuestCount > 0 ? ` +${totalGuestCount}` : ''})
                         </button>
                         <button
                             onClick={() => setActiveTab('waitlist')}
@@ -485,7 +486,7 @@ export default function AttendeesPage() {
                                             {/* Role/Guest info */}
                                             <span className="text-xs text-slate-500">
                                                 {isHostUser ? 'Event Host' :
-                                                 activeTab === 'going' && attendee.guest_count > 0
+                                                 FEATURE_GUESTS_ENABLED && activeTab === 'going' && attendee.guest_count > 0
                                                     ? `+${attendee.guest_count} guest${attendee.guest_count > 1 ? 's' : ''}`
                                                     : 'Member'}
                                             </span>

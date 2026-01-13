@@ -19,6 +19,7 @@ import SidebarLayout from '@/components/layout/SidebarLayout';
 // import ImageUpload from '@/components/ui/ImageUpload'; // Hidden - using category gradients instead
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import { CATEGORY_OPTIONS, EventCategory } from '@/lib/eventCategories';
+import { FEATURE_GUESTS_ENABLED } from '@/lib/featureFlags';
 
 export default function CreateEventPage() {
     const { token, isLoading: authLoading } = useAuth();
@@ -457,7 +458,8 @@ export default function CreateEventPage() {
                                         )}
                                     </div>
 
-                                    {/* Guests Card */}
+                                    {/* Guests Card - Hidden via feature flag */}
+                                    {FEATURE_GUESTS_ENABLED && (
                                     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                                         <button
                                             type="button"
@@ -521,6 +523,7 @@ export default function CreateEventPage() {
                                             </div>
                                         )}
                                     </div>
+                                    )}
 
                                     {/* Attendee Requests Card */}
                                     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
