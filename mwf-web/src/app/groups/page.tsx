@@ -67,8 +67,11 @@ export default function GroupsPage() {
     return (
         <SidebarLayout>
             <div className="px-4 sm:px-8 py-6 sm:py-8 max-w-5xl mx-auto w-full">
-                <div className="flex justify-between items-center mb-6 sm:mb-8">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display">All Groups</h1>
+                <div className="flex justify-between items-start mb-6 sm:mb-8">
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display">All Groups</h1>
+                        <p className="text-slate-500 mt-1">Listed groups that are open to new members</p>
+                    </div>
                     <Link
                         href="/groups/create"
                         className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-full hover:from-indigo-700 hover:to-violet-700 transition-all shadow-sm"
