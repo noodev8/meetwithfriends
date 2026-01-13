@@ -3,9 +3,13 @@ import 'package:dio/dio.dart';
 class ApiService {
   static const String baseUrl = 'http://192.168.1.136:3018/api';
 
+  // Singleton instance
+  static final ApiService _instance = ApiService._internal();
+  factory ApiService() => _instance;
+
   final Dio _dio;
 
-  ApiService() : _dio = Dio(BaseOptions(
+  ApiService._internal() : _dio = Dio(BaseOptions(
     baseUrl: baseUrl,
     connectTimeout: const Duration(seconds: 30),
     receiveTimeout: const Duration(seconds: 30),

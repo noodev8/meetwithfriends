@@ -1,38 +1,46 @@
 import 'package:flutter/material.dart';
+import '../models/group.dart';
+import '../services/groups_service.dart';
 
-class GroupsScreen extends StatelessWidget {
+class GroupsScreen extends StatefulWidget {
   const GroupsScreen({super.key});
 
-  // Mock data - will be replaced with API calls
-  static final List<Map<String, dynamic>> _groups = [
-    {
-      'id': 1,
-      'name': 'Brookfield Socials',
-      'members': 9,
-      'role': 'Organiser',
-      'initial': 'BS',
-      'color': Color(0xFF10B981),
-      'upcomingEvents': 3,
-    },
-    {
-      'id': 2,
-      'name': 'Friday Night Dinners',
-      'members': 12,
-      'role': 'Member',
-      'initial': 'FN',
-      'color': Color(0xFF6366F1),
-      'upcomingEvents': 1,
-    },
-    {
-      'id': 3,
-      'name': 'Coffee Lovers Club',
-      'members': 5,
-      'role': 'Host',
-      'initial': 'CL',
-      'color': Color(0xFFF59E0B),
-      'upcomingEvents': 0,
-    },
-  ];
+  @override
+  State<GroupsScreen> createState() => _GroupsScreenState();
+}
+
+class _GroupsScreenState extends State<GroupsScreen> {
+  final GroupsService _groupsService = GroupsService();
+
+  bool _isLoading = true;
+  String? _error;
+  List<Group> _groups = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGroups();
+  }
+
+  Future<void> _loadGroups() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    final result = await _groupsService.getMyGroups();
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        if (result.success) {
+          _groups = result.groups ?? [];
+        } else {
+          _error = result.error ?? 'Failed to load groups';
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,15 +82,15 @@ class GroupsScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF10B981).withOpacity(0.3),
+                          color: const Color(0xFF10B981).withAlpha(77),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
                       ],
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
+                      children: [
                         Icon(
                           Icons.add_rounded,
                           size: 18,
@@ -111,11 +119,11 @@ class GroupsScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
-              '${_groups.length} groups',
-              style: TextStyle(
+              '${_groups.length} group${_groups.length == 1 ? '' : 's'}',
+              style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF64748B).withOpacity(0.9),
+                color: Color(0xFF64748B),
               ),
             ),
           ),
@@ -124,44 +132,147 @@ class GroupsScreen extends StatelessWidget {
 
           // Groups list
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: _groups.length,
-              itemBuilder: (context, index) {
-                final group = _groups[index];
-                return _GroupDetailCard(group: group);
-              },
-            ),
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF7C3AED),
+                    ),
+                  )
+                : _error != null
+                    ? _buildErrorState()
+                    : _groups.isEmpty
+                        ? _buildEmptyState()
+                        : RefreshIndicator(
+                            onRefresh: _loadGroups,
+                            color: const Color(0xFF7C3AED),
+                            child: ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              itemCount: _groups.length,
+                              itemBuilder: (context, index) {
+                                final group = _groups[index];
+                                return _GroupDetailCard(group: group);
+                              },
+                            ),
+                          ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 64,
+              color: Colors.red.shade300,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _error!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _loadGroups,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF7C3AED),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.people_outline_rounded,
+              size: 64,
+              color: Colors.grey.shade300,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'No groups yet',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Create a group or join one to get started',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF94A3B8),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class _GroupDetailCard extends StatelessWidget {
-  final Map<String, dynamic> group;
+  final Group group;
 
   const _GroupDetailCard({required this.group});
 
+  Color get _roleColor {
+    switch (group.role.toLowerCase()) {
+      case 'organiser':
+        return const Color(0xFF7C3AED);
+      case 'host':
+        return const Color(0xFFF59E0B);
+      default:
+        return const Color(0xFF64748B);
+    }
+  }
+
+  Color get _avatarColor {
+    // Use theme color if available, otherwise generate from name
+    if (group.themeColor != null) {
+      try {
+        return Color(int.parse(group.themeColor!.replaceFirst('#', '0xFF')));
+      } catch (_) {}
+    }
+    // Default colors based on first letter
+    final colors = [
+      const Color(0xFF10B981),
+      const Color(0xFF6366F1),
+      const Color(0xFFF59E0B),
+      const Color(0xFFEC4899),
+      const Color(0xFF8B5CF6),
+    ];
+    return colors[group.name.codeUnitAt(0) % colors.length];
+  }
+
   @override
   Widget build(BuildContext context) {
-    final color = group['color'] as Color;
-    final role = group['role'] as String;
-    final upcomingEvents = group['upcomingEvents'] as int;
-
-    Color roleColor;
-    switch (role.toLowerCase()) {
-      case 'organiser':
-        roleColor = const Color(0xFF7C3AED);
-        break;
-      case 'host':
-        roleColor = const Color(0xFFF59E0B);
-        break;
-      default:
-        roleColor = const Color(0xFF64748B);
-    }
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
@@ -179,7 +290,7 @@ class _GroupDetailCard extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF1E293B).withOpacity(0.04),
+                color: const Color(0xFF1E293B).withAlpha(10),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -192,16 +303,16 @@ class _GroupDetailCard extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  color: _avatarColor.withAlpha(38),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Center(
                   child: Text(
-                    group['initial'] as String,
+                    group.initials,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: color,
+                      color: _avatarColor,
                     ),
                   ),
                 ),
@@ -218,7 +329,7 @@ class _GroupDetailCard extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            group['name'] as String,
+                            group.name,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -234,15 +345,15 @@ class _GroupDetailCard extends StatelessWidget {
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: roleColor.withOpacity(0.1),
+                            color: _roleColor.withAlpha(26),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            role.toUpperCase(),
+                            group.role.toUpperCase(),
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
-                              color: roleColor,
+                              color: _roleColor,
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -252,14 +363,14 @@ class _GroupDetailCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.people_outline_rounded,
                           size: 14,
-                          color: const Color(0xFF94A3B8),
+                          color: Color(0xFF94A3B8),
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${group['members']} members',
+                          '${group.memberCount} members',
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -267,20 +378,20 @@ class _GroupDetailCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 16),
-                        Icon(
+                        const Icon(
                           Icons.event_rounded,
                           size: 14,
-                          color: const Color(0xFF94A3B8),
+                          color: Color(0xFF94A3B8),
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          upcomingEvents == 0
+                          group.upcomingEventCount == 0
                               ? 'No events'
-                              : '$upcomingEvents upcoming',
+                              : '${group.upcomingEventCount} upcoming',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: upcomingEvents > 0
+                            color: group.upcomingEventCount > 0
                                 ? const Color(0xFF10B981)
                                 : const Color(0xFF64748B),
                           ),
@@ -292,9 +403,9 @@ class _GroupDetailCard extends StatelessWidget {
               ),
 
               // Arrow
-              Icon(
+              const Icon(
                 Icons.chevron_right_rounded,
-                color: const Color(0xFF94A3B8).withOpacity(0.8),
+                color: Color(0xFF94A3B8),
               ),
             ],
           ),

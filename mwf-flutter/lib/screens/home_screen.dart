@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../models/event.dart';
+import '../models/group.dart';
+import '../services/events_service.dart';
+import '../services/groups_service.dart';
+import '../config/event_categories.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userName;
@@ -17,63 +23,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  final EventsService _eventsService = EventsService();
+  final GroupsService _groupsService = GroupsService();
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  // Mock data - will be replaced with API calls
-  final List<Map<String, dynamic>> _upcomingEvents = [
-    {
-      'id': 1,
-      'name': 'Corbet Arms',
-      'groupName': 'Brookfield Socials',
-      'date': 'Sat 17 Jan',
-      'time': '18:00',
-      'location': 'Corbet Arms',
-      'going': 5,
-      'total': 10,
-      'isGoing': true,
-      'gradient': [Color(0xFF667EEA), Color(0xFF764BA2)],
-      'icon': Icons.restaurant_rounded,
-    },
-    {
-      'id': 2,
-      'name': 'Coffee Morning',
-      'groupName': 'Brookfield Socials',
-      'date': 'Thu 22 Jan',
-      'time': '15:00',
-      'location': 'Luv To Stay',
-      'going': 1,
-      'total': null,
-      'isGoing': true,
-      'gradient': [Color(0xFFF093FB), Color(0xFFF5576C)],
-      'icon': Icons.coffee_rounded,
-    },
-    {
-      'id': 3,
-      'name': 'Umami Night',
-      'groupName': 'Brookfield Socials',
-      'date': 'Fri 30 Jan',
-      'time': '19:30',
-      'location': 'Umami Restaurant',
-      'going': 1,
-      'total': 6,
-      'isGoing': false,
-      'gradient': [Color(0xFF4FACFE), Color(0xFF00F2FE)],
-      'icon': Icons.ramen_dining_rounded,
-    },
-  ];
-
-  final List<Map<String, dynamic>> _groups = [
-    {
-      'id': 1,
-      'name': 'Brookfield Socials',
-      'members': 9,
-      'role': 'Organiser',
-      'initial': 'BS',
-      'color': Color(0xFF10B981),
-    },
-  ];
+  bool _isLoading = true;
+  String? _error;
+  List<Event> _events = [];
+  List<Group> _groups = [];
 
   @override
   void initState() {
@@ -100,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
 
-    _animationController.forward();
+    _loadData();
   }
 
   @override
@@ -109,161 +69,328 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     super.dispose();
   }
 
+  Future<void> _loadData() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    // Fetch events and groups in parallel
+    final results = await Future.wait([
+      _eventsService.getMyEvents(),
+      _groupsService.getMyGroups(),
+    ]);
+
+    final eventsResult = results[0] as EventsResult;
+    final groupsResult = results[1] as GroupsResult;
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        if (eventsResult.success && groupsResult.success) {
+          _events = eventsResult.events ?? [];
+          _groups = groupsResult.groups ?? [];
+          _animationController.forward();
+        } else {
+          _error = eventsResult.error ?? groupsResult.error ?? 'Failed to load data';
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final firstName = widget.userName.split(' ').first;
+
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: Color(0xFF7C3AED),
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                size: 64,
+                color: Colors.red.shade300,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _loadData,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7C3AED),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return SafeArea(
       child: FadeTransition(
         opacity: _fadeAnimation,
         child: SlideTransition(
           position: _slideAnimation,
-          child: CustomScrollView(
-            slivers: [
-              // Header
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Hello, $firstName!',
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1E293B),
-                          letterSpacing: -0.5,
+          child: RefreshIndicator(
+            onRefresh: _loadData,
+            color: const Color(0xFF7C3AED),
+            child: CustomScrollView(
+              slivers: [
+                // Header
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hello, $firstName!',
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1E293B),
+                            letterSpacing: -0.5,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${_upcomingEvents.length} upcoming events',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF64748B).withOpacity(0.9),
+                        const SizedBox(height: 4),
+                        Text(
+                          _events.isEmpty
+                              ? 'No upcoming events'
+                              : '${_events.length} upcoming event${_events.length == 1 ? '' : 's'}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF64748B),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              // Upcoming Events Section
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Upcoming Events',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1E293B),
-                          letterSpacing: -0.3,
-                        ),
+                // Upcoming Events Section
+                if (_events.isNotEmpty) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Upcoming Events',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1E293B),
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: widget.onViewAllEvents,
+                            child: const Row(
+                              children: [
+                                Text(
+                                  'View all',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF7C3AED),
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 16,
+                                  color: Color(0xFF7C3AED),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      GestureDetector(
-                        onTap: widget.onViewAllEvents,
-                        child: Row(
+                    ),
+                  ),
+
+                  // Event Cards (max 3)
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final event = _events[index];
+                        return _EventCard(event: event);
+                      },
+                      childCount: _events.length > 3 ? 3 : _events.length,
+                    ),
+                  ),
+                ],
+
+                // Empty state for events
+                if (_events.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                      child: Container(
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Column(
                           children: [
-                            Text(
-                              'View all',
+                            Icon(
+                              Icons.event_rounded,
+                              size: 48,
+                              color: Colors.grey.shade300,
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'No upcoming events',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF7C3AED).withOpacity(0.9),
+                                color: Color(0xFF64748B),
                               ),
                             ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 16,
-                              color: const Color(0xFF7C3AED).withOpacity(0.9),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Join a group to see events',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF94A3B8),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ],
+                    ),
+                  ),
+
+                // Your Groups Section
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 32, 20, 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Your Groups',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1E293B),
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: widget.onViewAllGroups,
+                          child: const Row(
+                            children: [
+                              Text(
+                                'See all',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF7C3AED),
+                                ),
+                              ),
+                              SizedBox(width: 4),
+                              Icon(
+                                Icons.arrow_forward_rounded,
+                                size: 16,
+                                color: Color(0xFF7C3AED),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              // Event Cards
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final event = _upcomingEvents[index];
-                    return _EventCard(
-                      event: event,
-                      delay: index * 100,
-                    );
-                  },
-                  childCount: _upcomingEvents.length > 3 ? 3 : _upcomingEvents.length,
-                ),
-              ),
+                // Group Cards
+                if (_groups.isNotEmpty)
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final group = _groups[index];
+                        return _GroupCard(group: group);
+                      },
+                      childCount: _groups.length,
+                    ),
+                  ),
 
-              // Your Groups Section
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 32, 20, 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Your Groups',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1E293B),
-                          letterSpacing: -0.3,
+                // Empty state for groups
+                if (_groups.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                      child: Container(
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
-                      ),
-                      GestureDetector(
-                        onTap: widget.onViewAllGroups,
-                        child: Row(
+                        child: Column(
                           children: [
-                            Text(
-                              'See all',
+                            Icon(
+                              Icons.people_rounded,
+                              size: 48,
+                              color: Colors.grey.shade300,
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'No groups yet',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF7C3AED).withOpacity(0.9),
+                                color: Color(0xFF64748B),
                               ),
                             ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 16,
-                              color: const Color(0xFF7C3AED).withOpacity(0.9),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Create or join a group to get started',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF94A3B8),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
 
-              // Group Cards
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final group = _groups[index];
-                    return _GroupCard(group: group);
-                  },
-                  childCount: _groups.length,
+                // Bottom padding
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 24),
                 ),
-              ),
-
-              // Bottom padding
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 24),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -272,20 +399,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 }
 
 class _EventCard extends StatelessWidget {
-  final Map<String, dynamic> event;
-  final int delay;
+  final Event event;
 
-  const _EventCard({
-    required this.event,
-    required this.delay,
-  });
+  const _EventCard({required this.event});
 
   @override
   Widget build(BuildContext context) {
-    final gradient = event['gradient'] as List<Color>;
-    final isGoing = event['isGoing'] as bool;
-    final going = event['going'] as int;
-    final total = event['total'] as int?;
+    final categoryConfig = getCategoryConfig(event.category);
+    final gradient = categoryConfig.gradient;
+    final dateFormat = DateFormat('EEE d MMM');
+    final timeFormat = DateFormat('HH:mm');
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -298,7 +421,7 @@ class _EventCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: gradient[0].withOpacity(0.3),
+                color: gradient[0].withAlpha(77),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -316,14 +439,14 @@ class _EventCard extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  // Background pattern
+                  // Background icon
                   Positioned(
                     right: -20,
                     top: -20,
                     child: Icon(
-                      event['icon'] as IconData,
+                      categoryConfig.icon,
                       size: 120,
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withAlpha(38),
                     ),
                   ),
 
@@ -333,7 +456,7 @@ class _EventCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Top row: badge and attendance
+                        // Top row: attendance and status
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -344,11 +467,13 @@ class _EventCard extends StatelessWidget {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.2),
+                                color: Colors.black.withAlpha(51),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                total != null ? '$going/$total going' : '$going going',
+                                event.capacity != null
+                                    ? '${event.attendeeCount}/${event.capacity} going'
+                                    : '${event.attendeeCount} going',
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -358,7 +483,7 @@ class _EventCard extends StatelessWidget {
                             ),
 
                             // Going badge
-                            if (isGoing)
+                            if (event.isGoing)
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 12,
@@ -384,11 +509,11 @@ class _EventCard extends StatelessWidget {
 
                         // Group name
                         Text(
-                          (event['groupName'] as String).toUpperCase(),
+                          event.groupName.toUpperCase(),
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white.withAlpha(217),
                             letterSpacing: 1.2,
                           ),
                         ),
@@ -397,7 +522,7 @@ class _EventCard extends StatelessWidget {
 
                         // Event name
                         Text(
-                          event['name'] as String,
+                          event.title,
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w700,
@@ -414,40 +539,44 @@ class _EventCard extends StatelessWidget {
                             Icon(
                               Icons.calendar_today_rounded,
                               size: 14,
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withAlpha(230),
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              '${event['date']} · ${event['time']}',
+                              '${dateFormat.format(event.dateTime)} · ${timeFormat.format(event.dateTime)}',
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withAlpha(230),
                               ),
                             ),
                           ],
                         ),
 
-                        const SizedBox(height: 6),
-
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on_rounded,
-                              size: 14,
-                              color: Colors.white.withOpacity(0.9),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              event['location'] as String,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white.withOpacity(0.9),
+                        if (event.location != null) ...[
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.location_on_rounded,
+                                size: 14,
+                                color: Colors.white.withAlpha(230),
                               ),
-                            ),
-                          ],
-                        ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  event.location!,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white.withAlpha(230),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -462,15 +591,41 @@ class _EventCard extends StatelessWidget {
 }
 
 class _GroupCard extends StatelessWidget {
-  final Map<String, dynamic> group;
+  final Group group;
 
   const _GroupCard({required this.group});
 
+  Color get _roleColor {
+    switch (group.role.toLowerCase()) {
+      case 'organiser':
+        return const Color(0xFF7C3AED);
+      case 'host':
+        return const Color(0xFFF59E0B);
+      default:
+        return const Color(0xFF64748B);
+    }
+  }
+
+  Color get _avatarColor {
+    // Use theme color if available, otherwise generate from name
+    if (group.themeColor != null) {
+      try {
+        return Color(int.parse(group.themeColor!.replaceFirst('#', '0xFF')));
+      } catch (_) {}
+    }
+    // Default colors based on first letter
+    final colors = [
+      const Color(0xFF10B981),
+      const Color(0xFF6366F1),
+      const Color(0xFFF59E0B),
+      const Color(0xFFEC4899),
+      const Color(0xFF8B5CF6),
+    ];
+    return colors[group.name.codeUnitAt(0) % colors.length];
+  }
+
   @override
   Widget build(BuildContext context) {
-    final color = group['color'] as Color;
-    final role = group['role'] as String?;
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: GestureDetector(
@@ -488,7 +643,7 @@ class _GroupCard extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF1E293B).withOpacity(0.04),
+                color: const Color(0xFF1E293B).withAlpha(10),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -501,16 +656,16 @@ class _GroupCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  color: _avatarColor.withAlpha(38),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Text(
-                    group['initial'] as String,
+                    group.initials,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: color,
+                      color: _avatarColor,
                     ),
                   ),
                 ),
@@ -527,7 +682,7 @@ class _GroupCard extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            group['name'] as String,
+                            group.name,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -536,33 +691,31 @@ class _GroupCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (role != null) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF7C3AED).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              role.toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF7C3AED),
-                                letterSpacing: 0.5,
-                              ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _roleColor.withAlpha(26),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            group.role.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: _roleColor,
+                              letterSpacing: 0.5,
                             ),
                           ),
-                        ],
+                        ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${group['members']} members',
+                      '${group.memberCount} members',
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -574,9 +727,9 @@ class _GroupCard extends StatelessWidget {
               ),
 
               // Arrow
-              Icon(
+              const Icon(
                 Icons.chevron_right_rounded,
-                color: const Color(0xFF94A3B8).withOpacity(0.8),
+                color: Color(0xFF94A3B8),
               ),
             ],
           ),
