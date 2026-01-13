@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
+import 'screens/register_screen.dart';
+import 'screens/forgot_password_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'services/auth_service.dart';
 
@@ -14,10 +16,13 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
+enum AuthScreen { login, register, forgotPassword }
+
 class _MyAppState extends State<MyApp> {
   final _authService = AuthService();
   bool _isLoading = true;
   bool _isLoggedIn = false;
+  AuthScreen _authScreen = AuthScreen.login;
   Map<String, dynamic>? _user;
 
   @override
@@ -67,6 +72,24 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+  void _navigateToRegister() {
+    setState(() {
+      _authScreen = AuthScreen.register;
+    });
+  }
+
+  void _navigateToLogin() {
+    setState(() {
+      _authScreen = AuthScreen.login;
+    });
+  }
+
+  void _navigateToForgotPassword() {
+    setState(() {
+      _authScreen = AuthScreen.forgotPassword;
+    });
+  }
+
   Widget _buildHome() {
     if (_isLoading) {
       return const Scaffold(
@@ -86,6 +109,22 @@ class _MyAppState extends State<MyApp> {
       );
     }
 
-    return LoginScreen(onLoginSuccess: _onLoginSuccess);
+    switch (_authScreen) {
+      case AuthScreen.register:
+        return RegisterScreen(
+          onRegisterSuccess: _onLoginSuccess,
+          onNavigateToLogin: _navigateToLogin,
+        );
+      case AuthScreen.forgotPassword:
+        return ForgotPasswordScreen(
+          onNavigateToLogin: _navigateToLogin,
+        );
+      case AuthScreen.login:
+        return LoginScreen(
+          onLoginSuccess: _onLoginSuccess,
+          onNavigateToRegister: _navigateToRegister,
+          onNavigateToForgotPassword: _navigateToForgotPassword,
+        );
+    }
   }
 }

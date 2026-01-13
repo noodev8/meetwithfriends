@@ -1,43 +1,59 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
-class LoginScreen extends StatefulWidget {
-  final Function(Map<String, dynamic> user) onLoginSuccess;
-  final VoidCallback onNavigateToRegister;
-  final VoidCallback onNavigateToForgotPassword;
+class RegisterScreen extends StatefulWidget {
+  final Function(Map<String, dynamic> user) onRegisterSuccess;
+  final VoidCallback onNavigateToLogin;
 
-  const LoginScreen({
+  const RegisterScreen({
     super.key,
-    required this.onLoginSuccess,
-    required this.onNavigateToRegister,
-    required this.onNavigateToForgotPassword,
+    required this.onRegisterSuccess,
+    required this.onNavigateToLogin,
   });
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
   bool _isLoading = false;
+  bool _agreedToTerms = false;
   String? _error;
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  Future<void> _handleRegister() async {
+    final name = _nameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    if (email.isEmpty || password.isEmpty) {
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
       setState(() {
-        _error = 'Please enter email and password';
+        _error = 'Please fill in all fields';
+      });
+      return;
+    }
+
+    if (!_agreedToTerms) {
+      setState(() {
+        _error = 'Please agree to the Terms and Conditions';
+      });
+      return;
+    }
+
+    if (password.length < 8) {
+      setState(() {
+        _error = 'Password must be at least 8 characters';
       });
       return;
     }
@@ -47,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _error = null;
     });
 
-    final result = await _authService.login(email, password);
+    final result = await _authService.register(name, email, password);
 
     if (mounted) {
       setState(() {
@@ -55,10 +71,10 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       if (result.success && result.user != null) {
-        widget.onLoginSuccess(result.user!);
+        widget.onRegisterSuccess(result.user!);
       } else {
         setState(() {
-          _error = result.error ?? 'Login failed';
+          _error = result.error ?? 'Registration failed';
         });
       }
     }
@@ -97,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     SizedBox(height: isSmallScreen ? 24 : 32),
 
-                    // Login Card
+                    // Register Card
                     Container(
                       width: double.infinity,
                       constraints: BoxConstraints(maxWidth: maxCardWidth),
@@ -113,9 +129,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Log In heading
+                          // Create Account heading
                           Text(
-                            'Log In',
+                            'Create Account',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: headingFontSize,
@@ -143,6 +159,26 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(height: 16),
                           ],
+
+                          // Name label
+                          const Text(
+                            'Name',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Name field
+                          TextField(
+                            controller: _nameController,
+                            textCapitalization: TextCapitalization.words,
+                            enabled: !_isLoading,
+                            decoration: _inputDecoration('Your name'),
+                          ),
+                          SizedBox(height: isSmallScreen ? 16 : 20),
 
                           // Email label
                           const Text(
@@ -180,12 +216,67 @@ class _LoginScreenState extends State<LoginScreen> {
                             controller: _passwordController,
                             obscureText: true,
                             enabled: !_isLoading,
-                            onSubmitted: (_) => _handleLogin(),
-                            decoration: _inputDecoration('Your password'),
+                            decoration: _inputDecoration('Min. 8 characters'),
+                          ),
+                          SizedBox(height: isSmallScreen ? 16 : 20),
+
+                          // Terms and Conditions checkbox
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: Checkbox(
+                                  value: _agreedToTerms,
+                                  onChanged: _isLoading
+                                      ? null
+                                      : (value) {
+                                          setState(() {
+                                            _agreedToTerms = value ?? false;
+                                          });
+                                        },
+                                  activeColor: const Color(0xFF7C3AED),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: _isLoading
+                                      ? null
+                                      : () {
+                                          setState(() {
+                                            _agreedToTerms = !_agreedToTerms;
+                                          });
+                                        },
+                                  child: Text.rich(
+                                    TextSpan(
+                                      text: 'I agree to the ',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Color(0xFF64748B),
+                                      ),
+                                      children: [
+                                        TextSpan(
+                                          text: 'Terms and Conditions',
+                                          style: const TextStyle(
+                                            color: Color(0xFF6366F1),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           SizedBox(height: isSmallScreen ? 20 : 24),
 
-                          // Log In button
+                          // Create Account button
                           Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8),
@@ -199,7 +290,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             child: ElevatedButton(
-                              onPressed: _isLoading ? null : _handleLogin,
+                              onPressed: _isLoading ? null : _handleRegister,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.transparent,
                                 shadowColor: Colors.transparent,
@@ -221,7 +312,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                     )
                                   : const Text(
-                                      'Log In',
+                                      'Create Account',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
@@ -232,29 +323,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           SizedBox(height: isSmallScreen ? 16 : 20),
 
-                          // Forgot password link
-                          Center(
-                            child: TextButton(
-                              onPressed: _isLoading
-                                  ? null
-                                  : widget.onNavigateToForgotPassword,
-                              child: const Text(
-                                'Forgot your password?',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Color(0xFF6366F1),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-
-                          // Create account link
+                          // Already have an account link
                           Wrap(
                             alignment: WrapAlignment.center,
                             children: [
                               const Text(
-                                "Don't have an account? ",
+                                'Already have an account? ',
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Color(0xFF64748B),
@@ -263,14 +337,14 @@ class _LoginScreenState extends State<LoginScreen> {
                               TextButton(
                                 onPressed: _isLoading
                                     ? null
-                                    : widget.onNavigateToRegister,
+                                    : widget.onNavigateToLogin,
                                 style: TextButton.styleFrom(
                                   padding: EdgeInsets.zero,
                                   minimumSize: Size.zero,
                                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 ),
                                 child: const Text(
-                                  'Create one',
+                                  'Log in',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,

@@ -11,6 +11,30 @@ class AuthService {
       : _api = api ?? ApiService(),
         _storage = storage ?? const FlutterSecureStorage();
 
+  /// Register a new user
+  Future<AuthResult> register(String name, String email, String password) async {
+    final response = await _api.post('/auth/register', {
+      'name': name,
+      'email': email,
+      'password': password,
+    });
+
+    if (response['return_code'] == 'SUCCESS') {
+      final token = response['token'] as String;
+      await _storage.write(key: _tokenKey, value: token);
+      _api.setToken(token);
+      return AuthResult(
+        success: true,
+        user: response['user'] as Map<String, dynamic>?,
+      );
+    }
+
+    return AuthResult(
+      success: false,
+      error: response['message'] as String? ?? 'Registration failed',
+    );
+  }
+
   /// Login with email and password
   Future<AuthResult> login(String email, String password) async {
     final response = await _api.post('/auth/login', {
@@ -31,6 +55,22 @@ class AuthService {
     return AuthResult(
       success: false,
       error: response['message'] as String? ?? 'Login failed',
+    );
+  }
+
+  /// Request password reset email
+  Future<AuthResult> forgotPassword(String email) async {
+    final response = await _api.post('/auth/forgot_password', {
+      'email': email,
+    });
+
+    if (response['return_code'] == 'SUCCESS') {
+      return AuthResult(success: true);
+    }
+
+    return AuthResult(
+      success: false,
+      error: response['message'] as String? ?? 'Request failed',
     );
   }
 
