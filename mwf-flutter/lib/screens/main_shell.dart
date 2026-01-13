@@ -1,0 +1,127 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'home_screen.dart';
+import 'events_screen.dart';
+import 'groups_screen.dart';
+import 'profile_screen.dart';
+
+class MainShell extends StatefulWidget {
+  final String userName;
+  final String userEmail;
+  final VoidCallback onLogout;
+
+  const MainShell({
+    super.key,
+    required this.userName,
+    required this.userEmail,
+    required this.onLogout,
+  });
+
+  @override
+  State<MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends State<MainShell> {
+  int _currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.transparent,
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFFAFAFC),
+        body: IndexedStack(
+          index: _currentIndex,
+          children: [
+            HomeScreen(
+              userName: widget.userName,
+              onViewAllEvents: () => setState(() => _currentIndex = 1),
+              onViewAllGroups: () => setState(() => _currentIndex = 2),
+            ),
+            const EventsScreen(),
+            const GroupsScreen(),
+            ProfileScreen(
+              userName: widget.userName,
+              userEmail: widget.userEmail,
+              onLogout: widget.onLogout,
+            ),
+          ],
+        ),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF1E293B).withOpacity(0.06),
+                blurRadius: 20,
+                offset: const Offset(0, -4),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildNavItem(0, Icons.home_rounded, 'Home'),
+                  _buildNavItem(1, Icons.calendar_month_rounded, 'Events'),
+                  _buildNavItem(2, Icons.people_rounded, 'Groups'),
+                  _buildNavItem(3, Icons.person_rounded, 'Profile'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, String label) {
+    final isSelected = _currentIndex == index;
+
+    return GestureDetector(
+      onTap: () => setState(() => _currentIndex = index),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.symmetric(
+          horizontal: isSelected ? 20 : 16,
+          vertical: 10,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFF7C3AED).withOpacity(0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 24,
+              color: isSelected
+                  ? const Color(0xFF7C3AED)
+                  : const Color(0xFF94A3B8),
+            ),
+            if (isSelected) ...[
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF7C3AED),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}

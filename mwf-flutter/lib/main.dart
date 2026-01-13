@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/forgot_password_screen.dart';
-import 'screens/dashboard_screen.dart';
+import 'screens/main_shell.dart';
 import 'services/auth_service.dart';
 
 void main() {
@@ -103,8 +103,9 @@ class _MyAppState extends State<MyApp> {
     }
 
     if (_isLoggedIn && _user != null) {
-      return DashboardScreen(
+      return MainShell(
         userName: _user!['name'] as String? ?? 'User',
+        userEmail: _user!['email'] as String? ?? '',
         onLogout: _onLogout,
       );
     }
