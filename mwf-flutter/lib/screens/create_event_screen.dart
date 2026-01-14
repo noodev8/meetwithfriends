@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/events_service.dart';
 import '../config/event_categories.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 class CreateEventScreen extends StatefulWidget {
   final int groupId;
@@ -234,6 +235,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               ),
             ),
           );
+        },
+      ),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: 2, // Groups tab
+        onTap: (index) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
         },
       ),
     );
