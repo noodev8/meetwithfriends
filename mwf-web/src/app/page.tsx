@@ -260,76 +260,46 @@ export default function Home() {
                     </div>
 
                     {/* Hero illustration - Floating Icons */}
-                    <div className="hidden lg:block absolute top-1/2 right-8 xl:right-16 -translate-y-1/2 w-[420px] h-[420px]">
-                        {/* Background decorative rings */}
+                    <div className="hidden lg:block absolute top-1/2 right-4 xl:right-12 -translate-y-1/2 w-[400px] h-[400px]">
+                        {/* Background decorative ring */}
                         <div
-                            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full border border-indigo-200/40 transition-all duration-1000 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}
-                            style={{ animation: mounted ? 'float-gentle 12s ease-in-out infinite' : 'none' }}
-                        />
-                        <div
-                            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full border border-violet-200/20 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}
-                            style={{ animation: mounted ? 'float-gentle 15s ease-in-out infinite reverse' : 'none' }}
+                            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full border border-indigo-200/30 transition-all duration-1000 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}
+                            style={{ animation: mounted ? 'float-gentle 14s ease-in-out infinite' : 'none' }}
                         />
 
-                        {/* Small floating orbs */}
+                        {/* Top card - dinner (hero piece) */}
                         <div
-                            className={`absolute top-8 right-20 w-3 h-3 rounded-full bg-gradient-to-br from-indigo-400 to-violet-400 transition-all duration-700 ${mounted ? 'opacity-60 scale-100' : 'opacity-0 scale-0'}`}
-                            style={{ transitionDelay: '800ms', animation: mounted ? 'float-gentle 4s ease-in-out infinite' : 'none' }}
-                        />
-                        <div
-                            className={`absolute bottom-24 left-12 w-2 h-2 rounded-full bg-gradient-to-br from-violet-400 to-purple-400 transition-all duration-700 ${mounted ? 'opacity-50 scale-100' : 'opacity-0 scale-0'}`}
-                            style={{ transitionDelay: '900ms', animation: mounted ? 'float-gentle 5s ease-in-out infinite 1s' : 'none' }}
-                        />
-                        <div
-                            className={`absolute top-32 left-4 w-4 h-4 rounded-full bg-gradient-to-br from-indigo-300 to-indigo-400 transition-all duration-700 ${mounted ? 'opacity-40 scale-100' : 'opacity-0 scale-0'}`}
-                            style={{ transitionDelay: '1000ms', animation: mounted ? 'float-gentle 6s ease-in-out infinite 0.5s' : 'none' }}
-                        />
-
-                        {/* Main icon cards */}
-                        {/* Large primary card - dinner */}
-                        <div
-                            className={`absolute top-6 right-4 w-40 h-40 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+                            className={`absolute -top-4 right-8 w-44 h-44 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
                             style={{ transitionDelay: '200ms', animation: mounted ? 'float-gentle 8s ease-in-out infinite' : 'none' }}
                         >
-                            <div className="relative w-full h-full bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-indigo-500/10 border border-white/50 flex items-center justify-center overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-transparent to-violet-50/50" />
-                                <div className="absolute -top-8 -right-8 w-24 h-24 bg-indigo-100/60 rounded-full blur-2xl" />
-                                <span className="relative text-7xl">🍽️</span>
+                            <div className="relative w-full h-full bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl shadow-indigo-500/10 border border-white/60 flex items-center justify-center overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/80 via-white/50 to-violet-50/80" />
+                                <div className="absolute -top-10 -right-10 w-28 h-28 bg-indigo-200/40 rounded-full blur-2xl" />
+                                <span className="relative text-8xl">🍽️</span>
                             </div>
                         </div>
 
-                        {/* Secondary card - calendar */}
+                        {/* Left card - calendar */}
                         <div
-                            className={`absolute top-28 -left-2 w-32 h-32 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+                            className={`absolute top-24 -left-4 w-36 h-36 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
                             style={{ transitionDelay: '400ms', animation: mounted ? 'float-gentle 9s ease-in-out infinite 0.5s' : 'none' }}
                         >
-                            <div className="relative w-full h-full bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg shadow-violet-500/10 border border-white/50 flex items-center justify-center overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-br from-violet-50/50 via-transparent to-purple-50/50" />
-                                <div className="absolute -bottom-6 -left-6 w-16 h-16 bg-violet-100/60 rounded-full blur-xl" />
-                                <span className="relative text-5xl">📅</span>
+                            <div className="relative w-full h-full bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg shadow-violet-500/10 border border-white/60 flex items-center justify-center overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-violet-50/80 via-white/50 to-purple-50/80" />
+                                <div className="absolute -bottom-8 -left-8 w-20 h-20 bg-violet-200/40 rounded-full blur-xl" />
+                                <span className="relative text-6xl">📅</span>
                             </div>
                         </div>
 
-                        {/* Tertiary card - coffee */}
+                        {/* Bottom card - coffee */}
                         <div
-                            className={`absolute bottom-12 right-16 w-28 h-28 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
-                            style={{ transitionDelay: '550ms', animation: mounted ? 'float-gentle 7s ease-in-out infinite 1s' : 'none' }}
+                            className={`absolute bottom-4 right-4 w-36 h-36 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+                            style={{ transitionDelay: '550ms', animation: mounted ? 'float-gentle 10s ease-in-out infinite 1s' : 'none' }}
                         >
-                            <div className="relative w-full h-full bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg shadow-purple-500/10 border border-white/50 flex items-center justify-center overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-br from-amber-50/30 via-transparent to-orange-50/30" />
-                                <div className="absolute -top-4 -right-4 w-12 h-12 bg-amber-100/50 rounded-full blur-xl" />
-                                <span className="relative text-4xl">☕</span>
-                            </div>
-                        </div>
-
-                        {/* Fourth card - celebration (smaller, adds depth) */}
-                        <div
-                            className={`absolute bottom-32 left-16 w-20 h-20 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
-                            style={{ transitionDelay: '700ms', animation: mounted ? 'float-gentle 10s ease-in-out infinite 1.5s' : 'none' }}
-                        >
-                            <div className="relative w-full h-full bg-white/70 backdrop-blur-sm rounded-xl shadow-md shadow-indigo-500/10 border border-white/50 flex items-center justify-center overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-br from-pink-50/40 via-transparent to-rose-50/40" />
-                                <span className="relative text-3xl">🎉</span>
+                            <div className="relative w-full h-full bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg shadow-amber-500/10 border border-white/60 flex items-center justify-center overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-amber-50/60 via-white/50 to-orange-50/60" />
+                                <div className="absolute -top-6 -right-6 w-16 h-16 bg-amber-200/40 rounded-full blur-xl" />
+                                <span className="relative text-6xl">☕</span>
                             </div>
                         </div>
                     </div>
@@ -483,8 +453,11 @@ export default function Home() {
                                 <span className="w-2 h-2 bg-emerald-500 rounded-full" />
                                 <span className="text-sm font-medium text-emerald-700">Real humans, real help</span>
                             </div>
-                            <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-                                UK Support That Actually Responds
+                            <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-4 leading-[1.1]">
+                                Real people.
+                                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600">
+                                    Real support.
+                                </span>
                             </h2>
                             <p className="text-lg text-slate-600 mb-6 leading-relaxed">
                                 Tired of chatbots and endless FAQs? We get it. When you need help, you&apos;ll hear back from a real person within 24 hours. No tickets, no queues, no frustration.
