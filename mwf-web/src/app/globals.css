@@ -8,6 +8,16 @@
         transform: translateY(0px);
     }
     50% {
-        transform: translateY(-12px);
+        transform: translateY(-6px);
+    }
+}
+
+/* Gentle floating for hero illustration - very subtle ambient motion */
+@keyframes float-gentle {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-8px);
     }
 }

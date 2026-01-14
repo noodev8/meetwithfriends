@@ -260,34 +260,77 @@ export default function Home() {
                     </div>
 
                     {/* Hero illustration - Floating Icons */}
-                    <div className="hidden lg:block absolute top-1/2 right-12 -translate-y-1/2 w-80 h-80">
-                        {/* Floating icon bubbles */}
-                        {[
-                            { icon: '🍽️', size: 'w-20 h-20', position: 'top-0 right-8', delay: '0ms', duration: '3s' },
-                            { icon: '📅', size: 'w-16 h-16', position: 'top-20 right-0', delay: '500ms', duration: '3.5s' },
-                            { icon: '👥', size: 'w-18 h-18', position: 'top-8 left-4', delay: '200ms', duration: '4s' },
-                            { icon: '🎉', size: 'w-14 h-14', position: 'bottom-16 right-4', delay: '800ms', duration: '3.2s' },
-                            { icon: '☕', size: 'w-16 h-16', position: 'bottom-8 left-8', delay: '400ms', duration: '3.8s' },
-                        ].map((item, i) => (
-                            <div
-                                key={i}
-                                className={`absolute ${item.position} ${item.size} bg-white rounded-2xl shadow-lg flex items-center justify-center transition-all duration-1000 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}
-                                style={{
-                                    transitionDelay: item.delay,
-                                    animation: mounted ? `float ${item.duration} ease-in-out infinite` : 'none',
-                                    animationDelay: item.delay,
-                                }}
-                            >
-                                <span className="text-3xl">{item.icon}</span>
-                            </div>
-                        ))}
-                        {/* Central connecting element */}
+                    <div className="hidden lg:block absolute top-1/2 right-8 xl:right-16 -translate-y-1/2 w-[420px] h-[420px]">
+                        {/* Background decorative rings */}
                         <div
-                            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-gradient-to-br from-indigo-100 to-violet-100 rounded-full flex items-center justify-center border-2 border-white shadow-xl transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}
+                            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full border border-indigo-200/40 transition-all duration-1000 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}
+                            style={{ animation: mounted ? 'float-gentle 12s ease-in-out infinite' : 'none' }}
+                        />
+                        <div
+                            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full border border-violet-200/20 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}
+                            style={{ animation: mounted ? 'float-gentle 15s ease-in-out infinite reverse' : 'none' }}
+                        />
+
+                        {/* Small floating orbs */}
+                        <div
+                            className={`absolute top-8 right-20 w-3 h-3 rounded-full bg-gradient-to-br from-indigo-400 to-violet-400 transition-all duration-700 ${mounted ? 'opacity-60 scale-100' : 'opacity-0 scale-0'}`}
+                            style={{ transitionDelay: '800ms', animation: mounted ? 'float-gentle 4s ease-in-out infinite' : 'none' }}
+                        />
+                        <div
+                            className={`absolute bottom-24 left-12 w-2 h-2 rounded-full bg-gradient-to-br from-violet-400 to-purple-400 transition-all duration-700 ${mounted ? 'opacity-50 scale-100' : 'opacity-0 scale-0'}`}
+                            style={{ transitionDelay: '900ms', animation: mounted ? 'float-gentle 5s ease-in-out infinite 1s' : 'none' }}
+                        />
+                        <div
+                            className={`absolute top-32 left-4 w-4 h-4 rounded-full bg-gradient-to-br from-indigo-300 to-indigo-400 transition-all duration-700 ${mounted ? 'opacity-40 scale-100' : 'opacity-0 scale-0'}`}
+                            style={{ transitionDelay: '1000ms', animation: mounted ? 'float-gentle 6s ease-in-out infinite 0.5s' : 'none' }}
+                        />
+
+                        {/* Main icon cards */}
+                        {/* Large primary card - dinner */}
+                        <div
+                            className={`absolute top-6 right-4 w-40 h-40 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+                            style={{ transitionDelay: '200ms', animation: mounted ? 'float-gentle 8s ease-in-out infinite' : 'none' }}
                         >
-                            <svg className="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
+                            <div className="relative w-full h-full bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-indigo-500/10 border border-white/50 flex items-center justify-center overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-transparent to-violet-50/50" />
+                                <div className="absolute -top-8 -right-8 w-24 h-24 bg-indigo-100/60 rounded-full blur-2xl" />
+                                <span className="relative text-7xl">🍽️</span>
+                            </div>
+                        </div>
+
+                        {/* Secondary card - calendar */}
+                        <div
+                            className={`absolute top-28 -left-2 w-32 h-32 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+                            style={{ transitionDelay: '400ms', animation: mounted ? 'float-gentle 9s ease-in-out infinite 0.5s' : 'none' }}
+                        >
+                            <div className="relative w-full h-full bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg shadow-violet-500/10 border border-white/50 flex items-center justify-center overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-violet-50/50 via-transparent to-purple-50/50" />
+                                <div className="absolute -bottom-6 -left-6 w-16 h-16 bg-violet-100/60 rounded-full blur-xl" />
+                                <span className="relative text-5xl">📅</span>
+                            </div>
+                        </div>
+
+                        {/* Tertiary card - coffee */}
+                        <div
+                            className={`absolute bottom-12 right-16 w-28 h-28 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+                            style={{ transitionDelay: '550ms', animation: mounted ? 'float-gentle 7s ease-in-out infinite 1s' : 'none' }}
+                        >
+                            <div className="relative w-full h-full bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg shadow-purple-500/10 border border-white/50 flex items-center justify-center overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-amber-50/30 via-transparent to-orange-50/30" />
+                                <div className="absolute -top-4 -right-4 w-12 h-12 bg-amber-100/50 rounded-full blur-xl" />
+                                <span className="relative text-4xl">☕</span>
+                            </div>
+                        </div>
+
+                        {/* Fourth card - celebration (smaller, adds depth) */}
+                        <div
+                            className={`absolute bottom-32 left-16 w-20 h-20 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+                            style={{ transitionDelay: '700ms', animation: mounted ? 'float-gentle 10s ease-in-out infinite 1.5s' : 'none' }}
+                        >
+                            <div className="relative w-full h-full bg-white/70 backdrop-blur-sm rounded-xl shadow-md shadow-indigo-500/10 border border-white/50 flex items-center justify-center overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-pink-50/40 via-transparent to-rose-50/40" />
+                                <span className="relative text-3xl">🎉</span>
+                            </div>
                         </div>
                     </div>
                 </div>
