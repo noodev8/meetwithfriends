@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { getAllGroups, GroupWithCount } from '@/lib/api/groups';
+import { getAllGroups, getMyGroups, GroupWithCount } from '@/lib/api/groups';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 import { getGroupTheme, getGroupInitials } from '@/lib/groupThemes';
 
@@ -30,13 +30,24 @@ export default function GroupsPage() {
     }, [user, isLoading, router]);
 
     // =======================================================================
-    // Fetch groups
+    // Fetch groups (excluding ones user is already in)
     // =======================================================================
     useEffect(() => {
         async function fetchGroups() {
-            const result = await getAllGroups(token || undefined);
-            if (result.success && result.data) {
-                setGroups(result.data);
+            const [allGroupsResult, myGroupsResult] = await Promise.all([
+                getAllGroups(token || undefined),
+                getMyGroups(token!)
+            ]);
+
+            if (allGroupsResult.success && allGroupsResult.data) {
+                // Filter out groups user is already in
+                const myGroupIds = new Set(
+                    (myGroupsResult.data || []).map(g => g.id)
+                );
+                const discoverableGroups = allGroupsResult.data.filter(
+                    g => !myGroupIds.has(g.id)
+                );
+                setGroups(discoverableGroups);
             }
             setLoadingData(false);
         }
@@ -69,8 +80,8 @@ export default function GroupsPage() {
             <div className="px-4 sm:px-8 py-6 sm:py-8 max-w-5xl mx-auto w-full">
                 <div className="flex justify-between items-start mb-6 sm:mb-8">
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display">All Groups</h1>
-                        <p className="text-slate-500 mt-1">Listed groups that are open to new members</p>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display">Discover Groups</h1>
+                        <p className="text-slate-500 mt-1">Find new groups to join</p>
                     </div>
                     <Link
                         href="/groups/create"
@@ -89,8 +100,8 @@ export default function GroupsPage() {
                     </div>
                 ) : groups.length === 0 ? (
                     <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
-                        <p className="text-slate-600 mb-4">No groups yet</p>
-                        <p className="text-slate-500 mb-6">Be the first to create one!</p>
+                        <p className="text-slate-600 mb-4">No new groups to discover</p>
+                        <p className="text-slate-500 mb-6">You&apos;re already in all available groups, or you can create a new one!</p>
                         <Link
                             href="/groups/create"
                             className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-full hover:from-indigo-700 hover:to-violet-700 transition inline-block"

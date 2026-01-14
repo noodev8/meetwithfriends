@@ -1,4 +1,6 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -24,11 +26,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _agreedToTerms = false;
   String? _error;
 
+  late final TapGestureRecognizer _termsRecognizer;
+  late final TapGestureRecognizer _privacyRecognizer;
+
+  @override
+  void initState() {
+    super.initState();
+    _termsRecognizer = TapGestureRecognizer()
+      ..onTap = () => _openUrl('https://meetwithfriends.net/terms');
+    _privacyRecognizer = TapGestureRecognizer()
+      ..onTap = () => _openUrl('https://meetwithfriends.net/privacy');
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _termsRecognizer.dispose();
+    _privacyRecognizer.dispose();
     super.dispose();
   }
 
@@ -78,6 +94,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         });
       }
     }
+  }
+
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.parse(url);
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   @override
@@ -244,31 +265,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                               const SizedBox(width: 8),
                               Expanded(
-                                child: GestureDetector(
-                                  onTap: _isLoading
-                                      ? null
-                                      : () {
-                                          setState(() {
-                                            _agreedToTerms = !_agreedToTerms;
-                                          });
-                                        },
-                                  child: Text.rich(
-                                    TextSpan(
-                                      text: 'I agree to the ',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Color(0xFF64748B),
-                                      ),
-                                      children: [
-                                        TextSpan(
-                                          text: 'Terms and Conditions',
-                                          style: const TextStyle(
-                                            color: Color(0xFF6366F1),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
+                                child: Text.rich(
+                                  TextSpan(
+                                    text: 'I agree to the ',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Color(0xFF64748B),
                                     ),
+                                    children: [
+                                      TextSpan(
+                                        text: 'Terms of Service',
+                                        style: const TextStyle(
+                                          color: Color(0xFF6366F1),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        recognizer: _termsRecognizer,
+                                      ),
+                                      const TextSpan(text: ' and '),
+                                      TextSpan(
+                                        text: 'Privacy Policy',
+                                        style: const TextStyle(
+                                          color: Color(0xFF6366F1),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        recognizer: _privacyRecognizer,
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),

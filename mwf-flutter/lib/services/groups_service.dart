@@ -64,6 +64,44 @@ class GroupsService {
       error: response['message'] as String? ?? 'Failed to load groups',
     );
   }
+
+  /// Create a new group
+  Future<CreateGroupResult> createGroup({
+    required String name,
+    String? description,
+    String themeColor = 'indigo',
+    String joinPolicy = 'approval',
+    String visibility = 'listed',
+  }) async {
+    final response = await _api.post('/groups/create', {
+      'name': name,
+      'description': description,
+      'theme_color': themeColor,
+      'join_policy': joinPolicy,
+      'visibility': visibility,
+    });
+
+    if (response['return_code'] == 'SUCCESS') {
+      final groupJson = response['group'] as Map<String, dynamic>;
+      return CreateGroupResult(
+        success: true,
+        groupId: groupJson['id'] as int,
+      );
+    }
+
+    return CreateGroupResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to create group',
+    );
+  }
+}
+
+class CreateGroupResult {
+  final bool success;
+  final int? groupId;
+  final String? error;
+
+  CreateGroupResult({required this.success, this.groupId, this.error});
 }
 
 class GroupsResult {
