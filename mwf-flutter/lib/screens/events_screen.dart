@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/event.dart';
 import '../services/events_service.dart';
 import '../config/event_categories.dart';
+import 'event_detail_screen.dart';
 
 class EventsScreen extends StatefulWidget {
   const EventsScreen({super.key});
@@ -58,19 +59,22 @@ class _EventsScreenState extends State<EventsScreen> with SingleTickerProviderSt
     final upcomingEvents = _allEvents;
 
     return SafeArea(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
-            child: Text(
-              'Events',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1E293B),
-                letterSpacing: -0.5,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
+                child: Text(
+                  'Events',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E293B),
+                    letterSpacing: -0.5,
               ),
             ),
           ),
@@ -137,7 +141,9 @@ class _EventsScreenState extends State<EventsScreen> with SingleTickerProviderSt
                         ],
                       ),
           ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -238,7 +244,11 @@ class _CompactEventCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
         onTap: () {
-          // Navigate to event detail
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => EventDetailScreen(eventId: event.id),
+            ),
+          );
         },
         child: Container(
           padding: const EdgeInsets.all(16),

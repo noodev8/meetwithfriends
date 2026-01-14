@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.136:3019/api';
+  // Switch between local dev and VPS - see docs/FLUTTER-API.md
+  // static const String baseUrl = 'http://192.168.1.136:3019/api';  // Local dev
+  static const String baseUrl = 'https://meetwithfriends.noodev8.com/api';  // VPS
 
   // Singleton instance
   static final ApiService _instance = ApiService._internal();

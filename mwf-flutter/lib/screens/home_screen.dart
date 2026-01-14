@@ -5,6 +5,9 @@ import '../models/group.dart';
 import '../services/events_service.dart';
 import '../services/groups_service.dart';
 import '../config/event_categories.dart';
+import '../config/group_themes.dart';
+import 'group_dashboard_screen.dart';
+import 'event_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userName;
@@ -158,15 +161,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           child: RefreshIndicator(
             onRefresh: _loadData,
             color: const Color(0xFF7C3AED),
-            child: CustomScrollView(
-              slivers: [
-                // Header
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: CustomScrollView(
+                  slivers: [
+                    // Header
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                         Text(
                           'Hello, $firstName!',
                           style: const TextStyle(
@@ -386,10 +392,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
 
                 // Bottom padding
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: 24),
+                    const SliverToBoxAdapter(
+                      child: SizedBox(height: 24),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -414,7 +422,11 @@ class _EventCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       child: GestureDetector(
         onTap: () {
-          // Navigate to event detail
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => EventDetailScreen(eventId: event.id),
+            ),
+          );
         },
         child: Container(
           decoration: BoxDecoration(
@@ -606,23 +618,7 @@ class _GroupCard extends StatelessWidget {
     }
   }
 
-  Color get _avatarColor {
-    // Use theme color if available, otherwise generate from name
-    if (group.themeColor != null) {
-      try {
-        return Color(int.parse(group.themeColor!.replaceFirst('#', '0xFF')));
-      } catch (_) {}
-    }
-    // Default colors based on first letter
-    final colors = [
-      const Color(0xFF10B981),
-      const Color(0xFF6366F1),
-      const Color(0xFFF59E0B),
-      const Color(0xFFEC4899),
-      const Color(0xFF8B5CF6),
-    ];
-    return colors[group.name.codeUnitAt(0) % colors.length];
-  }
+  GroupTheme get _theme => getGroupTheme(group.themeColor);
 
   @override
   Widget build(BuildContext context) {
@@ -630,7 +626,11 @@ class _GroupCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: GestureDetector(
         onTap: () {
-          // Navigate to group detail
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => GroupDashboardScreen(groupId: group.id),
+            ),
+          );
         },
         child: Container(
           padding: const EdgeInsets.all(16),
@@ -656,16 +656,16 @@ class _GroupCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: _avatarColor.withAlpha(38),
+                  color: _theme.bgColor.withAlpha(38),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Text(
-                    group.initials,
+                    getGroupInitials(group.name),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: _avatarColor,
+                      color: _theme.bgColor,
                     ),
                   ),
                 ),

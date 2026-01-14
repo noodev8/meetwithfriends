@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/group.dart';
 import '../services/groups_service.dart';
+import '../config/group_themes.dart';
+import 'group_dashboard_screen.dart';
 
 class GroupsScreen extends StatefulWidget {
   const GroupsScreen({super.key});
@@ -45,16 +47,19 @@ class _GroupsScreenState extends State<GroupsScreen> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
                   'Groups',
                   style: TextStyle(
                     fontSize: 28,
@@ -150,12 +155,25 @@ class _GroupsScreenState extends State<GroupsScreen> {
                               itemCount: _groups.length,
                               itemBuilder: (context, index) {
                                 final group = _groups[index];
-                                return _GroupDetailCard(group: group);
+                                return _GroupDetailCard(
+                                  group: group,
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => GroupDashboardScreen(
+                                          groupId: group.id,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
                               },
                             ),
                           ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -239,8 +257,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
 
 class _GroupDetailCard extends StatelessWidget {
   final Group group;
+  final VoidCallback? onTap;
 
-  const _GroupDetailCard({required this.group});
+  const _GroupDetailCard({required this.group, this.onTap});
 
   Color get _roleColor {
     switch (group.role.toLowerCase()) {
@@ -253,32 +272,14 @@ class _GroupDetailCard extends StatelessWidget {
     }
   }
 
-  Color get _avatarColor {
-    // Use theme color if available, otherwise generate from name
-    if (group.themeColor != null) {
-      try {
-        return Color(int.parse(group.themeColor!.replaceFirst('#', '0xFF')));
-      } catch (_) {}
-    }
-    // Default colors based on first letter
-    final colors = [
-      const Color(0xFF10B981),
-      const Color(0xFF6366F1),
-      const Color(0xFFF59E0B),
-      const Color(0xFFEC4899),
-      const Color(0xFF8B5CF6),
-    ];
-    return colors[group.name.codeUnitAt(0) % colors.length];
-  }
+  GroupTheme get _theme => getGroupTheme(group.themeColor);
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
-        onTap: () {
-          // Navigate to group detail
-        },
+        onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -303,16 +304,16 @@ class _GroupDetailCard extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: _avatarColor.withAlpha(38),
+                  color: _theme.bgColor.withAlpha(38),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Center(
                   child: Text(
-                    group.initials,
+                    getGroupInitials(group.name),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: _avatarColor,
+                      color: _theme.bgColor,
                     ),
                   ),
                 ),
