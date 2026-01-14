@@ -148,6 +148,69 @@ class EventsService {
       error: response['message'] as String? ?? 'Failed to load attendees',
     );
   }
+
+  /// Create a new event
+  Future<CreateEventResult> createEvent({
+    required int groupId,
+    required String title,
+    required DateTime dateTime,
+    required String category,
+    String? description,
+    String? location,
+    int? capacity,
+    bool allowGuests = false,
+    int maxGuestsPerRsvp = 1,
+    bool preordersEnabled = false,
+    String? menuLink,
+    DateTime? preorderCutoff,
+  }) async {
+    final body = <String, dynamic>{
+      'group_id': groupId,
+      'title': title,
+      'date_time': dateTime.toUtc().toIso8601String(),
+      'category': category,
+    };
+
+    if (description != null && description.isNotEmpty) {
+      body['description'] = description;
+    }
+    if (location != null && location.isNotEmpty) {
+      body['location'] = location;
+    }
+    if (capacity != null) {
+      body['capacity'] = capacity;
+    }
+    if (allowGuests) {
+      body['allow_guests'] = true;
+      body['max_guests_per_rsvp'] = maxGuestsPerRsvp;
+    }
+    if (preordersEnabled) {
+      body['preorders_enabled'] = true;
+      if (menuLink != null && menuLink.isNotEmpty) {
+        body['menu_link'] = menuLink;
+      }
+      if (preorderCutoff != null) {
+        body['preorder_cutoff'] = preorderCutoff.toUtc().toIso8601String();
+      }
+    }
+
+    final response = await _api.post('/events/create', body);
+
+    if (response['return_code'] == 'SUCCESS') {
+      final eventData = response['event'] as Map<String, dynamic>?;
+      if (eventData != null) {
+        return CreateEventResult(
+          success: true,
+          event: Event.fromJson(eventData),
+        );
+      }
+    }
+
+    return CreateEventResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to create event',
+    );
+  }
 }
 
 class AttendeesResult {
@@ -392,4 +455,12 @@ class EventHost {
       avatarUrl: json['avatar_url'] as String?,
     );
   }
+}
+
+class CreateEventResult {
+  final bool success;
+  final Event? event;
+  final String? error;
+
+  CreateEventResult({required this.success, this.event, this.error});
 }
