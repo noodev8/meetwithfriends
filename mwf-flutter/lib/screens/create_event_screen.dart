@@ -292,6 +292,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: 2, // Groups tab
+        onTap: (index) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        },
+      ),
     );
   }
 
