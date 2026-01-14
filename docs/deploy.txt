@@ -1,0 +1,6 @@
+cd /apps/meetwithfriends/
+git pull
+rsync -av --delete --exclude='.env' --exclude='node_modules' --exclude='.git' --exclude='tests' --exclude='docs' --exclude='.github' /apps/meetwithfriends/mwf-server/ /apps/production/mwf-server/
+cd /apps/production/mwf-server
+npm install
+pm2 restart server.js --name meetwithfriends-prod

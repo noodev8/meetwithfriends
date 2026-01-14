@@ -1,0 +1,7 @@
+# Exclude non-web directories when deploying from root
+mwf-flutter/
+mwf-server/
+docs/
+*.mp4
+*.mov
+*.avi
