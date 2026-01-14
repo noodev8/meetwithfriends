@@ -7,6 +7,7 @@ import '../config/event_categories.dart';
 import '../config/group_themes.dart';
 import '../widgets/bottom_nav_bar.dart';
 import 'event_detail_screen.dart';
+import 'create_event_screen.dart';
 
 class GroupDashboardScreen extends StatefulWidget {
   final int groupId;
@@ -344,7 +345,19 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
             label: 'Create Event',
             isPrimary: true,
             onTap: () {
-              // TODO: Navigate to create event
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CreateEventScreen(
+                    groupId: _group!.id,
+                    groupName: _group!.name,
+                    canCreateEvents: _membership?.canManageMembers ?? false,
+                    onEventCreated: () {
+                      _loadGroup(); // Refresh to show new event
+                    },
+                  ),
+                ),
+              );
             },
           ),
       ],

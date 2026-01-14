@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/group.dart';
 import '../services/events_service.dart';
 import '../config/event_categories.dart';
 
 class CreateEventScreen extends StatefulWidget {
-  final Group group;
+  final int groupId;
+  final String groupName;
+  final bool canCreateEvents;
   final VoidCallback? onEventCreated;
 
   const CreateEventScreen({
     super.key,
-    required this.group,
+    required this.groupId,
+    required this.groupName,
+    required this.canCreateEvents,
     this.onEventCreated,
   });
 
@@ -42,7 +45,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   String? _error;
 
   // Check if user can create events
-  bool get _canCreateEvents => widget.group.isOrganiser || widget.group.isHost;
+  bool get _canCreateEvents => widget.canCreateEvents;
 
   @override
   void dispose() {
@@ -130,7 +133,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     });
 
     final result = await _eventsService.createEvent(
-      groupId: widget.group.id,
+      groupId: widget.groupId,
       title: _titleController.text.trim(),
       dateTime: dateTime,
       category: _selectedCategory.name,
@@ -176,7 +179,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Back to ${widget.group.name}',
+          'Back to ${widget.groupName}',
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
@@ -207,7 +210,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'for ${widget.group.name}',
+                    'for ${widget.groupName}',
                     style: const TextStyle(
                       fontSize: 15,
                       color: Color(0xFF64748B),
