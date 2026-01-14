@@ -59,6 +59,15 @@ export default function MyGroupsPage() {
             <div className="px-4 sm:px-8 py-6 sm:py-8 max-w-5xl mx-auto w-full">
                 <div className="flex justify-between items-center mb-6 sm:mb-8">
                     <div>
+                        <Link
+                            href="/dashboard"
+                            className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-700 text-sm font-medium mb-2 transition-colors"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                            Back to Dashboard
+                        </Link>
                         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display">Your Groups</h1>
                         <p className="text-slate-500 mt-1">Groups you organise or are a member of</p>
                     </div>
@@ -111,20 +120,6 @@ export default function MyGroupsPage() {
                     </section>
                 )}
 
-                {/* Browse more link */}
-                {groups.length > 0 && (
-                    <div className="text-center pt-4">
-                        <Link
-                            href="/groups"
-                            className="text-indigo-600 hover:text-indigo-700 font-medium inline-flex items-center gap-1"
-                        >
-                            Browse all groups
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                        </Link>
-                    </div>
-                )}
             </div>
         </SidebarLayout>
     );

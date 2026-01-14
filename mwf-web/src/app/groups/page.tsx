@@ -80,6 +80,15 @@ export default function GroupsPage() {
             <div className="px-4 sm:px-8 py-6 sm:py-8 max-w-5xl mx-auto w-full">
                 <div className="flex justify-between items-start mb-6 sm:mb-8">
                     <div>
+                        <Link
+                            href="/dashboard"
+                            className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-700 text-sm font-medium mb-2 transition-colors"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                            Back to Dashboard
+                        </Link>
                         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display">Discover Groups</h1>
                         <p className="text-slate-500 mt-1">Find new groups to join</p>
                     </div>

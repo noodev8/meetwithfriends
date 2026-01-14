@@ -440,7 +440,7 @@ export default function Dashboard() {
                                             href="/my-groups"
                                             className="block w-full py-2 text-sm font-semibold text-slate-500 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-colors text-center mt-2"
                                         >
-                                            See All Groups
+                                            All Your Groups
                                         </Link>
                                     </div>
                                 </section>
