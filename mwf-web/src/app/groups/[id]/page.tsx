@@ -131,11 +131,13 @@ export default function GroupDetailPage() {
     }, [isOrganiser, fetchPendingMembers]);
 
     // =======================================================================
-    // Fetch all members for sidebar preview
+    // Fetch all members for sidebar preview (only for active members)
     // =======================================================================
     useEffect(() => {
-        fetchAllMembers();
-    }, [fetchAllMembers]);
+        if (membership?.status === 'active') {
+            fetchAllMembers();
+        }
+    }, [membership?.status, fetchAllMembers]);
 
     // =======================================================================
     // Fetch group events
@@ -642,47 +644,53 @@ export default function GroupDetailPage() {
                                     Members
                                     <span className="ml-2 text-slate-400 font-normal">{group.member_count}</span>
                                 </h3>
-                                <Link
-                                    href={`/groups/${group.id}/members`}
-                                    className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-                                >
-                                    See all
-                                </Link>
+                                {membership?.status === 'active' && (
+                                    <Link
+                                        href={`/groups/${group.id}/members`}
+                                        className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                                    >
+                                        See all
+                                    </Link>
+                                )}
                             </div>
-                            {allMembers.length > 0 ? (
-                                <div className="flex flex-wrap gap-1">
-                                    {allMembers.slice(0, 12).map(member => (
-                                        member.avatar_url ? (
-                                            <div key={member.id} className="relative w-10 h-10" title={member.name}>
-                                                <Image
-                                                    src={member.avatar_url}
-                                                    alt={member.name}
-                                                    fill
-                                                    className="rounded-full object-cover"
-                                                />
-                                            </div>
-                                        ) : (
-                                            <div
-                                                key={member.id}
-                                                title={member.name}
-                                                className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center"
-                                            >
-                                                <span className="text-sm font-medium text-indigo-600">
-                                                    {member.name.charAt(0).toUpperCase()}
+                            {membership?.status === 'active' ? (
+                                allMembers.length > 0 ? (
+                                    <div className="flex flex-wrap gap-1">
+                                        {allMembers.slice(0, 12).map(member => (
+                                            member.avatar_url ? (
+                                                <div key={member.id} className="relative w-10 h-10" title={member.name}>
+                                                    <Image
+                                                        src={member.avatar_url}
+                                                        alt={member.name}
+                                                        fill
+                                                        className="rounded-full object-cover"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div
+                                                    key={member.id}
+                                                    title={member.name}
+                                                    className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center"
+                                                >
+                                                    <span className="text-sm font-medium text-indigo-600">
+                                                        {member.name.charAt(0).toUpperCase()}
+                                                    </span>
+                                                </div>
+                                            )
+                                        ))}
+                                        {group.member_count > 12 && (
+                                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                                                <span className="text-xs font-medium text-slate-500">
+                                                    +{group.member_count - 12}
                                                 </span>
                                             </div>
-                                        )
-                                    ))}
-                                    {group.member_count > 12 && (
-                                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                                            <span className="text-xs font-medium text-slate-500">
-                                                +{group.member_count - 12}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-slate-500">No members yet</p>
+                                )
                             ) : (
-                                <p className="text-sm text-slate-500">No members yet</p>
+                                <p className="text-sm text-slate-500">Join the group to see members</p>
                             )}
                         </div>
 

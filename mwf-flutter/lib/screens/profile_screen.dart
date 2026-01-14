@@ -39,7 +39,7 @@ class ProfileScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF7C3AED).withOpacity(0.3),
+                    color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -52,7 +52,7 @@ class ProfileScreen extends StatelessWidget {
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Center(
@@ -87,7 +87,7 @@ class ProfileScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white.withValues(alpha: 0.85),
                           ),
                         ),
                       ],
@@ -111,7 +111,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF1E293B).withOpacity(0.04),
+                    color: const Color(0xFF1E293B).withValues(alpha: 0.04),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -160,7 +160,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF1E293B).withOpacity(0.04),
+                    color: const Color(0xFF1E293B).withValues(alpha: 0.04),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -201,7 +201,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF1E293B).withOpacity(0.04),
+                    color: const Color(0xFF1E293B).withValues(alpha: 0.04),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -225,7 +225,7 @@ class ProfileScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF94A3B8).withOpacity(0.8),
+                color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
               ),
             ),
 
@@ -325,7 +325,7 @@ class _MenuItem extends StatelessWidget {
                   color: (isDestructive
                           ? const Color(0xFFDC2626)
                           : const Color(0xFF7C3AED))
-                      .withOpacity(0.1),
+                      .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -350,7 +350,7 @@ class _MenuItem extends StatelessWidget {
               if (!isDestructive)
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: const Color(0xFF94A3B8).withOpacity(0.8),
+                  color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
                 ),
             ],
           ),

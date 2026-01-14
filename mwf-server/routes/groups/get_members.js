@@ -4,8 +4,8 @@ API Route: get_members
 =======================================================================================================================================
 Method: GET
 Purpose: Retrieves members of a group with pagination and search support.
+         Only group members can view the member list.
          Only organisers and hosts can see pending members.
-         Regular members and non-members only see active members.
 =======================================================================================================================================
 Request Payload:
 None (GET request with :id URL parameter)
@@ -36,7 +36,8 @@ Success Response:
 Return Codes:
 "SUCCESS"
 "NOT_FOUND"
-"FORBIDDEN"
+"UNAUTHORIZED" - User must be logged in to view members
+"FORBIDDEN" - User must be a member of the group to view members / Only organisers/hosts can view pending
 "SERVER_ERROR"
 =======================================================================================================================================
 */
@@ -96,6 +97,24 @@ router.get('/:id/members', optionalAuth, async (req, res) => {
             if (memberResult.rows.length > 0) {
                 userRole = memberResult.rows[0].role;
             }
+        }
+
+        // =======================================================================
+        // Only group members can view the member list
+        // Non-members cannot see who is in the group (privacy protection)
+        // =======================================================================
+        if (!userId) {
+            return res.json({
+                return_code: 'UNAUTHORIZED',
+                message: 'You must be logged in to view group members'
+            });
+        }
+
+        if (!userRole) {
+            return res.json({
+                return_code: 'FORBIDDEN',
+                message: 'You must be a member of this group to view the member list'
+            });
         }
 
         // =======================================================================

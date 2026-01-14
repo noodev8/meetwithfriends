@@ -990,7 +990,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               elevation: 0,
-              disabledBackgroundColor: const Color(0xFF7C3AED).withOpacity(0.6),
+              disabledBackgroundColor: const Color(0xFF7C3AED).withValues(alpha: 0.6),
             ),
             child: _rsvpLoading
                 ? const SizedBox(

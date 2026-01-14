@@ -355,7 +355,7 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? activeColor.withOpacity(0.15) : const Color(0xFFF1F5F9),
+          color: isActive ? activeColor.withValues(alpha: 0.15) : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(

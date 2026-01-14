@@ -1,25 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:html/parser.dart' as html_parser;
 import '../services/groups_service.dart';
 import '../widgets/bottom_nav_bar.dart';
-import 'group_dashboard_screen.dart';
 
-class CreateGroupScreen extends StatefulWidget {
-  const CreateGroupScreen({super.key});
+class EditGroupScreen extends StatefulWidget {
+  final int groupId;
+  final String initialName;
+  final String? initialDescription;
+  final String initialThemeColor;
+  final String initialJoinPolicy;
+  final String initialVisibility;
+  final VoidCallback? onGroupUpdated;
+
+  const EditGroupScreen({
+    super.key,
+    required this.groupId,
+    required this.initialName,
+    this.initialDescription,
+    required this.initialThemeColor,
+    required this.initialJoinPolicy,
+    required this.initialVisibility,
+    this.onGroupUpdated,
+  });
 
   @override
-  State<CreateGroupScreen> createState() => _CreateGroupScreenState();
+  State<EditGroupScreen> createState() => _EditGroupScreenState();
 }
 
-class _CreateGroupScreenState extends State<CreateGroupScreen> {
+class _EditGroupScreenState extends State<EditGroupScreen> {
   final GroupsService _groupsService = GroupsService();
   final _formKey = GlobalKey<FormState>();
 
-  final _nameController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  late TextEditingController _nameController;
+  late TextEditingController _descriptionController;
 
-  String _selectedTheme = 'indigo';
-  String _joinPolicy = 'approval';
-  String _visibility = 'listed';
+  late String _selectedTheme;
+  late String _joinPolicy;
+  late String _visibility;
 
   bool _isSubmitting = false;
   String? _error;
@@ -32,6 +49,23 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     {'key': 'cyan', 'color': Color(0xFF06B6D4), 'label': 'Cyan'},
     {'key': 'violet', 'color': Color(0xFF8B5CF6), 'label': 'Violet'},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.initialName);
+    _descriptionController = TextEditingController(text: _stripHtml(widget.initialDescription ?? ''));
+    _selectedTheme = widget.initialThemeColor;
+    _joinPolicy = widget.initialJoinPolicy;
+    _visibility = widget.initialVisibility;
+  }
+
+  /// Strip HTML tags from description using proper HTML parser
+  String _stripHtml(String htmlString) {
+    if (htmlString.isEmpty) return '';
+    final document = html_parser.parse(htmlString);
+    return document.body?.text ?? '';
+  }
 
   @override
   void dispose() {
@@ -48,7 +82,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       _error = null;
     });
 
-    final result = await _groupsService.createGroup(
+    final result = await _groupsService.updateGroup(
+      groupId: widget.groupId,
       name: _nameController.text.trim(),
       description: _descriptionController.text.trim().isEmpty
           ? null
@@ -62,15 +97,11 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
 
     setState(() => _isSubmitting = false);
 
-    if (result.success && result.groupId != null) {
-      // Navigate to the new group
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => GroupDashboardScreen(groupId: result.groupId!),
-        ),
-      );
+    if (result.success) {
+      widget.onGroupUpdated?.call();
+      Navigator.of(context).pop();
     } else {
-      setState(() => _error = result.error ?? 'Failed to create group');
+      setState(() => _error = result.error ?? 'Failed to update group');
     }
   }
 
@@ -86,7 +117,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
-          'Create a Group',
+          'Edit Group',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -322,7 +353,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                                       ),
                                     )
                                   : const Text(
-                                      'Create Group',
+                                      'Save Changes',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
