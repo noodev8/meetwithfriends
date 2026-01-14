@@ -54,7 +54,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/meetwithfriends_icon_1024.png"
+  image_path: "../docs/meetwithfriends_icon_1024.png"
   remove_alpha_ios: true
 
 flutter_native_splash:
