@@ -10,7 +10,6 @@ Warm, editorial design for social gatherings of all kinds.
 */
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -260,17 +259,35 @@ export default function Home() {
                         </p>
                     </div>
 
-                    {/* Hero illustration - Logo */}
-                    <div className="hidden lg:block absolute top-1/2 right-8 -translate-y-1/2">
-                        <div className={`transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`}>
-                            <Image
-                                src="/logo.png"
-                                alt="Meet With Friends"
-                                width={400}
-                                height={400}
-                                className="w-80 h-auto drop-shadow-xl"
-                                priority
-                            />
+                    {/* Hero illustration - Floating Icons */}
+                    <div className="hidden lg:block absolute top-1/2 right-12 -translate-y-1/2 w-80 h-80">
+                        {/* Floating icon bubbles */}
+                        {[
+                            { icon: '🍽️', size: 'w-20 h-20', position: 'top-0 right-8', delay: '0ms', duration: '3s' },
+                            { icon: '📅', size: 'w-16 h-16', position: 'top-20 right-0', delay: '500ms', duration: '3.5s' },
+                            { icon: '👥', size: 'w-18 h-18', position: 'top-8 left-4', delay: '200ms', duration: '4s' },
+                            { icon: '🎉', size: 'w-14 h-14', position: 'bottom-16 right-4', delay: '800ms', duration: '3.2s' },
+                            { icon: '☕', size: 'w-16 h-16', position: 'bottom-8 left-8', delay: '400ms', duration: '3.8s' },
+                        ].map((item, i) => (
+                            <div
+                                key={i}
+                                className={`absolute ${item.position} ${item.size} bg-white rounded-2xl shadow-lg flex items-center justify-center transition-all duration-1000 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}
+                                style={{
+                                    transitionDelay: item.delay,
+                                    animation: mounted ? `float ${item.duration} ease-in-out infinite` : 'none',
+                                    animationDelay: item.delay,
+                                }}
+                            >
+                                <span className="text-3xl">{item.icon}</span>
+                            </div>
+                        ))}
+                        {/* Central connecting element */}
+                        <div
+                            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-gradient-to-br from-indigo-100 to-violet-100 rounded-full flex items-center justify-center border-2 border-white shadow-xl transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}
+                        >
+                            <svg className="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
                         </div>
                     </div>
                 </div>
