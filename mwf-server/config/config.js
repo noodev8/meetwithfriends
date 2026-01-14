@@ -8,7 +8,7 @@ Central configuration loaded from environment variables.
 
 module.exports = {
     // Server
-    port: process.env.PORT || 3018,
+    port: process.env.PORT || 3019,
     corsOrigin: (process.env.CORS_ORIGIN || 'http://localhost:3000').split(','),
 
     // Database

@@ -7,7 +7,7 @@ Follows API-Rules: never throws on API errors, returns structured objects.
 =======================================================================================================================================
 */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3018';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3019';
 
 interface ApiResponse {
     return_code: string;

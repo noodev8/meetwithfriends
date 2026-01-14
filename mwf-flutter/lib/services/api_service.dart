@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.136:3018/api';
+  static const String baseUrl = 'http://192.168.1.136:3019/api';
 
   // Singleton instance
   static final ApiService _instance = ApiService._internal();

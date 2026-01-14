@@ -534,7 +534,7 @@ meetwithfriends/
 
 | Service | Port |
 |---------|------|
-| mwf-server | 3018 |
+| mwf-server | 3019 |
 | mwf-web | 3000 |
 
 ## API Endpoints (MVP)

@@ -770,7 +770,7 @@ Before starting Flutter development:
 - [x] **Apple Developer Account** active (already set up)
 - [x] **Google Play Developer Account** active (already set up)
 - [x] **Bundle identifier:** `com.noodev8.meetwithfriends`
-- [ ] **API base URL** for production confirmed (dev: localhost:3018)
+- [ ] **API base URL** for production confirmed (dev: localhost:3019)
 - [x] **Privacy Policy URL** (already exists on web)
 - [x] **Terms of Service URL** (already exists on web)
 

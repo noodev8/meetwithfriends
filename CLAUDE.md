@@ -8,7 +8,7 @@ Meet With Friends (MWF) is a group event management platform for food-focused so
 
 ## Commands
 
-### mwf-server (Backend - Port 3018)
+### mwf-server (Backend - Port 3019)
 ```bash
 cd mwf-server
 npm run dev      # Start with nodemon (hot reload)
@@ -121,7 +121,7 @@ Organiser (owns group, connects Stripe)
 
 ### mwf-server/.env
 ```
-PORT=3018
+PORT=3019
 CORS_ORIGIN=http://localhost:3000
 DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
 JWT_SECRET, JWT_EXPIRES_IN
@@ -130,5 +130,5 @@ RESEND_API_KEY, EMAIL_FROM, EMAIL_FROM_NAME, FRONTEND_URL
 
 ### mwf-web/.env.local
 ```
-NEXT_PUBLIC_API_URL=http://localhost:3018
+NEXT_PUBLIC_API_URL=http://localhost:3019
 ```
