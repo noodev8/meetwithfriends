@@ -8,27 +8,19 @@ Privacy policy for Meet With Friends, operated by Noodev8 Ltd.
 =======================================================================================================================================
 */
 
-import Link from 'next/link';
-import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 
 export default function PrivacyPage() {
     return (
         <main className="min-h-screen flex flex-col bg-slate-50">
-            <Header />
+            {/* Simple header */}
+            <header className="px-4 sm:px-8 py-4 bg-white border-b border-slate-200">
+                <span className="font-display text-xl font-bold text-slate-800">
+                    Meet With Friends
+                </span>
+            </header>
 
             <div className="flex-1 px-4 sm:px-8 py-8 sm:py-12 max-w-3xl mx-auto w-full">
-                {/* Back link */}
-                <Link
-                    href="/help"
-                    className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-6 transition-colors"
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    Back to help
-                </Link>
-
                 {/* Header */}
                 <div className="text-center mb-10">
                     <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 font-display mb-3">
