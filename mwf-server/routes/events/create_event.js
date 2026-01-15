@@ -160,7 +160,7 @@ router.post('/create', verifyToken, async (req, res) => {
         // Single query to verify both group existence and user's role
         // =======================================================================
         const permissionResult = await query(
-            `SELECT gm.role
+            `SELECT gm.role, g.name as group_name
              FROM group_list g
              JOIN group_member gm ON g.id = gm.group_id
              WHERE g.id = $1
@@ -260,7 +260,12 @@ router.post('/create', verifyToken, async (req, res) => {
         // =======================================================================
         return res.json({
             return_code: 'SUCCESS',
-            event: result
+            event: {
+                ...result,
+                group_name: permissionResult.rows[0].group_name,
+                attendee_count: 1,  // Creator is auto-RSVP'd
+                waitlist_count: 0
+            }
         });
 
     } catch (error) {
