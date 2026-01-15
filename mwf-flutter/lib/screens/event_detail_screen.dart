@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../services/events_service.dart';
 import '../config/event_categories.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../widgets/pre_order_section.dart';
 import 'attendees_screen.dart';
 
 class EventDetailScreen extends StatefulWidget {
@@ -122,6 +123,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           eventTitle: event.title,
           eventDate: '${dateFormat.format(event.dateTime)} at ${timeFormat.format(event.dateTime)}',
           eventLocation: event.location,
+          groupName: event.groupName,
+          preordersEnabled: event.preordersEnabled,
         ),
       ),
     );
@@ -278,6 +281,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
                         // Attendees Section
                         _buildAttendeesSection(event, margin),
+
+                        // Pre-Order Section (only for events with pre-orders and RSVP'd users)
+                        if (event.preordersEnabled && _rsvp != null && _rsvp!.status != 'not_going')
+                          _buildPreOrderSection(event, margin),
 
                         // RSVP Section (inline, not sticky)
                         if (!event.isPast && !event.isCancelled)
@@ -1103,6 +1110,65 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildPreOrderSection(EventDetail event, double margin) {
+    final padding = _cardPadding(context);
+
+    return Container(
+      margin: EdgeInsets.fromLTRB(margin, 0, margin, margin),
+      child: PreOrderSection(
+        foodOrder: _rsvp?.foodOrder,
+        dietaryNotes: _rsvp?.dietaryNotes,
+        menuLink: event.menuLink,
+        preorderCutoff: event.preorderCutoff,
+        onSubmit: _handleSubmitOrder,
+        padding: padding,
+      ),
+    );
+  }
+
+  Future<bool> _handleSubmitOrder(String? foodOrder, String? dietaryNotes) async {
+    if (_event == null || _rsvp == null) return false;
+
+    final result = await _eventsService.submitOrder(
+      _event!.id,
+      foodOrder: foodOrder,
+      dietaryNotes: dietaryNotes,
+    );
+
+    if (result.success) {
+      // Update local RSVP with new order values
+      setState(() {
+        _rsvp = RsvpStatus(
+          status: _rsvp!.status,
+          waitlistPosition: _rsvp!.waitlistPosition,
+          guestCount: _rsvp!.guestCount,
+          foodOrder: result.foodOrder,
+          dietaryNotes: result.dietaryNotes,
+        );
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Order saved'),
+            backgroundColor: Color(0xFF22C55E),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      return true;
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.error ?? 'Failed to save order'),
+            backgroundColor: Colors.red.shade600,
+          ),
+        );
+      }
+      return false;
+    }
   }
 
   Widget _buildRsvpSection(EventDetail event, double margin) {

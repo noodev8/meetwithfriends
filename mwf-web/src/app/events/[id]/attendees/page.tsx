@@ -230,7 +230,21 @@ export default function AttendeesPage() {
     // =======================================================================
     const generateOrderSummary = () => {
         const lines: string[] = [];
-        lines.push(`${event?.title || 'Event'} - Orders`);
+
+        // Header with group name and event details
+        if (event?.group_name) {
+            lines.push(event.group_name);
+        }
+        lines.push(event?.title || 'Event');
+        if (event?.date_time) {
+            const { date, time } = formatDateTime(event.date_time);
+            lines.push(`${date} at ${time}`);
+        }
+        if (event?.location) {
+            lines.push(event.location);
+        }
+        lines.push('');
+        lines.push(`--- Orders (${attending.length} guests) ---`);
         lines.push('');
 
         attending.forEach((person) => {

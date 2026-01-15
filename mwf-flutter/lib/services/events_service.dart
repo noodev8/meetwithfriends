@@ -121,6 +121,28 @@ class EventsService {
     );
   }
 
+  /// Submit or update a pre-order for an event
+  Future<SubmitOrderResult> submitOrder(int eventId, {String? foodOrder, String? dietaryNotes}) async {
+    final response = await _api.post('/events/$eventId/submit-order', {
+      'food_order': foodOrder ?? '',
+      'dietary_notes': dietaryNotes ?? '',
+    });
+
+    if (response['return_code'] == 'SUCCESS') {
+      final orderJson = response['order'] as Map<String, dynamic>?;
+      return SubmitOrderResult(
+        success: true,
+        foodOrder: orderJson?['food_order'] as String?,
+        dietaryNotes: orderJson?['dietary_notes'] as String?,
+      );
+    }
+
+    return SubmitOrderResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to save order',
+    );
+  }
+
   /// Get attendees for an event
   Future<AttendeesResult> getAttendees(int eventId) async {
     final response = await _api.get('/events/$eventId/attendees');
@@ -468,4 +490,13 @@ class CreateEventResult {
   final String? error;
 
   CreateEventResult({required this.success, this.eventId, this.error});
+}
+
+class SubmitOrderResult {
+  final bool success;
+  final String? foodOrder;
+  final String? dietaryNotes;
+  final String? error;
+
+  SubmitOrderResult({required this.success, this.foodOrder, this.dietaryNotes, this.error});
 }

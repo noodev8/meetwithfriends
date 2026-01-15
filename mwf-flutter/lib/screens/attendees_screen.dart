@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../services/events_service.dart';
 import '../widgets/bottom_nav_bar.dart';
@@ -11,6 +12,8 @@ class AttendeesScreen extends StatefulWidget {
   final String eventTitle;
   final String? eventDate;
   final String? eventLocation;
+  final String? groupName;
+  final bool preordersEnabled;
 
   const AttendeesScreen({
     super.key,
@@ -18,6 +21,8 @@ class AttendeesScreen extends StatefulWidget {
     required this.eventTitle,
     this.eventDate,
     this.eventLocation,
+    this.groupName,
+    this.preordersEnabled = false,
   });
 
   @override
@@ -284,14 +289,54 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.eventTitle,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1E293B),
-              letterSpacing: -0.5,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  widget.eventTitle,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E293B),
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ),
+              if (widget.preordersEnabled) ...[
+                const SizedBox(width: 12),
+                GestureDetector(
+                  onTap: _showOrdersSummary,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFFCD34D)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.restaurant_menu_rounded,
+                          size: 16,
+                          color: Color(0xFF92400E),
+                        ),
+                        SizedBox(width: 6),
+                        Text(
+                          'Orders',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF92400E),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
           if (widget.eventDate != null || widget.eventLocation != null) ...[
             const SizedBox(height: 4),
@@ -484,6 +529,7 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
         itemBuilder: (context, index) {
           final attendee = _currentList[index];
           final isHost = _hostIds.contains(attendee.userId);
+          final hasOrder = attendee.foodOrder != null && attendee.foodOrder!.isNotEmpty;
           final initial = attendee.name.isNotEmpty
               ? attendee.name[0].toUpperCase()
               : '?';
@@ -527,6 +573,25 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
                             )
                           : null,
                     ),
+                    // Order indicator (top right)
+                    if (widget.preordersEnabled && _activeTab == AttendeeTab.going && hasOrder)
+                      Positioned(
+                        top: -2,
+                        right: -2,
+                        child: Container(
+                          width: 20,
+                          height: 20,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF22C55E),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.restaurant_menu_rounded,
+                            size: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     // Host badge
                     if (isHost)
                       Positioned(
@@ -632,6 +697,7 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
         ? attendee.name[0].toUpperCase()
         : '?';
     final rsvpFormat = DateFormat('d MMM yyyy, HH:mm');
+    final hasOrder = attendee.foodOrder != null && attendee.foodOrder!.isNotEmpty;
 
     showDialog(
       context: context,
@@ -642,10 +708,10 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
           children: [
             // Large avatar
             Container(
-              width: 240,
-              height: 240,
+              width: 200,
+              height: 200,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(120),
+                borderRadius: BorderRadius.circular(100),
                 gradient: attendee.avatarUrl == null
                     ? const LinearGradient(
                         colors: [Color(0xFFE0E7FF), Color(0xFFEDE9FE)],
@@ -672,7 +738,7 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
                       child: Text(
                         initial,
                         style: const TextStyle(
-                          fontSize: 96,
+                          fontSize: 80,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF6366F1),
                         ),
@@ -681,9 +747,10 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
                   : null,
             ),
             const SizedBox(height: 16),
-            // Name and RSVP time
+            // Name, RSVP time, and Order info
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              constraints: const BoxConstraints(maxWidth: 300),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
@@ -697,6 +764,7 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF1E293B),
                     ),
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -706,6 +774,65 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
                       color: Color(0xFF64748B),
                     ),
                   ),
+                  // Show order if preorders enabled
+                  if (widget.preordersEnabled && _activeTab == AttendeeTab.going) ...[
+                    const Divider(height: 24),
+                    if (hasOrder) ...[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(
+                            Icons.restaurant_menu_rounded,
+                            size: 16,
+                            color: Color(0xFFF59E0B),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              attendee.foodOrder!,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF1E293B),
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (attendee.dietaryNotes != null && attendee.dietaryNotes!.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.info_outline_rounded,
+                              size: 16,
+                              color: Color(0xFF7C3AED),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                attendee.dietaryNotes!,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF7C3AED),
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ] else
+                      const Text(
+                        'No order submitted',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF94A3B8),
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                  ],
                 ],
               ),
             ),
@@ -715,4 +842,256 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
     );
   }
 
+  void _showOrdersSummary() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _OrdersSummarySheet(
+        eventTitle: widget.eventTitle,
+        groupName: widget.groupName,
+        eventDate: widget.eventDate,
+        eventLocation: widget.eventLocation,
+        attendees: _attending,
+      ),
+    );
+  }
+}
+
+class _OrdersSummarySheet extends StatefulWidget {
+  final String eventTitle;
+  final String? groupName;
+  final String? eventDate;
+  final String? eventLocation;
+  final List<Attendee> attendees;
+
+  const _OrdersSummarySheet({
+    required this.eventTitle,
+    this.groupName,
+    this.eventDate,
+    this.eventLocation,
+    required this.attendees,
+  });
+
+  @override
+  State<_OrdersSummarySheet> createState() => _OrdersSummarySheetState();
+}
+
+class _OrdersSummarySheetState extends State<_OrdersSummarySheet> {
+  bool _copied = false;
+
+  String _generateOrderText() {
+    final lines = <String>[];
+
+    // Header with group name and event details
+    if (widget.groupName != null) {
+      lines.add(widget.groupName!);
+    }
+    lines.add(widget.eventTitle);
+    if (widget.eventDate != null) {
+      lines.add(widget.eventDate!);
+    }
+    if (widget.eventLocation != null) {
+      lines.add(widget.eventLocation!);
+    }
+    lines.add('');
+    lines.add('--- Orders (${widget.attendees.length} guests) ---');
+    lines.add('');
+
+    for (final person in widget.attendees) {
+      lines.add(person.name);
+      if (person.foodOrder != null && person.foodOrder!.isNotEmpty) {
+        lines.add(person.foodOrder!);
+        if (person.dietaryNotes != null && person.dietaryNotes!.isNotEmpty) {
+          lines.add('Notes: ${person.dietaryNotes}');
+        }
+      } else {
+        lines.add('No order submitted');
+      }
+      lines.add('');
+    }
+
+    return lines.join('\n').trim();
+  }
+
+  Future<void> _copyToClipboard() async {
+    final text = _generateOrderText();
+    await Clipboard.setData(ClipboardData(text: text));
+    setState(() => _copied = true);
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() => _copied = false);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.8,
+      ),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.fromLTRB(20, 16, 12, 12),
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFF59E0B), Color(0xFFEF4444)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.restaurant_menu_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Orders',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close_rounded),
+                  color: const Color(0xFF64748B),
+                ),
+              ],
+            ),
+          ),
+
+          // Orders list
+          Flexible(
+            child: widget.attendees.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Text(
+                      'No attendees yet',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  )
+                : ListView.separated(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.all(20),
+                    itemCount: widget.attendees.length,
+                    separatorBuilder: (context, index) => const Divider(height: 24),
+                    itemBuilder: (context, index) {
+                      final person = widget.attendees[index];
+                      final hasOrder = person.foodOrder != null && person.foodOrder!.isNotEmpty;
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            person.name,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          if (hasOrder) ...[
+                            Text(
+                              person.foodOrder!,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF475569),
+                                height: 1.4,
+                              ),
+                            ),
+                            if (person.dietaryNotes != null && person.dietaryNotes!.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  'Notes: ${person.dietaryNotes}',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF7C3AED),
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                          ] else
+                            const Text(
+                              'No order submitted',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF94A3B8),
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+          ),
+
+          // Footer with copy button
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              border: Border(
+                top: BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+            ),
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _copyToClipboard,
+                  icon: Icon(
+                    _copied ? Icons.check_rounded : Icons.copy_rounded,
+                    size: 18,
+                  ),
+                  label: Text(_copied ? 'Copied!' : 'Copy to clipboard'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _copied ? const Color(0xFF22C55E) : const Color(0xFF7C3AED),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
