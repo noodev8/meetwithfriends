@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'models/user.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/forgot_password_screen.dart';
@@ -23,7 +24,7 @@ class _MyAppState extends State<MyApp> {
   bool _isLoading = true;
   bool _isLoggedIn = false;
   AuthScreen _authScreen = AuthScreen.login;
-  Map<String, dynamic>? _user;
+  User? _user;
 
   @override
   void initState() {
@@ -37,15 +38,21 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         _isLoading = false;
         _isLoggedIn = result.success;
-        _user = result.user;
+        _user = result.user != null ? User.fromJson(result.user!) : null;
       });
     }
   }
 
-  void _onLoginSuccess(Map<String, dynamic> user) {
+  void _onLoginSuccess(Map<String, dynamic> userData) {
     setState(() {
       _isLoggedIn = true;
-      _user = user;
+      _user = User.fromJson(userData);
+    });
+  }
+
+  void _onUserUpdated(User updatedUser) {
+    setState(() {
+      _user = updatedUser;
     });
   }
 
@@ -104,9 +111,9 @@ class _MyAppState extends State<MyApp> {
 
     if (_isLoggedIn && _user != null) {
       return MainShell(
-        userName: _user!['name'] as String? ?? 'User',
-        userEmail: _user!['email'] as String? ?? '',
+        user: _user!,
         onLogout: _onLogout,
+        onUserUpdated: _onUserUpdated,
       );
     }
 

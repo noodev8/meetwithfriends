@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../models/user.dart';
 import 'home_screen.dart';
 import 'events_screen.dart';
 import 'groups_screen.dart';
 import 'profile_screen.dart';
 
 class MainShell extends StatefulWidget {
-  final String userName;
-  final String userEmail;
+  final User user;
   final VoidCallback onLogout;
+  final Function(User) onUserUpdated;
 
   const MainShell({
     super.key,
-    required this.userName,
-    required this.userEmail,
+    required this.user,
     required this.onLogout,
+    required this.onUserUpdated,
   });
 
   @override
@@ -36,16 +37,16 @@ class _MainShellState extends State<MainShell> {
           index: _currentIndex,
           children: [
             HomeScreen(
-              userName: widget.userName,
+              userName: widget.user.name,
               onViewAllEvents: () => setState(() => _currentIndex = 1),
               onViewAllGroups: () => setState(() => _currentIndex = 2),
             ),
             const EventsScreen(),
             GroupsScreen(onBackToHome: () => setState(() => _currentIndex = 0)),
             ProfileScreen(
-              userName: widget.userName,
-              userEmail: widget.userEmail,
+              user: widget.user,
               onLogout: widget.onLogout,
+              onUserUpdated: widget.onUserUpdated,
             ),
           ],
         ),

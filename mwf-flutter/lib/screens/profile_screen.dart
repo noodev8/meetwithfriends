@@ -1,25 +1,24 @@
 import 'package:flutter/material.dart';
+import '../models/user.dart';
+import 'edit_profile_screen.dart';
+import 'contact_details_screen.dart';
+import 'change_password_screen.dart';
+import 'delete_account_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
-  final String userName;
-  final String userEmail;
+  final User user;
   final VoidCallback onLogout;
+  final Function(User) onUserUpdated;
 
   const ProfileScreen({
     super.key,
-    required this.userName,
-    required this.userEmail,
+    required this.user,
     required this.onLogout,
+    required this.onUserUpdated,
   });
 
   @override
   Widget build(BuildContext context) {
-    final initials = userName
-        .split(' ')
-        .take(2)
-        .map((e) => e.isNotEmpty ? e[0].toUpperCase() : '')
-        .join();
-
     return SafeArea(
       child: SingleChildScrollView(
         child: Column(
@@ -54,17 +53,25 @@ class ProfileScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(16),
+                      image: user.avatarUrl != null
+                          ? DecorationImage(
+                              image: NetworkImage(user.avatarUrl!),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
                     ),
-                    child: Center(
-                      child: Text(
-                        initials,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+                    child: user.avatarUrl == null
+                        ? Center(
+                            child: Text(
+                              user.initials,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          )
+                        : null,
                   ),
                   const SizedBox(width: 16),
 
@@ -74,7 +81,7 @@ class ProfileScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          userName,
+                          user.name,
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -83,7 +90,7 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          userEmail,
+                          user.email,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -122,25 +129,19 @@ class ProfileScreen extends StatelessWidget {
                   _MenuItem(
                     icon: Icons.person_outline_rounded,
                     label: 'Edit Profile',
-                    onTap: () {
-                      // Navigate to edit profile
-                    },
+                    onTap: () => _navigateToEditProfile(context),
                   ),
                   _MenuDivider(),
                   _MenuItem(
-                    icon: Icons.notifications_outlined,
-                    label: 'Notifications',
-                    onTap: () {
-                      // Navigate to notifications settings
-                    },
+                    icon: Icons.contact_phone_outlined,
+                    label: 'Contact & Notifications',
+                    onTap: () => _navigateToContactDetails(context),
                   ),
                   _MenuDivider(),
                   _MenuItem(
                     icon: Icons.lock_outline_rounded,
-                    label: 'Privacy & Security',
-                    onTap: () {
-                      // Navigate to privacy settings
-                    },
+                    label: 'Change Password',
+                    onTap: () => _navigateToChangePassword(context),
                   ),
                 ],
               ),
@@ -172,7 +173,7 @@ class ProfileScreen extends StatelessWidget {
                     icon: Icons.help_outline_rounded,
                     label: 'Help & Support',
                     onTap: () {
-                      // Navigate to help
+                      // TODO: Navigate to help
                     },
                   ),
                   _MenuDivider(),
@@ -180,7 +181,7 @@ class ProfileScreen extends StatelessWidget {
                     icon: Icons.info_outline_rounded,
                     label: 'About',
                     onTap: () {
-                      // Show about dialog
+                      // TODO: Show about dialog
                     },
                   ),
                 ],
@@ -189,7 +190,7 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Logout button
+            // Account actions
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
@@ -207,13 +208,24 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              child: _MenuItem(
-                icon: Icons.logout_rounded,
-                label: 'Log Out',
-                isDestructive: true,
-                onTap: () {
-                  _showLogoutConfirmation(context);
-                },
+              child: Column(
+                children: [
+                  _MenuItem(
+                    icon: Icons.logout_rounded,
+                    label: 'Log Out',
+                    isDestructive: true,
+                    onTap: () {
+                      _showLogoutConfirmation(context);
+                    },
+                  ),
+                  _MenuDivider(),
+                  _MenuItem(
+                    icon: Icons.delete_forever_rounded,
+                    label: 'Delete Account',
+                    isDestructive: true,
+                    onTap: () => _navigateToDeleteAccount(context),
+                  ),
+                ],
               ),
             ),
 
@@ -231,6 +243,46 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateToEditProfile(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => EditProfileScreen(
+          user: user,
+          onProfileUpdated: onUserUpdated,
+        ),
+      ),
+    );
+  }
+
+  void _navigateToContactDetails(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ContactDetailsScreen(
+          user: user,
+          onProfileUpdated: onUserUpdated,
+        ),
+      ),
+    );
+  }
+
+  void _navigateToChangePassword(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ChangePasswordScreen(),
+      ),
+    );
+  }
+
+  void _navigateToDeleteAccount(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => DeleteAccountScreen(
+          onAccountDeleted: onLogout,
         ),
       ),
     );
