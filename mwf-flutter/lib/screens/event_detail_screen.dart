@@ -291,7 +291,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Gradient Header with Emoji
+          // Gradient Header with Title
           Container(
             height: 140,
             decoration: BoxDecoration(
@@ -307,7 +307,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
             child: Stack(
               children: [
-                // Large icon
+                // Large icon (background)
                 Positioned(
                   right: 20,
                   top: 20,
@@ -345,6 +345,21 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       ),
                     ),
                   ),
+                // Title at bottom
+                Positioned(
+                  left: 20,
+                  right: 20,
+                  bottom: 16,
+                  child: Text(
+                    event.title,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -355,18 +370,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title
-                Text(
-                  event.title,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E293B),
-                    letterSpacing: -0.5,
-                  ),
-                ),
-
-                const SizedBox(height: 16),
 
                 // Date & Time
                 Row(
@@ -421,32 +424,47 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   Widget _buildHostRow() {
-    final hostName = _hosts.isNotEmpty ? _hosts[0].name : _event!.creatorName;
+    final host = _hosts.isNotEmpty ? _hosts[0] : null;
+    final hostName = host?.name ?? _event!.creatorName;
+    final hostAvatarUrl = host?.avatarUrl;
     final hostInitial = hostName.isNotEmpty ? hostName[0].toUpperCase() : '?';
 
     return Row(
       children: [
-        // Host Avatar
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFE0E7FF), Color(0xFFEDE9FE)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+        // Host Avatar (tappable)
+        GestureDetector(
+          onTap: host != null ? () => _showHostAvatarPopup(host) : null,
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              gradient: hostAvatarUrl == null
+                  ? const LinearGradient(
+                      colors: [Color(0xFFE0E7FF), Color(0xFFEDE9FE)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : null,
+              borderRadius: BorderRadius.circular(16),
+              image: hostAvatarUrl != null
+                  ? DecorationImage(
+                      image: NetworkImage(hostAvatarUrl),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
             ),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Center(
-            child: Text(
-              hostInitial,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF6366F1),
-              ),
-            ),
+            child: hostAvatarUrl == null
+                ? Center(
+                    child: Text(
+                      hostInitial,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF6366F1),
+                      ),
+                    ),
+                  )
+                : null,
           ),
         ),
         const SizedBox(width: 10),
@@ -671,29 +689,41 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       padding: const EdgeInsets.only(right: 8),
                       child: Column(
                         children: [
-                          Stack(
+                          GestureDetector(
+                            onTap: () => _showHostAvatarPopup(host),
+                            child: Stack(
                             children: [
                               Container(
                                 width: 56,
                                 height: 56,
                                 decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFFE0E7FF), Color(0xFFEDE9FE)],
-                                  ),
+                                  gradient: host.avatarUrl == null
+                                      ? const LinearGradient(
+                                          colors: [Color(0xFFE0E7FF), Color(0xFFEDE9FE)],
+                                        )
+                                      : null,
                                   borderRadius: BorderRadius.circular(28),
+                                  image: host.avatarUrl != null
+                                      ? DecorationImage(
+                                          image: NetworkImage(host.avatarUrl!),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null,
                                 ),
-                                child: Center(
-                                  child: Text(
-                                    host.name.isNotEmpty
-                                        ? host.name[0].toUpperCase()
-                                        : '?',
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF6366F1),
-                                    ),
-                                  ),
-                                ),
+                                child: host.avatarUrl == null
+                                    ? Center(
+                                        child: Text(
+                                          host.name.isNotEmpty
+                                              ? host.name[0].toUpperCase()
+                                              : '?',
+                                          style: const TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF6366F1),
+                                          ),
+                                        ),
+                                      )
+                                    : null,
                               ),
                               Positioned(
                                 bottom: 0,
@@ -721,6 +751,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 ),
                               ),
                             ],
+                          ),
                           ),
                           const SizedBox(height: 6),
                           SizedBox(
@@ -1011,6 +1042,79 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showHostAvatarPopup(EventHost host) {
+    final initial = host.name.isNotEmpty ? host.name[0].toUpperCase() : '?';
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Large avatar
+            Container(
+              width: 240,
+              height: 240,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(120),
+                gradient: host.avatarUrl == null
+                    ? const LinearGradient(
+                        colors: [Color(0xFFE0E7FF), Color(0xFFEDE9FE)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
+                image: host.avatarUrl != null
+                    ? DecorationImage(
+                        image: NetworkImage(host.avatarUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(64),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: host.avatarUrl == null
+                  ? Center(
+                      child: Text(
+                        initial,
+                        style: const TextStyle(
+                          fontSize: 96,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF6366F1),
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(height: 16),
+            // Name
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                host.name,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -94,6 +94,230 @@ class GroupsService {
       error: response['message'] as String? ?? 'Failed to create group',
     );
   }
+
+  /// Update an existing group (organiser only)
+  Future<UpdateGroupResult> updateGroup({
+    required int groupId,
+    String? name,
+    String? description,
+    String? themeColor,
+    String? joinPolicy,
+    String? visibility,
+  }) async {
+    final Map<String, dynamic> payload = {};
+    if (name != null) payload['name'] = name;
+    if (description != null) payload['description'] = description;
+    if (themeColor != null) payload['theme_color'] = themeColor;
+    if (joinPolicy != null) payload['join_policy'] = joinPolicy;
+    if (visibility != null) payload['visibility'] = visibility;
+
+    final response = await _api.post('/groups/$groupId/update', payload);
+
+    if (response['return_code'] == 'SUCCESS') {
+      return UpdateGroupResult(success: true);
+    }
+
+    return UpdateGroupResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to update group',
+    );
+  }
+
+  /// Get group members with optional pagination and search
+  Future<GroupMembersResult> getGroupMembers(
+    int groupId, {
+    String status = 'active',
+    String? search,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final queryParams = <String, String>{
+      'status': status,
+      'limit': limit.toString(),
+      'offset': offset.toString(),
+    };
+    if (search != null && search.isNotEmpty) {
+      queryParams['search'] = search;
+    }
+
+    final queryString = queryParams.entries
+        .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+        .join('&');
+
+    final response = await _api.get('/groups/$groupId/members?$queryString');
+
+    if (response['return_code'] == 'SUCCESS') {
+      final membersList = response['members'] as List<dynamic>? ?? [];
+      final members = membersList
+          .map((m) => GroupMember.fromJson(m as Map<String, dynamic>))
+          .toList();
+
+      return GroupMembersResult(
+        success: true,
+        members: members,
+        totalCount: int.tryParse(response['total_count']?.toString() ?? '0') ?? 0,
+        hasMore: response['has_more'] as bool? ?? false,
+      );
+    }
+
+    return GroupMembersResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to load members',
+    );
+  }
+
+  /// Approve a pending member request (organiser/host only)
+  Future<MemberActionResult> approveMember(int groupId, int membershipId) async {
+    final response = await _api.post('/groups/$groupId/members/approve', {
+      'membership_id': membershipId,
+    });
+
+    if (response['return_code'] == 'SUCCESS') {
+      return MemberActionResult(success: true);
+    }
+
+    return MemberActionResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to approve member',
+    );
+  }
+
+  /// Reject a pending member request (organiser/host only)
+  Future<MemberActionResult> rejectMember(int groupId, int membershipId) async {
+    final response = await _api.post('/groups/$groupId/members/reject', {
+      'membership_id': membershipId,
+    });
+
+    if (response['return_code'] == 'SUCCESS') {
+      return MemberActionResult(success: true);
+    }
+
+    return MemberActionResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to reject member',
+    );
+  }
+
+  /// Leave a group (for active members, not organisers)
+  Future<MemberActionResult> leaveGroup(int groupId) async {
+    final response = await _api.post('/groups/$groupId/leave', {});
+
+    if (response['return_code'] == 'SUCCESS') {
+      return MemberActionResult(success: true);
+    }
+
+    return MemberActionResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to leave group',
+    );
+  }
+
+  /// Remove a member from a group (organiser only)
+  Future<MemberActionResult> removeMember(int groupId, int membershipId) async {
+    final response = await _api.post('/groups/$groupId/members/remove', {
+      'membership_id': membershipId,
+    });
+
+    if (response['return_code'] == 'SUCCESS') {
+      return MemberActionResult(success: true);
+    }
+
+    return MemberActionResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to remove member',
+    );
+  }
+
+  /// Assign a role to a member (organiser only)
+  /// role can be 'host' or 'member'
+  Future<MemberActionResult> assignRole(int groupId, int membershipId, String role) async {
+    final response = await _api.post('/groups/$groupId/members/role', {
+      'membership_id': membershipId,
+      'role': role,
+    });
+
+    if (response['return_code'] == 'SUCCESS') {
+      return MemberActionResult(success: true);
+    }
+
+    return MemberActionResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to update role',
+    );
+  }
+}
+
+class MemberActionResult {
+  final bool success;
+  final String? error;
+
+  MemberActionResult({required this.success, this.error});
+}
+
+class GroupMembersResult {
+  final bool success;
+  final List<GroupMember>? members;
+  final int totalCount;
+  final bool hasMore;
+  final String? error;
+
+  GroupMembersResult({
+    required this.success,
+    this.members,
+    this.totalCount = 0,
+    this.hasMore = false,
+    this.error,
+  });
+}
+
+class GroupMember {
+  final int id;
+  final int userId;
+  final String name;
+  final String? avatarUrl;
+  final String role;
+  final String status;
+  final DateTime joinedAt;
+
+  GroupMember({
+    required this.id,
+    required this.userId,
+    required this.name,
+    this.avatarUrl,
+    required this.role,
+    required this.status,
+    required this.joinedAt,
+  });
+
+  factory GroupMember.fromJson(Map<String, dynamic> json) {
+    return GroupMember(
+      id: json['id'] as int,
+      userId: json['user_id'] as int,
+      name: json['name'] as String,
+      avatarUrl: json['avatar_url'] as String?,
+      role: json['role'] as String? ?? 'member',
+      status: json['status'] as String? ?? 'active',
+      joinedAt: DateTime.parse(json['joined_at'] as String),
+    );
+  }
+
+  bool get isOrganiser => role == 'organiser';
+  bool get isHost => role == 'host';
+
+  String get initials {
+    final words = name.split(' ');
+    if (words.length >= 2) {
+      return '${words[0][0]}${words[1][0]}'.toUpperCase();
+    }
+    return name.substring(0, name.length >= 2 ? 2 : 1).toUpperCase();
+  }
+}
+
+class UpdateGroupResult {
+  final bool success;
+  final String? error;
+
+  UpdateGroupResult({required this.success, this.error});
 }
 
 class CreateGroupResult {

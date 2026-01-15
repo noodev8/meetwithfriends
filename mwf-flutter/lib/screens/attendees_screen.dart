@@ -488,12 +488,12 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
               ? attendee.name[0].toUpperCase()
               : '?';
 
-          return GestureDetector(
-            onTap: () => _showAttendeeModal(attendee),
-            child: Column(
+          return Column(
               children: [
-                // Avatar with badge
-                Stack(
+                // Avatar with badge (tappable for large popup)
+                GestureDetector(
+                  onTap: () => _showAvatarPopup(attendee),
+                  child: Stack(
                   clipBehavior: Clip.none,
                   children: [
                     // Avatar
@@ -584,6 +584,7 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
                       ),
                   ],
                 ),
+                ),
                 const SizedBox(height: 8),
                 // Name
                 Text(
@@ -596,19 +597,18 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
                 ),
-                // Role
-                Text(
-                  isHost
-                      ? 'Event Host'
-                      : attendee.guestCount > 0
-                          ? '+${attendee.guestCount} guest${attendee.guestCount > 1 ? 's' : ''}'
-                          : 'Member',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF64748B),
+                // Role (only show if host or has guests)
+                if (isHost || attendee.guestCount > 0)
+                  Text(
+                    isHost
+                        ? 'Event Host'
+                        : '+${attendee.guestCount} guest${attendee.guestCount > 1 ? 's' : ''}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF64748B),
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
                 // RSVP time
                 Text(
                   rsvpFormat.format(attendee.rsvpAt),
@@ -619,8 +619,7 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
                   textAlign: TextAlign.center,
                 ),
               ],
-            ),
-          );
+            );
         },
           ),
         );
@@ -628,131 +627,83 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
     );
   }
 
-  void _showAttendeeModal(Attendee attendee) {
+  void _showAvatarPopup(Attendee attendee) {
     final initial = attendee.name.isNotEmpty
         ? attendee.name[0].toUpperCase()
         : '?';
     final rsvpFormat = DateFormat('d MMM yyyy, HH:mm');
 
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => Container(
-        margin: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-        ),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle bar
+            // Large avatar
             Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
+              width: 240,
+              height: 240,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(120),
+                gradient: attendee.avatarUrl == null
+                    ? const LinearGradient(
+                        colors: [Color(0xFFE0E7FF), Color(0xFFEDE9FE)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
+                image: attendee.avatarUrl != null
+                    ? DecorationImage(
+                        image: NetworkImage(attendee.avatarUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(64),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
+              child: attendee.avatarUrl == null
+                  ? Center(
+                      child: Text(
+                        initial,
+                        style: const TextStyle(
+                          fontSize: 96,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF6366F1),
+                        ),
+                      ),
+                    )
+                  : null,
             ),
-            Padding(
-              padding: const EdgeInsets.all(24),
+            const SizedBox(height: 16),
+            // Name and RSVP time
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
               child: Column(
                 children: [
-                  // Large avatar
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFE0E7FF), Color(0xFFEDE9FE)],
-                      ),
-                      image: attendee.avatarUrl != null
-                          ? DecorationImage(
-                              image: NetworkImage(attendee.avatarUrl!),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
-                    ),
-                    child: attendee.avatarUrl == null
-                        ? Center(
-                            child: Text(
-                              initial,
-                              style: const TextStyle(
-                                fontSize: 40,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF6366F1),
-                              ),
-                            ),
-                          )
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  // Name
                   Text(
                     attendee.name,
                     style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
                       color: Color(0xFF1E293B),
                     ),
                   ),
                   const SizedBox(height: 4),
-                  // Status
                   Text(
-                    _activeTab == AttendeeTab.going
-                        ? 'Going'
-                        : _activeTab == AttendeeTab.waitlist
-                            ? 'Waitlist'
-                            : 'Not going',
+                    rsvpFormat.format(attendee.rsvpAt),
                     style: const TextStyle(
                       fontSize: 14,
                       color: Color(0xFF64748B),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // RSVP time
-                  Text(
-                    'RSVP: ${rsvpFormat.format(attendee.rsvpAt)}',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF94A3B8),
-                    ),
-                  ),
-                  if (attendee.guestCount > 0) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      '+${attendee.guestCount} guest${attendee.guestCount > 1 ? 's' : ''}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  // Close button
-                  SizedBox(
-                    width: double.infinity,
-                    child: TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        backgroundColor: const Color(0xFFF1F5F9),
-                      ),
-                      child: const Text(
-                        'Close',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
                     ),
                   ),
                 ],
@@ -763,4 +714,5 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
       ),
     );
   }
+
 }
