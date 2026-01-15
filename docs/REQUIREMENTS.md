@@ -2,7 +2,7 @@
 
 Single source of truth for feature status. See PROJECT_FOUNDATION.md for vision/architecture.
 
-**Status:** 11/11 complete
+**Status:** 11/12 complete (1 planned)
 
 ---
 
@@ -174,6 +174,47 @@ Allow group organisers to make groups unlisted (invite-only) so they can't be di
 
 ---
 
+## Phase 6: Infrastructure
+
+### REQ-014: Email Queue System
+**Status:** PLANNED
+**Effort:** Medium
+
+Implement email queue to respect Resend rate limits (2 requests/second).
+
+**Problem:**
+- Current code fires all notification emails simultaneously
+- Groups with 3+ members exceed Resend rate limit (429 errors)
+- Causes email delivery failures
+
+**Implementation Plan:**
+- New `email_queue` table:
+  ```sql
+  CREATE TABLE email_queue (
+      id SERIAL PRIMARY KEY,
+      email_type VARCHAR(50) NOT NULL,
+      recipient_email VARCHAR(255) NOT NULL,
+      recipient_name VARCHAR(255),
+      payload JSONB NOT NULL,
+      status VARCHAR(20) DEFAULT 'pending',
+      attempts INT DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      sent_at TIMESTAMPTZ,
+      error_message TEXT
+  );
+  ```
+- Helper function to queue emails instead of sending directly
+- `POST /api/emails/process-queue` endpoint to process pending emails with 1s delay
+- Manual trigger initially, cron job later
+
+**Affected Routes:**
+- `create_event.js` - new event notifications (currently commented out)
+- `cancel_event.js` - cancellation notifications
+- `update_event.js` - update notifications
+- Any other bulk email sends
+
+---
+
 ## Summary
 
 | REQ | Name | Phase | Effort | Status |
@@ -189,7 +230,8 @@ Allow group organisers to make groups unlisted (invite-only) so they can't be di
 | 011 | Last Login Tracking | 5 | Small | COMPLETE |
 | 012 | Duplicate Event | 5 | Small | COMPLETE |
 | 013 | Group Visibility | 5 | Medium | COMPLETE |
+| 014 | Email Queue System | 6 | Medium | PLANNED |
 
 ---
 
-**All phases complete.**
+**Phase 1-5 complete. Phase 6 in progress.**

@@ -227,14 +227,16 @@ router.post('/create', verifyToken, async (req, res) => {
         // =======================================================================
         // Send email notification to all group members (except creator)
         // =======================================================================
-        // Get group name and creator name
+        // TODO: REQ-014 - Email queue system needed to respect Resend rate limits (2/sec)
+        // Commented out due to rate limit errors when groups have multiple members
+        // See REQUIREMENTS.md for planned implementation
+        /*
         const groupResult = await query('SELECT id, name FROM group_list WHERE id = $1', [group_id]);
         const group = groupResult.rows[0];
 
         const creatorResult = await query('SELECT name FROM app_user WHERE id = $1', [userId]);
         const hostName = creatorResult.rows[0]?.name || 'Someone';
 
-        // Get all active group members except the event creator (respecting broadcast preferences)
         const membersResult = await query(
             `SELECT u.email, u.name
              FROM group_member gm
@@ -246,12 +248,12 @@ router.post('/create', verifyToken, async (req, res) => {
             [group_id, userId]
         );
 
-        // Send emails to each member (async - don't wait)
         membersResult.rows.forEach(member => {
             sendNewEventEmail(member.email, member.name, result, group, hostName).catch(err => {
                 console.error('Failed to send new event email:', err);
             });
         });
+        */
 
         // =======================================================================
         // Return success response
