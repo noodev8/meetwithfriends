@@ -156,9 +156,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
     setState(() => _isSubmitting = false);
 
-    if (result.success) {
+    if (result.success && result.eventId != null) {
       widget.onEventCreated?.call();
-      Navigator.of(context).pop(result.event);
+      Navigator.of(context).pop(result.eventId);
     } else {
       setState(() => _error = result.error ?? 'Failed to create event');
     }

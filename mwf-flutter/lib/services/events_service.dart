@@ -199,10 +199,15 @@ class EventsService {
     if (response['return_code'] == 'SUCCESS') {
       final eventData = response['event'] as Map<String, dynamic>?;
       if (eventData != null) {
-        return CreateEventResult(
-          success: true,
-          event: Event.fromJson(eventData),
-        );
+        // Only extract the ID - the response doesn't include group_name etc.
+        // that Event.fromJson expects. Caller should navigate by ID.
+        final eventId = eventData['id'] as int?;
+        if (eventId != null) {
+          return CreateEventResult(
+            success: true,
+            eventId: eventId,
+          );
+        }
       }
     }
 
@@ -459,8 +464,8 @@ class EventHost {
 
 class CreateEventResult {
   final bool success;
-  final Event? event;
+  final int? eventId;
   final String? error;
 
-  CreateEventResult({required this.success, this.event, this.error});
+  CreateEventResult({required this.success, this.eventId, this.error});
 }
