@@ -47,6 +47,26 @@ export default function PrivacyPage() {
 
                     <section>
                         <h2 className="text-xl font-bold text-slate-900 font-display mb-4">
+                            Age Requirements and Children&apos;s Privacy
+                        </h2>
+                        <p className="text-slate-600 leading-relaxed mb-4">
+                            Meet With Friends is intended for users aged 13 and over.
+                        </p>
+                        <ul className="list-disc list-inside text-slate-600 space-y-2">
+                            <li>You must be at least 13 years old to create an account</li>
+                            <li>Users aged 13-17 should have parental or guardian consent before using our service</li>
+                            <li>We do not knowingly collect personal information from children under 13</li>
+                            <li>If we discover that we have collected information from a child under 13, we will delete it immediately</li>
+                            <li>Parents or guardians who believe their child under 13 has provided us with personal information should contact us at{' '}
+                                <a href="mailto:noodev8@gmail.com" className="text-indigo-600 hover:text-indigo-700">
+                                    noodev8@gmail.com
+                                </a>
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2 className="text-xl font-bold text-slate-900 font-display mb-4">
                             Information We Collect
                         </h2>
                         <p className="text-slate-600 leading-relaxed mb-4">
