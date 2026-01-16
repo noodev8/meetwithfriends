@@ -113,13 +113,23 @@ export default function PrivacyPage() {
 
                     <section>
                         <h2 className="text-xl font-bold text-slate-900 font-display mb-4">
-                            Data Retention
+                            Data Retention and Storage
                         </h2>
+                        <p className="text-slate-600 leading-relaxed mb-4">
+                            Your data is collected and stored solely for the purpose of providing and operating the Meet With Friends service.
+                            We do not guarantee indefinite storage of any data. As we continue to develop the platform:
+                        </p>
                         <ul className="list-disc list-inside text-slate-600 space-y-2">
-                            <li><strong>Account deletion:</strong> When you delete your account, your personal data is removed immediately</li>
+                            <li><strong>No indefinite storage:</strong> Data may be deleted, lost, or reset at any time as we develop the platform</li>
+                            <li><strong>Account deletion:</strong> When you delete your account, your personal data is removed</li>
                             <li><strong>Inactive accounts:</strong> We may remove accounts that have been inactive for more than 1 year</li>
-                            <li><strong>Event data:</strong> Events and associated data (comments, RSVPs) older than 6 months may be deleted</li>
+                            <li><strong>Event data:</strong> Events and associated data (comments, RSVPs) may be deleted at any time</li>
+                            <li><strong>System changes:</strong> Platform updates or maintenance may result in data loss</li>
                         </ul>
+                        <p className="text-slate-600 leading-relaxed mt-4">
+                            By using Meet With Friends, you acknowledge that data loss may occur and accept this risk.
+                            We recommend not relying on our platform as your sole record of any important information.
+                        </p>
                     </section>
 
                     <section>

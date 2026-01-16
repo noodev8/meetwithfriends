@@ -58,6 +58,28 @@ export default function TermsPage() {
 
                     <section>
                         <h2 className="text-xl font-bold text-slate-900 font-display mb-4">
+                            Service Availability and Data
+                        </h2>
+                        <p className="text-slate-600 leading-relaxed mb-4">
+                            Meet With Friends is provided on an &quot;as is&quot; and &quot;as available&quot; basis. As we continue
+                            to develop and improve the platform:
+                        </p>
+                        <ul className="list-disc list-inside text-slate-600 space-y-2">
+                            <li>Data may be lost, deleted, or reset at any time without prior notice</li>
+                            <li>The service may be modified, suspended, or discontinued at our discretion</li>
+                            <li>Data is collected and stored solely for the functioning of the application</li>
+                            <li>Data is not guaranteed to be stored indefinitely and may be removed at any time</li>
+                            <li>We are not responsible for any data loss, corruption, or unavailability</li>
+                        </ul>
+                        <p className="text-slate-600 leading-relaxed mt-4">
+                            By using Meet With Friends, you acknowledge and accept that you do so at your own risk.
+                            You are responsible for maintaining your own backups of any important information.
+                            Noodev8 Ltd accepts no liability for any loss of data or any consequences arising from such loss.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 className="text-xl font-bold text-slate-900 font-display mb-4">
                             User Accounts
                         </h2>
                         <ul className="list-disc list-inside text-slate-600 space-y-2">
