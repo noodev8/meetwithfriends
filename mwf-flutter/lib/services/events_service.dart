@@ -184,6 +184,7 @@ class EventsService {
     int maxGuestsPerRsvp = 1,
     bool preordersEnabled = false,
     String? menuLink,
+    List<String>? menuImages,
     DateTime? preorderCutoff,
   }) async {
     final body = <String, dynamic>{
@@ -208,6 +209,9 @@ class EventsService {
     }
     if (preordersEnabled) {
       body['preorders_enabled'] = true;
+      if (menuImages != null && menuImages.isNotEmpty) {
+        body['menu_images'] = menuImages;
+      }
       if (menuLink != null && menuLink.isNotEmpty) {
         body['menu_link'] = menuLink;
       }
@@ -251,6 +255,8 @@ class EventsService {
     String? category,
     bool? preordersEnabled,
     String? menuLink,
+    List<String>? menuImages,
+    bool? menuImagesCleared, // Set to true to clear menu images
     DateTime? preorderCutoff,
     bool? preorderCutoffCleared, // Set to true to clear preorder cutoff
   }) async {
@@ -278,6 +284,11 @@ class EventsService {
     }
     if (preordersEnabled != null) {
       body['preorders_enabled'] = preordersEnabled;
+    }
+    if (menuImagesCleared == true) {
+      body['menu_images'] = null;
+    } else if (menuImages != null) {
+      body['menu_images'] = menuImages.isNotEmpty ? menuImages : null;
     }
     if (menuLink != null) {
       body['menu_link'] = menuLink.isNotEmpty ? menuLink : null;

@@ -753,63 +753,114 @@ export default function EditEventPage() {
                                                             Cutoff
                                                         </label>
                                                         {/* Date presets - relative to event date */}
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {[
-                                                                { days: 7, label: '1 week before' },
-                                                                { days: 3, label: '3 days before' },
-                                                                { days: 1, label: '1 day before' },
-                                                            ].map(({ days, label }) => {
-                                                                const cutoffDate = date ? (() => {
-                                                                    const d = new Date(date + 'T12:00:00'); // Use noon to avoid timezone issues
-                                                                    d.setDate(d.getDate() - days);
-                                                                    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                                                                })() : '';
-                                                                const isSelected = preorderCutoffDate === cutoffDate && cutoffDate !== '';
-                                                                return (
-                                                                    <button
-                                                                        key={days}
-                                                                        type="button"
-                                                                        disabled={!date}
-                                                                        onClick={() => {
-                                                                            setPreorderCutoffDate(cutoffDate);
-                                                                            setPreorderCutoffTime('17:00');
-                                                                        }}
-                                                                        className={`px-3 h-11 rounded-lg text-sm font-medium transition ${
-                                                                            isSelected
-                                                                                ? 'bg-indigo-500 text-white'
-                                                                                : date
-                                                                                    ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                                                                    : 'bg-slate-50 text-slate-400 cursor-not-allowed'
-                                                                        }`}
-                                                                    >
-                                                                        {label}
-                                                                    </button>
-                                                                );
-                                                            })}
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setPreorderCutoffDate('');
-                                                                    setPreorderCutoffTime('');
-                                                                }}
-                                                                className={`px-3 h-11 rounded-lg text-sm font-medium transition ${
-                                                                    preorderCutoffDate === ''
-                                                                        ? 'bg-indigo-500 text-white'
-                                                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                                                }`}
-                                                            >
-                                                                No cutoff
-                                                            </button>
-                                                        </div>
-                                                        {/* Show selected date */}
-                                                        {preorderCutoffDate && (
-                                                            <p className="mt-2 text-sm text-slate-600">
-                                                                Orders due by {new Date(preorderCutoffDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })} at 5pm
-                                                            </p>
-                                                        )}
-                                                        {!date && (
-                                                            <p className="mt-2 text-sm text-slate-400">Set event date first</p>
-                                                        )}
+                                                        {(() => {
+                                                            const presetDays = [7, 3, 1];
+                                                            const presetDates = date ? presetDays.map(days => {
+                                                                const d = new Date(date + 'T12:00:00');
+                                                                d.setDate(d.getDate() - days);
+                                                                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                                                            }) : [];
+                                                            const isCustomDate = preorderCutoffDate !== '' && !presetDates.includes(preorderCutoffDate);
+
+                                                            return (
+                                                                <>
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        {[
+                                                                            { days: 7, label: '1 week before' },
+                                                                            { days: 3, label: '3 days before' },
+                                                                            { days: 1, label: '1 day before' },
+                                                                        ].map(({ days, label }) => {
+                                                                            const cutoffDate = date ? (() => {
+                                                                                const d = new Date(date + 'T12:00:00');
+                                                                                d.setDate(d.getDate() - days);
+                                                                                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                                                                            })() : '';
+                                                                            const isSelected = preorderCutoffDate === cutoffDate && cutoffDate !== '';
+                                                                            return (
+                                                                                <button
+                                                                                    key={days}
+                                                                                    type="button"
+                                                                                    disabled={!date}
+                                                                                    onClick={() => {
+                                                                                        setPreorderCutoffDate(cutoffDate);
+                                                                                        setPreorderCutoffTime('17:00');
+                                                                                    }}
+                                                                                    className={`px-3 h-11 rounded-lg text-sm font-medium transition ${
+                                                                                        isSelected
+                                                                                            ? 'bg-indigo-500 text-white'
+                                                                                            : date
+                                                                                                ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                                                                                : 'bg-slate-50 text-slate-400 cursor-not-allowed'
+                                                                                    }`}
+                                                                                >
+                                                                                    {label}
+                                                                                </button>
+                                                                            );
+                                                                        })}
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                setPreorderCutoffDate('');
+                                                                                setPreorderCutoffTime('');
+                                                                            }}
+                                                                            className={`px-3 h-11 rounded-lg text-sm font-medium transition ${
+                                                                                preorderCutoffDate === ''
+                                                                                    ? 'bg-indigo-500 text-white'
+                                                                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                                                            }`}
+                                                                        >
+                                                                            No cutoff
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                if (date) {
+                                                                                    const d = new Date(date + 'T12:00:00');
+                                                                                    d.setDate(d.getDate() - 2);
+                                                                                    setPreorderCutoffDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+                                                                                    setPreorderCutoffTime('17:00');
+                                                                                }
+                                                                            }}
+                                                                            disabled={!date}
+                                                                            className={`px-3 h-11 rounded-lg text-sm font-medium transition ${
+                                                                                isCustomDate
+                                                                                    ? 'bg-indigo-500 text-white'
+                                                                                    : date
+                                                                                        ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                                                                        : 'bg-slate-50 text-slate-400 cursor-not-allowed'
+                                                                            }`}
+                                                                        >
+                                                                            Custom
+                                                                        </button>
+                                                                    </div>
+                                                                    {isCustomDate && (
+                                                                        <div className="mt-3 flex gap-3">
+                                                                            <input
+                                                                                type="date"
+                                                                                value={preorderCutoffDate}
+                                                                                onChange={(e) => setPreorderCutoffDate(e.target.value)}
+                                                                                max={date}
+                                                                                className="flex-1 px-4 h-11 rounded-lg bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-slate-700"
+                                                                            />
+                                                                            <input
+                                                                                type="time"
+                                                                                value={preorderCutoffTime}
+                                                                                onChange={(e) => setPreorderCutoffTime(e.target.value)}
+                                                                                className="w-32 px-4 h-11 rounded-lg bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-slate-700"
+                                                                            />
+                                                                        </div>
+                                                                    )}
+                                                                    {preorderCutoffDate && !isCustomDate && (
+                                                                        <p className="mt-2 text-sm text-slate-600">
+                                                                            Orders due by {new Date(preorderCutoffDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })} at 5pm
+                                                                        </p>
+                                                                    )}
+                                                                    {!date && (
+                                                                        <p className="mt-2 text-sm text-slate-400">Set event date first</p>
+                                                                    )}
+                                                                </>
+                                                            );
+                                                        })()}
                                                     </div>
                                                 </div>
                                             </div>

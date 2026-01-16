@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../services/events_service.dart';
 import '../config/event_categories.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../widgets/menu_image_picker.dart';
 
 class EditEventScreen extends StatefulWidget {
   final int eventId;
@@ -44,7 +45,10 @@ class _EditEventScreenState extends State<EditEventScreen> {
   bool _capacityExpanded = false;
   bool _preordersExpanded = false;
   bool _preordersEnabled = false;
-  int _preorderCutoffDays = 0; // 0 = no cutoff
+  int _preorderCutoffDays = 0; // 0 = no cutoff, -1 = custom
+  DateTime? _customCutoffDate;
+  TimeOfDay _customCutoffTime = const TimeOfDay(hour: 17, minute: 0);
+  List<String> _menuImages = [];
 
   bool _isSubmitting = false;
   String? _error;
@@ -85,6 +89,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
       _locationController.text = event.location ?? '';
       _descriptionController.text = _stripHtmlTags(event.description ?? '');
       _menuLinkController.text = event.menuLink ?? '';
+      _menuImages = event.menuImages ?? [];
 
       _selectedDate = event.dateTime;
       _selectedTime = '${event.dateTime.hour.toString().padLeft(2, '0')}:${event.dateTime.minute.toString().padLeft(2, '0')}';
@@ -105,10 +110,17 @@ class _EditEventScreenState extends State<EditEventScreen> {
       // Calculate cutoff days from preorder cutoff date
       if (event.preorderCutoff != null) {
         final diff = event.dateTime.difference(event.preorderCutoff!).inDays;
-        if (diff >= 1 && diff <= 3) {
+        // Check if it matches a preset (7, 3, or 1 days before)
+        if (diff == 7 || diff == 3 || diff == 1) {
           _preorderCutoffDays = diff;
         } else if (diff > 0) {
-          _preorderCutoffDays = 0; // Default to no cutoff for custom dates
+          // Custom date
+          _preorderCutoffDays = -1;
+          _customCutoffDate = event.preorderCutoff;
+          _customCutoffTime = TimeOfDay(
+            hour: event.preorderCutoff!.hour,
+            minute: event.preorderCutoff!.minute,
+          );
         }
       }
 
@@ -194,17 +206,29 @@ class _EditEventScreenState extends State<EditEventScreen> {
     // Calculate preorder cutoff if enabled
     DateTime? preorderCutoff;
     bool preorderCutoffCleared = false;
-    if (_preordersEnabled && _preorderCutoffDays > 0) {
-      preorderCutoff = dateTime.subtract(Duration(days: _preorderCutoffDays));
-      preorderCutoff = DateTime(
-        preorderCutoff.year,
-        preorderCutoff.month,
-        preorderCutoff.day,
-        17, // 5 PM
-        0,
-      );
-    } else if (_preordersEnabled && _preorderCutoffDays == 0) {
-      preorderCutoffCleared = true;
+    if (_preordersEnabled) {
+      if (_preorderCutoffDays == -1 && _customCutoffDate != null) {
+        // Custom date
+        preorderCutoff = DateTime(
+          _customCutoffDate!.year,
+          _customCutoffDate!.month,
+          _customCutoffDate!.day,
+          _customCutoffTime.hour,
+          _customCutoffTime.minute,
+        );
+      } else if (_preorderCutoffDays > 0) {
+        // Preset days before event
+        preorderCutoff = dateTime.subtract(Duration(days: _preorderCutoffDays));
+        preorderCutoff = DateTime(
+          preorderCutoff.year,
+          preorderCutoff.month,
+          preorderCutoff.day,
+          17, // 5 PM
+          0,
+        );
+      } else if (_preorderCutoffDays == 0) {
+        preorderCutoffCleared = true;
+      }
     }
 
     setState(() {
@@ -222,6 +246,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
       capacity: _capacity,
       capacityUnlimited: _capacity == null,
       preordersEnabled: _preordersEnabled,
+      menuImages: _menuImages,
       menuLink: _menuLinkController.text.trim(),
       preorderCutoff: preorderCutoff,
       preorderCutoffCleared: preorderCutoffCleared,
@@ -901,8 +926,30 @@ class _EditEventScreenState extends State<EditEventScreen> {
           if (_preordersEnabled) ...[
             const SizedBox(height: 20),
 
+            // Menu images
+            _buildLabel('Menu Photos'),
+            const SizedBox(height: 8),
+            MenuImagePicker(
+              images: _menuImages,
+              onImagesChanged: (images) => setState(() => _menuImages = images),
+            ),
+            const SizedBox(height: 20),
+
+            // Or divider
+            Row(
+              children: [
+                Expanded(child: Container(height: 1, color: const Color(0xFFE2E8F0))),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text('or', style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
+                ),
+                Expanded(child: Container(height: 1, color: const Color(0xFFE2E8F0))),
+              ],
+            ),
+            const SizedBox(height: 20),
+
             // Menu link
-            _buildLabel('Link'),
+            _buildLabel('External Link'),
             const SizedBox(height: 8),
             TextFormField(
               controller: _menuLinkController,
@@ -911,7 +958,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
             ),
             const SizedBox(height: 4),
             const Text(
-              'Share a menu, form, or any link for attendees to submit their choices',
+              'Link to a menu or form (used if no photos uploaded)',
               style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
             ),
             const SizedBox(height: 20),
@@ -927,8 +974,86 @@ class _EditEventScreenState extends State<EditEventScreen> {
                 _buildCutoffChip(3, '3 days before'),
                 _buildCutoffChip(1, '1 day before'),
                 _buildCutoffChip(0, 'No cutoff'),
+                _buildCutoffChip(-1, 'Custom'),
               ],
             ),
+            // Custom date/time pickers
+            if (_preorderCutoffDays == -1) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _customCutoffDate ?? DateTime.now(),
+                          firstDate: DateTime.now().subtract(const Duration(days: 1)),
+                          lastDate: _selectedDate ?? DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (picked != null) {
+                          setState(() => _customCutoffDate = picked);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF64748B)),
+                            const SizedBox(width: 8),
+                            Text(
+                              _customCutoffDate != null
+                                  ? DateFormat('EEE d MMM').format(_customCutoffDate!)
+                                  : 'Select date',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: _customCutoffDate != null ? const Color(0xFF1E293B) : const Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime: _customCutoffTime,
+                      );
+                      if (picked != null) {
+                        setState(() => _customCutoffTime = picked);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.schedule_rounded, size: 16, color: Color(0xFF64748B)),
+                          const SizedBox(width: 8),
+                          Text(
+                            _customCutoffTime.format(context),
+                            style: const TextStyle(fontSize: 14, color: Color(0xFF1E293B)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            // Show selected date for presets
             if (_preorderCutoffDays > 0 && _selectedDate != null) ...[
               const SizedBox(height: 8),
               Text(
@@ -936,7 +1061,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
                 style: const TextStyle(fontSize: 13, color: Color(0xFF475569)),
               ),
             ],
-            if (_selectedDate == null) ...[
+            if (_preorderCutoffDays > 0 && _selectedDate == null) ...[
               const SizedBox(height: 8),
               const Text(
                 'Set event date first',
@@ -951,10 +1076,17 @@ class _EditEventScreenState extends State<EditEventScreen> {
 
   Widget _buildCutoffChip(int days, String label) {
     final isSelected = _preorderCutoffDays == days;
+    // Presets need event date; custom and no cutoff always enabled
     final isDisabled = days > 0 && _selectedDate == null;
 
     return GestureDetector(
-      onTap: isDisabled ? null : () => setState(() => _preorderCutoffDays = days),
+      onTap: isDisabled ? null : () => setState(() {
+        _preorderCutoffDays = days;
+        // Initialize custom date to 2 days before event if switching to custom
+        if (days == -1 && _customCutoffDate == null && _selectedDate != null) {
+          _customCutoffDate = _selectedDate!.subtract(const Duration(days: 2));
+        }
+      }),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
