@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../models/comment.dart';
 import '../services/events_service.dart';
+import '../services/comments_service.dart';
 import '../config/event_categories.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/pre_order_section.dart';
@@ -23,6 +25,7 @@ class EventDetailScreen extends StatefulWidget {
 
 class _EventDetailScreenState extends State<EventDetailScreen> {
   final EventsService _eventsService = EventsService();
+  final CommentsService _commentsService = CommentsService();
 
   bool _isLoading = true;
   bool _rsvpLoading = false;
@@ -33,6 +36,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   List<Attendee> _attendees = []; // Preview of attendees for avatar display
   bool _isGroupMember = false;
   bool _canEdit = false;
+
+  // Comments state
+  List<Comment> _comments = [];
+  int _commentCount = 0;
+  bool _addingComment = false;
+  final TextEditingController _commentController = TextEditingController();
 
   // Responsive helpers
   bool _isTablet(BuildContext context) =>
@@ -56,6 +65,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     _loadEvent();
   }
 
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadEvent() async {
     setState(() {
       _isLoading = true;
@@ -66,8 +81,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
     if (mounted) {
       if (result.success) {
-        // Also fetch attendees for avatar preview
+        // Also fetch attendees for avatar preview and comments
         final attendeesResult = await _eventsService.getAttendees(widget.eventId);
+        final commentsResult = await _commentsService.getComments(widget.eventId);
 
         setState(() {
           _isLoading = false;
@@ -78,6 +94,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           _canEdit = result.canEdit;
           if (attendeesResult.success) {
             _attendees = attendeesResult.attending;
+          }
+          if (commentsResult.success) {
+            _comments = commentsResult.comments;
+            _commentCount = commentsResult.commentCount;
           }
         });
       } else {
@@ -149,6 +169,110 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     if (result == true) {
       _loadEvent();
     }
+  }
+
+  Future<void> _addComment() async {
+    final content = _commentController.text.trim();
+    if (content.isEmpty || _event == null) return;
+
+    setState(() => _addingComment = true);
+
+    final result = await _commentsService.addComment(_event!.id, content);
+
+    if (mounted) {
+      setState(() => _addingComment = false);
+
+      if (result.success && result.comment != null) {
+        setState(() {
+          _comments.add(result.comment!);
+          _commentCount++;
+          _commentController.clear();
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.error ?? 'Failed to add comment'),
+            backgroundColor: Colors.red.shade600,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteComment(Comment comment) async {
+    final result = await _commentsService.deleteComment(comment.id);
+
+    if (mounted) {
+      if (result.success) {
+        setState(() {
+          _comments.removeWhere((c) => c.id == comment.id);
+          _commentCount--;
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.error ?? 'Failed to delete comment'),
+            backgroundColor: Colors.red.shade600,
+          ),
+        );
+      }
+    }
+  }
+
+  void _confirmDeleteComment(Comment comment) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          'Delete comment?',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1E293B),
+          ),
+        ),
+        content: const Text(
+          'This action cannot be undone.',
+          style: TextStyle(
+            fontSize: 14,
+            color: Color(0xFF64748B),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF64748B),
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _deleteComment(comment);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade500,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 0,
+            ),
+            child: const Text(
+              'Delete',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -310,6 +434,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         // RSVP Section (inline, not sticky)
                         if (!event.isPast && !event.isCancelled)
                           _buildRsvpSection(event, margin),
+
+                        // Discussion Section (for group members)
+                        if (_isGroupMember)
+                          _buildDiscussionSection(event, margin),
 
                         SizedBox(height: _isTablet(context) ? 32 : 24),
                       ],
@@ -1358,6 +1486,310 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDiscussionSection(EventDetail event, double margin) {
+    final padding = _cardPadding(context);
+    final canComment = _rsvp != null &&
+        (_rsvp!.status == 'attending' || _rsvp!.status == 'waitlist') ||
+        _canEdit; // hosts/organisers can always comment
+
+    return Container(
+      margin: EdgeInsets.fromLTRB(margin, 0, margin, margin),
+      padding: EdgeInsets.all(padding),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              const Text(
+                'Discussion',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              if (_commentCount > 0) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '$_commentCount',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Add comment form (only for attendees/waitlist/hosts)
+          if (canComment)
+            _buildCommentForm()
+          else if (_rsvp == null || _rsvp!.status == 'not_going')
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                children: [
+                  Icon(
+                    Icons.chat_bubble_outline,
+                    size: 20,
+                    color: Color(0xFF94A3B8),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'RSVP to join the discussion',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // Comments list
+          if (_comments.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Divider(height: 1, color: Color(0xFFE2E8F0)),
+            const SizedBox(height: 16),
+            ..._comments.map((comment) => _buildCommentItem(comment)),
+          ] else if (canComment) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.forum_outlined,
+                    size: 20,
+                    color: Color(0xFF94A3B8),
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Be the first to comment',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCommentForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        TextField(
+          controller: _commentController,
+          maxLength: 280,
+          maxLines: 3,
+          minLines: 1,
+          decoration: InputDecoration(
+            hintText: 'Add a comment...',
+            hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+            filled: true,
+            fillColor: const Color(0xFFF8FAFC),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFF7C3AED),
+                width: 2,
+              ),
+            ),
+            counterText: '',
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '${_commentController.text.length}/280',
+              style: TextStyle(
+                fontSize: 12,
+                color: _commentController.text.length > 250
+                    ? Colors.orange.shade700
+                    : const Color(0xFF94A3B8),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: _addingComment ||
+                      _commentController.text.trim().isEmpty
+                  ? null
+                  : _addComment,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF7C3AED),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 0,
+                disabledBackgroundColor:
+                    const Color(0xFF7C3AED).withAlpha(100),
+              ),
+              child: _addingComment
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Post',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCommentItem(Comment comment) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Avatar
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              gradient: comment.userAvatarUrl == null
+                  ? const LinearGradient(
+                      colors: [Color(0xFFE0E7FF), Color(0xFFEDE9FE)],
+                    )
+                  : null,
+              borderRadius: BorderRadius.circular(18),
+              image: comment.userAvatarUrl != null
+                  ? DecorationImage(
+                      image: NetworkImage(comment.userAvatarUrl!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            child: comment.userAvatarUrl == null
+                ? Center(
+                    child: Text(
+                      comment.initials,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF6366F1),
+                      ),
+                    ),
+                  )
+                : null,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Name and time
+                Row(
+                  children: [
+                    Text(
+                      comment.userName,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      comment.relativeTime,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF94A3B8),
+                      ),
+                    ),
+                    const Spacer(),
+                    if (comment.canDelete)
+                      GestureDetector(
+                        onTap: () => _confirmDeleteComment(comment),
+                        child: const Icon(
+                          Icons.delete_outline,
+                          size: 18,
+                          color: Color(0xFF94A3B8),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                // Content
+                Text(
+                  comment.content,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    height: 1.4,
+                    color: Color(0xFF475569),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

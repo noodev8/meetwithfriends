@@ -142,31 +142,33 @@ router.post('/', verifyToken, async (req, res) => {
 
         // =======================================================================
         // Send notification emails to attendees and waitlist (except commenter)
+        // NOTE: Email notifications temporarily disabled to address rate limiting
+        // TODO: Re-enable when email batching/queuing is implemented
         // =======================================================================
-        const recipientsResult = await query(
-            `SELECT u.email, u.name
-             FROM event_rsvp er
-             JOIN app_user u ON er.user_id = u.id
-             WHERE er.event_id = $1
-             AND er.status IN ('attending', 'waitlist')
-             AND er.user_id != $2`,
-            [event_id, userId]
-        );
+        // const recipientsResult = await query(
+        //     `SELECT u.email, u.name
+        //      FROM event_rsvp er
+        //      JOIN app_user u ON er.user_id = u.id
+        //      WHERE er.event_id = $1
+        //      AND er.status IN ('attending', 'waitlist')
+        //      AND er.user_id != $2`,
+        //     [event_id, userId]
+        // );
 
-        // For test mode, only send one email (not one per recipient)
-        let testEmailSent = false;
-        recipientsResult.rows.forEach(recipient => {
-            const isTestEmail = recipient.email.toLowerCase().endsWith('@test.com');
-            if (isTestEmail && testEmailSent) {
-                return; // Skip duplicate test emails
-            }
-            if (isTestEmail) {
-                testEmailSent = true;
-            }
-            sendNewCommentEmail(recipient.email, recipient.name, event, user.name, trimmedContent).catch(err => {
-                console.error('Failed to send new comment email:', err);
-            });
-        });
+        // // For test mode, only send one email (not one per recipient)
+        // let testEmailSent = false;
+        // recipientsResult.rows.forEach(recipient => {
+        //     const isTestEmail = recipient.email.toLowerCase().endsWith('@test.com');
+        //     if (isTestEmail && testEmailSent) {
+        //         return; // Skip duplicate test emails
+        //     }
+        //     if (isTestEmail) {
+        //         testEmailSent = true;
+        //     }
+        //     sendNewCommentEmail(recipient.email, recipient.name, event, user.name, trimmedContent).catch(err => {
+        //         console.error('Failed to send new comment email:', err);
+        //     });
+        // });
 
         // =======================================================================
         // Return success with the new comment

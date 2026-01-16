@@ -10,6 +10,7 @@ import 'event_detail_screen.dart';
 import 'create_event_screen.dart';
 import 'edit_group_screen.dart';
 import 'group_members_screen.dart';
+import 'past_events_screen.dart';
 
 class GroupDashboardScreen extends StatefulWidget {
   final int groupId;
@@ -1344,7 +1345,47 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
           else
             // Show up to 3 events
             ...(_events.take(3).map((event) => _buildEventCard(event))),
+
+          // View past events link
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => _navigateToPastEvents(),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.history_rounded,
+                    size: 16,
+                    color: Colors.grey.shade500,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'View past events',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  void _navigateToPastEvents() {
+    if (_group == null) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => PastEventsScreen(
+          groupId: _group!.id,
+          groupName: _group!.name,
+        ),
       ),
     );
   }

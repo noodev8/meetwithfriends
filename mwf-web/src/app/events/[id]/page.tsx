@@ -987,45 +987,25 @@ export default function EventDetailPage() {
                                     {/* Add Comment Form - for attendees, waitlist, hosts, and organisers */}
                                     {user && (rsvp && (rsvp.status === 'attending' || rsvp.status === 'waitlist') || canEdit) ? (
                                         <form onSubmit={handleAddComment} className="mb-6">
-                                            <div className="flex gap-3">
-                                                {user.avatar_url ? (
-                                                    <div className="relative w-10 h-10 flex-shrink-0">
-                                                        <Image
-                                                            src={user.avatar_url}
-                                                            alt={user.name}
-                                                            fill
-                                                            className="rounded-full object-cover"
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center flex-shrink-0">
-                                                        <span className="text-sm font-medium text-indigo-600">
-                                                            {user.name.charAt(0).toUpperCase()}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                <div className="flex-1">
-                                                    <textarea
-                                                        value={newComment}
-                                                        onChange={(e) => setNewComment(e.target.value)}
-                                                        placeholder="Add a comment..."
-                                                        rows={2}
-                                                        maxLength={280}
-                                                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 resize-none transition"
-                                                    />
-                                                    <div className="flex justify-between items-center mt-2">
-                                                        <span className="text-xs text-slate-400">
-                                                            {newComment.length}/280
-                                                        </span>
-                                                        <button
-                                                            type="submit"
-                                                            disabled={commentLoading || !newComment.trim()}
-                                                            className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-lg hover:from-indigo-600 hover:to-violet-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                                        >
-                                                            {commentLoading ? 'Posting...' : 'Post'}
-                                                        </button>
-                                                    </div>
-                                                </div>
+                                            <textarea
+                                                value={newComment}
+                                                onChange={(e) => setNewComment(e.target.value)}
+                                                placeholder="Add a comment..."
+                                                rows={2}
+                                                maxLength={280}
+                                                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 resize-none transition"
+                                            />
+                                            <div className="flex justify-between items-center mt-2">
+                                                <span className="text-xs text-slate-400">
+                                                    {newComment.length}/280
+                                                </span>
+                                                <button
+                                                    type="submit"
+                                                    disabled={commentLoading || !newComment.trim()}
+                                                    className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium rounded-lg hover:from-indigo-600 hover:to-violet-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    {commentLoading ? 'Posting...' : 'Post'}
+                                                </button>
                                             </div>
                                         </form>
                                     ) : user && isGroupMember && !canEdit ? (
