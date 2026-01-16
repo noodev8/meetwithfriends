@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'pre_order_bottom_sheet.dart';
-import 'menu_gallery_viewer.dart';
 
 class PreOrderSection extends StatelessWidget {
   final String? foodOrder;
@@ -30,23 +28,6 @@ class PreOrderSection extends StatelessWidget {
   }
 
   bool get _hasOrder => foodOrder != null && foodOrder!.isNotEmpty;
-
-  bool get _hasMenuImages => menuImages != null && menuImages!.isNotEmpty;
-  bool get _hasMenuLink => menuLink != null && menuLink!.isNotEmpty;
-  bool get _hasMenu => _hasMenuImages || _hasMenuLink;
-
-  void _openMenu(BuildContext context) async {
-    if (_hasMenuImages) {
-      // Show in-app gallery viewer
-      MenuGalleryViewer.show(context, menuImages!);
-    } else if (_hasMenuLink) {
-      // Fallback to external browser
-      final uri = Uri.parse(menuLink!);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
-    }
-  }
 
   void _showOrderSheet(BuildContext context) {
     showModalBottomSheet(
@@ -155,50 +136,28 @@ class PreOrderSection extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // Buttons row
-        Row(
-          children: [
-            if (_hasMenu) ...[
-              OutlinedButton.icon(
-                onPressed: () => _openMenu(context),
-                icon: Icon(
-                  _hasMenuImages ? Icons.photo_library_rounded : Icons.menu_book_rounded,
-                  size: 18,
-                ),
-                label: Text(_hasMenuImages ? 'Menu' : 'View Menu'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF64748B),
-                  side: const BorderSide(color: Color(0xFFE2E8F0)),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
+        // Add Order button
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () => _showOrderSheet(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF7C3AED),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
-              const SizedBox(width: 12),
-            ],
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () => _showOrderSheet(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF7C3AED),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Add Your Order',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+              elevation: 0,
+            ),
+            child: const Text(
+              'Add Your Order',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          ],
+          ),
         ),
 
         // Cutoff reminder
@@ -283,42 +242,19 @@ class PreOrderSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        // Buttons row
-        Row(
-          children: [
-            OutlinedButton.icon(
-              onPressed: () => _showOrderSheet(context),
-              icon: const Icon(Icons.edit_rounded, size: 16),
-              label: const Text('Edit'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF64748B),
-                side: const BorderSide(color: Color(0xFFE2E8F0)),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
+        // Edit button
+        OutlinedButton.icon(
+          onPressed: () => _showOrderSheet(context),
+          icon: const Icon(Icons.edit_rounded, size: 16),
+          label: const Text('Edit'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFF64748B),
+            side: const BorderSide(color: Color(0xFFE2E8F0)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
             ),
-            if (_hasMenu) ...[
-              const SizedBox(width: 12),
-              OutlinedButton.icon(
-                onPressed: () => _openMenu(context),
-                icon: Icon(
-                  _hasMenuImages ? Icons.photo_library_rounded : Icons.menu_book_rounded,
-                  size: 16,
-                ),
-                label: Text(_hasMenuImages ? 'Menu' : 'View Menu'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF64748B),
-                  side: const BorderSide(color: Color(0xFFE2E8F0)),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-            ],
-          ],
+          ),
         ),
 
         // Cutoff reminder

@@ -431,13 +431,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         if (event.preordersEnabled && _rsvp != null && _rsvp!.status != 'not_going')
                           _buildPreOrderSection(event, margin),
 
-                        // RSVP Section (inline, not sticky)
-                        if (!event.isPast && !event.isCancelled)
-                          _buildRsvpSection(event, margin),
-
                         // Discussion Section (for group members)
                         if (_isGroupMember)
                           _buildDiscussionSection(event, margin),
+
+                        // RSVP Section (inline, at bottom)
+                        if (!event.isPast && !event.isCancelled)
+                          _buildRsvpSection(event, margin),
 
                         SizedBox(height: _isTablet(context) ? 32 : 24),
                       ],
