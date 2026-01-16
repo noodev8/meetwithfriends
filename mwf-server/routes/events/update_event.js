@@ -19,6 +19,7 @@ Request Payload:
   "max_guests_per_rsvp": 2,                // integer 1-5, optional
   "preorders_enabled": true,               // boolean, optional
   "menu_link": "https://...",              // string, optional (URL to menu)
+  "menu_images": ["https://..."],          // array of strings, optional (Cloudinary URLs for menu photos, max 10)
   "preorder_cutoff": "2026-02-14T12:00:00Z"  // ISO datetime, optional (deadline for pre-orders)
 }
 
@@ -41,6 +42,7 @@ Return Codes:
 "INVALID_CAPACITY"
 "INVALID_CATEGORY"
 "INVALID_CUTOFF"
+"INVALID_MENU_IMAGES"
 "EVENT_CANCELLED"
 "SERVER_ERROR"
 =======================================================================================================================================
@@ -58,7 +60,7 @@ const VALID_CATEGORIES = ['food', 'outdoor', 'games', 'coffee', 'arts', 'learnin
 router.post('/:id/update', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, location, date_time, capacity, category, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, preorder_cutoff } = req.body;
+        const { title, description, location, date_time, capacity, category, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, menu_images, preorder_cutoff } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -190,6 +192,38 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
+        // Validate menu_images if provided
+        // Must be an array of strings (URLs), max 10 items
+        // =======================================================================
+        let validatedMenuImages = undefined; // undefined means not provided
+        if (menu_images !== undefined) {
+            if (menu_images === null) {
+                // Explicitly clearing menu images
+                validatedMenuImages = null;
+            } else if (!Array.isArray(menu_images)) {
+                return res.json({
+                    return_code: 'INVALID_MENU_IMAGES',
+                    message: 'menu_images must be an array'
+                });
+            } else if (menu_images.length > 10) {
+                return res.json({
+                    return_code: 'INVALID_MENU_IMAGES',
+                    message: 'Maximum 10 menu images allowed'
+                });
+            } else {
+                // Filter out empty strings and validate each is a string
+                validatedMenuImages = menu_images
+                    .filter(img => typeof img === 'string' && img.trim().length > 0)
+                    .map(img => img.trim());
+
+                // If array is empty after filtering, set to null
+                if (validatedMenuImages.length === 0) {
+                    validatedMenuImages = null;
+                }
+            }
+        }
+
+        // =======================================================================
         // Build update query dynamically
         // =======================================================================
         const updates = [];
@@ -255,6 +289,11 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         if (menu_link !== undefined) {
             updates.push(`menu_link = $${paramCount++}`);
             values.push(menu_link?.trim() || null);
+        }
+
+        if (validatedMenuImages !== undefined) {
+            updates.push(`menu_images = $${paramCount++}`);
+            values.push(validatedMenuImages);
         }
 
         if (preorder_cutoff !== undefined) {

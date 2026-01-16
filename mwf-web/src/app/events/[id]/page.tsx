@@ -635,6 +635,38 @@ export default function EventDetailPage() {
                                             </p>
                                         )}
 
+                                        {/* Menu Images */}
+                                        {event.menu_images && event.menu_images.length > 0 && (
+                                            <div className="mb-4">
+                                                <p className="text-sm font-medium text-slate-700 mb-2">Menu</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {event.menu_images.map((url, idx) => (
+                                                        <a
+                                                            key={idx}
+                                                            href={url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="relative w-20 h-28 rounded-lg overflow-hidden border border-slate-200 hover:border-indigo-400 transition group"
+                                                        >
+                                                            <Image
+                                                                src={url}
+                                                                alt={`Menu page ${idx + 1}`}
+                                                                fill
+                                                                className="object-cover"
+                                                            />
+                                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition" />
+                                                            {event.menu_images && event.menu_images.length > 1 && (
+                                                                <span className="absolute bottom-1 right-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
+                                                                    {idx + 1}/{event.menu_images.length}
+                                                                </span>
+                                                            )}
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                                <p className="text-xs text-slate-500 mt-1">Click to view full size</p>
+                                            </div>
+                                        )}
+
                                         {/* Edit/Add button and Menu link */}
                                         <div className="flex flex-wrap items-center gap-3">
                                             <button
@@ -643,7 +675,7 @@ export default function EventDetailPage() {
                                             >
                                                 {rsvp.food_order || rsvp.dietary_notes ? 'Edit Order' : 'Add Order'}
                                             </button>
-                                            {event.menu_link && (
+                                            {!event.menu_images?.length && event.menu_link && (
                                                 <a
                                                     href={event.menu_link}
                                                     target="_blank"
@@ -690,23 +722,6 @@ export default function EventDetailPage() {
 
                                     {/* Form */}
                                     <form onSubmit={handleSubmitOrder} className="p-6 space-y-5">
-                                        {/* Menu link */}
-                                        {event.menu_link && (
-                                            <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
-                                                <a
-                                                    href={event.menu_link}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-indigo-700 hover:text-indigo-800 font-medium flex items-center gap-2"
-                                                >
-                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                                    </svg>
-                                                    View the menu
-                                                </a>
-                                            </div>
-                                        )}
-
                                         {/* Order textarea */}
                                         <div>
                                             <div className="flex items-center justify-between mb-2">

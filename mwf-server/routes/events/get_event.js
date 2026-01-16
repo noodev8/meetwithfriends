@@ -28,6 +28,7 @@ Success Response:
     "max_guests_per_rsvp": 2,
     "preorders_enabled": true,           // whether pre-orders are enabled
     "menu_link": "https://...",          // URL to menu (null if not set)
+    "menu_images": ["https://..."],      // array of Cloudinary URLs for menu photos (null if not set)
     "preorder_cutoff": "2026-01-14T12:00:00.000Z",  // deadline for pre-orders (null if not set)
     "status": "published",
     "attendee_count": 12,
@@ -105,6 +106,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
                 e.max_guests_per_rsvp,
                 e.preorders_enabled,
                 e.menu_link,
+                e.menu_images,
                 e.preorder_cutoff,
                 e.status,
                 e.created_at,

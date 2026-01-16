@@ -60,6 +60,7 @@ export interface Event {
     max_guests_per_rsvp?: number;
     preorders_enabled?: boolean;
     menu_link?: string;
+    menu_images?: string[];
     preorder_cutoff?: string;
     category?: 'food' | 'outdoor' | 'games' | 'coffee' | 'arts' | 'learning' | 'other';
     status: 'published' | 'cancelled';

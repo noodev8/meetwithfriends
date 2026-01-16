@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'menu_gallery_viewer.dart';
 
 class PreOrderBottomSheet extends StatefulWidget {
   final String? currentOrder;
   final String? currentNotes;
   final String? menuLink;
+  final List<String>? menuImages;
   final DateTime? preorderCutoff;
   final Future<bool> Function(String? foodOrder, String? dietaryNotes) onSubmit;
 
@@ -14,6 +16,7 @@ class PreOrderBottomSheet extends StatefulWidget {
     this.currentOrder,
     this.currentNotes,
     this.menuLink,
+    this.menuImages,
     this.preorderCutoff,
     required this.onSubmit,
   });
@@ -57,11 +60,20 @@ class _PreOrderBottomSheetState extends State<PreOrderBottomSheet> {
     }
   }
 
-  Future<void> _openMenu() async {
-    if (widget.menuLink == null) return;
-    final uri = Uri.parse(widget.menuLink!);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+  bool get _hasMenuImages => widget.menuImages != null && widget.menuImages!.isNotEmpty;
+  bool get _hasMenuLink => widget.menuLink != null && widget.menuLink!.isNotEmpty;
+  bool get _hasMenu => _hasMenuImages || _hasMenuLink;
+
+  void _openMenu() async {
+    if (_hasMenuImages) {
+      // Show in-app gallery viewer
+      MenuGalleryViewer.show(context, widget.menuImages!);
+    } else if (_hasMenuLink) {
+      // Fallback to external browser
+      final uri = Uri.parse(widget.menuLink!);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
     }
   }
 
@@ -116,8 +128,8 @@ class _PreOrderBottomSheetState extends State<PreOrderBottomSheet> {
                 ),
                 const SizedBox(height: 16),
 
-                // Menu link button
-                if (widget.menuLink != null) ...[
+                // Menu button (images or link)
+                if (_hasMenu) ...[
                   GestureDetector(
                     onTap: _openMenu,
                     child: Container(
@@ -144,19 +156,34 @@ class _PreOrderBottomSheetState extends State<PreOrderBottomSheet> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text(
-                              'View the menu',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF7C3AED),
-                              ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _hasMenuImages
+                                      ? 'View Menu${widget.menuImages!.length > 1 ? ' (${widget.menuImages!.length} pages)' : ''}'
+                                      : 'View the menu',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF7C3AED),
+                                  ),
+                                ),
+                                if (_hasMenuImages)
+                                  const Text(
+                                    'Tap to view, pinch to zoom',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF6B7280),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
-                          const Icon(
-                            Icons.open_in_new_rounded,
-                            color: Color(0xFF7C3AED),
+                          Icon(
+                            _hasMenuImages ? Icons.photo_library_rounded : Icons.open_in_new_rounded,
+                            color: const Color(0xFF7C3AED),
                             size: 18,
                           ),
                         ],

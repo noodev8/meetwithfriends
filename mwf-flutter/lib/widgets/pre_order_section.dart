@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'pre_order_bottom_sheet.dart';
+import 'menu_gallery_viewer.dart';
 
 class PreOrderSection extends StatelessWidget {
   final String? foodOrder;
   final String? dietaryNotes;
   final String? menuLink;
+  final List<String>? menuImages;
   final DateTime? preorderCutoff;
   final Future<bool> Function(String? foodOrder, String? dietaryNotes) onSubmit;
   final double padding;
@@ -16,6 +18,7 @@ class PreOrderSection extends StatelessWidget {
     this.foodOrder,
     this.dietaryNotes,
     this.menuLink,
+    this.menuImages,
     this.preorderCutoff,
     required this.onSubmit,
     this.padding = 20.0,
@@ -28,11 +31,20 @@ class PreOrderSection extends StatelessWidget {
 
   bool get _hasOrder => foodOrder != null && foodOrder!.isNotEmpty;
 
-  Future<void> _openMenu(BuildContext context) async {
-    if (menuLink == null) return;
-    final uri = Uri.parse(menuLink!);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+  bool get _hasMenuImages => menuImages != null && menuImages!.isNotEmpty;
+  bool get _hasMenuLink => menuLink != null && menuLink!.isNotEmpty;
+  bool get _hasMenu => _hasMenuImages || _hasMenuLink;
+
+  void _openMenu(BuildContext context) async {
+    if (_hasMenuImages) {
+      // Show in-app gallery viewer
+      MenuGalleryViewer.show(context, menuImages!);
+    } else if (_hasMenuLink) {
+      // Fallback to external browser
+      final uri = Uri.parse(menuLink!);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
     }
   }
 
@@ -45,6 +57,7 @@ class PreOrderSection extends StatelessWidget {
         currentOrder: foodOrder,
         currentNotes: dietaryNotes,
         menuLink: menuLink,
+        menuImages: menuImages,
         preorderCutoff: preorderCutoff,
         onSubmit: onSubmit,
       ),
@@ -145,11 +158,14 @@ class PreOrderSection extends StatelessWidget {
         // Buttons row
         Row(
           children: [
-            if (menuLink != null) ...[
+            if (_hasMenu) ...[
               OutlinedButton.icon(
                 onPressed: () => _openMenu(context),
-                icon: const Icon(Icons.menu_book_rounded, size: 18),
-                label: const Text('View Menu'),
+                icon: Icon(
+                  _hasMenuImages ? Icons.photo_library_rounded : Icons.menu_book_rounded,
+                  size: 18,
+                ),
+                label: Text(_hasMenuImages ? 'Menu' : 'View Menu'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFF64748B),
                   side: const BorderSide(color: Color(0xFFE2E8F0)),
@@ -283,12 +299,15 @@ class PreOrderSection extends StatelessWidget {
                 ),
               ),
             ),
-            if (menuLink != null) ...[
+            if (_hasMenu) ...[
               const SizedBox(width: 12),
               OutlinedButton.icon(
                 onPressed: () => _openMenu(context),
-                icon: const Icon(Icons.menu_book_rounded, size: 16),
-                label: const Text('View Menu'),
+                icon: Icon(
+                  _hasMenuImages ? Icons.photo_library_rounded : Icons.menu_book_rounded,
+                  size: 16,
+                ),
+                label: Text(_hasMenuImages ? 'Menu' : 'View Menu'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFF64748B),
                   side: const BorderSide(color: Color(0xFFE2E8F0)),

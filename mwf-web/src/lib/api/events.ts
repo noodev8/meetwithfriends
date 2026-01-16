@@ -53,6 +53,7 @@ export interface UpdateEventPayload {
     max_guests_per_rsvp?: number;
     preorders_enabled?: boolean;
     menu_link?: string | null;
+    menu_images?: string[] | null;
     preorder_cutoff?: string | null;
     category?: 'food' | 'outdoor' | 'games' | 'coffee' | 'arts' | 'learning' | 'other';
 }
@@ -83,6 +84,7 @@ export interface CreateEventPayload {
     max_guests_per_rsvp?: number;
     preorders_enabled?: boolean;
     menu_link?: string;
+    menu_images?: string[];
     preorder_cutoff?: string;
     category: 'food' | 'outdoor' | 'games' | 'coffee' | 'arts' | 'learning' | 'other';
 }

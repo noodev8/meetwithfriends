@@ -18,6 +18,7 @@ import { createEvent, getEvent } from '@/lib/api/events';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 // import ImageUpload from '@/components/ui/ImageUpload'; // Hidden - using category gradients instead
 import RichTextEditor from '@/components/ui/RichTextEditor';
+import MenuImageUpload from '@/components/ui/MenuImageUpload';
 import { CATEGORY_OPTIONS, EventCategory } from '@/lib/eventCategories';
 import { FEATURE_GUESTS_ENABLED } from '@/lib/featureFlags';
 
@@ -49,6 +50,7 @@ export default function CreateEventPage() {
     const [maxGuestsPerRsvp, setMaxGuestsPerRsvp] = useState(1);
     const [preordersEnabled, setPreordersEnabled] = useState(false);
     const [menuLink, setMenuLink] = useState('');
+    const [menuImages, setMenuImages] = useState<string[]>([]);
     const [preorderCutoffDate, setPreorderCutoffDate] = useState('');
     const [preorderCutoffTime, setPreorderCutoffTime] = useState('');
 
@@ -110,6 +112,7 @@ export default function CreateEventPage() {
                 setMaxGuestsPerRsvp(evt.max_guests_per_rsvp || 1);
                 setPreordersEnabled(evt.preorders_enabled || false);
                 setMenuLink(evt.menu_link || '');
+                setMenuImages(evt.menu_images || []);
                 // Expand sections that have values
                 // if (evt.image_url) setImageExpanded(true); // Hidden - using category gradients
                 if (evt.capacity) setCapacityExpanded(true);
@@ -178,6 +181,7 @@ export default function CreateEventPage() {
             max_guests_per_rsvp: allowGuests ? maxGuestsPerRsvp : undefined,
             preorders_enabled: preordersEnabled,
             menu_link: preordersEnabled ? (menuLink.trim() || undefined) : undefined,
+            menu_images: preordersEnabled && menuImages.length > 0 ? menuImages : undefined,
             preorder_cutoff: preordersEnabled ? preorderCutoff : undefined,
         });
 
@@ -579,9 +583,31 @@ export default function CreateEventPage() {
                                                         </button>
                                                     </div>
 
+                                                    {/* Menu Images */}
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                            Menu Images
+                                                        </label>
+                                                        <MenuImageUpload
+                                                            value={menuImages}
+                                                            onChange={setMenuImages}
+                                                        />
+                                                    </div>
+
+                                                    {/* Divider */}
+                                                    <div className="relative">
+                                                        <div className="absolute inset-0 flex items-center">
+                                                            <div className="w-full border-t border-slate-200" />
+                                                        </div>
+                                                        <div className="relative flex justify-center">
+                                                            <span className="px-3 bg-white text-sm text-slate-500">or</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Menu Link */}
                                                     <div>
                                                         <label htmlFor="menuLink" className="block text-sm font-medium text-slate-700 mb-2">
-                                                            Link
+                                                            Link to online menu
                                                         </label>
                                                         <input
                                                             type="url"
@@ -592,7 +618,7 @@ export default function CreateEventPage() {
                                                             placeholder="https://restaurant.com/menu"
                                                         />
                                                         <p className="mt-1.5 text-sm text-slate-500">
-                                                            Share a menu, form, or any link for attendees to submit their choices
+                                                            External link opens in browser (if no images uploaded)
                                                         </p>
                                                     </div>
 

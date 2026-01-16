@@ -425,6 +425,7 @@ class EventDetail {
   final int maxGuestsPerRsvp;
   final bool preordersEnabled;
   final String? menuLink;
+  final List<String>? menuImages;
   final DateTime? preorderCutoff;
   final String status;
   final int attendeeCount;
@@ -451,6 +452,7 @@ class EventDetail {
     required this.maxGuestsPerRsvp,
     required this.preordersEnabled,
     this.menuLink,
+    this.menuImages,
     this.preorderCutoff,
     required this.status,
     required this.attendeeCount,
@@ -479,6 +481,8 @@ class EventDetail {
       maxGuestsPerRsvp: json['max_guests_per_rsvp'] as int? ?? 0,
       preordersEnabled: json['preorders_enabled'] as bool? ?? false,
       menuLink: json['menu_link'] as String?,
+      menuImages: (json['menu_images'] as List<dynamic>?)
+          ?.map((e) => e as String).toList(),
       preorderCutoff: json['preorder_cutoff'] != null
           ? DateTime.parse(json['preorder_cutoff'] as String)
           : null,
@@ -494,6 +498,11 @@ class EventDetail {
   bool get isCancelled => status == 'cancelled';
   int get spotsRemaining => capacity != null ? capacity! - attendeeCount - totalGuestCount : -1;
   bool get isFull => capacity != null && spotsRemaining <= 0;
+
+  // Menu helpers
+  bool get hasMenuImages => menuImages != null && menuImages!.isNotEmpty;
+  bool get hasMenuLink => menuLink != null && menuLink!.isNotEmpty;
+  bool get hasMenu => hasMenuImages || hasMenuLink;
 }
 
 class RsvpStatus {

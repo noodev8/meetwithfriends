@@ -1268,6 +1268,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         foodOrder: _rsvp?.foodOrder,
         dietaryNotes: _rsvp?.dietaryNotes,
         menuLink: event.menuLink,
+        menuImages: event.menuImages,
         preorderCutoff: event.preorderCutoff,
         onSubmit: _handleSubmitOrder,
         padding: padding,

@@ -17,6 +17,7 @@ import { getEvent, updateEvent, cancelEvent, EventWithDetails } from '@/lib/api/
 import SidebarLayout from '@/components/layout/SidebarLayout';
 // import ImageUpload from '@/components/ui/ImageUpload'; // Hidden - using category gradients instead
 import RichTextEditor from '@/components/ui/RichTextEditor';
+import MenuImageUpload from '@/components/ui/MenuImageUpload';
 import { CATEGORY_OPTIONS, EventCategory } from '@/lib/eventCategories';
 import { FEATURE_GUESTS_ENABLED } from '@/lib/featureFlags';
 
@@ -48,6 +49,7 @@ export default function EditEventPage() {
     const [maxGuestsPerRsvp, setMaxGuestsPerRsvp] = useState(1);
     const [preordersEnabled, setPreordersEnabled] = useState(false);
     const [menuLink, setMenuLink] = useState('');
+    const [menuImages, setMenuImages] = useState<string[]>([]);
     const [preorderCutoffDate, setPreorderCutoffDate] = useState('');
     const [preorderCutoffTime, setPreorderCutoffTime] = useState('');
 
@@ -97,6 +99,7 @@ export default function EditEventPage() {
                 setMaxGuestsPerRsvp(evt.max_guests_per_rsvp || 1);
                 setPreordersEnabled(evt.preorders_enabled || false);
                 setMenuLink(evt.menu_link || '');
+                setMenuImages(evt.menu_images || []);
 
                 // Parse preorder cutoff date and time (use local date, not UTC)
                 if (evt.preorder_cutoff) {
@@ -142,6 +145,21 @@ export default function EditEventPage() {
         setImageSaving(false);
     };
     */
+
+    // =======================================================================
+    // Handle menu images change - auto-save to database
+    // =======================================================================
+    const [menuImagesSaving, setMenuImagesSaving] = useState(false);
+
+    const handleMenuImagesChange = async (urls: string[]) => {
+        setMenuImages(urls);
+
+        if (!token || !event) return;
+
+        setMenuImagesSaving(true);
+        await updateEvent(token, event.id, { menu_images: urls.length > 0 ? urls : null });
+        setMenuImagesSaving(false);
+    };
 
     // =======================================================================
     // Handle form submission
@@ -205,6 +223,7 @@ export default function EditEventPage() {
             max_guests_per_rsvp: allowGuests ? maxGuestsPerRsvp : undefined,
             preorders_enabled: preordersEnabled,
             menu_link: preordersEnabled ? (menuLink.trim() || null) : null,
+            menu_images: preordersEnabled && menuImages.length > 0 ? menuImages : null,
             preorder_cutoff: preordersEnabled ? preorderCutoff : null,
         });
 
@@ -687,9 +706,34 @@ export default function EditEventPage() {
                                                         </button>
                                                     </div>
 
+                                                    {/* Menu Images */}
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                            Menu Images
+                                                        </label>
+                                                        <MenuImageUpload
+                                                            value={menuImages}
+                                                            onChange={handleMenuImagesChange}
+                                                        />
+                                                        {menuImagesSaving && (
+                                                            <p className="text-xs text-indigo-600 mt-1">Saving...</p>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Divider */}
+                                                    <div className="relative">
+                                                        <div className="absolute inset-0 flex items-center">
+                                                            <div className="w-full border-t border-slate-200" />
+                                                        </div>
+                                                        <div className="relative flex justify-center">
+                                                            <span className="px-3 bg-white text-sm text-slate-500">or</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Menu Link */}
                                                     <div>
                                                         <label htmlFor="menuLink" className="block text-sm font-medium text-slate-700 mb-2">
-                                                            Link
+                                                            Link to online menu
                                                         </label>
                                                         <input
                                                             type="url"
@@ -700,7 +744,7 @@ export default function EditEventPage() {
                                                             placeholder="https://restaurant.com/menu"
                                                         />
                                                         <p className="mt-1.5 text-sm text-slate-500">
-                                                            Share a menu, form, or any link for attendees to submit their choices
+                                                            External link opens in browser (if no images uploaded)
                                                         </p>
                                                     </div>
 
