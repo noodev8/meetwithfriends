@@ -101,6 +101,11 @@ class AuthService {
     await _storage.delete(key: _tokenKey);
     _api.setToken(null);
   }
+
+  /// Get the current auth token (if any)
+  Future<String?> getToken() async {
+    return await _storage.read(key: _tokenKey);
+  }
 }
 
 class AuthResult {

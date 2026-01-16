@@ -77,6 +77,10 @@ export default function EventDetailPage() {
     // Cancel RSVP confirmation modal
     const [showCancelModal, setShowCancelModal] = useState(false);
 
+    // Export modal state
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [exportLoading, setExportLoading] = useState(false);
+
     // =======================================================================
     // Compute back link based on navigation source
     // =======================================================================
@@ -318,6 +322,80 @@ export default function EventDetailPage() {
     };
 
     // =======================================================================
+    // Handle copy guest list to clipboard
+    // =======================================================================
+    const handleCopyGuestList = async () => {
+        if (!attending || attending.length === 0) {
+            alert('No attendees to copy');
+            return;
+        }
+
+        const guestList = attending
+            .map(a => {
+                let line = a.name;
+                if (a.guest_count > 0) {
+                    line += ` (+${a.guest_count} guest${a.guest_count > 1 ? 's' : ''})`;
+                }
+                return line;
+            })
+            .join('\n');
+
+        const header = `${event?.title} - Guest List\n${attendingCount} attending\n\n`;
+        const text = header + guestList;
+
+        try {
+            await navigator.clipboard.writeText(text);
+            alert('Guest list copied to clipboard');
+            setShowExportModal(false);
+        } catch {
+            alert('Failed to copy to clipboard');
+        }
+    };
+
+    // =======================================================================
+    // Handle download pre-orders PDF
+    // =======================================================================
+    const handleDownloadPDF = async () => {
+        if (!token || !event) return;
+
+        setExportLoading(true);
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/events/${event.id}/preorders/pdf`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }
+            );
+
+            // Check if it's a JSON error response
+            const contentType = response.headers.get('content-type');
+            if (contentType?.includes('application/json')) {
+                const data = await response.json();
+                alert(data.message || 'Failed to generate PDF');
+                setExportLoading(false);
+                return;
+            }
+
+            // It's a PDF - download it
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `preorders-${event.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            setShowExportModal(false);
+        } catch {
+            alert('Failed to download PDF');
+        }
+        setExportLoading(false);
+    };
+
+    // =======================================================================
     // Format comment date
     // =======================================================================
     const formatCommentDate = (dateString: string) => {
@@ -553,6 +631,17 @@ export default function EventDetailPage() {
                                         </svg>
                                         Duplicate
                                     </Link>
+                                )}
+                                {canEdit && (
+                                    <button
+                                        onClick={() => setShowExportModal(true)}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-full transition-colors"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        </svg>
+                                        Export
+                                    </button>
                                 )}
                             </div>
                         </div>
@@ -1292,6 +1381,74 @@ export default function EventDetailPage() {
                             >
                                 {rsvpLoading ? 'Cancelling...' : "Can't make it"}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Export Modal */}
+            {showExportModal && event && (
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                    onClick={() => setShowExportModal(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-slate-900 font-display">Export</h3>
+                            <button
+                                onClick={() => setShowExportModal(false)}
+                                className="text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Options */}
+                        <div className="p-4 space-y-2">
+                            {/* Copy Guest List */}
+                            <button
+                                onClick={handleCopyGuestList}
+                                className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-slate-50 transition-colors text-left"
+                            >
+                                <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className="font-medium text-slate-900">Copy Guest List</p>
+                                    <p className="text-sm text-slate-500">Names and RSVP status</p>
+                                </div>
+                            </button>
+
+                            {/* Download Pre-Orders PDF - only shown if preorders enabled */}
+                            {event.preorders_enabled && (
+                                <button
+                                    onClick={handleDownloadPDF}
+                                    disabled={exportLoading}
+                                    className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-slate-50 transition-colors text-left disabled:opacity-50"
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-violet-50 flex items-center justify-center flex-shrink-0">
+                                        {exportLoading ? (
+                                            <div className="w-5 h-5 border-2 border-violet-600 border-t-transparent rounded-full animate-spin" />
+                                        ) : (
+                                            <svg className="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                            </svg>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-slate-900">Download Pre-Orders (PDF)</p>
+                                        <p className="text-sm text-slate-500">Table of all orders for venue</p>
+                                    </div>
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
