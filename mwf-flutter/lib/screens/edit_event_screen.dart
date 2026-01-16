@@ -923,9 +923,9 @@ class _EditEventScreenState extends State<EditEventScreen> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _buildCutoffChip(1, '1 day before'),
-                _buildCutoffChip(2, '2 days before'),
+                _buildCutoffChip(7, '1 week before'),
                 _buildCutoffChip(3, '3 days before'),
+                _buildCutoffChip(1, '1 day before'),
                 _buildCutoffChip(0, 'No cutoff'),
               ],
             ),

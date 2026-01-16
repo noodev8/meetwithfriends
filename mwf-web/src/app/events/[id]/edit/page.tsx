@@ -754,7 +754,11 @@ export default function EditEventPage() {
                                                         </label>
                                                         {/* Date presets - relative to event date */}
                                                         <div className="flex flex-wrap gap-2">
-                                                            {[1, 2, 3].map((days) => {
+                                                            {[
+                                                                { days: 7, label: '1 week before' },
+                                                                { days: 3, label: '3 days before' },
+                                                                { days: 1, label: '1 day before' },
+                                                            ].map(({ days, label }) => {
                                                                 const cutoffDate = date ? (() => {
                                                                     const d = new Date(date + 'T12:00:00'); // Use noon to avoid timezone issues
                                                                     d.setDate(d.getDate() - days);
@@ -778,7 +782,7 @@ export default function EditEventPage() {
                                                                                     : 'bg-slate-50 text-slate-400 cursor-not-allowed'
                                                                         }`}
                                                                     >
-                                                                        {days} day{days > 1 ? 's' : ''} before
+                                                                        {label}
                                                                     </button>
                                                                 );
                                                             })}

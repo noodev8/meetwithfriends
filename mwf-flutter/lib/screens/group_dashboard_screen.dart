@@ -400,59 +400,166 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
     final isOrganiser = membership?.isOrganiser ?? false;
     final canManageMembers = membership?.canManageMembers ?? false;
 
-    return SafeArea(
-      bottom: false,
-      child: RefreshIndicator(
-        onRefresh: _loadGroup,
-        color: const Color(0xFF7C3AED),
-        child: CustomScrollView(
-          slivers: [
-            // App Bar
-            SliverToBoxAdapter(child: _buildAppBar()),
+    return Stack(
+      children: [
+        SafeArea(
+          bottom: false,
+          child: RefreshIndicator(
+            onRefresh: _loadGroup,
+            color: const Color(0xFF7C3AED),
+            child: CustomScrollView(
+              slivers: [
+                // App Bar
+                SliverToBoxAdapter(child: _buildAppBar()),
 
-            // Constrained content for tablets
-            SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: Column(
-                    children: [
-                      // Hero Section
-                      _buildHeroSection(group, isOrganiser, canManageMembers),
+                // Constrained content for tablets
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child: Column(
+                        children: [
+                          // Hero Section (includes role badge)
+                          _buildHeroSection(group, isOrganiser, canManageMembers),
 
-                      // Join/Membership Status Card
-                      if (membership == null)
-                        _buildJoinCard(group)
-                      else
-                        _buildMembershipCard(membership),
+                          // Join card (only for non-members)
+                          if (membership == null)
+                            _buildJoinCard(group),
 
-                      // Pending Requests Section (only for organisers/hosts)
-                      if (canManageMembers && _pendingMembers.isNotEmpty)
-                        _buildPendingRequestsSection(),
+                          // Pending join request indicator
+                          if (membership?.isPending == true)
+                            _buildPendingIndicator(),
 
-                      // Members Section (always show, but content varies by membership)
-                      _buildMembersSection(group, membership?.isActive == true),
+                          // Pending Requests Section (only for organisers/hosts)
+                          if (canManageMembers && _pendingMembers.isNotEmpty)
+                            _buildPendingRequestsSection(),
 
-                      // About Section
-                      if (group.description != null && group.description!.isNotEmpty)
-                        _buildAboutSection(group),
+                          // Members Section (always show, but content varies by membership)
+                          _buildMembersSection(group, membership?.isActive == true),
 
-                      // Upcoming Events Section
-                      _buildUpcomingEventsSection(),
+                          // About Section
+                          if (group.description != null && group.description!.isNotEmpty)
+                            _buildAboutSection(group),
 
-                      // Leave group link (for active members who are not organisers)
-                      if (membership?.isActive == true && !isOrganiser)
-                        _buildLeaveGroupLink(),
+                          // Upcoming Events Section
+                          _buildUpcomingEventsSection(),
 
-                      // Bottom padding
-                      const SizedBox(height: 32),
-                    ],
+                          // Leave group link (for active members who are not organisers)
+                          if (membership?.isActive == true && !isOrganiser)
+                            _buildLeaveGroupLink(),
+
+                          // Bottom padding (extra for FAB)
+                          SizedBox(height: canManageMembers ? 100 : 32),
+                        ],
+                      ),
+                    ),
                   ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Floating Action Button for Create Event
+        if (canManageMembers)
+          Positioned(
+            right: 20,
+            bottom: MediaQuery.of(context).padding.bottom + 90,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CreateEventScreen(
+                      groupId: _group!.id,
+                      groupName: _group!.name,
+                      canCreateEvents: _membership?.canManageMembers ?? false,
+                      onEventCreated: () {
+                        _loadGroup(); // Refresh to show new event
+                      },
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: _theme.gradient,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _theme.gradient[0].withAlpha(100),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.add_rounded,
+                  color: Colors.white,
+                  size: 28,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildPendingIndicator() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF3C7),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFCD34D)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF59E0B).withAlpha(30),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.schedule_rounded,
+              size: 18,
+              color: Color(0xFFD97706),
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Request Pending',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF92400E),
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'Waiting for organiser approval',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFFB45309),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -462,14 +569,23 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
     bool isOrganiser,
     bool canManageMembers,
   ) {
+    final membership = _membership;
+    final roleLabel = membership?.isOrganiser == true
+        ? 'Organiser'
+        : membership?.role == 'host'
+            ? 'Host'
+            : membership?.isActive == true
+                ? 'Member'
+                : null;
+
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       child: Column(
         children: [
-          // Group Avatar
+          // Compact hero card with initials and info
           Container(
             width: double.infinity,
-            height: 160,
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: _theme.gradient,
@@ -479,278 +595,182 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: _theme.gradient[0].withAlpha(77),
-                  blurRadius: 20,
+                  color: _theme.gradient[0].withAlpha(60),
+                  blurRadius: 24,
                   offset: const Offset(0, 8),
                 ),
               ],
             ),
-            child: Center(
-              child: Text(
-                getGroupInitials(group.name),
-                style: const TextStyle(
-                  fontSize: 56,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white70,
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Group Name
-          Text(
-            group.name,
-            style: const TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1E293B),
-              letterSpacing: -0.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 12),
-
-          // Stats Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildStatChip(
-                Icons.people_outline_rounded,
-                '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}',
-              ),
-              const SizedBox(width: 12),
-              _buildStatChip(
-                group.joinPolicy == 'auto'
-                    ? Icons.public_rounded
-                    : Icons.lock_outline_rounded,
-                group.joinPolicy == 'auto' ? 'Open to all' : 'Approval required',
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Action Buttons
-          if (isOrganiser || canManageMembers) _buildActionButtons(isOrganiser, canManageMembers),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatChip(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: const Color(0xFF64748B)),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF64748B),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButtons(bool isOrganiser, bool canManageMembers) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      alignment: WrapAlignment.center,
-      children: [
-        if (isOrganiser) ...[
-          _buildActionButton(
-            icon: Icons.settings_rounded,
-            label: 'Edit',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EditGroupScreen(
-                    groupId: _group!.id,
-                    initialName: _group!.name,
-                    initialDescription: _group!.description,
-                    initialThemeColor: _group!.themeColor ?? 'indigo',
-                    initialJoinPolicy: _group!.joinPolicy,
-                    initialVisibility: _group!.visibility,
-                    onGroupUpdated: _loadGroup,
-                  ),
-                ),
-              );
-            },
-          ),
-          _buildActionButton(
-            icon: Icons.campaign_rounded,
-            label: 'Broadcast',
-            onTap: () {
-              // TODO: Show broadcast modal
-            },
-          ),
-        ],
-        if (canManageMembers)
-          _buildActionButton(
-            icon: Icons.add_rounded,
-            label: 'Create Event',
-            isPrimary: true,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CreateEventScreen(
-                    groupId: _group!.id,
-                    groupName: _group!.name,
-                    canCreateEvents: _membership?.canManageMembers ?? false,
-                    onEventCreated: () {
-                      _loadGroup(); // Refresh to show new event
-                    },
-                  ),
-                ),
-              );
-            },
-          ),
-      ],
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    bool isPrimary = false,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: isPrimary
-              ? const LinearGradient(
-                  colors: [Color(0xFF7C3AED), Color(0xFF6366F1)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-          color: isPrimary ? null : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: isPrimary ? null : Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: isPrimary
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF7C3AED).withAlpha(77),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : null,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isPrimary ? Colors.white : const Color(0xFF64748B),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: isPrimary ? Colors.white : const Color(0xFF1E293B),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMembershipCard(GroupMembership membership) {
-    final isActive = membership.isActive;
-    final isPending = membership.isPending;
-    final role = membership.role;
-
-    String statusText;
-    String subtitleText;
-    IconData statusIcon;
-    Color statusColor;
-
-    if (isPending) {
-      statusText = 'Request Pending';
-      subtitleText = 'Waiting for organiser approval';
-      statusIcon = Icons.schedule_rounded;
-      statusColor = const Color(0xFFF59E0B);
-    } else if (isActive) {
-      statusText = role == 'organiser'
-          ? 'Organiser'
-          : role == 'host'
-              ? 'Host'
-              : 'Member';
-      subtitleText = "You're part of this group";
-      statusIcon = Icons.check_circle_rounded;
-      statusColor = const Color(0xFF10B981);
-    } else {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: statusColor.withAlpha(26),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(statusIcon, color: statusColor, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  statusText,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E293B),
+                // Initials circle
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(40),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Center(
+                    child: Text(
+                      getGroupInitials(group.name),
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitleText,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF64748B),
+                const SizedBox(width: 16),
+                // Group info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        group.name,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.people_rounded,
+                            size: 14,
+                            color: Colors.white.withAlpha(200),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withAlpha(200),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Icon(
+                            group.joinPolicy == 'auto'
+                                ? Icons.public_rounded
+                                : Icons.lock_outline_rounded,
+                            size: 14,
+                            color: Colors.white.withAlpha(200),
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              group.joinPolicy == 'auto' ? 'Open' : 'Private',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white.withAlpha(200),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Role badge
+                      if (roleLabel != null) ...[
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            roleLabel,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: _theme.gradient[0],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
+                // Settings button for organisers
+                if (isOrganiser)
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditGroupScreen(
+                            groupId: _group!.id,
+                            initialName: _group!.name,
+                            initialDescription: _group!.description,
+                            initialThemeColor: _group!.themeColor ?? 'indigo',
+                            initialJoinPolicy: _group!.joinPolicy,
+                            initialVisibility: _group!.visibility,
+                            onGroupUpdated: _loadGroup,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withAlpha(30),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.settings_rounded,
+                        size: 20,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
+
+          // Broadcast button (if organiser)
+          if (isOrganiser) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () {
+                // TODO: Show broadcast modal
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.campaign_rounded,
+                      size: 18,
+                      color: _theme.gradient[0],
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Send Broadcast',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
