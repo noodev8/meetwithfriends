@@ -5,7 +5,7 @@
 -- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 17.4
 
--- Started on 2026-01-12 22:27:50
+-- Started on 2026-01-16 12:52:06
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -308,6 +308,7 @@ CREATE TABLE public.event_list (
     preorder_cutoff timestamp without time zone,
     preorders_enabled boolean DEFAULT false,
     category character varying(20) DEFAULT 'other'::character varying,
+    menu_images text[],
     CONSTRAINT event_category_check CHECK (((category)::text = ANY ((ARRAY['food'::character varying, 'outdoor'::character varying, 'games'::character varying, 'coffee'::character varying, 'arts'::character varying, 'learning'::character varying, 'other'::character varying])::text[]))),
     CONSTRAINT event_image_position_check CHECK (((image_position)::text = ANY ((ARRAY['top'::character varying, 'center'::character varying, 'bottom'::character varying])::text[]))),
     CONSTRAINT event_max_guests_check CHECK (((max_guests_per_rsvp >= 1) AND (max_guests_per_rsvp <= 5))),
@@ -316,6 +317,15 @@ CREATE TABLE public.event_list (
 
 
 ALTER TABLE public.event_list OWNER TO meetwithfriends_user;
+
+--
+-- TOC entry 3575 (class 0 OID 0)
+-- Dependencies: 225
+-- Name: COLUMN event_list.menu_images; Type: COMMENT; Schema: public; Owner: meetwithfriends_user
+--
+
+COMMENT ON COLUMN public.event_list.menu_images IS 'Array of Cloudinary URLs for menu images. Takes precedence over menu_link when displaying.';
+
 
 --
 -- TOC entry 224 (class 1259 OID 23606)
@@ -334,7 +344,7 @@ CREATE SEQUENCE public.event_list_id_seq
 ALTER SEQUENCE public.event_list_id_seq OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 3575 (class 0 OID 0)
+-- TOC entry 3576 (class 0 OID 0)
 -- Dependencies: 224
 -- Name: event_list_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
@@ -381,7 +391,7 @@ CREATE SEQUENCE public.event_rsvp_id_seq
 ALTER SEQUENCE public.event_rsvp_id_seq OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 3576 (class 0 OID 0)
+-- TOC entry 3577 (class 0 OID 0)
 -- Dependencies: 226
 -- Name: event_rsvp_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
@@ -432,7 +442,7 @@ CREATE SEQUENCE public.group_list_id_seq
 ALTER SEQUENCE public.group_list_id_seq OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 3577 (class 0 OID 0)
+-- TOC entry 3578 (class 0 OID 0)
 -- Dependencies: 220
 -- Name: group_list_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
@@ -477,7 +487,7 @@ CREATE SEQUENCE public.group_member_id_seq
 ALTER SEQUENCE public.group_member_id_seq OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 3578 (class 0 OID 0)
+-- TOC entry 3579 (class 0 OID 0)
 -- Dependencies: 222
 -- Name: group_member_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
@@ -519,7 +529,7 @@ CREATE SEQUENCE public.password_reset_token_id_seq
 ALTER SEQUENCE public.password_reset_token_id_seq OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 3579 (class 0 OID 0)
+-- TOC entry 3580 (class 0 OID 0)
 -- Dependencies: 218
 -- Name: password_reset_token_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
@@ -1011,7 +1021,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENC
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO meetwithfriends_user;
 
 
--- Completed on 2026-01-12 22:27:52
+-- Completed on 2026-01-16 12:52:07
 
 --
 -- PostgreSQL database dump complete
