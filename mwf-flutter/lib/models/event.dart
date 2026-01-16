@@ -55,4 +55,6 @@ class Event {
 
   bool get isGoing => rsvpStatus == 'attending';
   bool get isWaitlisted => rsvpStatus == 'waitlist';
+  bool get isFull => capacity != null && attendeeCount >= capacity!;
+  bool get isCancelled => status == 'cancelled';
 }

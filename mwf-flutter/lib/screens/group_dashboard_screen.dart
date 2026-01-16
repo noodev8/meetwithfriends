@@ -38,6 +38,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
   List<GroupMember> _pendingMembers = [];
   int? _processingMemberId;
   bool _isLeaving = false;
+  bool _isJoining = false;
 
   @override
   void initState() {
@@ -253,6 +254,54 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
     }
   }
 
+  Future<void> _handleJoinGroup() async {
+    if (_group == null) return;
+
+    setState(() => _isJoining = true);
+
+    final result = await _groupsService.joinGroup(_group!.id);
+
+    if (mounted) {
+      setState(() => _isJoining = false);
+
+      if (result.success) {
+        // Update local membership state
+        setState(() {
+          _membership = GroupMembership(
+            status: result.status,
+            role: 'member',
+          );
+        });
+
+        // Show success message
+        final message = result.isPending
+            ? 'Your request to join has been submitted'
+            : 'You have joined ${_group!.name}';
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: result.isPending
+                ? const Color(0xFFF59E0B)
+                : const Color(0xFF10B981),
+          ),
+        );
+
+        // If joined successfully (not pending), reload to get full member data
+        if (result.isActive) {
+          _loadGroup();
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.error ?? 'Failed to join group'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   GroupTheme get _theme => getGroupTheme(_group?.themeColor);
 
   @override
@@ -370,8 +419,11 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                       // Hero Section
                       _buildHeroSection(group, isOrganiser, canManageMembers),
 
-                      // Membership Status Card
-                      if (membership != null) _buildMembershipCard(membership),
+                      // Join/Membership Status Card
+                      if (membership == null)
+                        _buildJoinCard(group)
+                      else
+                        _buildMembershipCard(membership),
 
                       // Pending Requests Section (only for organisers/hosts)
                       if (canManageMembers && _pendingMembers.isNotEmpty)
@@ -696,6 +748,107 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJoinCard(GroupDetail group) {
+    final isOpenGroup = group.joinPolicy == 'auto';
+    final buttonText = isOpenGroup ? 'Join Group' : 'Request to Join';
+    final subtitleText = isOpenGroup
+        ? 'Anyone can join this group'
+        : 'Your request will be reviewed by an organiser';
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: _theme.gradient,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.group_add_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Join this group',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitleText,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _isJoining ? null : _handleJoinGroup,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF7C3AED),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+                disabledBackgroundColor: const Color(0xFF7C3AED).withAlpha(153),
+              ),
+              child: _isJoining
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(
+                      buttonText,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           ),
         ],
@@ -1276,6 +1429,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                                 ),
                               ),
                             ),
+                            // Status badges
                             if (event.isGoing)
                               Container(
                                 padding: const EdgeInsets.symmetric(
@@ -1288,6 +1442,44 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                                 ),
                                 child: const Text(
                                   'Going',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              )
+                            else if (event.isWaitlisted)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF8B5CF6),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Text(
+                                  'Waitlist',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              )
+                            else if (event.isFull && !event.isCancelled)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF59E0B),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Text(
+                                  'Waitlist',
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,

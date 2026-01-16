@@ -5,6 +5,7 @@ import '../config/event_categories.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/pre_order_section.dart';
 import 'attendees_screen.dart';
+import 'edit_event_screen.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final int eventId;
@@ -128,6 +129,26 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _navigateToEditEvent() async {
+    if (_event == null) return;
+
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => EditEventScreen(
+          eventId: _event!.id,
+          onEventUpdated: () {
+            // Callback when event is updated
+          },
+        ),
+      ),
+    );
+
+    // If the edit was successful, reload the event data
+    if (result == true) {
+      _loadEvent();
+    }
   }
 
   @override
@@ -617,9 +638,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         // Edit button (styled)
         if (_canEdit && !event.isPast)
           GestureDetector(
-            onTap: () {
-              // TODO: Navigate to edit event
-            },
+            onTap: () => _navigateToEditEvent(),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(

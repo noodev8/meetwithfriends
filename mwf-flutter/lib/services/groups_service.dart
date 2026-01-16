@@ -245,6 +245,67 @@ class GroupsService {
       error: response['message'] as String? ?? 'Failed to update role',
     );
   }
+
+  /// Join or request to join a group
+  /// For open groups (join_policy: 'auto'), the user is immediately added as a member
+  /// For approval-required groups, a pending request is created
+  Future<JoinGroupResult> joinGroup(int groupId, {String? inviteCode}) async {
+    final Map<String, dynamic> payload = {'group_id': groupId};
+    if (inviteCode != null && inviteCode.isNotEmpty) {
+      payload['invite_code'] = inviteCode;
+    }
+
+    final response = await _api.post('/groups/join', payload);
+
+    if (response['return_code'] == 'SUCCESS') {
+      return JoinGroupResult(
+        success: true,
+        status: response['status'] as String? ?? 'active',
+        message: response['message'] as String?,
+      );
+    }
+
+    // Handle specific error cases
+    String errorMessage;
+    switch (response['return_code']) {
+      case 'ALREADY_MEMBER':
+        errorMessage = 'You are already a member of this group';
+        break;
+      case 'ALREADY_PENDING':
+        errorMessage = 'You already have a pending request to join this group';
+        break;
+      case 'NOT_FOUND':
+        errorMessage = 'Group not found or invalid invite code';
+        break;
+      default:
+        errorMessage = response['message'] as String? ?? 'Failed to join group';
+    }
+
+    return JoinGroupResult(
+      success: false,
+      error: errorMessage,
+      returnCode: response['return_code'] as String?,
+    );
+  }
+}
+
+class JoinGroupResult {
+  final bool success;
+  final String? status; // 'active' or 'pending'
+  final String? message;
+  final String? error;
+  final String? returnCode;
+
+  JoinGroupResult({
+    required this.success,
+    this.status,
+    this.message,
+    this.error,
+    this.returnCode,
+  });
+
+  bool get isActive => status == 'active';
+  bool get isPending => status == 'pending';
 }
 
 class MemberActionResult {

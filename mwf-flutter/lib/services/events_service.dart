@@ -238,6 +238,67 @@ class EventsService {
       error: response['message'] as String? ?? 'Failed to create event',
     );
   }
+
+  /// Update an existing event
+  Future<UpdateEventResult> updateEvent({
+    required int eventId,
+    String? title,
+    String? description,
+    String? location,
+    DateTime? dateTime,
+    int? capacity,
+    bool? capacityUnlimited, // Set to true to explicitly set capacity to null (unlimited)
+    String? category,
+    bool? preordersEnabled,
+    String? menuLink,
+    DateTime? preorderCutoff,
+    bool? preorderCutoffCleared, // Set to true to clear preorder cutoff
+  }) async {
+    final body = <String, dynamic>{};
+
+    if (title != null && title.isNotEmpty) {
+      body['title'] = title;
+    }
+    if (description != null) {
+      body['description'] = description;
+    }
+    if (location != null) {
+      body['location'] = location;
+    }
+    if (dateTime != null) {
+      body['date_time'] = dateTime.toUtc().toIso8601String();
+    }
+    if (capacityUnlimited == true) {
+      body['capacity'] = null;
+    } else if (capacity != null) {
+      body['capacity'] = capacity;
+    }
+    if (category != null && category.isNotEmpty) {
+      body['category'] = category;
+    }
+    if (preordersEnabled != null) {
+      body['preorders_enabled'] = preordersEnabled;
+    }
+    if (menuLink != null) {
+      body['menu_link'] = menuLink.isNotEmpty ? menuLink : null;
+    }
+    if (preorderCutoffCleared == true) {
+      body['preorder_cutoff'] = null;
+    } else if (preorderCutoff != null) {
+      body['preorder_cutoff'] = preorderCutoff.toUtc().toIso8601String();
+    }
+
+    final response = await _api.post('/events/$eventId/update', body);
+
+    if (response['return_code'] == 'SUCCESS') {
+      return UpdateEventResult(success: true);
+    }
+
+    return UpdateEventResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to update event',
+    );
+  }
 }
 
 class AttendeesResult {
@@ -490,6 +551,13 @@ class CreateEventResult {
   final String? error;
 
   CreateEventResult({required this.success, this.eventId, this.error});
+}
+
+class UpdateEventResult {
+  final bool success;
+  final String? error;
+
+  UpdateEventResult({required this.success, this.error});
 }
 
 class SubmitOrderResult {

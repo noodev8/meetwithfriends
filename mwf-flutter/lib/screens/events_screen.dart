@@ -325,6 +325,7 @@ class _CompactEventCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        // Status badges
                         if (event.isGoing)
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -341,6 +342,46 @@ class _CompactEventCard extends StatelessWidget {
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 color: Color(0xFF10B981),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          )
+                        else if (event.isWaitlisted)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF7C3AED).withAlpha(26),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'WAITLIST',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF7C3AED),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          )
+                        else if (event.isFull && !event.isCancelled)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF59E0B).withAlpha(26),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'WAITLIST',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFFF59E0B),
                                 letterSpacing: 0.5,
                               ),
                             ),

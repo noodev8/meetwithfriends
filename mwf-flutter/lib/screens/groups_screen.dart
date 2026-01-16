@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../models/group.dart';
 import '../services/groups_service.dart';
 import '../config/group_themes.dart';
-import '../widgets/bottom_nav_bar.dart';
 import 'group_dashboard_screen.dart';
 import 'create_group_screen.dart';
 
@@ -149,12 +148,6 @@ class _GroupsScreenState extends State<GroupsScreen> {
                           },
                         ),
                       ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: -1,
-        onTap: (index) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
-        },
       ),
     );
   }
