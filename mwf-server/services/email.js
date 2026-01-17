@@ -188,7 +188,7 @@ Returns: { processed, sent, failed }
 =======================================================================================================================================
 */
 async function processEmailQueue(limit = 50) {
-    const stats = { processed: 0, sent: 0, failed: 0 };
+    const stats = { processed: 0, sent: 0, failed: 0, skipped: 0 };
 
     try {
         // Get pending emails that are scheduled for now or earlier
@@ -206,6 +206,16 @@ async function processEmailQueue(limit = 50) {
 
         for (const email of emails) {
             stats.processed++;
+
+            // Skip @test.com emails - mark as skipped without sending
+            if (email.recipient_email.toLowerCase().endsWith('@test.com')) {
+                await query(
+                    `UPDATE email_queue SET status = 'skipped', sent_at = NOW() WHERE id = $1`,
+                    [email.id]
+                );
+                stats.skipped++;
+                continue;
+            }
 
             // Send the email
             const sendResult = await sendEmail(
@@ -270,9 +280,11 @@ async function getQueueStats() {
             GROUP BY status
         `);
 
-        const stats = { pending: 0, sent: 0, failed: 0, cancelled: 0 };
+        const stats = { pending: 0, sent: 0, failed: 0, cancelled: 0, skipped: 0 };
         result.rows.forEach(row => {
-            stats[row.status] = parseInt(row.count, 10);
+            if (stats.hasOwnProperty(row.status)) {
+                stats[row.status] = parseInt(row.count, 10);
+            }
         });
 
         return { success: true, stats };
