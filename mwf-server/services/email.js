@@ -991,6 +991,40 @@ async function queueEventReminderEmail(email, userName, event, group, isHost = f
     });
 }
 
+/*
+=======================================================================================================================================
+queueNewCommentEmail
+=======================================================================================================================================
+Queue comment notification for later processing
+=======================================================================================================================================
+*/
+async function queueNewCommentEmail(email, userName, event, group, commenterName, commentContent) {
+    // Truncate comment if too long for display
+    const maxLength = 200;
+    const truncatedComment = commentContent.length > maxLength
+        ? commentContent.substring(0, maxLength) + '...'
+        : commentContent;
+
+    const html = wrapEmail(`
+        <h2 style="color: #333; margin-top: 0;">New comment on ${event.title}</h2>
+        <p style="color: #666; font-size: 16px;">
+            <strong>${commenterName}</strong> commented:
+        </p>
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #4f46e5;">
+            <p style="color: #666; font-size: 16px; font-style: italic; margin: 0;">
+                "${truncatedComment}"
+            </p>
+        </div>
+        ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Conversation')}
+    `);
+
+    return queueEmail(email, userName, `New comment on ${event.title}`, html, 'new_comment', {
+        groupId: group.id,
+        eventId: event.id,
+        groupName: group.name
+    });
+}
+
 module.exports = {
     // Core functions
     sendEmail,
@@ -1017,5 +1051,6 @@ module.exports = {
     queueNewEventEmail,
     queueEventCancelledEmail,
     queueBroadcastEmail,
-    queueEventReminderEmail
+    queueEventReminderEmail,
+    queueNewCommentEmail
 };

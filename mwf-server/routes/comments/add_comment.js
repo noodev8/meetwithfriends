@@ -39,7 +39,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
-const { sendNewCommentEmail } = require('../../services/email');
+const { queueNewCommentEmail } = require('../../services/email');
 
 // Maximum comment length
 const MAX_COMMENT_LENGTH = 280;
@@ -85,10 +85,12 @@ router.post('/', verifyToken, async (req, res) => {
                 e.id,
                 e.title,
                 e.group_id,
+                g.name AS group_name,
                 er.status AS rsvp_status,
                 gm.role AS member_role,
                 EXISTS(SELECT 1 FROM event_host eh WHERE eh.event_id = e.id AND eh.user_id = $2) AS is_host
              FROM event_list e
+             JOIN group_list g ON e.group_id = g.id
              LEFT JOIN event_rsvp er ON e.id = er.event_id AND er.user_id = $2
              LEFT JOIN group_member gm ON e.group_id = gm.group_id AND gm.user_id = $2 AND gm.status = 'active'
              WHERE e.id = $1`,
@@ -141,34 +143,34 @@ router.post('/', verifyToken, async (req, res) => {
         const event = eventResult.rows[0];
 
         // =======================================================================
-        // Send notification emails to attendees and waitlist (except commenter)
-        // NOTE: Email notifications temporarily disabled to address rate limiting
-        // TODO: Re-enable when email batching/queuing is implemented
+        // Queue notification emails to attendees and waitlist (except commenter)
         // =======================================================================
-        // const recipientsResult = await query(
-        //     `SELECT u.email, u.name
-        //      FROM event_rsvp er
-        //      JOIN app_user u ON er.user_id = u.id
-        //      WHERE er.event_id = $1
-        //      AND er.status IN ('attending', 'waitlist')
-        //      AND er.user_id != $2`,
-        //     [event_id, userId]
-        // );
+        const recipientsResult = await query(
+            `SELECT u.email, u.name
+             FROM event_rsvp er
+             JOIN app_user u ON er.user_id = u.id
+             WHERE er.event_id = $1
+             AND er.status IN ('attending', 'waitlist')
+             AND er.user_id != $2`,
+            [event_id, userId]
+        );
 
-        // // For test mode, only send one email (not one per recipient)
-        // let testEmailSent = false;
-        // recipientsResult.rows.forEach(recipient => {
-        //     const isTestEmail = recipient.email.toLowerCase().endsWith('@test.com');
-        //     if (isTestEmail && testEmailSent) {
-        //         return; // Skip duplicate test emails
-        //     }
-        //     if (isTestEmail) {
-        //         testEmailSent = true;
-        //     }
-        //     sendNewCommentEmail(recipient.email, recipient.name, event, user.name, trimmedContent).catch(err => {
-        //         console.error('Failed to send new comment email:', err);
-        //     });
-        // });
+        // Create group object for email queue
+        const group = { id: event.group_id, name: event.group_name };
+
+        // Queue emails for all recipients
+        for (const recipient of recipientsResult.rows) {
+            queueNewCommentEmail(
+                recipient.email,
+                recipient.name,
+                event,
+                group,
+                user.name,
+                trimmedContent
+            ).catch(err => {
+                console.error('Failed to queue comment email:', err);
+            });
+        }
 
         // =======================================================================
         // Return success with the new comment
