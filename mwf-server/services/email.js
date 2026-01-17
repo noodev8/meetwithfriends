@@ -65,9 +65,10 @@ async function logEmail(recipientEmail, emailType, subject, status, relatedId = 
 sendEmail
 =======================================================================================================================================
 Core email sending function with test mode and daily limit handling
+Optional fromName parameter allows customizing sender (e.g., group name instead of "Meet With Friends")
 =======================================================================================================================================
 */
-async function sendEmail(to, subject, html, emailType, relatedId = null, replyTo = null, text = null) {
+async function sendEmail(to, subject, html, emailType, relatedId = null, replyTo = null, text = null, fromName = null) {
     const isTestEmail = to.toLowerCase().endsWith('@test.com');
 
     // Check daily limit for real emails
@@ -91,8 +92,10 @@ async function sendEmail(to, subject, html, emailType, relatedId = null, replyTo
     }
 
     try {
+        // Use custom fromName if provided, otherwise use default
+        const senderName = fromName || config.email.fromName;
         const emailOptions = {
-            from: `${config.email.fromName} <${config.email.from}>`,
+            from: `${senderName} <${config.email.from}>`,
             to: actualRecipient,
             subject: actualSubject,
         };
@@ -140,37 +143,18 @@ async function sendEmail(to, subject, html, emailType, relatedId = null, replyTo
 queueEmail
 =======================================================================================================================================
 Add email to queue for later processing (used for bulk sends)
+Options: { groupId, eventId, groupName, replyTo, text, scheduledFor }
 =======================================================================================================================================
 */
-async function queueEmail(to, subject, html, emailType, relatedId = null, replyTo = null, text = null, scheduledFor = null) {
+async function queueEmail(to, recipientName, subject, html, emailType, options = {}) {
+    const { groupId = null, eventId = null, groupName = null, replyTo = null, text = null, scheduledFor = null } = options;
     try {
         await query(
             `INSERT INTO email_queue
-             (recipient_email, subject, html_content, text_content, email_type, related_id, reply_to, scheduled_for)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE($8, NOW()))`,
-            [to, subject, html, text, emailType, relatedId, replyTo, scheduledFor]
-        );
-        return { success: true, queued: true };
-    } catch (error) {
-        console.error('Error queueing email:', error);
-        return { success: false, error: error.message };
-    }
-}
-
-/*
-=======================================================================================================================================
-queueEmailWithName
-=======================================================================================================================================
-Queue email with recipient name (for display purposes)
-=======================================================================================================================================
-*/
-async function queueEmailWithName(to, recipientName, subject, html, emailType, relatedId = null, replyTo = null, text = null) {
-    try {
-        await query(
-            `INSERT INTO email_queue
-             (recipient_email, recipient_name, subject, html_content, text_content, email_type, related_id, reply_to)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-            [to, recipientName, subject, html, text, emailType, relatedId, replyTo]
+             (recipient_email, recipient_name, subject, html_content, text_content, email_type,
+              group_id, event_id, group_name, reply_to, scheduled_for)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, COALESCE($11, NOW()))`,
+            [to, recipientName, subject, html, text, emailType, groupId, eventId, groupName, replyTo, scheduledFor]
         );
         return { success: true, queued: true };
     } catch (error) {
@@ -217,15 +201,16 @@ async function processEmailQueue(limit = 50) {
                 continue;
             }
 
-            // Send the email
+            // Send the email (use group_name as sender if available)
             const sendResult = await sendEmail(
                 email.recipient_email,
                 email.subject,
                 email.html_content,
                 email.email_type,
-                email.related_id,
+                email.event_id || email.group_id,  // For logging
                 email.reply_to,
-                email.text_content
+                email.text_content,
+                email.group_name  // Custom sender name
             );
 
             if (sendResult.success) {
@@ -300,25 +285,51 @@ Email Templates
 =======================================================================================================================================
 */
 
-// Base email wrapper
+// Base email wrapper with prominent branding
 function wrapEmail(content) {
     return `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            ${content}
-            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-            <p style="color: #999; font-size: 12px; text-align: center;">
-                Meet With Friends<br>
-                <a href="${config.frontendUrl}" style="color: #666;">Visit our website</a>
-            </p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+            <!-- Header with branding -->
+            <div style="background-color: #4f46e5; padding: 20px; text-align: center;">
+                <a href="${config.frontendUrl}" style="text-decoration: none;">
+                    <span style="color: #ffffff; font-size: 24px; font-weight: bold; letter-spacing: -0.5px;">Meet With Friends</span>
+                </a>
+            </div>
+
+            <!-- Main content -->
+            <div style="padding: 30px 20px;">
+                ${content}
+            </div>
+
+            <!-- Footer -->
+            <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #eee;">
+                <p style="color: #666; font-size: 14px; margin: 0 0 10px 0;">
+                    <strong>Meet With Friends</strong> - Your group events platform
+                </p>
+                <p style="color: #999; font-size: 12px; margin: 0;">
+                    <a href="${config.frontendUrl}" style="color: #4f46e5; text-decoration: none;">Visit meetwithfriends.app</a>
+                    &nbsp;|&nbsp;
+                    <a href="${config.frontendUrl}/profile" style="color: #4f46e5; text-decoration: none;">Manage preferences</a>
+                </p>
+            </div>
         </div>
     `;
 }
 
-// Simple text link helper
+// CTA button helper (prominent action button)
+function emailButton(url, text) {
+    return `
+        <p style="margin: 25px 0;">
+            <a href="${url}" style="display: inline-block; background-color: #4f46e5; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">${text}</a>
+        </p>
+    `;
+}
+
+// Simple text link helper (for secondary actions)
 function emailLink(url, text) {
     return `
         <p style="margin: 20px 0;">
-            <a href="${url}" style="color: #4f46e5;">${text}</a>
+            <a href="${url}" style="color: #4f46e5; text-decoration: none;">${text}</a>
         </p>
     `;
 }
@@ -332,7 +343,7 @@ Sent when a new user registers
 */
 async function sendWelcomeEmail(email, userName) {
     const html = wrapEmail(`
-        <h2 style="color: #333;">Welcome to Meet With Friends!</h2>
+        <h2 style="color: #333; margin-top: 0;">Welcome to Meet With Friends!</h2>
         <p style="color: #666; font-size: 16px;">
             Hi ${userName},
         </p>
@@ -342,7 +353,7 @@ async function sendWelcomeEmail(email, userName) {
         <p style="color: #666; font-size: 16px;">
             Start by joining a group or browsing upcoming events.
         </p>
-        ${emailLink(config.frontendUrl + '/dashboard', 'Go to Dashboard')}
+        ${emailButton(config.frontendUrl + '/dashboard', 'Go to Dashboard')}
     `);
 
     return sendEmail(email, 'Welcome to Meet With Friends', html, 'welcome');
@@ -364,18 +375,20 @@ async function sendRsvpConfirmedEmail(email, userName, event) {
     });
 
     const html = wrapEmail(`
-        <h2 style="color: #333;">You're going!</h2>
+        <h2 style="color: #333; margin-top: 0;">You're going!</h2>
         <p style="color: #666; font-size: 16px;">
             Hi ${userName},
         </p>
         <p style="color: #666; font-size: 16px;">
             Your RSVP for <strong>${event.title}</strong> has been confirmed.
         </p>
-        <p style="color: #666; font-size: 16px;">
-            <strong>${event.title}</strong><br>
-            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
-        </p>
-        ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event')}
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <p style="color: #333; font-size: 16px; margin: 0;">
+                <strong>${event.title}</strong><br>
+                <span style="color: #666;">${eventDate} at ${eventTime}</span>${event.location ? `<br><span style="color: #666;">${event.location}</span>` : ''}
+            </p>
+        </div>
+        ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Event')}
     `);
 
     return sendEmail(email, `RSVP confirmed: ${event.title}`, html, 'rsvp_confirmed', event.id);
@@ -401,17 +414,19 @@ async function sendRemovedFromEventEmail(email, userName, event, reason) {
         : 'You have been removed from the event.';
 
     const html = wrapEmail(`
-        <h2 style="color: #333;">Event Update</h2>
+        <h2 style="color: #333; margin-top: 0;">Event Update</h2>
         <p style="color: #666; font-size: 16px;">
             Hi ${userName},
         </p>
         <p style="color: #666; font-size: 16px;">
             ${reasonText}
         </p>
-        <p style="color: #666; font-size: 16px;">
-            <strong>${event.title}</strong><br>
-            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
-        </p>
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #333; margin: 0 0 10px 0; font-size: 18px;">${event.title}</h3>
+            <p style="color: #666; font-size: 15px; margin: 0;">
+                ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
+            </p>
+        </div>
         <p style="color: #666; font-size: 16px;">
             If you have any questions, please contact the event host.
         </p>
@@ -437,18 +452,20 @@ async function sendPromotedFromWaitlistEmail(email, userName, event) {
     });
 
     const html = wrapEmail(`
-        <h2 style="color: #333;">Good news - you're in!</h2>
+        <h2 style="color: #2e7d32; margin-top: 0;">Good news - you're in!</h2>
         <p style="color: #666; font-size: 16px;">
             Hi ${userName},
         </p>
         <p style="color: #666; font-size: 16px;">
             A spot has opened up and you've been moved from the waitlist to attending!
         </p>
-        <p style="color: #666; font-size: 16px;">
-            <strong>${event.title}</strong><br>
-            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
-        </p>
-        ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event')}
+        <div style="background-color: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2e7d32;">
+            <h3 style="color: #333; margin: 0 0 10px 0; font-size: 18px;">${event.title}</h3>
+            <p style="color: #666; font-size: 15px; margin: 0;">
+                ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
+            </p>
+        </div>
+        ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Event')}
     `);
 
     return sendEmail(email, `You're in: ${event.title}`, html, 'promoted_from_waitlist', event.id);
@@ -470,14 +487,16 @@ async function sendEventCancelledEmail(email, userName, event) {
     });
 
     const html = wrapEmail(`
-        <h2 style="color: #333;">Event Cancelled</h2>
+        <h2 style="color: #d32f2f; margin-top: 0;">Event Cancelled</h2>
         <p style="color: #666; font-size: 16px;">
             Unfortunately, the following event has been cancelled:
         </p>
-        <p style="color: #666; font-size: 16px;">
-            <strong>${event.title}</strong><br>
-            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
-        </p>
+        <div style="background-color: #ffebee; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d32f2f;">
+            <h3 style="color: #333; margin: 0 0 10px 0; font-size: 18px; text-decoration: line-through;">${event.title}</h3>
+            <p style="color: #666; font-size: 15px; margin: 0;">
+                ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
+            </p>
+        </div>
         <p style="color: #666; font-size: 16px;">
             If you have any questions, please contact the event host.
         </p>
@@ -495,14 +514,14 @@ Sent to host/organiser when someone requests to join a group
 */
 async function sendNewJoinRequestEmail(email, hostName, requesterName, group) {
     const html = wrapEmail(`
-        <h2 style="color: #333;">New Join Request</h2>
+        <h2 style="color: #333; margin-top: 0;">New Join Request</h2>
         <p style="color: #666; font-size: 16px;">
             Hi ${hostName},
         </p>
         <p style="color: #666; font-size: 16px;">
             <strong>${requesterName}</strong> has requested to join <strong>${group.name}</strong>.
         </p>
-        ${emailLink(config.frontendUrl + '/groups/' + group.id + '/members', 'Review Request')}
+        ${emailButton(config.frontendUrl + '/groups/' + group.id + '/members', 'Review Request')}
     `);
 
     return sendEmail(email, `New join request: ${group.name}`, html, 'new_join_request', group.id);
@@ -517,7 +536,7 @@ Sent when a user's join request is approved by host/organiser
 */
 async function sendJoinedGroupEmail(email, userName, group) {
     const html = wrapEmail(`
-        <h2 style="color: #333;">Welcome to ${group.name}!</h2>
+        <h2 style="color: #2e7d32; margin-top: 0;">Welcome to ${group.name}!</h2>
         <p style="color: #666; font-size: 16px;">
             Hi ${userName},
         </p>
@@ -527,7 +546,7 @@ async function sendJoinedGroupEmail(email, userName, group) {
         <p style="color: #666; font-size: 16px;">
             You can now see all members, RSVP to events, and join discussions.
         </p>
-        ${emailLink(config.frontendUrl + '/groups/' + group.id, 'View Group')}
+        ${emailButton(config.frontendUrl + '/groups/' + group.id, 'View Group')}
     `);
 
     return sendEmail(email, `Welcome to ${group.name}`, html, 'joined_group', group.id);
@@ -549,15 +568,19 @@ async function sendNewEventEmail(email, userName, event, group, hostName) {
     });
 
     const html = wrapEmail(`
-        <h2 style="color: #333;">New Event in ${group.name}</h2>
-        <p style="color: #666; font-size: 16px;">
-            <strong>${hostName}</strong> has created a new event:
+        <p style="color: #666; font-size: 16px; text-align: center; margin-top: 0;">
+            <a href="${config.frontendUrl}/groups/${group.id}" style="color: #4f46e5; text-decoration: none; font-weight: bold; font-size: 18px;">${group.name}</a> scheduled a new event
         </p>
-        <p style="color: #666; font-size: 16px;">
-            <strong>${event.title}</strong><br>
-            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
-        </p>
-        ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event & RSVP')}
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #333; margin: 0 0 10px 0; font-size: 20px;">${event.title}</h3>
+            <p style="color: #666; font-size: 15px; margin: 0;">
+                ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
+            </p>
+            <p style="color: #999; font-size: 14px; margin: 10px 0 0 0;">
+                Hosted by ${hostName}
+            </p>
+        </div>
+        ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Event & RSVP')}
     `);
 
     // Subject: "Group Name: New event - Event Title" (truncate title if needed)
@@ -588,26 +611,30 @@ async function sendEventReminderEmail(email, userName, event, isHost = false, at
     let summarySection = '';
     if (isHost && attendeeSummary) {
         summarySection = `
-            <p style="color: #666; font-size: 16px;">
-                <strong>Attendee Summary:</strong> ${attendeeSummary.attending} attending${attendeeSummary.waitlist > 0 ? `, ${attendeeSummary.waitlist} on waitlist` : ''}
-            </p>
+            <div style="background-color: #e8f5e9; padding: 12px 15px; border-radius: 6px; margin: 15px 0;">
+                <p style="color: #2e7d32; font-size: 14px; margin: 0;">
+                    <strong>Host Summary:</strong> ${attendeeSummary.attending} attending${attendeeSummary.waitlist > 0 ? `, ${attendeeSummary.waitlist} on waitlist` : ''}
+                </p>
+            </div>
         `;
     }
 
     const html = wrapEmail(`
-        <h2 style="color: #333;">Event Tomorrow!</h2>
+        <h2 style="color: #333; margin-top: 0;">Event Tomorrow!</h2>
         <p style="color: #666; font-size: 16px;">
             Hi ${userName},
         </p>
         <p style="color: #666; font-size: 16px;">
             Just a reminder that you have an event coming up tomorrow:
         </p>
-        <p style="color: #666; font-size: 16px;">
-            <strong>${event.title}</strong><br>
-            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
-        </p>
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #333; margin: 0 0 10px 0; font-size: 20px;">${event.title}</h3>
+            <p style="color: #666; font-size: 15px; margin: 0;">
+                ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
+            </p>
+        </div>
         ${summarySection}
-        ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event')}
+        ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Event')}
     `);
 
     const subject = isHost ? `Tomorrow: ${event.title} (${attendeeSummary?.attending || 0} attending)` : `Reminder: ${event.title} is tomorrow`;
@@ -625,20 +652,20 @@ async function sendPasswordResetEmail(email, token) {
     const resetUrl = `${config.frontendUrl}/reset-password?token=${token}`;
 
     const html = wrapEmail(`
-        <h2 style="color: #333;">Reset Your Password</h2>
+        <h2 style="color: #333; margin-top: 0;">Reset Your Password</h2>
         <p style="color: #666; font-size: 16px;">
             You requested to reset your password for your Meet With Friends account.
         </p>
         <p style="color: #666; font-size: 16px;">
-            Click the link below to set a new password. This link will expire in 1 hour.
+            Click the button below to set a new password. This link will expire in 1 hour.
         </p>
-        ${emailLink(resetUrl, 'Reset Password')}
+        ${emailButton(resetUrl, 'Reset Password')}
         <p style="color: #999; font-size: 14px;">
             If you didn't request this, you can safely ignore this email.
         </p>
         <p style="color: #999; font-size: 12px;">
-            If the link doesn't work, copy and paste this URL into your browser:<br>
-            <a href="${resetUrl}" style="color: #666;">${resetUrl}</a>
+            If the button doesn't work, copy and paste this URL into your browser:<br>
+            <a href="${resetUrl}" style="color: #4f46e5;">${resetUrl}</a>
         </p>
     `);
 
@@ -660,14 +687,16 @@ async function sendNewCommentEmail(email, userName, event, commenterName, commen
         : commentContent;
 
     const html = wrapEmail(`
-        <h2 style="color: #333;">New comment on ${event.title}</h2>
+        <h2 style="color: #333; margin-top: 0;">New comment on ${event.title}</h2>
         <p style="color: #666; font-size: 16px;">
             <strong>${commenterName}</strong> commented:
         </p>
-        <p style="color: #666; font-size: 16px; font-style: italic;">
-            "${truncatedComment}"
-        </p>
-        ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Conversation')}
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #4f46e5;">
+            <p style="color: #666; font-size: 16px; font-style: italic; margin: 0;">
+                "${truncatedComment}"
+            </p>
+        </div>
+        ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Conversation')}
     `);
 
     return sendEmail(email, `New comment on ${event.title}`, html, 'new_comment', event.id);
@@ -792,25 +821,33 @@ async function queueNewEventEmail(email, userName, event, group, hostName) {
     });
 
     const html = wrapEmail(`
-        <h2 style="color: #333;">New Event in ${group.name}</h2>
-        <p style="color: #666; font-size: 16px;">
-            <strong>${hostName}</strong> has created a new event:
+        <p style="color: #666; font-size: 16px; text-align: center; margin-top: 0;">
+            <a href="${config.frontendUrl}/groups/${group.id}" style="color: #4f46e5; text-decoration: none; font-weight: bold; font-size: 18px;">${group.name}</a> scheduled a new event
         </p>
-        <p style="color: #666; font-size: 16px;">
-            <strong>${event.title}</strong><br>
-            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
-        </p>
-        ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event & RSVP')}
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #333; margin: 0 0 10px 0; font-size: 20px;">${event.title}</h3>
+            <p style="color: #666; font-size: 15px; margin: 0;">
+                ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
+            </p>
+            <p style="color: #999; font-size: 14px; margin: 10px 0 0 0;">
+                Hosted by ${hostName}
+            </p>
+        </div>
+        ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Event & RSVP')}
     `);
 
-    // Subject: "Group Name: New event - Event Title" (truncate title if needed)
-    const maxTitleLength = 40;
+    // Subject: "New event - Event Title" (sender shows as group name)
+    const maxTitleLength = 50;
     const truncatedTitle = event.title.length > maxTitleLength
         ? event.title.substring(0, maxTitleLength - 3) + '...'
         : event.title;
-    const subject = `${group.name}: New event - ${truncatedTitle}`;
+    const subject = `New event - ${truncatedTitle}`;
 
-    return queueEmailWithName(email, userName, subject, html, 'new_event', event.id);
+    return queueEmail(email, userName, subject, html, 'new_event', {
+        groupId: group.id,
+        eventId: event.id,
+        groupName: group.name
+    });
 }
 
 /*
@@ -820,7 +857,7 @@ queueEventCancelledEmail
 Queue event cancelled notification for later processing
 =======================================================================================================================================
 */
-async function queueEventCancelledEmail(email, userName, event) {
+async function queueEventCancelledEmail(email, userName, event, group) {
     const eventDate = new Date(event.date_time).toLocaleDateString('en-GB', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
@@ -829,20 +866,26 @@ async function queueEventCancelledEmail(email, userName, event) {
     });
 
     const html = wrapEmail(`
-        <h2 style="color: #333;">Event Cancelled</h2>
+        <h2 style="color: #d32f2f; margin-top: 0;">Event Cancelled</h2>
         <p style="color: #666; font-size: 16px;">
             Unfortunately, the following event has been cancelled:
         </p>
-        <p style="color: #666; font-size: 16px;">
-            <strong>${event.title}</strong><br>
-            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
-        </p>
+        <div style="background-color: #ffebee; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d32f2f;">
+            <h3 style="color: #333; margin: 0 0 10px 0; font-size: 18px; text-decoration: line-through;">${event.title}</h3>
+            <p style="color: #666; font-size: 15px; margin: 0;">
+                ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
+            </p>
+        </div>
         <p style="color: #666; font-size: 16px;">
             If you have any questions, please contact the event host.
         </p>
     `);
 
-    return queueEmailWithName(email, userName, `Cancelled: ${event.title}`, html, 'event_cancelled', event.id);
+    return queueEmail(email, userName, `Cancelled: ${event.title}`, html, 'event_cancelled', {
+        groupId: group.id,
+        eventId: event.id,
+        groupName: group.name
+    });
 }
 
 /*
@@ -864,7 +907,11 @@ View group: ${config.frontendUrl}/groups/${group.id}
 
 You received this because you're a member of ${group.name}. To stop receiving broadcasts, update your preferences in your profile settings.`;
 
-    return queueEmailWithName(email, memberName, `Message from ${group.name}`, null, 'broadcast', group.id, null, text);
+    return queueEmail(email, memberName, `Message from ${organiserName}`, null, 'broadcast', {
+        groupId: group.id,
+        groupName: group.name,
+        text: text
+    });
 }
 
 /*
@@ -874,7 +921,7 @@ queueEventReminderEmail
 Queue event reminder for later processing
 =======================================================================================================================================
 */
-async function queueEventReminderEmail(email, userName, event, isHost = false, attendeeSummary = null) {
+async function queueEventReminderEmail(email, userName, event, group, isHost = false, attendeeSummary = null) {
     const eventDate = new Date(event.date_time).toLocaleDateString('en-GB', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
@@ -885,37 +932,44 @@ async function queueEventReminderEmail(email, userName, event, isHost = false, a
     let summarySection = '';
     if (isHost && attendeeSummary) {
         summarySection = `
-            <p style="color: #666; font-size: 16px;">
-                <strong>Attendee Summary:</strong> ${attendeeSummary.attending} attending${attendeeSummary.waitlist > 0 ? `, ${attendeeSummary.waitlist} on waitlist` : ''}
-            </p>
+            <div style="background-color: #e8f5e9; padding: 12px 15px; border-radius: 6px; margin: 15px 0;">
+                <p style="color: #2e7d32; font-size: 14px; margin: 0;">
+                    <strong>Host Summary:</strong> ${attendeeSummary.attending} attending${attendeeSummary.waitlist > 0 ? `, ${attendeeSummary.waitlist} on waitlist` : ''}
+                </p>
+            </div>
         `;
     }
 
     const html = wrapEmail(`
-        <h2 style="color: #333;">Event Tomorrow!</h2>
+        <h2 style="color: #333; margin-top: 0;">Event Tomorrow!</h2>
         <p style="color: #666; font-size: 16px;">
             Hi ${userName},
         </p>
         <p style="color: #666; font-size: 16px;">
             Just a reminder that you have an event coming up tomorrow:
         </p>
-        <p style="color: #666; font-size: 16px;">
-            <strong>${event.title}</strong><br>
-            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
-        </p>
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #333; margin: 0 0 10px 0; font-size: 20px;">${event.title}</h3>
+            <p style="color: #666; font-size: 15px; margin: 0;">
+                ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
+            </p>
+        </div>
         ${summarySection}
-        ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event')}
+        ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Event')}
     `);
 
     const subject = isHost ? `Tomorrow: ${event.title} (${attendeeSummary?.attending || 0} attending)` : `Reminder: ${event.title} is tomorrow`;
-    return queueEmailWithName(email, userName, subject, html, 'event_reminder', event.id);
+    return queueEmail(email, userName, subject, html, 'event_reminder', {
+        groupId: group.id,
+        eventId: event.id,
+        groupName: group.name
+    });
 }
 
 module.exports = {
     // Core functions
     sendEmail,
     queueEmail,
-    queueEmailWithName,
     processEmailQueue,
     getQueueStats,
     // Immediate send functions (single recipient)

@@ -2,21 +2,22 @@
 =======================================================================================================================================
 Script: send_reminders
 =======================================================================================================================================
-Purpose: Sends event reminder emails 24 hours before events.
+Purpose: Queues event reminder emails 24 hours before events.
 Usage: Run manually or via cron job (e.g., daily at 9am)
 
    node scripts/send_reminders.js
 
 This script:
 1. Finds events starting in the next 24-26 hours (gives a 2-hour window)
-2. Sends reminder emails to all attendees
+2. Queues reminder emails to all attendees
 3. Hosts receive a version with attendee summary
+4. Run process_email_queue.js after to actually send the emails
 =======================================================================================================================================
 */
 
 require('dotenv').config();
 const { query, pool } = require('../database');
-const { sendEventReminderEmail } = require('../services/email');
+const { queueEventReminderEmail } = require('../services/email');
 
 // Time window: events starting between 24 and 26 hours from now
 const HOURS_BEFORE_MIN = 24;
@@ -28,7 +29,7 @@ async function sendReminders() {
 
     try {
         // =======================================================================
-        // Find events in the reminder window
+        // Find events in the reminder window (with group info)
         // =======================================================================
         const eventsResult = await query(
             `SELECT
@@ -36,27 +37,32 @@ async function sendReminders() {
                 e.title,
                 e.location,
                 e.date_time,
-                e.group_id
+                e.group_id,
+                g.name AS group_name
              FROM event_list e
+             JOIN group_list g ON e.group_id = g.id
              WHERE e.status = 'published'
              AND e.date_time > NOW() + INTERVAL '${HOURS_BEFORE_MIN} hours'
              AND e.date_time <= NOW() + INTERVAL '${HOURS_BEFORE_MAX} hours'`
         );
 
-        console.log(`Found ${eventsResult.rows.length} events to send reminders for`);
+        console.log(`Found ${eventsResult.rows.length} events to queue reminders for`);
 
         if (eventsResult.rows.length === 0) {
             console.log('No events to remind about. Done.');
             return;
         }
 
-        let totalEmailsSent = 0;
+        let totalEmailsQueued = 0;
 
         // =======================================================================
         // Process each event
         // =======================================================================
         for (const event of eventsResult.rows) {
             console.log(`\nProcessing event: ${event.title} (ID: ${event.id})`);
+
+            // Create group object for email queue
+            const group = { id: event.group_id, name: event.group_name };
 
             // Get attendee counts for host summary
             const countsResult = await query(
@@ -92,28 +98,30 @@ async function sendReminders() {
 
             console.log(`  - ${attendeesResult.rows.length} attendees to notify`);
 
-            // Send emails to each attendee
+            // Queue emails for each attendee
             for (const attendee of attendeesResult.rows) {
                 const isHost = hostUserIds.includes(attendee.id);
 
                 try {
-                    await sendEventReminderEmail(
+                    await queueEventReminderEmail(
                         attendee.email,
                         attendee.name,
                         event,
+                        group,
                         isHost,
                         isHost ? attendeeSummary : null
                     );
-                    totalEmailsSent++;
-                    console.log(`  - Sent to ${attendee.email}${isHost ? ' (host)' : ''}`);
+                    totalEmailsQueued++;
+                    console.log(`  - Queued for ${attendee.email}${isHost ? ' (host)' : ''}`);
                 } catch (err) {
-                    console.error(`  - Failed to send to ${attendee.email}:`, err.message);
+                    console.error(`  - Failed to queue for ${attendee.email}:`, err.message);
                 }
             }
         }
 
         console.log(`\n=== Reminder job complete ===`);
-        console.log(`Total emails sent: ${totalEmailsSent}`);
+        console.log(`Total emails queued: ${totalEmailsQueued}`);
+        console.log(`\nRun 'node scripts/process_email_queue.js' to send the queued emails.`);
 
     } catch (error) {
         console.error('Error in reminder job:', error);

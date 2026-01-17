@@ -56,9 +56,11 @@ router.post('/:id/cancel', verifyToken, async (req, res) => {
                 e.title,
                 e.location,
                 e.date_time,
+                g.name AS group_name,
                 gm.role AS current_user_role,
                 EXISTS(SELECT 1 FROM event_host eh WHERE eh.event_id = e.id AND eh.user_id = $2) AS is_host
              FROM event_list e
+             JOIN group_list g ON e.group_id = g.id
              LEFT JOIN group_member gm ON e.group_id = gm.group_id
                 AND gm.user_id = $2
                 AND gm.status = 'active'
@@ -116,8 +118,9 @@ router.post('/:id/cancel', verifyToken, async (req, res) => {
         // =======================================================================
         // Queue cancellation emails to all attendees and waitlist
         // =======================================================================
+        const group = { id: event.group_id, name: event.group_name };
         for (const attendee of attendeesResult.rows) {
-            queueEventCancelledEmail(attendee.email, attendee.name, event).catch(err => {
+            queueEventCancelledEmail(attendee.email, attendee.name, event, group).catch(err => {
                 console.error('Failed to queue event cancelled email:', err);
             });
         }
