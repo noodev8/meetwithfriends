@@ -8,6 +8,10 @@ Purpose: Retrieves upcoming events from groups the authenticated user is a membe
 Request Payload:
 None (GET request)
 
+Query params:
+  - unresponded: boolean (optional, if true returns only events user has NOT RSVP'd to)
+  - limit: number (optional, limits number of events returned)
+
 Success Response:
 {
   "return_code": "SUCCESS",
@@ -44,13 +48,17 @@ const { verifyToken } = require('../../middleware/auth');
 router.get('/my-events', verifyToken, async (req, res) => {
     try {
         const userId = req.user.id;
+        const { unresponded, limit } = req.query;
+        const showUnrespondedOnly = unresponded === 'true';
+        const queryLimit = limit ? parseInt(limit, 10) : null;
 
         // =======================================================================
         // Fetch upcoming events from groups the user is an active member of
         // Includes user's RSVP status if they have one
+        // When unresponded=true, only returns events user has NOT RSVP'd to
         // =======================================================================
-        const result = await query(
-            `SELECT
+        let queryText = `
+            SELECT
                 e.id,
                 e.group_id,
                 g.name AS group_name,
@@ -74,11 +82,25 @@ router.get('/my-events', verifyToken, async (req, res) => {
              LEFT JOIN event_rsvp r ON e.id = r.event_id
              LEFT JOIN event_rsvp user_rsvp ON e.id = user_rsvp.event_id AND user_rsvp.user_id = $1
              WHERE e.status = 'published'
-               AND e.date_time > NOW()
+               AND e.date_time > NOW()`;
+
+        // Filter to only unresponded events if requested
+        if (showUnrespondedOnly) {
+            queryText += `
+               AND user_rsvp.status IS NULL`;
+        }
+
+        queryText += `
              GROUP BY e.id, g.name, g.image_url, user_rsvp.status
-             ORDER BY e.date_time ASC`,
-            [userId]
-        );
+             ORDER BY e.date_time ASC`;
+
+        // Add limit if specified
+        if (queryLimit) {
+            queryText += `
+             LIMIT ${queryLimit}`;
+        }
+
+        const result = await query(queryText, [userId]);
 
         // =======================================================================
         // Transform results to ensure counts are numbers

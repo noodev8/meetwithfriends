@@ -26,6 +26,7 @@ Success Response:
       "attendee_count": 12,
       "waitlist_count": 3,
       "rsvp_status": "attending",
+      "is_host": false,
       "created_at": "2026-01-01T00:00:00.000Z"
     }
   ]
@@ -68,7 +69,8 @@ router.get('/my-rsvps', verifyToken, async (req, res) => {
                 e.created_at,
                 COUNT(r.id) FILTER (WHERE r.status = 'attending') AS attendee_count,
                 COUNT(r.id) FILTER (WHERE r.status = 'waitlist') AS waitlist_count,
-                user_rsvp.status AS rsvp_status
+                user_rsvp.status AS rsvp_status,
+                EXISTS(SELECT 1 FROM event_host eh WHERE eh.event_id = e.id AND eh.user_id = $1) AS is_host
              FROM event_list e
              INNER JOIN group_list g ON e.group_id = g.id
              INNER JOIN event_rsvp user_rsvp ON e.id = user_rsvp.event_id AND user_rsvp.user_id = $1
