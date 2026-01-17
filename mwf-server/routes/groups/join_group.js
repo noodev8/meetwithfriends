@@ -43,7 +43,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
-const { sendNewJoinRequestEmail } = require('../../services/email');
+const { sendNewJoinRequestEmail, sendNewMemberEmail } = require('../../services/email');
 
 router.post('/', verifyToken, async (req, res) => {
     try {
@@ -127,28 +127,42 @@ router.post('/', verifyToken, async (req, res) => {
         );
 
         // =======================================================================
-        // Send email to organisers for pending requests
+        // Send email to organisers
         // =======================================================================
-        if (newStatus === 'pending') {
-            // Get requesting user's name
-            const userResult = await query('SELECT name FROM app_user WHERE id = $1', [userId]);
-            const requesterName = userResult.rows[0]?.name || 'A user';
+        // Get user's name for email
+        const userResult = await query('SELECT name FROM app_user WHERE id = $1', [userId]);
+        const memberName = userResult.rows[0]?.name || 'A user';
 
-            // Get organisers emails (only organisers can approve, not hosts)
-            const organisersResult = await query(
-                `SELECT u.email, u.name
-                 FROM group_member gm
-                 JOIN app_user u ON gm.user_id = u.id
-                 WHERE gm.group_id = $1
-                 AND gm.status = 'active'
-                 AND gm.role = 'organiser'`,
+        // Get organisers
+        const organisersResult = await query(
+            `SELECT u.email, u.name
+             FROM group_member gm
+             JOIN app_user u ON gm.user_id = u.id
+             WHERE gm.group_id = $1
+             AND gm.status = 'active'
+             AND gm.role = 'organiser'`,
+            [group_id]
+        );
+
+        if (newStatus === 'pending') {
+            // Send join request email to each organiser
+            organisersResult.rows.forEach(organiser => {
+                sendNewJoinRequestEmail(organiser.email, organiser.name, memberName, group).catch(err => {
+                    console.error('Failed to send join request email:', err);
+                });
+            });
+        } else {
+            // Auto-join: Send new member email to organisers
+            // Get total member count
+            const countResult = await query(
+                `SELECT COUNT(*) as count FROM group_member WHERE group_id = $1 AND status = 'active'`,
                 [group_id]
             );
+            const totalMembers = parseInt(countResult.rows[0].count, 10);
 
-            // Send email to each organiser (async - don't wait)
             organisersResult.rows.forEach(organiser => {
-                sendNewJoinRequestEmail(organiser.email, organiser.name, requesterName, group).catch(err => {
-                    console.error('Failed to send join request email:', err);
+                sendNewMemberEmail(organiser.email, organiser.name, memberName, group, totalMembers).catch(err => {
+                    console.error('Failed to send new member email:', err);
                 });
             });
         }
