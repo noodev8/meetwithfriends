@@ -896,6 +896,31 @@ Queue broadcast message for later processing
 =======================================================================================================================================
 */
 async function queueBroadcastEmail(email, memberName, organiserName, group, message) {
+    // Auto-link URLs in the message
+    const urlRegex = /(https?:\/\/[^\s<]+)/g;
+    const linkedMessage = message.replace(urlRegex, '<a href="$1" style="color: #4f46e5;">$1</a>');
+
+    // Convert newlines to <br> for HTML
+    const htmlMessage = linkedMessage.replace(/\n/g, '<br>');
+
+    const html = wrapEmail(`
+        <p style="color: #666; font-size: 16px; margin-top: 0;">
+            Hi ${memberName},
+        </p>
+        <p style="color: #666; font-size: 16px;">
+            <strong>${organiserName}</strong> sent a message to all members of <a href="${config.frontendUrl}/groups/${group.id}" style="color: #4f46e5; text-decoration: none;">${group.name}</a>:
+        </p>
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4f46e5;">
+            <p style="color: #333; font-size: 16px; margin: 0; line-height: 1.6;">
+                ${htmlMessage}
+            </p>
+        </div>
+        ${emailButton(config.frontendUrl + '/groups/' + group.id, 'View Group')}
+        <p style="color: #999; font-size: 12px; margin-top: 24px;">
+            You received this because you're a member of ${group.name}. To stop receiving broadcasts, update your preferences in your profile settings.
+        </p>
+    `);
+
     const text = `Hi ${memberName},
 
 ${organiserName} sent a message to all members of ${group.name}:
@@ -907,7 +932,7 @@ View group: ${config.frontendUrl}/groups/${group.id}
 
 You received this because you're a member of ${group.name}. To stop receiving broadcasts, update your preferences in your profile settings.`;
 
-    return queueEmail(email, memberName, `Message from ${organiserName}`, null, 'broadcast', {
+    return queueEmail(email, memberName, `Message from ${organiserName}`, html, 'broadcast', {
         groupId: group.id,
         groupName: group.name,
         text: text

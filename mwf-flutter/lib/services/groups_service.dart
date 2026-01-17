@@ -287,6 +287,40 @@ class GroupsService {
       returnCode: response['return_code'] as String?,
     );
   }
+
+  /// Send a broadcast message to all group members (organiser only)
+  Future<BroadcastResult> broadcastMessage(int groupId, String message) async {
+    final response = await _api.post('/groups/$groupId/broadcast', {
+      'message': message,
+    });
+
+    if (response['return_code'] == 'SUCCESS') {
+      return BroadcastResult(
+        success: true,
+        message: response['message'] as String?,
+        queuedCount: response['queued'] as int? ?? 0,
+      );
+    }
+
+    return BroadcastResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to send broadcast',
+    );
+  }
+}
+
+class BroadcastResult {
+  final bool success;
+  final String? message;
+  final int queuedCount;
+  final String? error;
+
+  BroadcastResult({
+    required this.success,
+    this.message,
+    this.queuedCount = 0,
+    this.error,
+  });
 }
 
 class JoinGroupResult {

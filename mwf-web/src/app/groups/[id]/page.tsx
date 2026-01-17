@@ -23,6 +23,7 @@ import {
     approveMember,
     rejectMember,
     contactOrganiser,
+    broadcastMessage,
     GroupWithCount,
     GroupMembership,
     GroupMember,
@@ -58,6 +59,8 @@ export default function GroupDetailPage() {
     const [contactMessage, setContactMessage] = useState('');
     const [contactLoading, setContactLoading] = useState(false);
     const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+    const [broadcastMessageText, setBroadcastMessageText] = useState('');
+    const [broadcastLoading, setBroadcastLoading] = useState(false);
 
     // =======================================================================
     // Check if user can manage members (organiser or host)
@@ -259,6 +262,27 @@ export default function GroupDetailPage() {
 
     // Check if user can contact organiser (active member who is not the organiser)
     const canContactOrganiser = membership?.status === 'active' && membership?.role !== 'organiser';
+
+    // =======================================================================
+    // Handle broadcast message
+    // =======================================================================
+    const [broadcastSuccess, setBroadcastSuccess] = useState(false);
+
+    const handleBroadcastMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!token || !group || !broadcastMessageText.trim()) return;
+
+        setBroadcastLoading(true);
+        const result = await broadcastMessage(token, group.id, broadcastMessageText.trim());
+        setBroadcastLoading(false);
+
+        if (result.success) {
+            setBroadcastMessageText('');
+            setBroadcastSuccess(true);
+        } else {
+            alert(result.error || 'Failed to send broadcast');
+        }
+    };
 
     // =======================================================================
     // Find organiser from members
@@ -852,7 +876,12 @@ export default function GroupDetailPage() {
             {showBroadcastModal && (
                 <div
                     className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-                    onClick={() => setShowBroadcastModal(false)}
+                    onClick={() => {
+                        if (!broadcastLoading) {
+                            setShowBroadcastModal(false);
+                            setBroadcastSuccess(false);
+                        }
+                    }}
                 >
                     <div
                         className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden"
@@ -864,8 +893,12 @@ export default function GroupDetailPage() {
                                 Broadcast to Members
                             </h3>
                             <button
-                                onClick={() => setShowBroadcastModal(false)}
-                                className="text-slate-400 hover:text-slate-600 transition-colors"
+                                onClick={() => {
+                                    setShowBroadcastModal(false);
+                                    setBroadcastSuccess(false);
+                                }}
+                                disabled={broadcastLoading}
+                                className="text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50"
                             >
                                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -873,23 +906,63 @@ export default function GroupDetailPage() {
                             </button>
                         </div>
 
-                        <div className="p-6 text-center">
-                            <div className="w-16 h-16 mx-auto mb-4 bg-indigo-100 rounded-full flex items-center justify-center">
-                                <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                                </svg>
+                        {broadcastSuccess ? (
+                            <div className="p-8 text-center">
+                                <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <h4 className="text-lg font-semibold text-slate-900">Message Sent</h4>
                             </div>
-                            <h4 className="text-lg font-semibold text-slate-900 mb-2">Coming Soon</h4>
-                            <p className="text-sm text-slate-600 mb-6">
-                                The broadcast feature is coming soon. You&apos;ll be able to send messages to all group members.
-                            </p>
-                            <button
-                                onClick={() => setShowBroadcastModal(false)}
-                                className="px-6 py-2.5 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition-colors"
-                            >
-                                Got it
-                            </button>
-                        </div>
+                        ) : (
+                            <form onSubmit={handleBroadcastMessage} className="p-6 space-y-5">
+                                <p className="text-sm text-slate-600">
+                                    Send a message to all group members who have broadcasts enabled.
+                                </p>
+
+                                <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label htmlFor="broadcastMessage" className="block text-sm font-medium text-slate-700">
+                                            Your message
+                                        </label>
+                                        <span className={`text-xs ${broadcastMessageText.length > 1800 ? 'text-indigo-600' : 'text-slate-400'}`}>
+                                            {broadcastMessageText.length}/2000
+                                        </span>
+                                    </div>
+                                    <textarea
+                                        id="broadcastMessage"
+                                        value={broadcastMessageText}
+                                        onChange={(e) => setBroadcastMessageText(e.target.value)}
+                                        placeholder="Hi everyone, I wanted to let you know..."
+                                        rows={6}
+                                        maxLength={2000}
+                                        minLength={10}
+                                        required
+                                        className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 resize-none transition text-base"
+                                    />
+                                    <p className="text-xs text-slate-400 mt-2">Minimum 10 characters. URLs will be clickable in the email.</p>
+                                </div>
+
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowBroadcastModal(false)}
+                                        disabled={broadcastLoading}
+                                        className="flex-1 px-5 py-3 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={broadcastLoading || broadcastMessageText.trim().length < 10}
+                                        className="flex-1 px-5 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all shadow-md disabled:opacity-50"
+                                    >
+                                        {broadcastLoading ? 'Sending...' : 'Send Broadcast'}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
                     </div>
                 </div>
             )}

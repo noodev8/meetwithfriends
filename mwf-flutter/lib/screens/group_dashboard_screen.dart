@@ -40,6 +40,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
   int? _processingMemberId;
   bool _isLeaving = false;
   bool _isJoining = false;
+  bool _isBroadcasting = false;
 
   @override
   void initState() {
@@ -304,6 +305,173 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
   }
 
   GroupTheme get _theme => getGroupTheme(_group?.themeColor);
+
+  void _showBroadcastDialog() {
+    final messageController = TextEditingController();
+    bool sending = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.campaign_rounded,
+                  color: Color(0xFF6366F1),
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Broadcast Message',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.8,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Send a message to all group members who have broadcasts enabled.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF64748B),
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: messageController,
+                  maxLines: 5,
+                  maxLength: 2000,
+                  decoration: InputDecoration(
+                    hintText: 'Type your message here...',
+                    hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+                    filled: true,
+                    fillColor: const Color(0xFFF8FAFC),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2),
+                    ),
+                    contentPadding: const EdgeInsets.all(16),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Minimum 10 characters. URLs will be clickable in the email.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF94A3B8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: sending ? null : () => Navigator.of(context).pop(),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Color(0xFF64748B),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: sending
+                  ? null
+                  : () async {
+                      final message = messageController.text.trim();
+                      if (message.length < 10) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Message must be at least 10 characters'),
+                            backgroundColor: Colors.orange,
+                          ),
+                        );
+                        return;
+                      }
+
+                      setDialogState(() => sending = true);
+
+                      final result = await _groupsService.broadcastMessage(
+                        widget.groupId,
+                        message,
+                      );
+
+                      if (!context.mounted) return;
+
+                      Navigator.of(context).pop();
+
+                      if (result.success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Message Sent'),
+                            backgroundColor: Color(0xFF10B981),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(result.error ?? 'Failed to send broadcast'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6366F1),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 0,
+              ),
+              child: sending
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Send',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -698,38 +866,62 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                     ],
                   ),
                 ),
-                // Settings button for organisers
+                // Broadcast and Settings buttons for organisers
                 if (isOrganiser)
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditGroupScreen(
-                            groupId: _group!.id,
-                            initialName: _group!.name,
-                            initialDescription: _group!.description,
-                            initialThemeColor: _group!.themeColor ?? 'indigo',
-                            initialJoinPolicy: _group!.joinPolicy,
-                            initialVisibility: _group!.visibility,
-                            onGroupUpdated: _loadGroup,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Broadcast button
+                      GestureDetector(
+                        onTap: _showBroadcastDialog,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha(30),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.campaign_rounded,
+                            size: 20,
+                            color: Colors.white,
                           ),
                         ),
-                      );
-                    },
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(30),
-                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(
-                        Icons.settings_rounded,
-                        size: 20,
-                        color: Colors.white,
+                      const SizedBox(width: 8),
+                      // Settings button
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EditGroupScreen(
+                                groupId: _group!.id,
+                                initialName: _group!.name,
+                                initialDescription: _group!.description,
+                                initialThemeColor: _group!.themeColor ?? 'indigo',
+                                initialJoinPolicy: _group!.joinPolicy,
+                                initialVisibility: _group!.visibility,
+                                onGroupUpdated: _loadGroup,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha(30),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.settings_rounded,
+                            size: 20,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
               ],
             ),

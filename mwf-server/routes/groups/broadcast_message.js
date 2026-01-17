@@ -113,14 +113,7 @@ router.post('/:id/broadcast', verifyToken, async (req, res) => {
             [groupId, userId]
         );
 
-        let recipients = recipientsResult.rows;
-
-        // Limit to 1 recipient when ALL recipients are @test.com (pure test mode)
-        const allTestEmails = recipients.length > 0 &&
-            recipients.every(r => r.email.toLowerCase().endsWith('@test.com'));
-        if (allTestEmails) {
-            recipients = recipients.slice(0, 1);
-        }
+        const recipients = recipientsResult.rows;
 
         if (recipients.length === 0) {
             return res.json({
