@@ -560,7 +560,14 @@ async function sendNewEventEmail(email, userName, event, group, hostName) {
         ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event & RSVP')}
     `);
 
-    return sendEmail(email, `New event: ${event.title}`, html, 'new_event', event.id);
+    // Subject: "Group Name: New event - Event Title" (truncate title if needed)
+    const maxTitleLength = 40;
+    const truncatedTitle = event.title.length > maxTitleLength
+        ? event.title.substring(0, maxTitleLength - 3) + '...'
+        : event.title;
+    const subject = `${group.name}: New event - ${truncatedTitle}`;
+
+    return sendEmail(email, subject, html, 'new_event', event.id);
 }
 
 /*
@@ -796,7 +803,14 @@ async function queueNewEventEmail(email, userName, event, group, hostName) {
         ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event & RSVP')}
     `);
 
-    return queueEmailWithName(email, userName, `New event: ${event.title}`, html, 'new_event', event.id);
+    // Subject: "Group Name: New event - Event Title" (truncate title if needed)
+    const maxTitleLength = 40;
+    const truncatedTitle = event.title.length > maxTitleLength
+        ? event.title.substring(0, maxTitleLength - 3) + '...'
+        : event.title;
+    const subject = `${group.name}: New event - ${truncatedTitle}`;
+
+    return queueEmailWithName(email, userName, subject, html, 'new_event', event.id);
 }
 
 /*
