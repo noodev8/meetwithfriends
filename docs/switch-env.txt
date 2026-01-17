@@ -1,0 +1,6 @@
+mwf-flutter/lib/services/api_service.dart
+
+LOCAL:  static const String baseUrl = 'http://192.168.1.136:3019/api';
+VPS:    static const String baseUrl = 'https://meetwithfriends.noodev8.com/api';
+
+Comment one, uncomment the other.

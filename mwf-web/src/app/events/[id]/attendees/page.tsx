@@ -63,6 +63,7 @@ export default function AttendeesPage() {
     // Order summary modal state
     const [showOrderSummary, setShowOrderSummary] = useState(false);
     const [copiedOrders, setCopiedOrders] = useState(false);
+    const [pdfLoading, setPdfLoading] = useState(false);
 
     // =======================================================================
     // Fetch event and attendees
@@ -231,9 +232,12 @@ export default function AttendeesPage() {
     const generateOrderSummary = () => {
         const lines: string[] = [];
 
-        // Header with group name and event details
+        // Header with group name, host, and event details
         if (event?.group_name) {
             lines.push(event.group_name);
+        }
+        if (hosts.length > 0) {
+            lines.push(`Host: ${hosts[0].name}`);
         }
         lines.push(event?.title || 'Event');
         if (event?.date_time) {
@@ -260,6 +264,9 @@ export default function AttendeesPage() {
             lines.push('');
         });
 
+        lines.push('---');
+        lines.push('Powered by meetwithfriends.net');
+
         return lines.join('\n').trim();
     };
 
@@ -275,6 +282,48 @@ export default function AttendeesPage() {
         } catch {
             alert('Failed to copy to clipboard');
         }
+    };
+
+    // =======================================================================
+    // Download pre-orders PDF
+    // =======================================================================
+    const handleDownloadPDF = async () => {
+        if (!token || !event) return;
+
+        setPdfLoading(true);
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/events/${event.id}/preorders/pdf`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }
+            );
+
+            // Check if it's a JSON error response
+            const contentType = response.headers.get('content-type');
+            if (contentType?.includes('application/json')) {
+                const data = await response.json();
+                alert(data.message || 'Failed to generate PDF');
+                setPdfLoading(false);
+                return;
+            }
+
+            // It's a PDF - download it
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `preorders-${event.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch {
+            alert('Failed to download PDF');
+        }
+        setPdfLoading(false);
     };
 
     // =======================================================================
@@ -762,28 +811,52 @@ export default function AttendeesPage() {
                             )}
                         </div>
 
-                        {/* Footer with copy button */}
+                        {/* Footer with action buttons */}
                         <div className="px-6 py-4 border-t border-slate-200 flex-shrink-0">
-                            <button
-                                onClick={handleCopyOrders}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition"
-                            >
-                                {copiedOrders ? (
-                                    <>
-                                        <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        <span className="text-green-600">Copied!</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                        </svg>
-                                        Copy to clipboard
-                                    </>
-                                )}
-                            </button>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                {/* Copy button */}
+                                <button
+                                    onClick={handleCopyOrders}
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-violet-600 text-white font-medium rounded-xl hover:bg-violet-700 transition"
+                                >
+                                    {copiedOrders ? (
+                                        <>
+                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Copied!
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            </svg>
+                                            Copy
+                                        </>
+                                    )}
+                                </button>
+
+                                {/* Download PDF button */}
+                                <button
+                                    onClick={handleDownloadPDF}
+                                    disabled={pdfLoading}
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-600 text-white font-medium rounded-xl hover:bg-slate-700 transition disabled:opacity-50"
+                                >
+                                    {pdfLoading ? (
+                                        <>
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                            Loading...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                            </svg>
+                                            PDF
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -134,8 +134,8 @@ const styles = StyleSheet.create({
         paddingTop: 10,
     },
     footerText: {
-        fontSize: 9,
-        color: '#94a3b8',
+        fontSize: 10,
+        color: '#64748b',
     },
     summary: {
         marginTop: 8,
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
 // =======================================================================
 // PDF Document Component
 // =======================================================================
-const PreOrdersPDF = ({ event, groupName, attendees, stats }) => {
+const PreOrdersPDF = ({ event, groupName, hostName, attendees, stats }) => {
     const formatDate = (dateStr) => {
         const date = new Date(dateStr);
         return date.toLocaleDateString('en-GB', {
@@ -188,9 +188,10 @@ const PreOrdersPDF = ({ event, groupName, attendees, stats }) => {
         React.createElement(Page, { size: 'A4', style: styles.page },
             // Header
             React.createElement(View, { style: styles.header },
-                React.createElement(Text, { style: styles.title }, 'Pre-Order Summary'),
+                React.createElement(Text, { style: styles.title }, 'Pre-Orders'),
                 React.createElement(Text, { style: styles.subtitle }, event.title),
                 React.createElement(Text, { style: styles.eventInfo }, groupName),
+                hostName && React.createElement(Text, { style: styles.eventInfo }, `Host: ${hostName}`),
                 React.createElement(Text, { style: styles.eventInfo },
                     `${formatDate(event.date_time)} at ${formatTime(event.date_time)}`
                 ),
@@ -254,7 +255,7 @@ const PreOrdersPDF = ({ event, groupName, attendees, stats }) => {
                 React.createElement(Text, { style: styles.footerText },
                     `Generated ${generatedDate} at ${generatedTime}`
                 ),
-                React.createElement(Text, { style: styles.footerText }, 'meetwithfriends.com')
+                React.createElement(Text, { style: styles.footerText }, 'Powered by meetwithfriends.net')
             )
         )
     );
@@ -334,6 +335,20 @@ router.get('/:id/preorders/pdf', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
+        // Get first host name
+        // =======================================================================
+        const firstHostResult = await query(
+            `SELECT u.name
+             FROM event_host eh
+             JOIN app_user u ON eh.user_id = u.id
+             WHERE eh.event_id = $1
+             ORDER BY eh.created_at ASC
+             LIMIT 1`,
+            [id]
+        );
+        const hostName = firstHostResult.rows.length > 0 ? firstHostResult.rows[0].name : null;
+
+        // =======================================================================
         // Get attendees with their orders
         // =======================================================================
         const attendeesResult = await query(
@@ -366,6 +381,7 @@ router.get('/:id/preorders/pdf', verifyToken, async (req, res) => {
             React.createElement(PreOrdersPDF, {
                 event,
                 groupName,
+                hostName,
                 attendees,
                 stats
             })

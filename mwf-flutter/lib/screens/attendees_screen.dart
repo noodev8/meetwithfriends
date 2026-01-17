@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:io';
+import 'dart:convert';
 import '../services/events_service.dart';
+import '../services/auth_service.dart';
+import '../services/api_service.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 enum AttendeeTab { going, waitlist, notGoing }
@@ -13,6 +21,7 @@ class AttendeesScreen extends StatefulWidget {
   final String? eventDate;
   final String? eventLocation;
   final String? groupName;
+  final String? hostName;
   final bool preordersEnabled;
 
   const AttendeesScreen({
@@ -22,6 +31,7 @@ class AttendeesScreen extends StatefulWidget {
     this.eventDate,
     this.eventLocation,
     this.groupName,
+    this.hostName,
     this.preordersEnabled = false,
   });
 
@@ -848,8 +858,10 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _OrdersSummarySheet(
+        eventId: widget.eventId,
         eventTitle: widget.eventTitle,
         groupName: widget.groupName,
+        hostName: widget.hostName,
         eventDate: widget.eventDate,
         eventLocation: widget.eventLocation,
         attendees: _attending,
@@ -859,15 +871,19 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
 }
 
 class _OrdersSummarySheet extends StatefulWidget {
+  final int eventId;
   final String eventTitle;
   final String? groupName;
+  final String? hostName;
   final String? eventDate;
   final String? eventLocation;
   final List<Attendee> attendees;
 
   const _OrdersSummarySheet({
+    required this.eventId,
     required this.eventTitle,
     this.groupName,
+    this.hostName,
     this.eventDate,
     this.eventLocation,
     required this.attendees,
@@ -879,13 +895,80 @@ class _OrdersSummarySheet extends StatefulWidget {
 
 class _OrdersSummarySheetState extends State<_OrdersSummarySheet> {
   bool _copied = false;
+  bool _downloading = false;
+
+  Future<void> _downloadPDF() async {
+    setState(() => _downloading = true);
+
+    try {
+      final token = await AuthService().getToken();
+      if (token == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please log in to download PDF'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        setState(() => _downloading = false);
+        return;
+      }
+
+      final response = await http.get(
+        Uri.parse('${ApiService.baseUrl}/events/${widget.eventId}/preorders/pdf'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (!mounted) return;
+      setState(() => _downloading = false);
+
+      final contentType = response.headers['content-type'] ?? '';
+      if (contentType.contains('application/json')) {
+        final data = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(data['message'] ?? 'Failed to generate PDF'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final tempDir = await getTemporaryDirectory();
+      final fileName = 'preorders-${widget.eventTitle.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-')}.pdf';
+      final file = File('${tempDir.path}/$fileName');
+      await file.writeAsBytes(response.bodyBytes);
+
+      final result = await OpenFilex.open(file.path);
+      if (result.type != ResultType.done) {
+        await Share.shareXFiles(
+          [XFile(file.path)],
+          subject: '${widget.eventTitle} - Pre-Orders',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _downloading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to download PDF: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   String _generateOrderText() {
     final lines = <String>[];
 
-    // Header with group name and event details
+    // Header with group name, host, and event details
     if (widget.groupName != null) {
       lines.add(widget.groupName!);
+    }
+    if (widget.hostName != null) {
+      lines.add('Host: ${widget.hostName}');
     }
     lines.add(widget.eventTitle);
     if (widget.eventDate != null) {
@@ -910,6 +993,9 @@ class _OrdersSummarySheetState extends State<_OrdersSummarySheet> {
       }
       lines.add('');
     }
+
+    lines.add('---');
+    lines.add('Powered by meetwithfriends.net');
 
     return lines.join('\n').trim();
   }
@@ -1058,7 +1144,7 @@ class _OrdersSummarySheetState extends State<_OrdersSummarySheet> {
                   ),
           ),
 
-          // Footer with copy button
+          // Footer with action buttons
           Container(
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
@@ -1068,25 +1154,56 @@ class _OrdersSummarySheetState extends State<_OrdersSummarySheet> {
             ),
             child: SafeArea(
               top: false,
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _copyToClipboard,
-                  icon: Icon(
-                    _copied ? Icons.check_rounded : Icons.copy_rounded,
-                    size: 18,
-                  ),
-                  label: Text(_copied ? 'Copied!' : 'Copy to clipboard'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _copied ? const Color(0xFF22C55E) : const Color(0xFF7C3AED),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              child: Row(
+                children: [
+                  // Copy button
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _copyToClipboard,
+                      icon: Icon(
+                        _copied ? Icons.check_rounded : Icons.copy_rounded,
+                        size: 18,
+                      ),
+                      label: Text(_copied ? 'Copied!' : 'Copy'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _copied ? const Color(0xFF22C55E) : const Color(0xFF7C3AED),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
                     ),
-                    elevation: 0,
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  // Download PDF button
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _downloading ? null : _downloadPDF,
+                      icon: _downloading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.picture_as_pdf_rounded, size: 18),
+                      label: Text(_downloading ? 'Loading...' : 'PDF'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF64748B),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
