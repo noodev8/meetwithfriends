@@ -735,42 +735,6 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
             ),
           ),
 
-          // Broadcast button (if organiser)
-          if (isOrganiser) ...[
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () {
-                // TODO: Show broadcast modal
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.campaign_rounded,
-                      size: 18,
-                      color: _theme.gradient[0],
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Send Broadcast',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1E293B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -1248,6 +1212,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
 
   Widget _buildAboutSection(GroupDetail group) {
     return Container(
+      width: double.infinity,
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
