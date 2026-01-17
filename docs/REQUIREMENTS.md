@@ -6,129 +6,11 @@ Single source of truth for feature status. See PROJECT_FOUNDATION.md for vision/
 
 ## Active Requirements
 
-### REQ-014: Email Queue System
-**Status:** PLANNED
-**Effort:** Medium
-**Phase:** Infrastructure
-
-Implement email queue to respect Resend rate limits (2 requests/second). Use 1/second to be safe.
-
-**Problem:**
-- Current code fires all notification emails simultaneously
-- Groups with 3+ members exceed Resend rate limit (429 errors)
-- Causes email delivery failures
-
----
-
-#### Database Schema
-
-```sql
-CREATE TABLE email_queue (
-    id SERIAL PRIMARY KEY,
-    email_type VARCHAR(50) NOT NULL,
-    recipient_email VARCHAR(255) NOT NULL,
-    recipient_name VARCHAR(255),
-    subject VARCHAR(255) NOT NULL,
-    html_content TEXT,
-    text_content TEXT,
-    reply_to VARCHAR(255),
-    related_id INTEGER,
-    status VARCHAR(20) DEFAULT 'pending',  -- pending, sent, failed, cancelled
-    attempts INT DEFAULT 0,
-    max_attempts INT DEFAULT 3,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    scheduled_for TIMESTAMPTZ DEFAULT NOW(),  -- for delayed sends
-    sent_at TIMESTAMPTZ,
-    error_message TEXT
-);
-
-CREATE INDEX idx_email_queue_status ON email_queue(status);
-CREATE INDEX idx_email_queue_scheduled ON email_queue(scheduled_for) WHERE status = 'pending';
-```
-
----
-
-#### Implementation Plan
-
-1. **New helper function:** `queueEmail()` - adds email to queue instead of sending
-2. **Process endpoint:** `POST /api/emails/process-queue` - sends pending emails at 1/sec
-3. **Manual controls:** Ability to set emails as `cancelled` before processing
-4. **Retry logic:** Failed emails retry up to 3 times
-
----
-
-#### Email Senders - Classification
-
-**IMMEDIATE (single recipient, send directly):**
-| Route | Function | Recipient |
-|-------|----------|-----------|
-| `auth/register.js` | `sendWelcomeEmail` | New user |
-| `auth/forgot_password.js` | `sendPasswordResetEmail` | User |
-| `events/rsvp.js` | `sendRsvpConfirmedEmail` | User who RSVP'd |
-| `events/rsvp.js` | `sendPromotedFromWaitlistEmail` | Single user (auto-promote) |
-| `events/manage_attendee.js` | `sendRemovedFromEventEmail` | Single user |
-| `events/manage_attendee.js` | `sendPromotedFromWaitlistEmail` | Single user |
-| `groups/approve_member.js` | `sendJoinedGroupEmail` | Approved user |
-| `groups/join_group.js` | `sendNewJoinRequestEmail` | Organiser |
-| `groups/contact_organiser.js` | `sendContactOrganiserEmail` | Organiser |
-| `events/contact_host.js` | `sendContactHostEmail` | Host(s) - typically 1-3 |
-| `support/contact_support.js` | `sendContactSupportEmail` | Support inbox |
-
-**QUEUED (multiple recipients, use queue):**
-| Route | Function | Recipients | Notes |
-|-------|----------|------------|-------|
-| `events/create_event.js` | `sendNewEventEmail` | All group members | Currently fires all at once |
-| `events/cancel_event.js` | `sendEventCancelledEmail` | All attendees | Currently fires all at once |
-| `events/update_event.js` | `sendPromotedFromWaitlistEmail` | Multiple (capacity increase) | When capacity increases |
-| `groups/broadcast_message.js` | `sendBroadcastEmail` | All group members | Currently disabled on UI |
-| `comments/add_comment.js` | `sendNewCommentEmail` | Attendees + waitlist | Currently commented out |
-| `scripts/send_reminders.js` | `sendEventReminderEmail` | All attendees | Scheduled job |
-
----
-
-#### Process Flow
-
-```
-1. Action triggers email (e.g., create event)
-2. Check if bulk (multiple recipients) → queue, else send immediately
-3. Queue stores: recipient, content, status='pending'
-4. Manual review: Admin can set status='cancelled' for specific emails
-5. Process queue: GET /api/emails/process-queue?limit=50
-   - Fetches pending emails WHERE scheduled_for <= NOW()
-   - Sends at 1/second pace
-   - Updates status to 'sent' or 'failed'
-6. Retry: Failed emails with attempts < max_attempts stay pending
-```
-
----
-
-#### Migration Steps
-
-1. Create `email_queue` table
-2. Add `queueEmail()` helper to `services/email.js`
-3. Create `/api/emails/process-queue` endpoint
-4. Update bulk senders to use `queueEmail()` instead of direct send
-5. Test with small group
-6. Add cron job for automatic processing (later)
+_No active requirements - check Backlog for upcoming work._
 
 ---
 
 ## Backlog
-
-### REQ-018: Broadcast Message to Group Members
-**Status:** BACKLOG
-**Effort:** Medium
-**Phase:** Infrastructure
-**Depends on:** REQ-014 (Email Queue System)
-
-Allow organisers to send broadcast emails to all group members.
-
-**Notes:**
-- Requires email queue system to handle rate limiting
-- Should respect user's `receive_broadcasts` opt-out preference
-- UI button removed from Flutter until email infrastructure is ready
-
----
 
 ### REQ-019: User Flow - Events & Groups Navigation
 **Status:** BACKLOG
@@ -145,6 +27,47 @@ Review and structure user flow from seeing their own events to all events and al
 ---
 
 ## Completed
+
+<details>
+<summary>REQ-018: Broadcast Message to Group Members</summary>
+
+**Completed:** Jan 2026
+**Effort:** Medium
+
+Allow organisers to send broadcast emails to all group members.
+
+- Broadcast button on Flutter and Web group pages
+- Modal with message input (10-2000 chars)
+- Uses email queue for rate limiting
+- Respects user's `receive_broadcasts` preference
+- Auto-links URLs in broadcast emails
+- Group name shows as email sender
+</details>
+
+<details>
+<summary>REQ-014: Email Queue System</summary>
+
+**Completed:** Jan 2026
+**Effort:** Medium
+
+Email queue to respect Resend rate limits (1/second).
+
+- `email_queue` table with status tracking (pending, sent, failed, cancelled, skipped)
+- `queueEmail()` function for bulk sends
+- `processEmailQueue()` sends at 1/second rate
+- `@test.com` emails marked as 'skipped' (not sent)
+- CLI script: `node scripts/process_email_queue.js`
+- Auto-cleanup of non-sent emails older than 14 days
+- Group name as email sender (like Meetup)
+- Branded email templates with header/footer
+
+**Queued senders:**
+- New event notifications
+- Event cancelled notifications
+- Event reminders
+- Broadcast messages
+- Comment notifications
+</details>
 
 <details>
 <summary>REQ-015: Menu Image Upload (Flutter)</summary>
