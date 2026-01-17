@@ -15,7 +15,8 @@ This script:
 =======================================================================================================================================
 */
 
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const { query, pool } = require('../database');
 const { queueEventReminderEmail } = require('../services/email');
 

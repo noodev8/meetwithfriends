@@ -9,7 +9,8 @@ Example: node scripts/process_email_queue.js 50
 =======================================================================================================================================
 */
 
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const { processEmailQueue, getQueueStats } = require('../services/email');
 const { query } = require('../database');
 

@@ -674,6 +674,33 @@ async function sendPasswordResetEmail(email, token) {
 
 /*
 =======================================================================================================================================
+sendNewMemberEmail
+=======================================================================================================================================
+Sent to organiser when a new member joins their group (auto-join or after approval)
+=======================================================================================================================================
+*/
+async function sendNewMemberEmail(email, organiserName, newMemberName, group, totalMembers) {
+    const html = wrapEmail(`
+        <h2 style="color: #333; margin-top: 0;">New member in ${group.name}!</h2>
+        <p style="color: #666; font-size: 16px;">
+            Hi ${organiserName},
+        </p>
+        <p style="color: #666; font-size: 16px;">
+            1 new member joined your group. You now have ${totalMembers} member${totalMembers !== 1 ? 's' : ''}!
+        </p>
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <p style="color: #4f46e5; font-size: 16px; font-weight: bold; margin: 0;">
+                ${newMemberName}
+            </p>
+        </div>
+        ${emailButton(config.frontendUrl + '/groups/' + group.id + '/members', 'View Members')}
+    `);
+
+    return sendEmail(email, `New member joined ${group.name}`, html, 'new_member', group.id);
+}
+
+/*
+=======================================================================================================================================
 sendNewCommentEmail
 =======================================================================================================================================
 Sent to attendees and waitlist when someone posts a comment on the event
@@ -1042,6 +1069,7 @@ module.exports = {
     sendNewEventEmail,
     sendEventReminderEmail,
     sendPasswordResetEmail,
+    sendNewMemberEmail,
     sendNewCommentEmail,
     sendContactOrganiserEmail,
     sendContactHostEmail,
