@@ -113,8 +113,28 @@ class UserService {
     );
   }
 
-  /// Clear avatar (set to empty)
-  Future<UserResult> removeAvatar() async {
+  /// Remove avatar - deletes from Cloudinary and clears database reference
+  /// Takes the current avatar URL to delete from Cloudinary
+  Future<UserResult> removeAvatar({String? currentAvatarUrl}) async {
+    // =======================================================================
+    // Step 1: Delete image from Cloudinary if URL provided
+    // We don't fail the whole operation if Cloudinary delete fails
+    // =======================================================================
+    if (currentAvatarUrl != null && currentAvatarUrl.isNotEmpty) {
+      try {
+        await _api.post('/images/delete', {
+          'image_url': currentAvatarUrl,
+        });
+        // We ignore the result - even if Cloudinary delete fails,
+        // we still want to clear the database reference
+      } catch (_) {
+        // Ignore - clearing the DB reference is more important
+      }
+    }
+
+    // =======================================================================
+    // Step 2: Clear avatar URL in database
+    // =======================================================================
     final response = await _api.post('/users/update_profile', {
       'avatar_url': '',
     });

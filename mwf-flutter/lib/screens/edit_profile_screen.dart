@@ -239,7 +239,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _success = null;
     });
 
-    final result = await _userService.removeAvatar();
+    final result = await _userService.removeAvatar(currentAvatarUrl: _currentAvatarUrl);
 
     if (!mounted) return;
 

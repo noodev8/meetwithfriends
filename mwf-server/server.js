@@ -49,6 +49,9 @@ app.use('/api/comments', require('./routes/comments'));
 // Support routes
 app.use('/api/support', require('./routes/support'));
 
+// Image routes (Cloudinary operations)
+app.use('/api/images', require('./routes/images'));
+
 // =======================================================================================================================================
 // Health check
 // =======================================================================================================================================
