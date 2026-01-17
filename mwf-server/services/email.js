@@ -137,6 +137,153 @@ async function sendEmail(to, subject, html, emailType, relatedId = null, replyTo
 
 /*
 =======================================================================================================================================
+queueEmail
+=======================================================================================================================================
+Add email to queue for later processing (used for bulk sends)
+=======================================================================================================================================
+*/
+async function queueEmail(to, subject, html, emailType, relatedId = null, replyTo = null, text = null, scheduledFor = null) {
+    try {
+        await query(
+            `INSERT INTO email_queue
+             (recipient_email, subject, html_content, text_content, email_type, related_id, reply_to, scheduled_for)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE($8, NOW()))`,
+            [to, subject, html, text, emailType, relatedId, replyTo, scheduledFor]
+        );
+        return { success: true, queued: true };
+    } catch (error) {
+        console.error('Error queueing email:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/*
+=======================================================================================================================================
+queueEmailWithName
+=======================================================================================================================================
+Queue email with recipient name (for display purposes)
+=======================================================================================================================================
+*/
+async function queueEmailWithName(to, recipientName, subject, html, emailType, relatedId = null, replyTo = null, text = null) {
+    try {
+        await query(
+            `INSERT INTO email_queue
+             (recipient_email, recipient_name, subject, html_content, text_content, email_type, related_id, reply_to)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+            [to, recipientName, subject, html, text, emailType, relatedId, replyTo]
+        );
+        return { success: true, queued: true };
+    } catch (error) {
+        console.error('Error queueing email:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/*
+=======================================================================================================================================
+processEmailQueue
+=======================================================================================================================================
+Process pending emails from queue at 1/second rate
+Returns: { processed, sent, failed }
+=======================================================================================================================================
+*/
+async function processEmailQueue(limit = 50) {
+    const stats = { processed: 0, sent: 0, failed: 0 };
+
+    try {
+        // Get pending emails that are scheduled for now or earlier
+        const result = await query(
+            `SELECT * FROM email_queue
+             WHERE status = 'pending'
+             AND scheduled_for <= NOW()
+             AND attempts < max_attempts
+             ORDER BY created_at ASC
+             LIMIT $1`,
+            [limit]
+        );
+
+        const emails = result.rows;
+
+        for (const email of emails) {
+            stats.processed++;
+
+            // Send the email
+            const sendResult = await sendEmail(
+                email.recipient_email,
+                email.subject,
+                email.html_content,
+                email.email_type,
+                email.related_id,
+                email.reply_to,
+                email.text_content
+            );
+
+            if (sendResult.success) {
+                // Mark as sent
+                await query(
+                    `UPDATE email_queue SET status = 'sent', sent_at = NOW() WHERE id = $1`,
+                    [email.id]
+                );
+                stats.sent++;
+            } else {
+                // Increment attempts, mark as failed if max reached
+                const newAttempts = email.attempts + 1;
+                const newStatus = newAttempts >= email.max_attempts ? 'failed' : 'pending';
+
+                await query(
+                    `UPDATE email_queue
+                     SET attempts = $1, status = $2, error_message = $3
+                     WHERE id = $4`,
+                    [newAttempts, newStatus, sendResult.error?.message || 'Unknown error', email.id]
+                );
+                stats.failed++;
+            }
+
+            // Wait 1 second between sends (rate limit: 1/second to be safe)
+            if (stats.processed < emails.length) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+
+        return { success: true, ...stats };
+    } catch (error) {
+        console.error('Error processing email queue:', error);
+        return { success: false, error: error.message, ...stats };
+    }
+}
+
+/*
+=======================================================================================================================================
+getQueueStats
+=======================================================================================================================================
+Get current queue statistics
+=======================================================================================================================================
+*/
+async function getQueueStats() {
+    try {
+        const result = await query(`
+            SELECT
+                status,
+                COUNT(*) as count
+            FROM email_queue
+            WHERE created_at > NOW() - INTERVAL '7 days'
+            GROUP BY status
+        `);
+
+        const stats = { pending: 0, sent: 0, failed: 0, cancelled: 0 };
+        result.rows.forEach(row => {
+            stats[row.status] = parseInt(row.count, 10);
+        });
+
+        return { success: true, stats };
+    } catch (error) {
+        console.error('Error getting queue stats:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/*
+=======================================================================================================================================
 Email Templates
 =======================================================================================================================================
 */
@@ -604,8 +751,148 @@ You received this because you're a member of ${group.name}. To stop receiving br
     return sendEmail(email, `Message from ${group.name}`, null, 'broadcast', group.id, null, text);
 }
 
+/*
+=======================================================================================================================================
+QUEUE VERSIONS - For bulk sends that need rate limiting
+=======================================================================================================================================
+*/
+
+/*
+=======================================================================================================================================
+queueNewEventEmail
+=======================================================================================================================================
+Queue new event notification for later processing
+=======================================================================================================================================
+*/
+async function queueNewEventEmail(email, userName, event, group, hostName) {
+    const eventDate = new Date(event.date_time).toLocaleDateString('en-GB', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+    const eventTime = new Date(event.date_time).toLocaleTimeString('en-GB', {
+        hour: '2-digit', minute: '2-digit'
+    });
+
+    const html = wrapEmail(`
+        <h2 style="color: #333;">New Event in ${group.name}</h2>
+        <p style="color: #666; font-size: 16px;">
+            <strong>${hostName}</strong> has created a new event:
+        </p>
+        <p style="color: #666; font-size: 16px;">
+            <strong>${event.title}</strong><br>
+            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
+        </p>
+        ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event & RSVP')}
+    `);
+
+    return queueEmailWithName(email, userName, `New event: ${event.title}`, html, 'new_event', event.id);
+}
+
+/*
+=======================================================================================================================================
+queueEventCancelledEmail
+=======================================================================================================================================
+Queue event cancelled notification for later processing
+=======================================================================================================================================
+*/
+async function queueEventCancelledEmail(email, userName, event) {
+    const eventDate = new Date(event.date_time).toLocaleDateString('en-GB', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+    const eventTime = new Date(event.date_time).toLocaleTimeString('en-GB', {
+        hour: '2-digit', minute: '2-digit'
+    });
+
+    const html = wrapEmail(`
+        <h2 style="color: #333;">Event Cancelled</h2>
+        <p style="color: #666; font-size: 16px;">
+            Unfortunately, the following event has been cancelled:
+        </p>
+        <p style="color: #666; font-size: 16px;">
+            <strong>${event.title}</strong><br>
+            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
+        </p>
+        <p style="color: #666; font-size: 16px;">
+            If you have any questions, please contact the event host.
+        </p>
+    `);
+
+    return queueEmailWithName(email, userName, `Cancelled: ${event.title}`, html, 'event_cancelled', event.id);
+}
+
+/*
+=======================================================================================================================================
+queueBroadcastEmail
+=======================================================================================================================================
+Queue broadcast message for later processing
+=======================================================================================================================================
+*/
+async function queueBroadcastEmail(email, memberName, organiserName, group, message) {
+    const text = `Hi ${memberName},
+
+${organiserName} sent a message to all members of ${group.name}:
+
+${message}
+
+---
+View group: ${config.frontendUrl}/groups/${group.id}
+
+You received this because you're a member of ${group.name}. To stop receiving broadcasts, update your preferences in your profile settings.`;
+
+    return queueEmailWithName(email, memberName, `Message from ${group.name}`, null, 'broadcast', group.id, null, text);
+}
+
+/*
+=======================================================================================================================================
+queueEventReminderEmail
+=======================================================================================================================================
+Queue event reminder for later processing
+=======================================================================================================================================
+*/
+async function queueEventReminderEmail(email, userName, event, isHost = false, attendeeSummary = null) {
+    const eventDate = new Date(event.date_time).toLocaleDateString('en-GB', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+    const eventTime = new Date(event.date_time).toLocaleTimeString('en-GB', {
+        hour: '2-digit', minute: '2-digit'
+    });
+
+    let summarySection = '';
+    if (isHost && attendeeSummary) {
+        summarySection = `
+            <p style="color: #666; font-size: 16px;">
+                <strong>Attendee Summary:</strong> ${attendeeSummary.attending} attending${attendeeSummary.waitlist > 0 ? `, ${attendeeSummary.waitlist} on waitlist` : ''}
+            </p>
+        `;
+    }
+
+    const html = wrapEmail(`
+        <h2 style="color: #333;">Event Tomorrow!</h2>
+        <p style="color: #666; font-size: 16px;">
+            Hi ${userName},
+        </p>
+        <p style="color: #666; font-size: 16px;">
+            Just a reminder that you have an event coming up tomorrow:
+        </p>
+        <p style="color: #666; font-size: 16px;">
+            <strong>${event.title}</strong><br>
+            ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
+        </p>
+        ${summarySection}
+        ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event')}
+    `);
+
+    const subject = isHost ? `Tomorrow: ${event.title} (${attendeeSummary?.attending || 0} attending)` : `Reminder: ${event.title} is tomorrow`;
+    return queueEmailWithName(email, userName, subject, html, 'event_reminder', event.id);
+}
+
 module.exports = {
+    // Core functions
     sendEmail,
+    queueEmail,
+    queueEmailWithName,
+    processEmailQueue,
+    getQueueStats,
+    // Immediate send functions (single recipient)
     sendWelcomeEmail,
     sendRsvpConfirmedEmail,
     sendRemovedFromEventEmail,
@@ -620,5 +907,10 @@ module.exports = {
     sendContactOrganiserEmail,
     sendContactHostEmail,
     sendContactSupportEmail,
-    sendBroadcastEmail
+    sendBroadcastEmail,
+    // Queue functions (bulk sends)
+    queueNewEventEmail,
+    queueEventCancelledEmail,
+    queueBroadcastEmail,
+    queueEventReminderEmail
 };

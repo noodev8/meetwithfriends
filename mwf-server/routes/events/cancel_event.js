@@ -28,7 +28,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
-const { sendEventCancelledEmail } = require('../../services/email');
+const { queueEventCancelledEmail } = require('../../services/email');
 
 router.post('/:id/cancel', verifyToken, async (req, res) => {
     try {
@@ -114,13 +114,13 @@ router.post('/:id/cancel', verifyToken, async (req, res) => {
         await query('DELETE FROM event_list WHERE id = $1', [id]);
 
         // =======================================================================
-        // Send cancellation emails to all attendees and waitlist
+        // Queue cancellation emails to all attendees and waitlist
         // =======================================================================
-        attendeesResult.rows.forEach(attendee => {
-            sendEventCancelledEmail(attendee.email, attendee.name, event).catch(err => {
-                console.error('Failed to send event cancelled email:', err);
+        for (const attendee of attendeesResult.rows) {
+            queueEventCancelledEmail(attendee.email, attendee.name, event).catch(err => {
+                console.error('Failed to queue event cancelled email:', err);
             });
-        });
+        }
 
         return res.json({
             return_code: 'SUCCESS',

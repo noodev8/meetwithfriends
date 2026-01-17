@@ -52,6 +52,9 @@ app.use('/api/support', require('./routes/support'));
 // Image routes (Cloudinary operations)
 app.use('/api/images', require('./routes/images'));
 
+// Email queue routes
+app.use('/api/emails', require('./routes/emails'));
+
 // =======================================================================================================================================
 // Health check
 // =======================================================================================================================================

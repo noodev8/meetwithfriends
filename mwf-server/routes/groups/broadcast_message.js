@@ -31,7 +31,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
-const { sendBroadcastEmail } = require('../../services/email');
+const { queueBroadcastEmail } = require('../../services/email');
 
 router.post('/:id/broadcast', verifyToken, async (req, res) => {
     try {
@@ -130,27 +130,28 @@ router.post('/:id/broadcast', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
-        // Send emails to all recipients
+        // Queue emails for all recipients
         // =======================================================================
-        let sentCount = 0;
+        let queuedCount = 0;
         for (const recipient of recipients) {
             try {
-                await sendBroadcastEmail(
+                await queueBroadcastEmail(
                     recipient.email,
                     recipient.name,
                     organiserName,
                     group,
                     trimmedMessage
                 );
-                sentCount++;
+                queuedCount++;
             } catch (err) {
-                console.error(`Failed to send broadcast to ${recipient.email}:`, err);
+                console.error(`Failed to queue broadcast to ${recipient.email}:`, err);
             }
         }
 
         return res.json({
             return_code: 'SUCCESS',
-            message: `Broadcast sent to ${sentCount} member${sentCount !== 1 ? 's' : ''}`
+            message: `Broadcast queued for ${queuedCount} member${queuedCount !== 1 ? 's' : ''}`,
+            queued: queuedCount
         });
 
     } catch (error) {

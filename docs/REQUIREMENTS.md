@@ -11,23 +11,105 @@ Single source of truth for feature status. See PROJECT_FOUNDATION.md for vision/
 **Effort:** Medium
 **Phase:** Infrastructure
 
-Implement email queue to respect Resend rate limits (2 requests/second).
+Implement email queue to respect Resend rate limits (2 requests/second). Use 1/second to be safe.
 
 **Problem:**
 - Current code fires all notification emails simultaneously
 - Groups with 3+ members exceed Resend rate limit (429 errors)
 - Causes email delivery failures
 
-**Implementation Plan:**
-- New `email_queue` table with status tracking
-- Helper function to queue emails instead of sending directly
-- `POST /api/emails/process-queue` endpoint to process pending emails with 1s delay
-- Manual trigger initially, cron job later
+---
 
-**Affected Routes:**
-- `create_event.js` - new event notifications (currently commented out)
-- `cancel_event.js` - cancellation notifications
-- `update_event.js` - update notifications
+#### Database Schema
+
+```sql
+CREATE TABLE email_queue (
+    id SERIAL PRIMARY KEY,
+    email_type VARCHAR(50) NOT NULL,
+    recipient_email VARCHAR(255) NOT NULL,
+    recipient_name VARCHAR(255),
+    subject VARCHAR(255) NOT NULL,
+    html_content TEXT,
+    text_content TEXT,
+    reply_to VARCHAR(255),
+    related_id INTEGER,
+    status VARCHAR(20) DEFAULT 'pending',  -- pending, sent, failed, cancelled
+    attempts INT DEFAULT 0,
+    max_attempts INT DEFAULT 3,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    scheduled_for TIMESTAMPTZ DEFAULT NOW(),  -- for delayed sends
+    sent_at TIMESTAMPTZ,
+    error_message TEXT
+);
+
+CREATE INDEX idx_email_queue_status ON email_queue(status);
+CREATE INDEX idx_email_queue_scheduled ON email_queue(scheduled_for) WHERE status = 'pending';
+```
+
+---
+
+#### Implementation Plan
+
+1. **New helper function:** `queueEmail()` - adds email to queue instead of sending
+2. **Process endpoint:** `POST /api/emails/process-queue` - sends pending emails at 1/sec
+3. **Manual controls:** Ability to set emails as `cancelled` before processing
+4. **Retry logic:** Failed emails retry up to 3 times
+
+---
+
+#### Email Senders - Classification
+
+**IMMEDIATE (single recipient, send directly):**
+| Route | Function | Recipient |
+|-------|----------|-----------|
+| `auth/register.js` | `sendWelcomeEmail` | New user |
+| `auth/forgot_password.js` | `sendPasswordResetEmail` | User |
+| `events/rsvp.js` | `sendRsvpConfirmedEmail` | User who RSVP'd |
+| `events/rsvp.js` | `sendPromotedFromWaitlistEmail` | Single user (auto-promote) |
+| `events/manage_attendee.js` | `sendRemovedFromEventEmail` | Single user |
+| `events/manage_attendee.js` | `sendPromotedFromWaitlistEmail` | Single user |
+| `groups/approve_member.js` | `sendJoinedGroupEmail` | Approved user |
+| `groups/join_group.js` | `sendNewJoinRequestEmail` | Organiser |
+| `groups/contact_organiser.js` | `sendContactOrganiserEmail` | Organiser |
+| `events/contact_host.js` | `sendContactHostEmail` | Host(s) - typically 1-3 |
+| `support/contact_support.js` | `sendContactSupportEmail` | Support inbox |
+
+**QUEUED (multiple recipients, use queue):**
+| Route | Function | Recipients | Notes |
+|-------|----------|------------|-------|
+| `events/create_event.js` | `sendNewEventEmail` | All group members | Currently fires all at once |
+| `events/cancel_event.js` | `sendEventCancelledEmail` | All attendees | Currently fires all at once |
+| `events/update_event.js` | `sendPromotedFromWaitlistEmail` | Multiple (capacity increase) | When capacity increases |
+| `groups/broadcast_message.js` | `sendBroadcastEmail` | All group members | Currently disabled on UI |
+| `comments/add_comment.js` | `sendNewCommentEmail` | Attendees + waitlist | Currently commented out |
+| `scripts/send_reminders.js` | `sendEventReminderEmail` | All attendees | Scheduled job |
+
+---
+
+#### Process Flow
+
+```
+1. Action triggers email (e.g., create event)
+2. Check if bulk (multiple recipients) → queue, else send immediately
+3. Queue stores: recipient, content, status='pending'
+4. Manual review: Admin can set status='cancelled' for specific emails
+5. Process queue: GET /api/emails/process-queue?limit=50
+   - Fetches pending emails WHERE scheduled_for <= NOW()
+   - Sends at 1/second pace
+   - Updates status to 'sent' or 'failed'
+6. Retry: Failed emails with attempts < max_attempts stay pending
+```
+
+---
+
+#### Migration Steps
+
+1. Create `email_queue` table
+2. Add `queueEmail()` helper to `services/email.js`
+3. Create `/api/emails/process-queue` endpoint
+4. Update bulk senders to use `queueEmail()` instead of direct send
+5. Test with small group
+6. Add cron job for automatic processing (later)
 
 ---
 
