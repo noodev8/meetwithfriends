@@ -53,7 +53,7 @@ export default function LoginPage() {
             login(result.data.token, result.data.user);
             setIsLoading(false);
             setIsRedirecting(true);
-            router.push('/dashboard');
+            router.push('/your-events');
         } else {
             setError(result.error || 'Login failed');
             setIsLoading(false);

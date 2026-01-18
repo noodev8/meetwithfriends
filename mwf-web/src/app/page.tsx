@@ -153,11 +153,11 @@ export default function Home() {
     };
 
     // =======================================================================
-    // Redirect logged-in users to dashboard
+    // Redirect logged-in users to My Events (home)
     // =======================================================================
     useEffect(() => {
         if (!isLoading && user) {
-            router.replace('/dashboard');
+            router.replace('/your-events');
         }
     }, [user, isLoading, router]);
 

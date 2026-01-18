@@ -46,6 +46,11 @@ export default function EventCard({ event, from }: EventCardProps) {
 
                 {/* Status badges on header */}
                 <div className="absolute top-3 right-3 flex gap-1.5">
+                    {event.is_host && (
+                        <span className="px-2.5 py-1 text-xs font-semibold text-amber-700 bg-amber-100/90 rounded-full backdrop-blur-sm">
+                            Host
+                        </span>
+                    )}
                     {(event.rsvp_status === 'attending' || event.rsvp_status === 'waitlist') && (
                         <span className={`px-2.5 py-1 text-xs font-semibold rounded-full backdrop-blur-sm ${
                             event.rsvp_status === 'attending'

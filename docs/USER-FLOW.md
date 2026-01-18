@@ -18,20 +18,17 @@ The default landing view for all logged-in users. Shows events the user has comm
 
 ### Content Hierarchy
 
-#### 1. Attending (Primary)
-- Events where user RSVP status = `attending`
-- Sorted chronologically (soonest first)
-- Past events automatically hidden (stay accessible via Group Dashboard)
+**Single chronological list** combining Attending + Waitlist events.
+
+- Events sorted by date (soonest first)
+- Past events automatically hidden (accessible via Group Dashboard)
 - **Full list OK** - user has manually accepted each, won't grow indefinitely
-- **Host badge** - events where user is a host show a badge/indicator (no separate section)
+- **Status badges** distinguish Going vs Waitlist (with queue position)
+- **Host badge** - events where user is a host show amber badge
 
-#### 2. Waitlist (Secondary)
-- Events where user RSVP status = `waitlist`
-- Separate section below Attending
-- Collapsible or visually distinct
-- Shows position in queue if available
+**Why combined?** Users want to see "what have I committed to" - both Going and Waitlist are commitments. A waitlisted event tomorrow matters more than an attending event next month.
 
-#### 3. Empty State
+### Empty State
 When user has no upcoming events:
 - Friendly message: "No upcoming events"
 - CTA: "See what's happening in your groups" → links to Explore
@@ -174,54 +171,12 @@ Combines discovery of new events and new groups in one place.
 
 ### API Changes Required
 
-#### 1. Add `is_host` to my-rsvps (HIGH)
-**File:** `mwf-server/routes/users/my_rsvps.js`
-**Effort:** Small (5 mins)
+All API changes have been implemented.
 
-Add host indicator to each event in response:
-```json
-{
-  "is_host": true
-}
-```
-
-**SQL change:** Add EXISTS subquery:
-```sql
-EXISTS(SELECT 1 FROM event_host eh WHERE eh.event_id = e.id AND eh.user_id = $1) AS is_host
-```
-
-**Enables:** Host badge on Home screen event cards.
-
----
-
-#### 2. Add `?unresponded=true` filter to my-events (MEDIUM)
-**File:** `mwf-server/routes/users/my_events.js`
-**Effort:** Small (10 mins)
-
-Add optional query parameter to filter events where user has NO RSVP.
-
-**Current:** Returns all upcoming events from user's groups (with rsvp_status which may be null, attending, or waitlist)
-
-**Change:** When `?unresponded=true`, only return events where `rsvp_status IS NULL`
-
-**SQL change:** Add conditional WHERE clause:
-```sql
--- When unresponded=true:
-AND user_rsvp.status IS NULL
-```
-
-**Enables:** Explore screen "New Events in My Groups" section.
-
----
-
-### API Summary
-
-| Change | File | Effort | Enables |
-|--------|------|--------|---------|
-| Add `is_host` field | `my_rsvps.js` | 5 mins | Host badge on Home |
-| Add `?unresponded=true` | `my_events.js` | 10 mins | Explore new events |
-
-**Total API work:** ~15 minutes
+| Change | File | Status |
+|--------|------|--------|
+| `is_host` field | `my_rsvps.js` | ✅ Done |
+| `?unresponded=true` filter | `my_events.js` | ✅ Done |
 
 ---
 
@@ -229,23 +184,42 @@ AND user_rsvp.status IS NULL
 
 | Feature | Web | Flutter | API | Priority |
 |---------|-----|---------|-----|----------|
-| My Events as primary screen | Partial | Partial | Ready | HIGH |
-| Host badge on events | No | No | **Needs `is_host`** | HIGH |
-| Explore screen (combined) | No | No | Needs filter | MEDIUM |
+| My Events as primary screen | In Progress | Partial | ✅ Ready | HIGH |
+| Host badge on events | In Progress | No | ✅ Ready | HIGH |
+| Explore screen (combined) | Pending | No | ✅ Ready | MEDIUM |
 | Empty states with CTAs | Basic | Basic | N/A | MEDIUM |
-| Waitlist section | ? | ? | Ready | LOW |
+| Combined list (no separate waitlist) | In Progress | No | ✅ Ready | HIGH |
 
 ---
 
 ## Next Steps
 
-1. **API: Add `is_host` to my-rsvps** - enables host badge
-2. **API: Add `?unresponded=true` to my-events** - enables Explore new events
-3. **Flutter: Update Home tab** - make it My Events focused
-4. **Flutter: Rename "Events" tab to "Home"** - keep standard label
-5. **Both: Add host badge** to event cards
-6. **Both: Create Explore screen** - new events + discover groups
-7. **Both: Update empty states** with proper CTAs
+### Web (In Progress)
+1. ✅ API: `is_host` field added to my-rsvps
+2. ✅ API: `?unresponded=true` filter added to my-events
+3. 🔄 Add host badge to EventCard component (amber `#F59E0B`)
+4. 🔄 Restructure `/your-events` to use `getMyRsvps()` (committed events only)
+5. 🔄 Update navigation: "Events" → "My Events", add "Explore"
+6. ⏳ Create `/explore` page (new events + discover groups)
+7. ⏳ Update empty states with CTAs to Explore
+
+### Flutter (Pending)
+1. Add host badge to event cards
+2. Update Home screen to show combined Attending + Waitlist
+3. Create Explore tab (rename current "Events" tab)
+
+---
+
+## Decisions Log
+
+| Question | Decision |
+|----------|----------|
+| Separate "Events I'm Hosting" section? | **No** - badge on event card is sufficient |
+| Discover prominence for new vs established? | **Same** - equal prominence for all users |
+| Combine new events + discover groups? | **Yes** - single Explore screen |
+| Show past events on My Events? | **No** - access via Group Dashboard |
+| Limit lists on landing? | **Yes** for Explore, **No** for My Events |
+| Separate Attending vs Waitlist sections? | **No** - single chronological list with status badges |
 
 ---
 
