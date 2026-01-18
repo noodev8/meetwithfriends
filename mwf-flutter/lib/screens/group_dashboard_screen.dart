@@ -43,7 +43,6 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
   int? _processingMemberId;
   bool _isLeaving = false;
   bool _isJoining = false;
-  bool _isBroadcasting = false;
 
   @override
   void initState() {
