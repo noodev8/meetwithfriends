@@ -35,6 +35,7 @@ const router = express.Router();
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
 const { withTransaction } = require('../../utils/transaction');
+const { logAudit, AuditAction } = require('../../services/audit');
 
 router.post('/:id/delete', verifyToken, async (req, res) => {
     try {
@@ -80,6 +81,12 @@ router.post('/:id/delete', verifyToken, async (req, res) => {
         const group = groupResult.rows[0];
 
         // =======================================================================
+        // Get current user's name for audit log
+        // =======================================================================
+        const userResult = await query('SELECT name FROM app_user WHERE id = $1', [userId]);
+        const userName = userResult.rows[0]?.name || null;
+
+        // =======================================================================
         // Delete group and all associated data in a transaction
         // Order: comments -> RSVPs -> events -> members -> audit log -> group
         // =======================================================================
@@ -118,10 +125,14 @@ router.post('/:id/delete', verifyToken, async (req, res) => {
             );
 
             // Create audit log entry
-            await client.query(
-                'INSERT INTO audit_log (user_id, action) VALUES ($1, $2)',
-                [userId, `Deleted group "${group.name}"`]
-            );
+            await logAudit({
+                action: AuditAction.GROUP_DELETED,
+                userId,
+                userName,
+                groupId,
+                details: group.name,
+                client
+            });
 
             // Delete the group
             await client.query(

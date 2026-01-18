@@ -41,6 +41,7 @@ const bcrypt = require('bcrypt');
 const cloudinary = require('cloudinary').v2;
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
+const { logAudit, AuditAction, anonymizeUserAuditLogs } = require('../../services/audit');
 
 // =======================================================================
 // Configure Cloudinary with credentials from environment
@@ -131,6 +132,19 @@ router.post('/', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
+        // Anonymize existing audit log entries for privacy
+        // =======================================================================
+        await anonymizeUserAuditLogs(userId);
+
+        // =======================================================================
+        // Create audit log entry (user ID only, no name for privacy)
+        // =======================================================================
+        await logAudit({
+            action: AuditAction.USER_DELETED,
+            userId
+        });
+
+        // =======================================================================
         // Delete user account
         // Foreign key cascades will clean up:
         // - password_reset_token (CASCADE)
@@ -141,6 +155,7 @@ router.post('/', verifyToken, async (req, res) => {
         // Foreign keys set to NULL:
         // - event_list.created_by (SET NULL) - events remain, creator shows as deleted
         // - event_host.added_by (SET NULL) - host records remain
+        // - audit_log.user_id (SET NULL) - audit entries remain but anonymized
         // =======================================================================
         await query(
             `DELETE FROM app_user WHERE id = $1`,

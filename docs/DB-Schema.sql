@@ -5,7 +5,7 @@
 -- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 17.4
 
--- Started on 2026-01-17 15:15:16
+-- Started on 2026-01-18 13:53:55
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -38,7 +38,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 
 
 --
--- TOC entry 3587 (class 0 OID 0)
+-- TOC entry 3589 (class 0 OID 0)
 -- Dependencies: 2
 -- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner: 
 --
@@ -109,7 +109,7 @@ CREATE SEQUENCE public.app_user_id_seq
 ALTER SEQUENCE public.app_user_id_seq OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 3588 (class 0 OID 0)
+-- TOC entry 3590 (class 0 OID 0)
 -- Dependencies: 216
 -- Name: app_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
@@ -118,14 +118,20 @@ ALTER SEQUENCE public.app_user_id_seq OWNED BY public.app_user.id;
 
 
 --
--- TOC entry 235 (class 1259 OID 23798)
+-- TOC entry 237 (class 1259 OID 23877)
 -- Name: audit_log; Type: TABLE; Schema: public; Owner: meetwithfriends_user
 --
 
 CREATE TABLE public.audit_log (
     id integer NOT NULL,
     user_id integer,
-    action text NOT NULL,
+    user_name character varying(100),
+    action character varying(50),
+    target_user_id integer,
+    target_user_name character varying(100),
+    group_id integer,
+    event_id integer,
+    details text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -133,7 +139,7 @@ CREATE TABLE public.audit_log (
 ALTER TABLE public.audit_log OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 234 (class 1259 OID 23797)
+-- TOC entry 236 (class 1259 OID 23876)
 -- Name: audit_log_id_seq; Type: SEQUENCE; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -149,8 +155,8 @@ CREATE SEQUENCE public.audit_log_id_seq
 ALTER SEQUENCE public.audit_log_id_seq OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 3589 (class 0 OID 0)
--- Dependencies: 234
+-- TOC entry 3591 (class 0 OID 0)
+-- Dependencies: 236
 -- Name: audit_log_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -193,7 +199,7 @@ CREATE SEQUENCE public.email_log_id_seq
 ALTER SEQUENCE public.email_log_id_seq OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 3590 (class 0 OID 0)
+-- TOC entry 3592 (class 0 OID 0)
 -- Dependencies: 232
 -- Name: email_log_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
@@ -202,7 +208,7 @@ ALTER SEQUENCE public.email_log_id_seq OWNED BY public.email_log.id;
 
 
 --
--- TOC entry 237 (class 1259 OID 23840)
+-- TOC entry 235 (class 1259 OID 23840)
 -- Name: email_queue; Type: TABLE; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -231,7 +237,7 @@ CREATE TABLE public.email_queue (
 ALTER TABLE public.email_queue OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 236 (class 1259 OID 23839)
+-- TOC entry 234 (class 1259 OID 23839)
 -- Name: email_queue_id_seq; Type: SEQUENCE; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -247,8 +253,8 @@ CREATE SEQUENCE public.email_queue_id_seq
 ALTER SEQUENCE public.email_queue_id_seq OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 3591 (class 0 OID 0)
--- Dependencies: 236
+-- TOC entry 3593 (class 0 OID 0)
+-- Dependencies: 234
 -- Name: email_queue_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -288,7 +294,7 @@ CREATE SEQUENCE public.event_comment_id_seq
 ALTER SEQUENCE public.event_comment_id_seq OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 3592 (class 0 OID 0)
+-- TOC entry 3594 (class 0 OID 0)
 -- Dependencies: 228
 -- Name: event_comment_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
@@ -329,7 +335,7 @@ CREATE SEQUENCE public.event_host_id_seq
 ALTER SEQUENCE public.event_host_id_seq OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 3593 (class 0 OID 0)
+-- TOC entry 3595 (class 0 OID 0)
 -- Dependencies: 230
 -- Name: event_host_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
@@ -373,7 +379,7 @@ CREATE TABLE public.event_list (
 ALTER TABLE public.event_list OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 3594 (class 0 OID 0)
+-- TOC entry 3596 (class 0 OID 0)
 -- Dependencies: 225
 -- Name: COLUMN event_list.menu_images; Type: COMMENT; Schema: public; Owner: meetwithfriends_user
 --
@@ -398,7 +404,7 @@ CREATE SEQUENCE public.event_list_id_seq
 ALTER SEQUENCE public.event_list_id_seq OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 3595 (class 0 OID 0)
+-- TOC entry 3597 (class 0 OID 0)
 -- Dependencies: 224
 -- Name: event_list_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
@@ -445,7 +451,7 @@ CREATE SEQUENCE public.event_rsvp_id_seq
 ALTER SEQUENCE public.event_rsvp_id_seq OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 3596 (class 0 OID 0)
+-- TOC entry 3598 (class 0 OID 0)
 -- Dependencies: 226
 -- Name: event_rsvp_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
@@ -496,7 +502,7 @@ CREATE SEQUENCE public.group_list_id_seq
 ALTER SEQUENCE public.group_list_id_seq OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 3597 (class 0 OID 0)
+-- TOC entry 3599 (class 0 OID 0)
 -- Dependencies: 220
 -- Name: group_list_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
@@ -541,7 +547,7 @@ CREATE SEQUENCE public.group_member_id_seq
 ALTER SEQUENCE public.group_member_id_seq OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 3598 (class 0 OID 0)
+-- TOC entry 3600 (class 0 OID 0)
 -- Dependencies: 222
 -- Name: group_member_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
@@ -583,7 +589,7 @@ CREATE SEQUENCE public.password_reset_token_id_seq
 ALTER SEQUENCE public.password_reset_token_id_seq OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 3599 (class 0 OID 0)
+-- TOC entry 3601 (class 0 OID 0)
 -- Dependencies: 218
 -- Name: password_reset_token_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
@@ -600,7 +606,7 @@ ALTER TABLE ONLY public.app_user ALTER COLUMN id SET DEFAULT nextval('public.app
 
 
 --
--- TOC entry 3353 (class 2604 OID 23801)
+-- TOC entry 3359 (class 2604 OID 23880)
 -- Name: audit_log id; Type: DEFAULT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -616,7 +622,7 @@ ALTER TABLE ONLY public.email_log ALTER COLUMN id SET DEFAULT nextval('public.em
 
 
 --
--- TOC entry 3355 (class 2604 OID 23843)
+-- TOC entry 3353 (class 2604 OID 23843)
 -- Name: email_queue id; Type: DEFAULT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -698,7 +704,7 @@ ALTER TABLE ONLY public.app_user
 
 
 --
--- TOC entry 3413 (class 2606 OID 23806)
+-- TOC entry 3420 (class 2606 OID 23885)
 -- Name: audit_log audit_log_pkey; Type: CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -716,7 +722,7 @@ ALTER TABLE ONLY public.email_log
 
 
 --
--- TOC entry 3417 (class 2606 OID 23852)
+-- TOC entry 3413 (class 2606 OID 23852)
 -- Name: email_queue email_queue_pkey; Type: CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -832,7 +838,15 @@ CREATE INDEX idx_app_user_email ON public.app_user USING btree (email);
 
 
 --
--- TOC entry 3414 (class 1259 OID 23813)
+-- TOC entry 3421 (class 1259 OID 23887)
+-- Name: idx_audit_log_action; Type: INDEX; Schema: public; Owner: meetwithfriends_user
+--
+
+CREATE INDEX idx_audit_log_action ON public.audit_log USING btree (action);
+
+
+--
+-- TOC entry 3422 (class 1259 OID 23888)
 -- Name: idx_audit_log_created_at; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -840,7 +854,23 @@ CREATE INDEX idx_audit_log_created_at ON public.audit_log USING btree (created_a
 
 
 --
--- TOC entry 3415 (class 1259 OID 23812)
+-- TOC entry 3423 (class 1259 OID 23890)
+-- Name: idx_audit_log_event_id; Type: INDEX; Schema: public; Owner: meetwithfriends_user
+--
+
+CREATE INDEX idx_audit_log_event_id ON public.audit_log USING btree (event_id);
+
+
+--
+-- TOC entry 3424 (class 1259 OID 23889)
+-- Name: idx_audit_log_group_id; Type: INDEX; Schema: public; Owner: meetwithfriends_user
+--
+
+CREATE INDEX idx_audit_log_group_id ON public.audit_log USING btree (group_id);
+
+
+--
+-- TOC entry 3425 (class 1259 OID 23886)
 -- Name: idx_audit_log_user_id; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -856,7 +886,7 @@ CREATE INDEX idx_email_log_sent_at ON public.email_log USING btree (sent_at);
 
 
 --
--- TOC entry 3418 (class 1259 OID 23855)
+-- TOC entry 3414 (class 1259 OID 23855)
 -- Name: idx_email_queue_created; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -864,7 +894,7 @@ CREATE INDEX idx_email_queue_created ON public.email_queue USING btree (created_
 
 
 --
--- TOC entry 3419 (class 1259 OID 23857)
+-- TOC entry 3415 (class 1259 OID 23857)
 -- Name: idx_email_queue_event; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -872,7 +902,7 @@ CREATE INDEX idx_email_queue_event ON public.email_queue USING btree (event_id);
 
 
 --
--- TOC entry 3420 (class 1259 OID 23856)
+-- TOC entry 3416 (class 1259 OID 23856)
 -- Name: idx_email_queue_group; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -880,7 +910,7 @@ CREATE INDEX idx_email_queue_group ON public.email_queue USING btree (group_id);
 
 
 --
--- TOC entry 3421 (class 1259 OID 23854)
+-- TOC entry 3417 (class 1259 OID 23854)
 -- Name: idx_email_queue_scheduled; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -888,7 +918,7 @@ CREATE INDEX idx_email_queue_scheduled ON public.email_queue USING btree (schedu
 
 
 --
--- TOC entry 3422 (class 1259 OID 23853)
+-- TOC entry 3418 (class 1259 OID 23853)
 -- Name: idx_email_queue_status; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -976,7 +1006,7 @@ CREATE INDEX idx_password_reset_token_token ON public.password_reset_token USING
 
 
 --
--- TOC entry 3436 (class 2620 OID 23678)
+-- TOC entry 3438 (class 2620 OID 23678)
 -- Name: app_user update_app_user_updated_at; Type: TRIGGER; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -984,7 +1014,7 @@ CREATE TRIGGER update_app_user_updated_at BEFORE UPDATE ON public.app_user FOR E
 
 
 --
--- TOC entry 3438 (class 2620 OID 23680)
+-- TOC entry 3440 (class 2620 OID 23680)
 -- Name: event_list update_event_list_updated_at; Type: TRIGGER; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -992,7 +1022,7 @@ CREATE TRIGGER update_event_list_updated_at BEFORE UPDATE ON public.event_list F
 
 
 --
--- TOC entry 3437 (class 2620 OID 23679)
+-- TOC entry 3439 (class 2620 OID 23679)
 -- Name: group_list update_group_list_updated_at; Type: TRIGGER; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1000,16 +1030,7 @@ CREATE TRIGGER update_group_list_updated_at BEFORE UPDATE ON public.group_list F
 
 
 --
--- TOC entry 3435 (class 2606 OID 23807)
--- Name: audit_log audit_log_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: meetwithfriends_user
---
-
-ALTER TABLE ONLY public.audit_log
-    ADD CONSTRAINT audit_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.app_user(id) ON DELETE SET NULL;
-
-
---
--- TOC entry 3430 (class 2606 OID 23666)
+-- TOC entry 3433 (class 2606 OID 23666)
 -- Name: event_comment event_comment_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1018,7 +1039,7 @@ ALTER TABLE ONLY public.event_comment
 
 
 --
--- TOC entry 3431 (class 2606 OID 23671)
+-- TOC entry 3434 (class 2606 OID 23671)
 -- Name: event_comment event_comment_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1027,7 +1048,7 @@ ALTER TABLE ONLY public.event_comment
 
 
 --
--- TOC entry 3426 (class 2606 OID 23748)
+-- TOC entry 3429 (class 2606 OID 23748)
 -- Name: event_list event_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1036,7 +1057,7 @@ ALTER TABLE ONLY public.event_list
 
 
 --
--- TOC entry 3427 (class 2606 OID 23619)
+-- TOC entry 3430 (class 2606 OID 23619)
 -- Name: event_list event_group_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1045,7 +1066,7 @@ ALTER TABLE ONLY public.event_list
 
 
 --
--- TOC entry 3432 (class 2606 OID 23753)
+-- TOC entry 3435 (class 2606 OID 23753)
 -- Name: event_host event_host_added_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1054,7 +1075,7 @@ ALTER TABLE ONLY public.event_host
 
 
 --
--- TOC entry 3433 (class 2606 OID 23729)
+-- TOC entry 3436 (class 2606 OID 23729)
 -- Name: event_host event_host_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1063,7 +1084,7 @@ ALTER TABLE ONLY public.event_host
 
 
 --
--- TOC entry 3434 (class 2606 OID 23734)
+-- TOC entry 3437 (class 2606 OID 23734)
 -- Name: event_host event_host_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1072,7 +1093,7 @@ ALTER TABLE ONLY public.event_host
 
 
 --
--- TOC entry 3428 (class 2606 OID 23643)
+-- TOC entry 3431 (class 2606 OID 23643)
 -- Name: event_rsvp event_rsvp_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1081,7 +1102,7 @@ ALTER TABLE ONLY public.event_rsvp
 
 
 --
--- TOC entry 3429 (class 2606 OID 23648)
+-- TOC entry 3432 (class 2606 OID 23648)
 -- Name: event_rsvp event_rsvp_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1090,7 +1111,7 @@ ALTER TABLE ONLY public.event_rsvp
 
 
 --
--- TOC entry 3424 (class 2606 OID 23593)
+-- TOC entry 3427 (class 2606 OID 23593)
 -- Name: group_member group_member_group_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1099,7 +1120,7 @@ ALTER TABLE ONLY public.group_member
 
 
 --
--- TOC entry 3425 (class 2606 OID 23598)
+-- TOC entry 3428 (class 2606 OID 23598)
 -- Name: group_member group_member_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1108,7 +1129,7 @@ ALTER TABLE ONLY public.group_member
 
 
 --
--- TOC entry 3423 (class 2606 OID 23560)
+-- TOC entry 3426 (class 2606 OID 23560)
 -- Name: password_reset_token password_reset_token_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1132,7 +1153,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENC
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO meetwithfriends_user;
 
 
--- Completed on 2026-01-17 15:15:17
+-- Completed on 2026-01-18 13:53:57
 
 --
 -- PostgreSQL database dump complete

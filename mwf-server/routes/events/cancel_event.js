@@ -29,6 +29,7 @@ const router = express.Router();
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
 const { queueEventCancelledEmail } = require('../../services/email');
+const { logAudit, AuditAction } = require('../../services/audit');
 
 router.post('/:id/cancel', verifyToken, async (req, res) => {
     try {
@@ -78,6 +79,12 @@ router.post('/:id/cancel', verifyToken, async (req, res) => {
         const event = eventResult.rows[0];
 
         // =======================================================================
+        // Get current user's name for audit log
+        // =======================================================================
+        const userResult = await query('SELECT name FROM app_user WHERE id = $1', [userId]);
+        const userName = userResult.rows[0]?.name || null;
+
+        // =======================================================================
         // Check permissions: must be organiser OR event host
         // =======================================================================
         const isOrganiser = event.current_user_role === 'organiser';
@@ -105,10 +112,14 @@ router.post('/:id/cancel', verifyToken, async (req, res) => {
         // =======================================================================
         // Create audit log entry
         // =======================================================================
-        await query(
-            'INSERT INTO audit_log (user_id, action) VALUES ($1, $2)',
-            [userId, `Deleted event "${event.title}"`]
-        );
+        await logAudit({
+            action: AuditAction.EVENT_DELETED,
+            userId,
+            userName,
+            groupId: event.group_id,
+            eventId: parseInt(id, 10),
+            details: event.title
+        });
 
         // =======================================================================
         // Delete the event (cascades to event_rsvp, event_host, event_comment)

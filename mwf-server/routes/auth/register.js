@@ -40,6 +40,7 @@ const jwt = require('jsonwebtoken');
 const { query } = require('../../database');
 const config = require('../../config/config');
 const { sendWelcomeEmail } = require('../../services/email');
+const { logAudit, AuditAction } = require('../../services/audit');
 
 router.post('/', async (req, res) => {
     try {
@@ -108,6 +109,15 @@ router.post('/', async (req, res) => {
         );
 
         const user = result.rows[0];
+
+        // =======================================================================
+        // Create audit log entry
+        // =======================================================================
+        await logAudit({
+            action: AuditAction.USER_REGISTERED,
+            userId: user.id,
+            userName: user.name
+        });
 
         // =======================================================================
         // Generate JWT token (only user_id per API-Rules)
