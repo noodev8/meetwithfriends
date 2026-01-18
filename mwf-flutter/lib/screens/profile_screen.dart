@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../models/user.dart';
 import 'edit_profile_screen.dart';
 import 'contact_details_screen.dart';
 import 'change_password_screen.dart';
 import 'delete_account_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   final User user;
   final VoidCallback onLogout;
   final Function(User) onUserUpdated;
@@ -17,6 +18,26 @@ class ProfileScreen extends StatelessWidget {
     required this.onLogout,
     required this.onUserUpdated,
   });
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String _version = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      _version = packageInfo.version;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,17 +75,17 @@ class ProfileScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(16),
-                      image: user.avatarUrl != null
+                      image: widget.user.avatarUrl != null
                           ? DecorationImage(
-                              image: NetworkImage(user.avatarUrl!),
+                              image: NetworkImage(widget.user.avatarUrl!),
                               fit: BoxFit.cover,
                             )
                           : null,
                     ),
-                    child: user.avatarUrl == null
+                    child: widget.user.avatarUrl == null
                         ? Center(
                             child: Text(
-                              user.initials,
+                              widget.user.initials,
                               style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w700,
@@ -82,7 +103,7 @@ class ProfileScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          user.name,
+                          widget.user.name,
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -91,7 +112,7 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          user.email,
+                          widget.user.email,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -230,7 +251,7 @@ class ProfileScreen extends StatelessWidget {
 
             // Version
             Text(
-              'Version 1.0.1',
+              _version.isNotEmpty ? 'Version $_version' : '',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
@@ -249,8 +270,8 @@ class ProfileScreen extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => EditProfileScreen(
-          user: user,
-          onProfileUpdated: onUserUpdated,
+          user: widget.user,
+          onProfileUpdated: widget.onUserUpdated,
         ),
       ),
     );
@@ -260,8 +281,8 @@ class ProfileScreen extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ContactDetailsScreen(
-          user: user,
-          onProfileUpdated: onUserUpdated,
+          user: widget.user,
+          onProfileUpdated: widget.onUserUpdated,
         ),
       ),
     );
@@ -279,7 +300,7 @@ class ProfileScreen extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => DeleteAccountScreen(
-          onAccountDeleted: onLogout,
+          onAccountDeleted: widget.onLogout,
         ),
       ),
     );
@@ -307,19 +328,19 @@ class ProfileScreen extends StatelessWidget {
             color: Color(0xFF1E293B),
           ),
         ),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Version 1.0.1',
-              style: TextStyle(
+              _version.isNotEmpty ? 'Version $_version' : '',
+              style: const TextStyle(
                 fontSize: 15,
                 color: Color(0xFF64748B),
               ),
             ),
-            SizedBox(height: 12),
-            Text(
+            const SizedBox(height: 12),
+            const Text(
               'Organise group events with friends. Manage RSVPs, pre-orders, and more.',
               style: TextStyle(
                 fontSize: 14,
@@ -383,7 +404,7 @@ class ProfileScreen extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              onLogout();
+              widget.onLogout();
             },
             child: const Text(
               'Log Out',
