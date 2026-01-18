@@ -1193,109 +1193,120 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
+      child: Column(
         children: [
-          // Avatar
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: member.avatarUrl == null
-                  ? const LinearGradient(
-                      colors: [Color(0xFF818CF8), Color(0xFFA78BFA)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                  : null,
-              image: member.avatarUrl != null
-                  ? DecorationImage(
-                      image: NetworkImage(member.avatarUrl!),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
-            ),
-            child: member.avatarUrl == null
-                ? Center(
-                    child: Text(
-                      member.initials,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  )
-                : null,
-          ),
-
-          const SizedBox(width: 12),
-
-          // Name
-          Expanded(
-            child: Text(
-              member.name,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1E293B),
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // Action buttons
+          // Top row: Avatar + Name
           Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              // Approve button
-              GestureDetector(
-                onTap: isProcessing ? null : () => _handleApproveMember(member),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10B981),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: isProcessing
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
+              // Avatar
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: member.avatarUrl == null
+                      ? const LinearGradient(
+                          colors: [Color(0xFF818CF8), Color(0xFFA78BFA)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         )
-                      : const Text(
-                          'Approve',
-                          style: TextStyle(
-                            fontSize: 13,
+                      : null,
+                  image: member.avatarUrl != null
+                      ? DecorationImage(
+                          image: NetworkImage(member.avatarUrl!),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: member.avatarUrl == null
+                    ? Center(
+                        child: Text(
+                          member.initials,
+                          style: const TextStyle(
+                            fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
                         ),
+                      )
+                    : null,
+              ),
+
+              const SizedBox(width: 12),
+
+              // Name
+              Expanded(
+                child: Text(
+                  member.name,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // Bottom row: Action buttons
+          Row(
+            children: [
+              // Approve button
+              Expanded(
+                child: GestureDetector(
+                  onTap: isProcessing ? null : () => _handleApproveMember(member),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: isProcessing
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Approve',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                    ),
+                  ),
                 ),
               ),
 
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
 
               // Decline button
-              GestureDetector(
-                onTap: isProcessing ? null : () => _handleRejectMember(member),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    'Decline',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF475569),
+              Expanded(
+                child: GestureDetector(
+                  onTap: isProcessing ? null : () => _handleRejectMember(member),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Decline',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF475569),
+                        ),
+                      ),
                     ),
                   ),
                 ),
