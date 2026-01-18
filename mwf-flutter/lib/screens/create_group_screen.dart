@@ -66,7 +66,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       // Navigate to the new group
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => GroupDashboardScreen(groupId: result.groupId!),
+          builder: (context) => GroupDashboardScreen(groupId: result.groupId!, backLabel: 'Home'),
         ),
       );
     } else {

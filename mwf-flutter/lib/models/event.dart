@@ -14,6 +14,8 @@ class Event {
   final int attendeeCount;
   final int waitlistCount;
   final String? rsvpStatus; // 'attending', 'waitlist', or null
+  final bool isHost; // Whether current user is a host of this event
+  final int? waitlistPosition; // Position in waitlist if applicable
 
   Event({
     required this.id,
@@ -31,6 +33,8 @@ class Event {
     required this.attendeeCount,
     required this.waitlistCount,
     this.rsvpStatus,
+    this.isHost = false,
+    this.waitlistPosition,
   });
 
   factory Event.fromJson(Map<String, dynamic> json) {
@@ -50,6 +54,8 @@ class Event {
       attendeeCount: json['attendee_count'] as int? ?? 0,
       waitlistCount: json['waitlist_count'] as int? ?? 0,
       rsvpStatus: json['rsvp_status'] as String?,
+      isHost: json['is_host'] as bool? ?? false,
+      waitlistPosition: json['waitlist_position'] as int?,
     );
   }
 

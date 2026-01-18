@@ -33,8 +33,33 @@ class EventsService {
   }
 
   /// Get upcoming events from user's groups
-  Future<EventsResult> getMyEvents() async {
-    final response = await _api.get('/users/my-events');
+  Future<EventsResult> getMyEvents({bool? unresponded, int? limit}) async {
+    String path = '/users/my-events';
+    final params = <String>[];
+    if (unresponded == true) params.add('unresponded=true');
+    if (limit != null) params.add('limit=$limit');
+    if (params.isNotEmpty) path += '?${params.join('&')}';
+
+    final response = await _api.get(path);
+
+    if (response['return_code'] == 'SUCCESS') {
+      final eventsList = response['events'] as List<dynamic>? ?? [];
+      final events = eventsList
+          .map((e) => Event.fromJson(e as Map<String, dynamic>))
+          .toList();
+      return EventsResult(success: true, events: events);
+    }
+
+    return EventsResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to load events',
+    );
+  }
+
+  /// Get events user has RSVP'd to (attending or waitlist)
+  /// Used for the Home screen "My Events" list
+  Future<EventsResult> getMyRsvps() async {
+    final response = await _api.get('/users/my-rsvps');
 
     if (response['return_code'] == 'SUCCESS') {
       final eventsList = response['events'] as List<dynamic>? ?? [];

@@ -64,7 +64,7 @@ export default function Header() {
         <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 relative z-20">
             <div className="flex justify-between items-center px-4 sm:px-8 py-4 max-w-7xl mx-auto">
                 {/* Logo */}
-                <Link href={user ? '/dashboard' : '/'}>
+                <Link href={user ? '/your-events' : '/'}>
                     <Image
                         src="/logo.png"
                         alt="Meet With Friends"

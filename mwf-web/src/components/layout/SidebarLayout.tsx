@@ -20,9 +20,10 @@ import { useAuth } from '@/context/AuthContext';
 
 // Navigation items configuration
 const navItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
-    { name: 'Events', href: '/your-events', icon: 'events' },
+    { name: 'Dashboard', href: '/your-events', icon: 'dashboard' },
+    { name: 'Events', href: '/your-events/all', icon: 'events' },
     { name: 'Groups', href: '/my-groups', icon: 'groups' },
+    { name: 'Discover', href: '/explore', icon: 'explore' },
 ];
 
 // Icon component for navigation
@@ -41,6 +42,11 @@ function NavIcon({ name, className }: { name: string; className?: string }) {
         groups: (
             <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+        ),
+        explore: (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
         ),
         settings: (
@@ -81,7 +87,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
 
     // Check if a nav item is active
     const isActive = (href: string) => {
-        if (href === '/dashboard') return pathname === '/dashboard';
+        if (href === '/your-events') return pathname === '/your-events';
         return pathname.startsWith(href);
     };
 
@@ -91,7 +97,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
             <aside className="hidden lg:flex w-64 bg-white border-r border-slate-200 flex-col">
                 {/* Logo */}
                 <div className="p-6">
-                    <Link href="/dashboard" className="text-xl font-bold text-slate-800 tracking-tight">
+                    <Link href="/your-events" className="text-xl font-bold text-slate-800 tracking-tight">
                         Meet With Friends
                     </Link>
                 </div>
@@ -193,7 +199,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </button>
 
                     {/* Mobile logo */}
-                    <Link href="/dashboard" className="font-bold text-slate-800">
+                    <Link href="/your-events" className="font-bold text-slate-800">
                         Meet With Friends
                     </Link>
 

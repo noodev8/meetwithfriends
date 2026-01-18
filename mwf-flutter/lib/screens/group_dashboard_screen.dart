@@ -11,15 +11,18 @@ import 'create_event_screen.dart';
 import 'edit_group_screen.dart';
 import 'group_members_screen.dart';
 import 'past_events_screen.dart';
+import 'group_events_screen.dart';
 
 class GroupDashboardScreen extends StatefulWidget {
   final int groupId;
   final VoidCallback? onBack;
+  final String? backLabel;
 
   const GroupDashboardScreen({
     super.key,
     required this.groupId,
     this.onBack,
+    this.backLabel,
   });
 
   @override
@@ -547,14 +550,36 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
   }
 
   Widget _buildAppBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 20, 16),
       child: Row(
         children: [
-          IconButton(
-            onPressed: widget.onBack ?? () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back_rounded),
-            color: const Color(0xFF1E293B),
+          GestureDetector(
+            onTap: widget.onBack ?? () => Navigator.of(context).pop(),
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.arrow_back_rounded,
+                    color: Color(0xFF1E293B),
+                  ),
+                  if (widget.backLabel != null) ...[
+                    const SizedBox(width: 4),
+                    Text(
+                      widget.backLabel!,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ),
           const Spacer(),
         ],
@@ -612,12 +637,15 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                           // Upcoming Events Section
                           _buildUpcomingEventsSection(),
 
+                          // Bottom actions section
+                          _buildBottomActions(group, canManageMembers, isOrganiser, membership?.isActive == true),
+
                           // Leave group link (for active members who are not organisers)
                           if (membership?.isActive == true && !isOrganiser)
                             _buildLeaveGroupLink(),
 
-                          // Bottom padding (extra for FAB)
-                          SizedBox(height: canManageMembers ? 100 : 32),
+                          // Bottom padding
+                          const SizedBox(height: 32),
                         ],
                       ),
                     ),
@@ -627,55 +655,66 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
             ),
           ),
         ),
+      ],
+    );
+  }
 
-        // Floating Action Button for Create Event
-        if (canManageMembers)
-          Positioned(
-            right: 20,
-            bottom: MediaQuery.of(context).padding.bottom + 90,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CreateEventScreen(
-                      groupId: _group!.id,
-                      groupName: _group!.name,
-                      canCreateEvents: _membership?.canManageMembers ?? false,
-                      onEventCreated: () {
-                        _loadGroup(); // Refresh to show new event
-                      },
-                    ),
-                  ),
-                );
-              },
-              child: Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: _theme.gradient,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _theme.gradient[0].withAlpha(100),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.add_rounded,
-                  color: Colors.white,
-                  size: 28,
-                ),
+  Widget _buildBottomActions(GroupDetail group, bool canManageMembers, bool isOrganiser, bool isActiveMember) {
+    if (!canManageMembers) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CreateEventScreen(
+                groupId: group.id,
+                groupName: group.name,
+                canCreateEvents: _membership?.canManageMembers ?? false,
+                onEventCreated: () {
+                  _loadGroup();
+                },
               ),
             ),
+          );
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: _theme.gradient,
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: _theme.gradient[0].withAlpha(80),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-      ],
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.add_rounded, color: Colors.white, size: 22),
+              SizedBox(width: 8),
+              Text(
+                'Create Event',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -1468,7 +1507,14 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
               if (_events.length > 3)
                 GestureDetector(
                   onTap: () {
-                    // TODO: Navigate to all events
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => GroupEventsScreen(
+                          groupId: widget.groupId,
+                          groupName: _group?.name ?? '',
+                        ),
+                      ),
+                    );
                   },
                   child: const Text(
                     'See all',

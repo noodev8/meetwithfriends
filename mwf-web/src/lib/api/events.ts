@@ -18,6 +18,8 @@ export interface EventWithDetails extends Event {
     waitlist_count: number;
     total_guest_count: number;
     rsvp_status?: 'attending' | 'waitlist' | null;
+    is_host?: boolean;
+    waitlist_position?: number | null;
 }
 
 // RSVP status type
@@ -413,10 +415,23 @@ export async function cancelEvent(
 getMyEvents
 =======================================================================================================================================
 Fetches upcoming events from groups the authenticated user is a member of.
+Options:
+- unresponded: Only return events user hasn't RSVP'd to (for Explore screen)
+- limit: Max number of events to return
 =======================================================================================================================================
 */
-export async function getMyEvents(token: string): Promise<ApiResult<EventWithDetails[]>> {
-    const response = await apiGet('/api/users/my-events', token);
+interface GetMyEventsOptions {
+    unresponded?: boolean;
+    limit?: number;
+}
+
+export async function getMyEvents(token: string, options?: GetMyEventsOptions): Promise<ApiResult<EventWithDetails[]>> {
+    const params = new URLSearchParams();
+    if (options?.unresponded) params.append('unresponded', 'true');
+    if (options?.limit) params.append('limit', String(options.limit));
+
+    const url = `/api/users/my-events${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await apiGet(url, token);
 
     if (response.return_code === 'SUCCESS' && response.events) {
         return {
