@@ -49,105 +49,149 @@ class _GroupsScreenState extends State<GroupsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF1E293B)),
-          onPressed: () {
-            if (widget.onBackToHome != null) {
-              widget.onBackToHome!();
-            } else {
-              Navigator.of(context).pop();
-            }
-          },
-        ),
-        title: const Text(
-          'Your Groups',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1E293B),
-          ),
-        ),
-        centerTitle: false,
-        actions: [
+    return SafeArea(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // App bar with back button and create button
           Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const CreateGroupScreen(),
-                  ),
-                ).then((_) => _loadGroups());
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF6366F1), Color(0xFF7C3AED)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.add_rounded, size: 16, color: Colors.white),
-                    SizedBox(width: 4),
-                    Text(
-                      'New',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
+            padding: const EdgeInsets.fromLTRB(8, 8, 16, 16),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    if (widget.onBackToHome != null) {
+                      widget.onBackToHome!();
+                    } else {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: const Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.arrow_back_rounded, color: Color(0xFF1E293B)),
+                        SizedBox(width: 4),
+                        Text(
+                          'Home',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const CreateGroupScreen(),
+                      ),
+                    ).then((_) => _loadGroups());
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF6366F1), Color(0xFF7C3AED)],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.add_rounded, size: 16, color: Colors.white),
+                        SizedBox(width: 4),
+                        Text(
+                          'New',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Title
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
+            child: Text(
+              'My Groups',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1E293B),
+                letterSpacing: -0.5,
               ),
             ),
           ),
-        ],
-      ),
-      body: SafeArea(
-        child: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(
-                  color: Color(0xFF7C3AED),
-                ),
-              )
-            : _error != null
-                ? _buildErrorState()
-                : _groups.isEmpty
-                    ? _buildEmptyState()
-                    : RefreshIndicator(
-                        onRefresh: _loadGroups,
-                        color: const Color(0xFF7C3AED),
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(20),
-                          itemCount: _groups.length,
-                          itemBuilder: (context, index) {
-                            final group = _groups[index];
-                            return _GroupDetailCard(
-                              group: group,
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => GroupDashboardScreen(
-                                      groupId: group.id,
-                                    ),
-                                  ),
+
+          // Subtitle
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 4, 20, 0),
+            child: Text(
+              'Groups you organise or are a member of',
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF64748B),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Content
+          Expanded(
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF7C3AED),
+                    ),
+                  )
+                : _error != null
+                    ? _buildErrorState()
+                    : _groups.isEmpty
+                        ? _buildEmptyState()
+                        : RefreshIndicator(
+                            onRefresh: _loadGroups,
+                            color: const Color(0xFF7C3AED),
+                            child: ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              itemCount: _groups.length,
+                              itemBuilder: (context, index) {
+                                final group = _groups[index];
+                                return _GroupDetailCard(
+                                  group: group,
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => GroupDashboardScreen(
+                                          groupId: group.id,
+                                          backLabel: 'My Groups',
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 );
                               },
-                            );
-                          },
-                        ),
-                      ),
+                            ),
+                          ),
+          ),
+        ],
       ),
     );
   }
@@ -248,17 +292,19 @@ class _GroupDetailCard extends StatelessWidget {
 
   GroupTheme get _theme => getGroupTheme(group.themeColor);
 
+  bool get _isLeader => group.role.toLowerCase() == 'organiser' || group.role.toLowerCase() == 'host';
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 16),
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: const Color(0xFFE2E8F0),
               width: 1,
@@ -273,19 +319,19 @@ class _GroupDetailCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Avatar
+              // Avatar - larger
               Container(
-                width: 56,
-                height: 56,
+                width: 64,
+                height: 64,
                 decoration: BoxDecoration(
                   color: _theme.bgColor.withAlpha(38),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Center(
                   child: Text(
                     getGroupInitials(group.name),
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 22,
                       fontWeight: FontWeight.w700,
                       color: _theme.bgColor,
                     ),
@@ -293,49 +339,47 @@ class _GroupDetailCard extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(width: 14),
+              const SizedBox(width: 16),
 
               // Info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            group.name,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF1E293B),
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _roleColor.withAlpha(26),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            group.role.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: _roleColor,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                      ],
+                    // Title row
+                    Text(
+                      group.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E293B),
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 6),
+                    // Role badge - only for organiser/host
+                    if (_isLeader) ...[
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _roleColor.withAlpha(26),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          group.role.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: _roleColor,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         const Icon(
@@ -362,7 +406,7 @@ class _GroupDetailCard extends StatelessWidget {
                         Text(
                           group.upcomingEventCount == 0
                               ? 'No events'
-                              : '${group.upcomingEventCount} upcoming',
+                              : '${group.upcomingEventCount} ${group.upcomingEventCount == 1 ? 'event' : 'events'}',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,

@@ -21,6 +21,7 @@ import { useAuth } from '@/context/AuthContext';
 // Navigation items configuration
 const navItems = [
     { name: 'Dashboard', href: '/your-events', icon: 'dashboard' },
+    { name: 'Events', href: '/your-events/all', icon: 'events' },
     { name: 'Groups', href: '/my-groups', icon: 'groups' },
     { name: 'Discover', href: '/explore', icon: 'explore' },
 ];

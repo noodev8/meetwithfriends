@@ -336,7 +336,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
 
-                // Your Groups Section
+                // My Groups Section
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 32, 20, 12),
@@ -344,7 +344,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Your Groups',
+                          'My Groups',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -432,7 +432,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
 
-                // Discover Groups Section
+                // Discover Section
                 if (_discoverableGroups.isNotEmpty) ...[
                   SliverToBoxAdapter(
                     child: Padding(
@@ -440,34 +440,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              const Text(
-                                'Discover Groups',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF1E293B),
-                                  letterSpacing: -0.3,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFEEF2FF),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  '${_discoverableGroups.length}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF6366F1),
-                                  ),
-                                ),
-                              ),
-                            ],
+                          const Text(
+                            'Discover',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1E293B),
+                              letterSpacing: -0.3,
+                            ),
                           ),
                           GestureDetector(
                             onTap: () {
@@ -818,7 +798,7 @@ class _DiscoverGroupCard extends StatelessWidget {
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => GroupDashboardScreen(groupId: group.id),
+            builder: (context) => GroupDashboardScreen(groupId: group.id, backLabel: 'Home'),
           ),
         );
       },
@@ -1190,6 +1170,8 @@ class _GroupCard extends StatelessWidget {
 
   const _GroupCard({required this.group});
 
+  bool get _isLeader => group.role.toLowerCase() == 'organiser' || group.role.toLowerCase() == 'host';
+
   Color get _roleColor {
     switch (group.role.toLowerCase()) {
       case 'organiser':
@@ -1211,7 +1193,7 @@ class _GroupCard extends StatelessWidget {
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => GroupDashboardScreen(groupId: group.id),
+              builder: (context) => GroupDashboardScreen(groupId: group.id, backLabel: 'Home'),
             ),
           );
         },
@@ -1274,26 +1256,29 @@ class _GroupCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _roleColor.withAlpha(26),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            group.role.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: _roleColor,
-                              letterSpacing: 0.5,
+                        // Only show badge for organiser/host
+                        if (_isLeader) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _roleColor.withAlpha(26),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              group.role.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: _roleColor,
+                                letterSpacing: 0.5,
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 4),

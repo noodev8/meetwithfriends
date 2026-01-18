@@ -5,16 +5,21 @@ import '../services/events_service.dart';
 import '../config/event_categories.dart';
 import 'event_detail_screen.dart';
 
-class EventsScreen extends StatefulWidget {
-  final VoidCallback? onBackToHome;
+class GroupEventsScreen extends StatefulWidget {
+  final int groupId;
+  final String groupName;
 
-  const EventsScreen({super.key, this.onBackToHome});
+  const GroupEventsScreen({
+    super.key,
+    required this.groupId,
+    required this.groupName,
+  });
 
   @override
-  State<EventsScreen> createState() => _EventsScreenState();
+  State<GroupEventsScreen> createState() => _GroupEventsScreenState();
 }
 
-class _EventsScreenState extends State<EventsScreen> {
+class _GroupEventsScreenState extends State<GroupEventsScreen> {
   final EventsService _eventsService = EventsService();
 
   bool _isLoading = true;
@@ -33,7 +38,7 @@ class _EventsScreenState extends State<EventsScreen> {
       _error = null;
     });
 
-    final result = await _eventsService.getMyRsvps();
+    final result = await _eventsService.getUpcomingEvents(groupId: widget.groupId);
 
     if (mounted) {
       setState(() {
@@ -49,91 +54,71 @@ class _EventsScreenState extends State<EventsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 800),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // App bar with back button
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 20, 16),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        if (widget.onBackToHome != null) {
-                          widget.onBackToHome!();
-                        } else {
-                          Navigator.of(context).pop();
-                        }
-                      },
-                      behavior: HitTestBehavior.opaque,
-                      child: const Padding(
-                        padding: EdgeInsets.all(8),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.arrow_back_rounded, color: Color(0xFF1E293B)),
-                            SizedBox(width: 4),
-                            Text(
-                              'Home',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF1E293B),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+    return Scaffold(
+      backgroundColor: const Color(0xFFFAFAFC),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF1E293B)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          widget.groupName,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1E293B),
+          ),
+        ),
+        centerTitle: false,
+      ),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                  child: Text(
+                    '${_events.length} upcoming event${_events.length == 1 ? '' : 's'}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF64748B),
                     ),
-                  ],
-                ),
-              ),
-
-              // Title
-              const Padding(
-                padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
-                child: Text(
-                  'My Events',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E293B),
-                    letterSpacing: -0.5,
                   ),
                 ),
-              ),
 
-              // Subtitle with count
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
-                child: Text(
-                  '${_events.length} event${_events.length == 1 ? '' : 's'} you\'re attending or waitlisted for',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF64748B),
-                  ),
+                // Events list
+                Expanded(
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF7C3AED),
+                          ),
+                        )
+                      : _error != null
+                          ? _buildErrorState()
+                          : _events.isEmpty
+                              ? _buildEmptyState()
+                              : RefreshIndicator(
+                                  onRefresh: _loadEvents,
+                                  color: const Color(0xFF7C3AED),
+                                  child: ListView.builder(
+                                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                                    itemCount: _events.length,
+                                    itemBuilder: (context, index) {
+                                      final event = _events[index];
+                                      return _EventCard(event: event);
+                                    },
+                                  ),
+                                ),
                 ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Events list
-              Expanded(
-                child: _isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFF7C3AED),
-                        ),
-                      )
-                    : _error != null
-                        ? _buildErrorState()
-                        : _buildEventsList(_events),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -180,50 +165,35 @@ class _EventsScreenState extends State<EventsScreen> {
     );
   }
 
-  Widget _buildEventsList(List<Event> events) {
-    if (events.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.event_busy_rounded,
-              size: 64,
-              color: Colors.grey.shade300,
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.event_rounded,
+            size: 64,
+            color: Colors.grey.shade300,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'No upcoming events',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF64748B),
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'No events yet',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF64748B),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _loadEvents,
-      color: const Color(0xFF7C3AED),
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: events.length,
-        itemBuilder: (context, index) {
-          final event = events[index];
-          return _CompactEventCard(event: event);
-        },
+          ),
+        ],
       ),
     );
   }
 }
 
-class _CompactEventCard extends StatelessWidget {
+class _EventCard extends StatelessWidget {
   final Event event;
 
-  const _CompactEventCard({required this.event});
+  const _EventCard({required this.event});
 
   @override
   Widget build(BuildContext context) {
@@ -354,26 +324,6 @@ class _CompactEventCard extends StatelessWidget {
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 color: Color(0xFF7C3AED),
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          )
-                        else if (event.isFull && !event.isCancelled)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF59E0B).withAlpha(26),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Text(
-                              'WAITLIST',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFFF59E0B),
                                 letterSpacing: 0.5,
                               ),
                             ),

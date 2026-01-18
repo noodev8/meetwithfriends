@@ -106,7 +106,7 @@ class _DiscoverGroupCard extends StatelessWidget {
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => GroupDashboardScreen(groupId: group.id),
+              builder: (context) => GroupDashboardScreen(groupId: group.id, backLabel: 'Discover'),
             ),
           );
         },

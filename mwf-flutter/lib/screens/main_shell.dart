@@ -41,7 +41,7 @@ class _MainShellState extends State<MainShell> {
               onViewAllEvents: () => setState(() => _currentIndex = 1),
               onViewAllGroups: () => setState(() => _currentIndex = 2),
             ),
-            const EventsScreen(),
+            EventsScreen(onBackToHome: () => setState(() => _currentIndex = 0)),
             GroupsScreen(onBackToHome: () => setState(() => _currentIndex = 0)),
             ProfileScreen(
               user: widget.user,
