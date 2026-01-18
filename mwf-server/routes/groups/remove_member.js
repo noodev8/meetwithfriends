@@ -31,6 +31,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
+const { logAudit, AuditAction } = require('../../services/audit');
 
 router.post('/:id/members/remove', verifyToken, async (req, res) => {
     try {
@@ -126,6 +127,21 @@ router.post('/:id/members/remove', verifyToken, async (req, res) => {
             'DELETE FROM group_member WHERE id = $1',
             [membership_id]
         );
+
+        // =======================================================================
+        // Create audit log entry
+        // =======================================================================
+        const organiserResult = await query('SELECT name FROM app_user WHERE id = $1', [userId]);
+        const organiserName = organiserResult.rows[0]?.name || null;
+
+        await logAudit({
+            action: AuditAction.MEMBER_REMOVED,
+            userId,
+            userName: organiserName,
+            targetUserId: memberToRemove.user_id,
+            targetUserName: memberToRemove.name,
+            groupId: parseInt(id, 10)
+        });
 
         // =======================================================================
         // Return success response

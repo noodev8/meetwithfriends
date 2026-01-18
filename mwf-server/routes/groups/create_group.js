@@ -48,6 +48,7 @@ const router = express.Router();
 const crypto = require('crypto');
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
+const { logAudit, AuditAction } = require('../../services/audit');
 
 // Generate a random 8-character invite code
 function generateInviteCode() {
@@ -154,6 +155,20 @@ router.post('/', verifyToken, async (req, res) => {
              VALUES ($1, $2, 'organiser', 'active')`,
             [group.id, userId]
         );
+
+        // =======================================================================
+        // Create audit log entry
+        // =======================================================================
+        const userResult = await query('SELECT name FROM app_user WHERE id = $1', [userId]);
+        const userName = userResult.rows[0]?.name || null;
+
+        await logAudit({
+            action: AuditAction.GROUP_CREATED,
+            userId,
+            userName,
+            groupId: group.id,
+            details: group.name
+        });
 
         // =======================================================================
         // Return success response

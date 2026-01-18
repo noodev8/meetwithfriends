@@ -69,6 +69,7 @@ const { query } = require('../../database');
 const { withTransaction } = require('../../utils/transaction');
 const { verifyToken } = require('../../middleware/auth');
 const { queueNewEventEmail } = require('../../services/email');
+const { logAudit, AuditAction } = require('../../services/audit');
 
 // Valid category values
 const VALID_CATEGORIES = ['food', 'outdoor', 'games', 'coffee', 'arts', 'learning', 'other'];
@@ -264,6 +265,18 @@ router.post('/create', verifyToken, async (req, res) => {
 
         const creatorResult = await query('SELECT name FROM app_user WHERE id = $1', [userId]);
         const hostName = creatorResult.rows[0]?.name || 'Someone';
+
+        // =======================================================================
+        // Create audit log entry
+        // =======================================================================
+        await logAudit({
+            action: AuditAction.EVENT_CREATED,
+            userId,
+            userName: hostName,
+            groupId: group_id,
+            eventId: result.id,
+            details: result.title
+        });
 
         const membersResult = await query(
             `SELECT u.email, u.name
