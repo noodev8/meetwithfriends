@@ -237,7 +237,10 @@ export default function GroupDetailPage() {
     // Handle copy link
     // =======================================================================
     const handleCopyLink = async () => {
-        const url = `${window.location.origin}/groups/${group?.id}`;
+        let url = `${window.location.origin}/groups/${group?.id}`;
+        if (group?.visibility === 'unlisted' && group?.invite_code) {
+            url += `?code=${group.invite_code}`;
+        }
         await navigator.clipboard.writeText(url);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);

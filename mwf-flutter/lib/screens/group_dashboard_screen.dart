@@ -948,6 +948,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                             initialThemeColor: _group!.themeColor ?? 'indigo',
                             initialJoinPolicy: _group!.joinPolicy,
                             initialVisibility: _group!.visibility,
+                            inviteCode: _group!.inviteCode,
                             onGroupUpdated: _loadGroup,
                           ),
                         ),

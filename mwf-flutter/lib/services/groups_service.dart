@@ -455,6 +455,7 @@ class GroupDetail {
   final String visibility;
   final String? themeColor;
   final String? icon;
+  final String? inviteCode;
   final int memberCount;
   final DateTime createdAt;
 
@@ -468,6 +469,7 @@ class GroupDetail {
     required this.visibility,
     this.themeColor,
     this.icon,
+    this.inviteCode,
     required this.memberCount,
     required this.createdAt,
   });
@@ -483,6 +485,7 @@ class GroupDetail {
       visibility: json['visibility'] as String? ?? 'listed',
       themeColor: json['theme_color'] as String?,
       icon: json['icon'] as String?,
+      inviteCode: json['invite_code'] as String?,
       memberCount: int.tryParse(json['member_count']?.toString() ?? '0') ?? 0,
       createdAt: DateTime.parse(json['created_at'] as String),
     );

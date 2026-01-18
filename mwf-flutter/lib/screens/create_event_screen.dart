@@ -420,6 +420,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           TextFormField(
             controller: _titleController,
             decoration: _inputDecoration('e.g., Friday Evening Dinner'),
+            textCapitalization: TextCapitalization.words,
             maxLength: 200,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -504,6 +505,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           TextFormField(
             controller: _locationController,
             decoration: _inputDecoration('e.g., The Beacon Hotel, Copthorne'),
+            textCapitalization: TextCapitalization.words,
           ),
           const SizedBox(height: 20),
 
@@ -513,6 +515,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           TextFormField(
             controller: _descriptionController,
             decoration: _inputDecoration('Tell people what to expect...'),
+            textCapitalization: TextCapitalization.sentences,
             maxLines: 4,
           ),
         ],

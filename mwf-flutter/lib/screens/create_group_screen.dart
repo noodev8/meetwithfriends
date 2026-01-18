@@ -151,6 +151,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                           TextFormField(
                             controller: _nameController,
                             decoration: _inputDecoration('e.g., Brookfield Socials'),
+                            textCapitalization: TextCapitalization.words,
                             maxLength: 100,
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
@@ -167,6 +168,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                           TextFormField(
                             controller: _descriptionController,
                             decoration: _inputDecoration('Tell people what your group is about...'),
+                            textCapitalization: TextCapitalization.sentences,
                             maxLines: 4,
                           ),
                           const SizedBox(height: 24),

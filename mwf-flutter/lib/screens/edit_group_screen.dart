@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:html/parser.dart' as html_parser;
 import '../services/groups_service.dart';
 import '../widgets/bottom_nav_bar.dart';
@@ -10,6 +11,7 @@ class EditGroupScreen extends StatefulWidget {
   final String initialThemeColor;
   final String initialJoinPolicy;
   final String initialVisibility;
+  final String? inviteCode;
   final VoidCallback? onGroupUpdated;
 
   const EditGroupScreen({
@@ -20,6 +22,7 @@ class EditGroupScreen extends StatefulWidget {
     required this.initialThemeColor,
     required this.initialJoinPolicy,
     required this.initialVisibility,
+    this.inviteCode,
     this.onGroupUpdated,
   });
 
@@ -39,6 +42,7 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
   late String _visibility;
 
   bool _isSubmitting = false;
+  bool _linkCopied = false;
   String? _error;
 
   static const List<Map<String, dynamic>> _themeOptions = [
@@ -107,36 +111,45 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF1E293B)),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(
-          'Edit Group',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1E293B),
-          ),
-        ),
-        centerTitle: false,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.transparent,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+      child: Scaffold(
+        backgroundColor: const Color(0xFFFAFAFC),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Back button
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          behavior: HitTestBehavior.opaque,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.arrow_back_rounded, color: Color(0xFF1E293B)),
+                              const SizedBox(width: 8),
+                              Text(
+                                widget.initialName,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     // Error message
                     if (_error != null) ...[
                       Container(
@@ -311,78 +324,133 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 32),
-
-                    // Submit buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF6366F1), Color(0xFF7C3AED)],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
+                    // Invite Link section (only for unlisted groups)
+                    if (_visibility == 'unlisted' && widget.inviteCode != null) ...[
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildLabel('Invite Link'),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Share this link to invite people to your group.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF64748B),
                               ),
-                              borderRadius: BorderRadius.circular(14),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF7C3AED).withAlpha(60),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
                             ),
-                            child: ElevatedButton(
-                              onPressed: _isSubmitting ? null : _handleSubmit,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.transparent,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
+                            const SizedBox(height: 12),
+                            GestureDetector(
+                              onTap: () async {
+                                final inviteUrl = 'https://www.meetwithfriends.net/groups/${widget.groupId}?code=${widget.inviteCode}';
+                                await Clipboard.setData(ClipboardData(text: inviteUrl));
+                                setState(() => _linkCopied = true);
+                                Future.delayed(const Duration(seconds: 2), () {
+                                  if (mounted) setState(() => _linkCopied = false);
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: const Color(0xFFE2E8F0)),
                                 ),
-                              ),
-                              child: _isSubmitting
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Text(
-                                      'Save Changes',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        'www.meetwithfriends.net/groups/${widget.groupId}?code=${widget.inviteCode}',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: Color(0xFF475569),
+                                          fontFamily: 'monospace',
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
+                                    const SizedBox(width: 12),
+                                    Icon(
+                                      _linkCopied ? Icons.check_rounded : Icons.copy_rounded,
+                                      size: 20,
+                                      color: _linkCopied ? const Color(0xFF10B981) : const Color(0xFF7C3AED),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
+                            if (_linkCopied)
+                              const Padding(
+                                padding: EdgeInsets.only(top: 8),
+                                child: Text(
+                                  'Link copied to clipboard!',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF10B981),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 32),
+
+                    // Submit button
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF6366F1), Color(0xFF7C3AED)],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF7C3AED).withAlpha(60),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: _isSubmitting ? null : _handleSubmit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        OutlinedButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                            side: const BorderSide(color: Color(0xFFCBD5E1)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          child: const Text(
-                            'Cancel',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF475569),
-                            ),
-                          ),
-                        ),
-                      ],
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'Save Changes',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
                     ),
                   ],
                 ),
@@ -390,12 +458,13 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
             ),
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: 2, // Groups tab
-        onTap: (index) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
-        },
+        ),
+        bottomNavigationBar: BottomNavBar(
+          currentIndex: 2, // Groups tab
+          onTap: (index) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          },
+        ),
       ),
     );
   }
