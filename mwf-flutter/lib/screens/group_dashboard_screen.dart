@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../models/event.dart';
 import '../services/groups_service.dart';
@@ -477,21 +478,26 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
-      body: _isLoading
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.transparent,
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF5F7FA),
+        body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFF7C3AED)),
             )
           : _error != null
               ? _buildErrorState()
               : _buildContent(),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: 2, // Groups tab
-        onTap: (index) {
-          // Pop back to main shell - it will show the selected tab
-          Navigator.of(context).popUntil((route) => route.isFirst);
-        },
+        bottomNavigationBar: BottomNavBar(
+          currentIndex: 2, // Groups tab
+          onTap: (index) {
+            // Pop back to main shell - it will show the selected tab
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          },
+        ),
       ),
     );
   }
