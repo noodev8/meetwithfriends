@@ -326,7 +326,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       bottomNavigationBar: BottomNavBar(
         currentIndex: 3, // Profile tab
         onTap: (index) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
+          navigateToMainTab(context, index);
         },
       ),
     );

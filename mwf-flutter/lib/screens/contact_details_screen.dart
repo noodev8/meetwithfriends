@@ -336,7 +336,7 @@ class _ContactDetailsScreenState extends State<ContactDetailsScreen> {
       bottomNavigationBar: BottomNavBar(
         currentIndex: 3, // Profile tab
         onTap: (index) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
+          navigateToMainTab(context, index);
         },
       ),
     );

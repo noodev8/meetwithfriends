@@ -11,6 +11,7 @@ class EditGroupScreen extends StatefulWidget {
   final String initialThemeColor;
   final String initialJoinPolicy;
   final String initialVisibility;
+  final bool initialRequireProfileImage;
   final String? inviteCode;
   final VoidCallback? onGroupUpdated;
 
@@ -22,6 +23,7 @@ class EditGroupScreen extends StatefulWidget {
     required this.initialThemeColor,
     required this.initialJoinPolicy,
     required this.initialVisibility,
+    this.initialRequireProfileImage = false,
     this.inviteCode,
     this.onGroupUpdated,
   });
@@ -40,6 +42,7 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
   late String _selectedTheme;
   late String _joinPolicy;
   late String _visibility;
+  late bool _requireProfileImage;
 
   bool _isSubmitting = false;
   bool _linkCopied = false;
@@ -62,6 +65,7 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
     _selectedTheme = widget.initialThemeColor;
     _joinPolicy = widget.initialJoinPolicy;
     _visibility = widget.initialVisibility;
+    _requireProfileImage = widget.initialRequireProfileImage;
   }
 
   /// Strip HTML tags from description using proper HTML parser
@@ -95,6 +99,7 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
       themeColor: _selectedTheme,
       joinPolicy: _joinPolicy,
       visibility: _visibility,
+      requireProfileImage: _requireProfileImage,
     );
 
     if (!mounted) return;
@@ -403,6 +408,55 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
                       ),
                     ],
 
+                    const SizedBox(height: 20),
+
+                    // Require Profile Image card
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: GestureDetector(
+                        onTap: () => setState(() => _requireProfileImage = !_requireProfileImage),
+                        behavior: HitTestBehavior.opaque,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Require Profile Image',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF1E293B),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'Members must have a profile photo before they can join',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Switch(
+                              value: _requireProfileImage,
+                              onChanged: (value) => setState(() => _requireProfileImage = value),
+                              activeColor: const Color(0xFF7C3AED),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
                     const SizedBox(height: 32),
 
                     // Submit button
@@ -462,7 +516,7 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
         bottomNavigationBar: BottomNavBar(
           currentIndex: 2, // Groups tab
           onTap: (index) {
-            Navigator.of(context).popUntil((route) => route.isFirst);
+            navigateToMainTab(context, index);
           },
         ),
       ),

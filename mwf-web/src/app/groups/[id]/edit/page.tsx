@@ -34,6 +34,7 @@ export default function EditGroupPage() {
     const [themeColor, setThemeColor] = useState<GroupThemeColor>('indigo');
     const [joinPolicy, setJoinPolicy] = useState<'auto' | 'approval'>('approval');
     const [visibility, setVisibility] = useState<'listed' | 'unlisted'>('listed');
+    const [requireProfileImage, setRequireProfileImage] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isOrganiser, setIsOrganiser] = useState(false);
@@ -72,6 +73,7 @@ export default function EditGroupPage() {
                 setThemeColor((groupData.theme_color as GroupThemeColor) || 'indigo');
                 setJoinPolicy(groupData.join_policy as 'auto' | 'approval');
                 setVisibility(groupData.visibility || 'listed');
+                setRequireProfileImage(groupData.require_profile_image || false);
             } else {
                 setError(result.error || 'Group not found');
             }
@@ -135,6 +137,7 @@ export default function EditGroupPage() {
             theme_color: themeColor,
             join_policy: joinPolicy,
             visibility: visibility,
+            require_profile_image: requireProfileImage,
         });
 
         if (result.success) {
@@ -340,6 +343,21 @@ export default function EditGroupPage() {
                                         </div>
                                     </label>
                                 </div>
+                            </div>
+
+                            <div className="mb-6">
+                                <label className="flex items-start gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition">
+                                    <input
+                                        type="checkbox"
+                                        checked={requireProfileImage}
+                                        onChange={(e) => setRequireProfileImage(e.target.checked)}
+                                        className="mt-0.5 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded"
+                                    />
+                                    <div>
+                                        <p className="font-medium text-slate-800">Require Profile Image</p>
+                                        <p className="text-sm text-slate-500">Members must have a profile photo before they can join</p>
+                                    </div>
+                                </label>
                             </div>
 
                             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">

@@ -12,7 +12,8 @@ Request Payload:
   "image_url": "https://...",             // string, optional (max 500 chars)
   "image_position": "center",             // string, optional (default: "center", options: "top", "center", "bottom")
   "join_policy": "approval",              // string, optional (default: "approval", options: "auto", "approval")
-  "visibility": "listed"                  // string, optional (default: "listed", options: "listed", "unlisted")
+  "visibility": "listed",                 // string, optional (default: "listed", options: "listed", "unlisted")
+  "require_profile_image": false          // boolean, optional (default: false)
 }
 
 Success Response:
@@ -57,7 +58,7 @@ function generateInviteCode() {
 
 router.post('/', verifyToken, async (req, res) => {
     try {
-        const { name, description, image_url, image_position, join_policy, visibility, theme_color, icon } = req.body;
+        const { name, description, image_url, image_position, join_policy, visibility, theme_color, icon, require_profile_image } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -138,11 +139,12 @@ router.post('/', verifyToken, async (req, res) => {
         // Create the group with invite code
         // =======================================================================
         const inviteCode = generateInviteCode();
+        const finalRequireProfileImage = require_profile_image === true;
         const groupResult = await query(
-            `INSERT INTO group_list (name, description, image_url, image_position, join_policy, visibility, invite_code, theme_color, icon)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-             RETURNING id, name, description, image_url, image_position, join_policy, visibility, invite_code, theme_color, icon, created_at`,
-            [name.trim(), description || null, image_url || null, image_position || 'center', finalJoinPolicy, finalVisibility, inviteCode, finalThemeColor, icon || null]
+            `INSERT INTO group_list (name, description, image_url, image_position, join_policy, visibility, invite_code, theme_color, icon, require_profile_image)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+             RETURNING id, name, description, image_url, image_position, join_policy, visibility, invite_code, theme_color, icon, require_profile_image, created_at`,
+            [name.trim(), description || null, image_url || null, image_position || 'center', finalJoinPolicy, finalVisibility, inviteCode, finalThemeColor, icon || null, finalRequireProfileImage]
         );
 
         const group = groupResult.rows[0];

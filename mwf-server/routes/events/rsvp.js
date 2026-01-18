@@ -106,10 +106,12 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
             // Lock event row for update (separate from count query)
             // ===================================================================
             const eventResult = await client.query(
-                `SELECT id, group_id, capacity, status, date_time, allow_guests, max_guests_per_rsvp, title, location
-                 FROM event_list
-                 WHERE id = $1
-                 FOR UPDATE`,
+                `SELECT e.id, e.group_id, e.capacity, e.status, e.date_time, e.allow_guests, e.max_guests_per_rsvp, e.title, e.location,
+                        g.name AS group_name
+                 FROM event_list e
+                 JOIN group_list g ON g.id = e.group_id
+                 WHERE e.id = $1
+                 FOR UPDATE OF e`,
                 [id]
             );
 
@@ -238,7 +240,7 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                         return_code: 'SUCCESS',
                         rsvp: { status: 'attending', waitlist_position: null, guest_count: finalGuestCount },
                         message: "You're going to this event",
-                        _emailData: { type: 'rsvp_confirmed', userId, event }
+                        _emailData: { type: 'rsvp_confirmed', userId, event, group: { id: event.group_id, name: event.group_name } }
                     };
                 } else {
                     // Add to waitlist - get next position (no guests on waitlist)
@@ -384,7 +386,7 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                     return_code: 'SUCCESS',
                     rsvp: null,
                     message: "You've cancelled your RSVP",
-                    _emailData: promotedUserIds.length > 0 ? { type: 'promoted_multiple', promotedUserIds, event } : null
+                    _emailData: promotedUserIds.length > 0 ? { type: 'promoted_multiple', promotedUserIds, event, group: { id: event.group_id, name: event.group_name } } : null
                 };
             }
         });
@@ -400,7 +402,7 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                 const userResult = await query('SELECT name, email FROM app_user WHERE id = $1', [emailData.userId]);
                 if (userResult.rows.length > 0) {
                     const user = userResult.rows[0];
-                    sendRsvpConfirmedEmail(user.email, user.name, emailData.event).catch(err => {
+                    sendRsvpConfirmedEmail(user.email, user.name, emailData.event, emailData.group).catch(err => {
                         console.error('Failed to send RSVP confirmation email:', err);
                     });
                 }
@@ -410,7 +412,7 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                     const userResult = await query('SELECT name, email FROM app_user WHERE id = $1', [promotedUserId]);
                     if (userResult.rows.length > 0) {
                         const user = userResult.rows[0];
-                        sendPromotedFromWaitlistEmail(user.email, user.name, emailData.event).catch(err => {
+                        sendPromotedFromWaitlistEmail(user.email, user.name, emailData.event, emailData.group).catch(err => {
                             console.error('Failed to send waitlist promotion email:', err);
                         });
                     }

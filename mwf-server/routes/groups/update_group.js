@@ -12,7 +12,8 @@ Request Payload:
   "image_url": "https://...",            // string, optional (null to clear, max 500 chars)
   "image_position": "top",               // string, optional ("top", "center", "bottom")
   "join_policy": "auto",                 // string, optional ("auto" or "approval")
-  "visibility": "listed"                 // string, optional ("listed" or "unlisted")
+  "visibility": "listed",                // string, optional ("listed" or "unlisted")
+  "require_profile_image": true          // boolean, optional
 }
 
 Success Response:
@@ -51,7 +52,7 @@ const { verifyToken } = require('../../middleware/auth');
 router.post('/:id/update', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, description, image_url, image_position, join_policy, visibility, theme_color, icon } = req.body;
+        const { name, description, image_url, image_position, join_policy, visibility, theme_color, icon, require_profile_image } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -68,7 +69,7 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         // Check if group exists
         // =======================================================================
         const groupResult = await query(
-            'SELECT id, name, description, image_url, image_position, join_policy, visibility, theme_color, icon FROM group_list WHERE id = $1',
+            'SELECT id, name, description, image_url, image_position, join_policy, visibility, theme_color, icon, require_profile_image FROM group_list WHERE id = $1',
             [id]
         );
 
@@ -179,16 +180,17 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         const finalImageUrl = image_url !== undefined ? image_url : currentGroup.image_url;
         const finalImagePosition = image_position !== undefined ? image_position : currentGroup.image_position;
         const finalIcon = icon !== undefined ? icon : currentGroup.icon;
+        const finalRequireProfileImage = require_profile_image !== undefined ? require_profile_image === true : currentGroup.require_profile_image;
 
         // =======================================================================
         // Update the group
         // =======================================================================
         const updateResult = await query(
             `UPDATE group_list
-             SET name = $1, description = $2, image_url = $3, image_position = $4, join_policy = $5, visibility = $6, theme_color = $7, icon = $8, updated_at = CURRENT_TIMESTAMP
-             WHERE id = $9
-             RETURNING id, name, description, image_url, image_position, join_policy, visibility, theme_color, icon, created_at, updated_at`,
-            [finalName.trim(), finalDescription, finalImageUrl, finalImagePosition, finalJoinPolicy, finalVisibility, finalThemeColor || 'indigo', finalIcon, id]
+             SET name = $1, description = $2, image_url = $3, image_position = $4, join_policy = $5, visibility = $6, theme_color = $7, icon = $8, require_profile_image = $9, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $10
+             RETURNING id, name, description, image_url, image_position, join_policy, visibility, theme_color, icon, require_profile_image, created_at, updated_at`,
+            [finalName.trim(), finalDescription, finalImageUrl, finalImagePosition, finalJoinPolicy, finalVisibility, finalThemeColor || 'indigo', finalIcon, finalRequireProfileImage, id]
         );
 
         const updatedGroup = updateResult.rows[0];

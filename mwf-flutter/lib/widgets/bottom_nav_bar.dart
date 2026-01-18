@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/main_tab_controller.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -88,9 +89,11 @@ class BottomNavBar extends StatelessWidget {
   }
 }
 
-/// Helper to navigate back to main shell with a specific tab
+/// Helper to navigate back to main shell with a specific tab.
+/// Sets the desired tab index in the controller, then pops back to MainShell.
 void navigateToMainTab(BuildContext context, int tabIndex) {
-  // Pop all routes until we get to the main shell, then trigger tab change
+  // Set the desired tab - MainShell is listening and will switch
+  MainTabController().switchToTab(tabIndex);
+  // Pop all routes until we get to the main shell
   Navigator.of(context).popUntil((route) => route.isFirst);
-  // The main shell will handle the tab based on a callback or state management
 }

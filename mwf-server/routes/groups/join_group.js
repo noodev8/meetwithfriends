@@ -34,6 +34,7 @@ Return Codes:
 "NOT_FOUND"                  // Also returned for unlisted groups with missing/invalid code
 "ALREADY_MEMBER"
 "ALREADY_PENDING"
+"PROFILE_IMAGE_REQUIRED"     // Group requires profile image and user doesn't have one
 "UNAUTHORIZED"
 "SERVER_ERROR"
 =======================================================================================================================================
@@ -64,7 +65,7 @@ router.post('/', verifyToken, async (req, res) => {
         // Check if group exists and get join_policy, visibility, invite_code
         // =======================================================================
         const groupResult = await query(
-            'SELECT id, name, join_policy, visibility, invite_code FROM group_list WHERE id = $1',
+            'SELECT id, name, join_policy, visibility, invite_code, require_profile_image FROM group_list WHERE id = $1',
             [group_id]
         );
 
@@ -85,6 +86,26 @@ router.post('/', verifyToken, async (req, res) => {
                 return res.json({
                     return_code: 'NOT_FOUND',
                     message: 'Group not found'
+                });
+            }
+        }
+
+        // =======================================================================
+        // Check if group requires profile image
+        // =======================================================================
+        if (group.require_profile_image) {
+            const userResult = await query(
+                'SELECT avatar_url FROM app_user WHERE id = $1',
+                [userId]
+            );
+
+            const userAvatarUrl = userResult.rows[0]?.avatar_url;
+
+            // Check for null, empty string, or whitespace-only
+            if (!userAvatarUrl || userAvatarUrl.trim() === '') {
+                return res.json({
+                    return_code: 'PROFILE_IMAGE_REQUIRED',
+                    message: 'This group requires members to have a profile image. Please update your profile before joining.'
                 });
             }
         }

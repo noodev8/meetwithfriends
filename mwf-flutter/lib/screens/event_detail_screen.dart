@@ -290,7 +290,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       bottomNavigationBar: BottomNavBar(
         currentIndex: 1, // Events tab
         onTap: (index) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
+          navigateToMainTab(context, index);
         },
       ),
     );

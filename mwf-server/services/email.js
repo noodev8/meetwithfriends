@@ -375,7 +375,7 @@ sendRsvpConfirmedEmail
 Sent when a user RSVPs to an event
 =======================================================================================================================================
 */
-async function sendRsvpConfirmedEmail(email, userName, event) {
+async function sendRsvpConfirmedEmail(email, userName, event, group) {
     const eventDate = new Date(event.date_time).toLocaleDateString('en-GB', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
@@ -400,7 +400,7 @@ async function sendRsvpConfirmedEmail(email, userName, event) {
         ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Event')}
     `);
 
-    return sendEmail(email, `RSVP confirmed: ${event.title}`, html, 'rsvp_confirmed', event.id);
+    return sendEmail(email, `RSVP confirmed: ${event.title}`, html, 'rsvp_confirmed', event.id, null, null, group?.name);
 }
 
 /*
@@ -410,7 +410,7 @@ sendRemovedFromEventEmail
 Sent when a host/organiser removes or demotes a user from an event
 =======================================================================================================================================
 */
-async function sendRemovedFromEventEmail(email, userName, event, reason) {
+async function sendRemovedFromEventEmail(email, userName, event, reason, group) {
     const eventDate = new Date(event.date_time).toLocaleDateString('en-GB', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
@@ -442,7 +442,7 @@ async function sendRemovedFromEventEmail(email, userName, event, reason) {
         ${emailLink(config.frontendUrl + '/events/' + event.id, 'View Event')}
     `);
 
-    return sendEmail(email, `Update: ${event.title}`, html, 'removed_from_event', event.id);
+    return sendEmail(email, `Update: ${event.title}`, html, 'removed_from_event', event.id, null, null, group?.name);
 }
 
 /*
@@ -452,7 +452,7 @@ sendPromotedFromWaitlistEmail
 Sent when a user is promoted from waitlist to attending
 =======================================================================================================================================
 */
-async function sendPromotedFromWaitlistEmail(email, userName, event) {
+async function sendPromotedFromWaitlistEmail(email, userName, event, group) {
     const eventDate = new Date(event.date_time).toLocaleDateString('en-GB', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
@@ -477,7 +477,7 @@ async function sendPromotedFromWaitlistEmail(email, userName, event) {
         ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Event')}
     `);
 
-    return sendEmail(email, `You're in: ${event.title}`, html, 'promoted_from_waitlist', event.id);
+    return sendEmail(email, `You're in: ${event.title}`, html, 'promoted_from_waitlist', event.id, null, null, group?.name);
 }
 
 /*
@@ -533,7 +533,7 @@ async function sendNewJoinRequestEmail(email, hostName, requesterName, group) {
         ${emailButton(config.frontendUrl + '/groups/' + group.id + '/members', 'Review Request')}
     `);
 
-    return sendEmail(email, `New join request: ${group.name}`, html, 'new_join_request', group.id);
+    return sendEmail(email, `New join request: ${group.name}`, html, 'new_join_request', group.id, null, null, group.name);
 }
 
 /*
@@ -558,7 +558,7 @@ async function sendJoinedGroupEmail(email, userName, group) {
         ${emailButton(config.frontendUrl + '/groups/' + group.id, 'View Group')}
     `);
 
-    return sendEmail(email, `Welcome to ${group.name}`, html, 'joined_group', group.id);
+    return sendEmail(email, `Welcome to ${group.name}`, html, 'joined_group', group.id, null, null, group.name);
 }
 
 /*
@@ -705,7 +705,7 @@ async function sendNewMemberEmail(email, organiserName, newMemberName, group, to
         ${emailButton(config.frontendUrl + '/groups/' + group.id + '/members', 'View Members')}
     `);
 
-    return sendEmail(email, `New member joined ${group.name}`, html, 'new_member', group.id);
+    return sendEmail(email, `New member joined ${group.name}`, html, 'new_member', group.id, null, null, group.name);
 }
 
 /*

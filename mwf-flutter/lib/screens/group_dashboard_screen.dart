@@ -297,14 +297,120 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
           _loadGroup();
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.error ?? 'Failed to join group'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        // Check if profile image is required
+        if (result.returnCode == 'PROFILE_IMAGE_REQUIRED') {
+          _showProfileImageRequiredDialog();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.error ?? 'Failed to join group'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
+  }
+
+  void _showProfileImageRequiredDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6366F1).withAlpha(25),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.person_rounded,
+                color: Color(0xFF6366F1),
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Profile Image Required',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'This group requires members to have a profile photo.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF64748B),
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1).withAlpha(25),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.person_rounded,
+                      color: Color(0xFF6366F1),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Tap the Profile tab at the bottom to add your photo',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6366F1),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              minimumSize: const Size(100, 44),
+            ),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   GroupTheme get _theme => getGroupTheme(_group?.themeColor);
@@ -494,8 +600,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
         bottomNavigationBar: BottomNavBar(
           currentIndex: 2, // Groups tab
           onTap: (index) {
-            // Pop back to main shell - it will show the selected tab
-            Navigator.of(context).popUntil((route) => route.isFirst);
+            navigateToMainTab(context, index);
           },
         ),
       ),
@@ -948,6 +1053,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                             initialThemeColor: _group!.themeColor ?? 'indigo',
                             initialJoinPolicy: _group!.joinPolicy,
                             initialVisibility: _group!.visibility,
+                            initialRequireProfileImage: _group!.requireProfileImage,
                             inviteCode: _group!.inviteCode,
                             onGroupUpdated: _loadGroup,
                           ),

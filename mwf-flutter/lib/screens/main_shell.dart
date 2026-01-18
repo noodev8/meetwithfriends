@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/user.dart';
+import '../services/main_tab_controller.dart';
 import 'home_screen.dart';
 import 'events_screen.dart';
 import 'groups_screen.dart';
@@ -24,6 +25,27 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
+  final _tabController = MainTabController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Listen for tab change requests from nested screens
+    _tabController.tabIndex.addListener(_onTabChangeRequested);
+  }
+
+  @override
+  void dispose() {
+    _tabController.tabIndex.removeListener(_onTabChangeRequested);
+    super.dispose();
+  }
+
+  void _onTabChangeRequested() {
+    final newIndex = _tabController.tabIndex.value;
+    if (newIndex != _currentIndex) {
+      setState(() => _currentIndex = newIndex);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

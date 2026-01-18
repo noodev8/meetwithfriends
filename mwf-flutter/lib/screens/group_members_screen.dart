@@ -483,7 +483,7 @@ class _GroupMembersScreenState extends State<GroupMembersScreen> {
       bottomNavigationBar: BottomNavBar(
         currentIndex: 2, // Groups tab
         onTap: (index) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
+          navigateToMainTab(context, index);
         },
       ),
     );

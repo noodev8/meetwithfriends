@@ -107,6 +107,7 @@ export async function createGroup(
         theme_color?: 'indigo' | 'emerald' | 'rose' | 'amber' | 'cyan' | 'violet';
         icon?: string;
         visibility?: 'listed' | 'unlisted';
+        require_profile_image?: boolean;
     }
 ): Promise<ApiResult<Group>> {
     const response = await apiCall('/api/groups/create', data, token);
@@ -144,6 +145,7 @@ export async function updateGroup(
         visibility?: 'listed' | 'unlisted';
         theme_color?: 'indigo' | 'emerald' | 'rose' | 'amber' | 'cyan' | 'violet';
         icon?: string | null;
+        require_profile_image?: boolean;
     }
 ): Promise<ApiResult<Group>> {
     const response = await apiCall(`/api/groups/${groupId}/update`, data, token);

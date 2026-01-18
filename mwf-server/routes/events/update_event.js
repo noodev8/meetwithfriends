@@ -83,9 +83,11 @@ router.post('/:id/update', verifyToken, async (req, res) => {
                 e.group_id,
                 e.status,
                 e.date_time,
+                g.name AS group_name,
                 gm.role AS current_user_role,
                 EXISTS(SELECT 1 FROM event_host eh WHERE eh.event_id = e.id AND eh.user_id = $2) AS is_host
              FROM event_list e
+             JOIN group_list g ON g.id = e.group_id
              LEFT JOIN group_member gm ON e.group_id = gm.group_id
                 AND gm.user_id = $2
                 AND gm.status = 'active'
@@ -401,8 +403,9 @@ router.post('/:id/update', verifyToken, async (req, res) => {
                     );
 
                     // Send promotion emails (async - don't wait)
+                    const group = { id: event.group_id, name: event.group_name };
                     promotedUsers.forEach(user => {
-                        sendPromotedFromWaitlistEmail(user.email, user.name, updatedEvent).catch(err => {
+                        sendPromotedFromWaitlistEmail(user.email, user.name, updatedEvent, group).catch(err => {
                             console.error('Failed to send waitlist promotion email:', err);
                         });
                     });

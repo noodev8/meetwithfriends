@@ -20,6 +20,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   String _selectedTheme = 'indigo';
   String _joinPolicy = 'approval';
   String _visibility = 'listed';
+  bool _requireProfileImage = false;
 
   bool _isSubmitting = false;
   String? _error;
@@ -56,6 +57,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       themeColor: _selectedTheme,
       joinPolicy: _joinPolicy,
       visibility: _visibility,
+      requireProfileImage: _requireProfileImage,
     );
 
     if (!mounted) return;
@@ -282,6 +284,55 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       ),
                     ),
 
+                    const SizedBox(height: 20),
+
+                    // Require Profile Image card
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: GestureDetector(
+                        onTap: () => setState(() => _requireProfileImage = !_requireProfileImage),
+                        behavior: HitTestBehavior.opaque,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Require Profile Image',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF1E293B),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'Members must have a profile photo before they can join',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Switch(
+                              value: _requireProfileImage,
+                              onChanged: (value) => setState(() => _requireProfileImage = value),
+                              activeColor: const Color(0xFF7C3AED),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
                     const SizedBox(height: 32),
 
                     // Submit buttons
@@ -365,7 +416,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       bottomNavigationBar: BottomNavBar(
         currentIndex: 2, // Groups tab
         onTap: (index) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
+          navigateToMainTab(context, index);
         },
       ),
     );

@@ -48,7 +48,7 @@ class DiscoverGroupsScreen extends StatelessWidget {
       bottomNavigationBar: BottomNavBar(
         currentIndex: -1,
         onTap: (index) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
+          navigateToMainTab(context, index);
         },
       ),
     );

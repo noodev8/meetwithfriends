@@ -61,6 +61,7 @@ export default function GroupDetailPage() {
     const [showBroadcastModal, setShowBroadcastModal] = useState(false);
     const [broadcastMessageText, setBroadcastMessageText] = useState('');
     const [broadcastLoading, setBroadcastLoading] = useState(false);
+    const [showProfileImageModal, setShowProfileImageModal] = useState(false);
 
     // =======================================================================
     // Check if user can manage members (organiser or host)
@@ -175,7 +176,12 @@ export default function GroupDetailPage() {
                 fetchAllMembers();
             }
         } else {
-            alert(result.error || 'Failed to join group');
+            // Check if profile image is required
+            if (result.return_code === 'PROFILE_IMAGE_REQUIRED') {
+                setShowProfileImageModal(true);
+            } else {
+                alert(result.error || 'Failed to join group');
+            }
         }
     };
 
@@ -966,6 +972,47 @@ export default function GroupDetailPage() {
                                 </div>
                             </form>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Profile Image Required Modal */}
+            {showProfileImageModal && (
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                    onClick={() => setShowProfileImageModal(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="p-6">
+                            <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-900 text-center mb-2">
+                                Profile Image Required
+                            </h3>
+                            <p className="text-slate-600 text-center mb-6">
+                                This group requires members to have a profile photo. Please add one to your profile before joining.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowProfileImageModal(false)}
+                                    className="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition"
+                                >
+                                    Cancel
+                                </button>
+                                <Link
+                                    href="/profile"
+                                    className="flex-1 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-violet-700 transition text-center"
+                                >
+                                    Go to Profile
+                                </Link>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

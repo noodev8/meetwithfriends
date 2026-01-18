@@ -72,6 +72,7 @@ class GroupsService {
     String themeColor = 'indigo',
     String joinPolicy = 'approval',
     String visibility = 'listed',
+    bool requireProfileImage = false,
   }) async {
     final response = await _api.post('/groups/create', {
       'name': name,
@@ -79,6 +80,7 @@ class GroupsService {
       'theme_color': themeColor,
       'join_policy': joinPolicy,
       'visibility': visibility,
+      'require_profile_image': requireProfileImage,
     });
 
     if (response['return_code'] == 'SUCCESS') {
@@ -103,6 +105,7 @@ class GroupsService {
     String? themeColor,
     String? joinPolicy,
     String? visibility,
+    bool? requireProfileImage,
   }) async {
     final Map<String, dynamic> payload = {};
     if (name != null) payload['name'] = name;
@@ -110,6 +113,7 @@ class GroupsService {
     if (themeColor != null) payload['theme_color'] = themeColor;
     if (joinPolicy != null) payload['join_policy'] = joinPolicy;
     if (visibility != null) payload['visibility'] = visibility;
+    if (requireProfileImage != null) payload['require_profile_image'] = requireProfileImage;
 
     final response = await _api.post('/groups/$groupId/update', payload);
 
@@ -276,6 +280,9 @@ class GroupsService {
         break;
       case 'NOT_FOUND':
         errorMessage = 'Group not found or invalid invite code';
+        break;
+      case 'PROFILE_IMAGE_REQUIRED':
+        errorMessage = 'This group requires members to have a profile image. Please update your profile before joining.';
         break;
       default:
         errorMessage = response['message'] as String? ?? 'Failed to join group';
@@ -455,6 +462,7 @@ class GroupDetail {
   final String visibility;
   final String? themeColor;
   final String? icon;
+  final bool requireProfileImage;
   final String? inviteCode;
   final int memberCount;
   final DateTime createdAt;
@@ -469,6 +477,7 @@ class GroupDetail {
     required this.visibility,
     this.themeColor,
     this.icon,
+    this.requireProfileImage = false,
     this.inviteCode,
     required this.memberCount,
     required this.createdAt,
@@ -485,6 +494,7 @@ class GroupDetail {
       visibility: json['visibility'] as String? ?? 'listed',
       themeColor: json['theme_color'] as String?,
       icon: json['icon'] as String?,
+      requireProfileImage: json['require_profile_image'] as bool? ?? false,
       inviteCode: json['invite_code'] as String?,
       memberCount: int.tryParse(json['member_count']?.toString() ?? '0') ?? 0,
       createdAt: DateTime.parse(json['created_at'] as String),

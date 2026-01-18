@@ -96,9 +96,11 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
                     e.title,
                     e.location,
                     e.date_time,
+                    g.name AS group_name,
                     gm.role AS current_user_role,
                     EXISTS(SELECT 1 FROM event_host eh WHERE eh.event_id = e.id AND eh.user_id = $2) AS is_host
                  FROM event_list e
+                 JOIN group_list g ON g.id = e.group_id
                  LEFT JOIN group_member gm ON e.group_id = gm.group_id
                     AND gm.user_id = $2
                     AND gm.status = 'active'
@@ -202,7 +204,7 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
                 return {
                     return_code: 'SUCCESS',
                     message: 'Attendee moved to not going',
-                    _emailData: { type: 'removed', targetUserId, event, reason: 'removed' }
+                    _emailData: { type: 'removed', targetUserId, event, group: { id: event.group_id, name: event.group_name }, reason: 'removed' }
                 };
             }
 
@@ -263,7 +265,7 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
                 return {
                     return_code: 'SUCCESS',
                     message: 'Attendee moved to waitlist',
-                    _emailData: { type: 'removed', targetUserId, event, reason: 'demoted' }
+                    _emailData: { type: 'removed', targetUserId, event, group: { id: event.group_id, name: event.group_name }, reason: 'demoted' }
                 };
             }
 
@@ -299,7 +301,7 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
                 return {
                     return_code: 'SUCCESS',
                     message: 'Attendee promoted from waitlist',
-                    _emailData: { type: 'promoted', targetUserId, event }
+                    _emailData: { type: 'promoted', targetUserId, event, group: { id: event.group_id, name: event.group_name } }
                 };
             }
         });
@@ -315,11 +317,11 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
                 const user = userResult.rows[0];
 
                 if (emailData.type === 'removed') {
-                    sendRemovedFromEventEmail(user.email, user.name, emailData.event, emailData.reason).catch(err => {
+                    sendRemovedFromEventEmail(user.email, user.name, emailData.event, emailData.reason, emailData.group).catch(err => {
                         console.error('Failed to send removed from event email:', err);
                     });
                 } else if (emailData.type === 'promoted') {
-                    sendPromotedFromWaitlistEmail(user.email, user.name, emailData.event).catch(err => {
+                    sendPromotedFromWaitlistEmail(user.email, user.name, emailData.event, emailData.group).catch(err => {
                         console.error('Failed to send waitlist promotion email:', err);
                     });
                 }

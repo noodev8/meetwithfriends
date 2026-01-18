@@ -30,6 +30,7 @@ export interface Group {
     join_policy: 'auto' | 'approval';
     theme_color?: 'indigo' | 'emerald' | 'rose' | 'amber' | 'cyan' | 'violet';
     icon?: string;
+    require_profile_image?: boolean;
     created_at: string;
 }
 

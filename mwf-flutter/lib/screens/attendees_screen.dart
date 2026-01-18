@@ -128,7 +128,7 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
       bottomNavigationBar: BottomNavBar(
         currentIndex: 1,
         onTap: (index) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
+          navigateToMainTab(context, index);
         },
       ),
     );
