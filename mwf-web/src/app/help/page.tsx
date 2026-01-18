@@ -143,100 +143,141 @@ export default function HelpPage() {
                     </div>
                 </section>
 
-                {/* Contact Section */}
+                {/* Contact Section - "Real people. Real support." style */}
                 <section id="contact" className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm mb-8">
-                    <h2 className="text-xl font-bold text-slate-900 font-display mb-4">
-                        Contact Us
-                    </h2>
-                    <p className="text-slate-600 mb-6">
-                        Can&apos;t find what you&apos;re looking for? Send us a message and we&apos;ll get back to you within 24 hours.
-                    </p>
-
-                    {contactSuccess ? (
-                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 text-center">
-                            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                        {/* Left side - Message */}
+                        <div>
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full border border-emerald-200 mb-4">
+                                <span className="w-2 h-2 bg-emerald-500 rounded-full" />
+                                <span className="text-sm font-medium text-emerald-700">Real humans, real help</span>
                             </div>
-                            <h3 className="font-semibold text-emerald-800 mb-2">Message Sent!</h3>
-                            <p className="text-emerald-700 text-sm">
-                                Thanks for reaching out. We&apos;ll respond to your email within 24 hours.
+                            <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 mb-3 leading-[1.1]">
+                                Real people.
+                                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600">
+                                    Real support.
+                                </span>
+                            </h2>
+                            <p className="text-slate-600 mb-4 leading-relaxed">
+                                Tired of chatbots and endless FAQs? We get it. When you need help, you&apos;ll hear back from a real person within 24 hours. No tickets, no queues, no frustration.
                             </p>
-                            <button
-                                onClick={() => setContactSuccess(false)}
-                                className="mt-4 text-sm text-emerald-600 hover:text-emerald-700 underline"
-                            >
-                                Send another message
-                            </button>
-                        </div>
-                    ) : (
-                        <form onSubmit={handleContactSubmit} className="space-y-4">
-                            <div>
-                                <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
-                                    Your Name
-                                </label>
-                                <input
-                                    type="text"
-                                    id="name"
-                                    required
-                                    minLength={2}
-                                    maxLength={100}
-                                    value={contactForm.name}
-                                    onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                                    placeholder="John Smith"
-                                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                />
-                            </div>
-                            <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
-                                    Your Email
-                                </label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    required
-                                    value={contactForm.email}
-                                    onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                                    placeholder="you@example.com"
-                                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                />
-                            </div>
-                            <div>
-                                <label htmlFor="message" className="block text-sm font-medium text-slate-700 mb-1">
-                                    Message
-                                </label>
-                                <textarea
-                                    id="message"
-                                    required
-                                    rows={4}
-                                    minLength={10}
-                                    maxLength={1000}
-                                    value={contactForm.message}
-                                    onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                                    placeholder="How can we help you?"
-                                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
-                                />
-                                <p className="text-xs text-slate-400 mt-1">
-                                    {contactForm.message.length}/1000 characters
-                                </p>
-                            </div>
-
-                            {contactError && (
-                                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-                                    {contactError}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-3 text-slate-700">
+                                    <svg className="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                    <span>Response within 24 hours</span>
                                 </div>
-                            )}
+                                <div className="flex items-center gap-3 text-slate-700">
+                                    <svg className="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                    <span>UK-based team</span>
+                                </div>
+                                <div className="flex items-center gap-3 text-slate-700">
+                                    <svg className="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                    <span>No chatbots, just humans</span>
+                                </div>
+                            </div>
+                        </div>
 
-                            <button
-                                type="submit"
-                                disabled={contactLoading}
-                                className="w-full bg-indigo-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {contactLoading ? 'Sending...' : 'Send Message'}
-                            </button>
-                        </form>
-                    )}
+                        {/* Right side - Contact Form */}
+                        <div className="bg-slate-50 rounded-xl p-5 sm:p-6 border border-slate-200">
+                            <h3 className="font-display text-lg font-bold text-slate-900 mb-1">
+                                Send us a message
+                            </h3>
+                            <p className="text-slate-500 text-sm mb-4">
+                                Question, feedback, or just want to say hi? We&apos;d love to hear from you.
+                            </p>
+
+                            {contactSuccess ? (
+                                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 text-center">
+                                    <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <h4 className="font-semibold text-emerald-800 mb-2">Message Sent!</h4>
+                                    <p className="text-emerald-700 text-sm">
+                                        Thanks for reaching out. We&apos;ll get back to you within 24 hours.
+                                    </p>
+                                    <button
+                                        onClick={() => setContactSuccess(false)}
+                                        className="mt-4 text-sm text-emerald-600 hover:text-emerald-700 underline"
+                                    >
+                                        Send another message
+                                    </button>
+                                </div>
+                            ) : (
+                                <form onSubmit={handleContactSubmit} className="space-y-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
+                                                Name
+                                            </label>
+                                            <input
+                                                type="text"
+                                                id="name"
+                                                required
+                                                minLength={2}
+                                                maxLength={100}
+                                                value={contactForm.name}
+                                                onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                                                placeholder="Your name"
+                                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+                                                Email
+                                            </label>
+                                            <input
+                                                type="email"
+                                                id="email"
+                                                required
+                                                value={contactForm.email}
+                                                onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                                                placeholder="you@example.com"
+                                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label htmlFor="message" className="block text-sm font-medium text-slate-700 mb-1">
+                                            Message
+                                        </label>
+                                        <textarea
+                                            id="message"
+                                            required
+                                            rows={3}
+                                            minLength={10}
+                                            maxLength={1000}
+                                            value={contactForm.message}
+                                            onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                                            placeholder="How can we help?"
+                                            className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none bg-white"
+                                        />
+                                    </div>
+
+                                    {contactError && (
+                                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm">
+                                            {contactError}
+                                        </div>
+                                    )}
+
+                                    <button
+                                        type="submit"
+                                        disabled={contactLoading}
+                                        className="w-full bg-slate-900 text-white py-3 px-6 rounded-lg font-semibold hover:bg-slate-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {contactLoading ? 'Sending...' : 'Send Message'}
+                                    </button>
+                                </form>
+                            )}
+                        </div>
+                    </div>
                 </section>
 
                 {/* Policies Section */}

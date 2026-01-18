@@ -64,15 +64,8 @@ export default function Header() {
         <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 relative z-20">
             <div className="flex justify-between items-center px-4 sm:px-8 py-4 max-w-7xl mx-auto">
                 {/* Logo */}
-                <Link href={user ? '/your-events' : '/'}>
-                    <Image
-                        src="/logo.png"
-                        alt="Meet With Friends"
-                        width={160}
-                        height={160}
-                        className="h-16 sm:h-20 w-auto"
-                        priority
-                    />
+                <Link href={user ? '/your-events' : '/'} className="font-display text-xl font-bold text-slate-800">
+                    Meet With Friends
                 </Link>
 
                 {/* Desktop Navigation */}

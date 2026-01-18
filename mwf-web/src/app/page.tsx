@@ -257,6 +257,32 @@ export default function Home() {
                             </svg>
                             Free to join · No credit card required
                         </p>
+
+                        {/* App Store Badges */}
+                        <div className={`mt-6 flex flex-wrap gap-3 transition-all duration-700 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                            {/* Google Play Badge - using official image */}
+                            <a
+                                href="https://play.google.com/store/apps/details?id=com.noodev8.meetwithfriends"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="h-[40px] hover:opacity-80 transition-opacity"
+                            >
+                                <img
+                                    src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+                                    alt="Get it on Google Play"
+                                    className="h-[60px] -my-[10px]"
+                                />
+                            </a>
+
+                            {/* App Store Badge - using official image */}
+                            <div className="h-[40px] cursor-default">
+                                <img
+                                    src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+                                    alt="Download on the App Store"
+                                    className="h-full"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     {/* Hero illustration - Floating Icons */}

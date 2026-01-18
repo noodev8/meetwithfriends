@@ -306,10 +306,19 @@ function wrapEmail(content) {
                 <p style="color: #666; font-size: 14px; margin: 0 0 10px 0;">
                     <strong>Meet With Friends</strong> - Your group events platform
                 </p>
-                <p style="color: #999; font-size: 12px; margin: 0;">
+                <p style="color: #999; font-size: 12px; margin: 0 0 15px 0;">
                     <a href="${config.frontendUrl}" style="color: #4f46e5; text-decoration: none;">Visit meetwithfriends.app</a>
                     &nbsp;|&nbsp;
                     <a href="${config.frontendUrl}/profile" style="color: #4f46e5; text-decoration: none;">Manage preferences</a>
+                </p>
+                <!-- App Store Badges -->
+                <p style="margin: 0;">
+                    <a href="https://play.google.com/store/apps/details?id=com.noodev8.meetwithfriends" style="display: inline-block; margin: 0 5px;">
+                        <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" style="height: 40px;" />
+                    </a>
+                    <a href="${config.frontendUrl}" style="display: inline-block; margin: 0 5px;">
+                        <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" style="height: 40px;" />
+                    </a>
                 </p>
             </div>
         </div>

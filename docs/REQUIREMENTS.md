@@ -12,21 +12,34 @@ _No active requirements - check Backlog for upcoming work._
 
 ## Backlog
 
-### REQ-019: User Flow - Events & Groups Navigation
-**Status:** BACKLOG
-**Effort:** Medium
-**Phase:** UX
-
-Review and structure user flow from seeing their own events to all events and all groups.
-
-**Notes:**
-- Evaluate current navigation between My Events → All Events → Groups
-- Ensure intuitive discovery path for users
-- Consider mobile vs web navigation patterns
+_No items in backlog._
 
 ---
 
 ## Completed
+
+<details>
+<summary>REQ-019: User Flow - Events & Groups Navigation</summary>
+
+**Completed:** Jan 2026
+**Effort:** Medium
+
+Restructured user flow with dashboard-style home page.
+
+**Flutter:**
+- Dashboard home with My Events, My Groups, Discover sections
+- My Events shows RSVP'd events (attending/waitlisted)
+- My Groups shows groups user is member of
+- Consistent back button navigation with contextual labels (Home, My Groups, Discover)
+- Status bar visibility fixed across all screens
+- Removed redundant Cancel buttons (back arrow suffices)
+- Replaced floating action buttons with CTA buttons
+- Only show Organiser/Host badges (not Member)
+
+**Web:**
+- Added Events menu item to sidebar navigation
+- Dashboard → Events → Groups → Discover flow
+</details>
 
 <details>
 <summary>REQ-018: Broadcast Message to Group Members</summary>

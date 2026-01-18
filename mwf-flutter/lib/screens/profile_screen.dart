@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/user.dart';
 import 'edit_profile_screen.dart';
 import 'contact_details_screen.dart';
@@ -172,17 +173,13 @@ class ProfileScreen extends StatelessWidget {
                   _MenuItem(
                     icon: Icons.help_outline_rounded,
                     label: 'Help & Support',
-                    onTap: () {
-                      // TODO: Navigate to help
-                    },
+                    onTap: () => _openHelp(),
                   ),
                   _MenuDivider(),
                   _MenuItem(
                     icon: Icons.info_outline_rounded,
                     label: 'About',
-                    onTap: () {
-                      // TODO: Show about dialog
-                    },
+                    onTap: () => _showAboutDialog(context),
                   ),
                 ],
               ),
@@ -233,7 +230,7 @@ class ProfileScreen extends StatelessWidget {
 
             // Version
             Text(
-              'Version 1.0.0',
+              'Version 1.0.1',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
@@ -284,6 +281,67 @@ class ProfileScreen extends StatelessWidget {
         builder: (context) => DeleteAccountScreen(
           onAccountDeleted: onLogout,
         ),
+      ),
+    );
+  }
+
+  Future<void> _openHelp() async {
+    final uri = Uri.parse('https://meetwithfriends.noodev8.com/help');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _showAboutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          'Meet With Friends',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1E293B),
+          ),
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Version 1.0.1',
+              style: TextStyle(
+                fontSize: 15,
+                color: Color(0xFF64748B),
+              ),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Organise group events with friends. Manage RSVPs, pre-orders, and more.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF64748B),
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'OK',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF7C3AED),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
