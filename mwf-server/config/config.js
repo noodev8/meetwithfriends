@@ -22,7 +22,7 @@ module.exports = {
 
     // JWT
     jwtSecret: process.env.JWT_SECRET,
-    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '90d',
 
     // Email (Resend)
     email: {
