@@ -866,26 +866,6 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                               color: Colors.white.withAlpha(200),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Icon(
-                            group.joinPolicy == 'auto'
-                                ? Icons.public_rounded
-                                : Icons.lock_outline_rounded,
-                            size: 14,
-                            color: Colors.white.withAlpha(200),
-                          ),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              group.joinPolicy == 'auto' ? 'Open' : 'Private',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white.withAlpha(200),
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
                         ],
                       ),
                       // Role badge
@@ -910,67 +890,103 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                     ],
                   ),
                 ),
-                // Broadcast and Settings buttons for organisers
-                if (isOrganiser)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Broadcast button
-                      GestureDetector(
-                        onTap: _showBroadcastDialog,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(30),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.campaign_rounded,
-                            size: 20,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Settings button
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => EditGroupScreen(
-                                groupId: _group!.id,
-                                initialName: _group!.name,
-                                initialDescription: _group!.description,
-                                initialThemeColor: _group!.themeColor ?? 'indigo',
-                                initialJoinPolicy: _group!.joinPolicy,
-                                initialVisibility: _group!.visibility,
-                                onGroupUpdated: _loadGroup,
-                              ),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(30),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.settings_rounded,
-                            size: 20,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
               ],
             ),
           ),
-
+          // Broadcast and Settings buttons for organisers - in separate row below
+          if (isOrganiser) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                // Broadcast button
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _showBroadcastDialog,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _theme.gradient[0].withAlpha(25),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _theme.gradient[0].withAlpha(40),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.campaign_rounded,
+                            size: 18,
+                            color: _theme.gradient[0],
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Broadcast',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: _theme.gradient[0],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Settings button
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditGroupScreen(
+                            groupId: _group!.id,
+                            initialName: _group!.name,
+                            initialDescription: _group!.description,
+                            initialThemeColor: _group!.themeColor ?? 'indigo',
+                            initialJoinPolicy: _group!.joinPolicy,
+                            initialVisibility: _group!.visibility,
+                            onGroupUpdated: _loadGroup,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _theme.gradient[0].withAlpha(25),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _theme.gradient[0].withAlpha(40),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.settings_rounded,
+                            size: 18,
+                            color: _theme.gradient[0],
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Settings',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: _theme.gradient[0],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

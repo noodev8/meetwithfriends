@@ -16,7 +16,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
-import { updateProfile, changePassword, deleteAccount } from '@/lib/api/users';
+import { updateProfile, changePassword, deleteAccount, deleteImage } from '@/lib/api/users';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 
 export default function ProfilePage() {
@@ -121,6 +121,11 @@ export default function ProfilePage() {
         setProfileError('');
 
         try {
+            // Delete old avatar from Cloudinary if exists
+            if (avatarUrl && token) {
+                await deleteImage(token, avatarUrl).catch(() => {});
+            }
+
             const formData = new FormData();
             formData.append('file', file);
             formData.append('upload_preset', uploadPreset);
@@ -174,6 +179,11 @@ export default function ProfilePage() {
         setIsUploadingAvatar(true);
         setProfileError('');
         setProfileSuccess('');
+
+        // Delete from Cloudinary first (ignore errors - clearing DB is more important)
+        if (avatarUrl) {
+            await deleteImage(token, avatarUrl).catch(() => {});
+        }
 
         const result = await updateProfile(token, { avatar_url: '' });
         if (result.success && result.data) {

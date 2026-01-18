@@ -38,8 +38,37 @@ Notes:
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
+const cloudinary = require('cloudinary').v2;
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
+
+// =======================================================================
+// Configure Cloudinary with credentials from environment
+// =======================================================================
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// =======================================================================
+// Helper: Extract public_id from Cloudinary URL
+// =======================================================================
+function extractPublicId(url) {
+    try {
+        const regex = /\/upload\/(?:[^/]+\/)*v\d+\/(.+)\.[a-zA-Z]+$/;
+        const match = url.match(regex);
+        if (match && match[1]) return match[1];
+
+        const simpleRegex = /\/upload\/(?:[^/]+\/)*([^/]+\/[^.]+)\.[a-zA-Z]+$/;
+        const simpleMatch = url.match(simpleRegex);
+        if (simpleMatch && simpleMatch[1]) return simpleMatch[1];
+
+        return null;
+    } catch {
+        return null;
+    }
+}
 
 router.post('/', verifyToken, async (req, res) => {
     try {
@@ -57,10 +86,10 @@ router.post('/', verifyToken, async (req, res) => {
         }
 
         // =======================================================================
-        // Fetch user's password hash
+        // Fetch user's password hash and avatar URL
         // =======================================================================
         const result = await query(
-            `SELECT id, password_hash FROM app_user WHERE id = $1`,
+            `SELECT id, password_hash, avatar_url FROM app_user WHERE id = $1`,
             [userId]
         );
 
@@ -83,6 +112,22 @@ router.post('/', verifyToken, async (req, res) => {
                 return_code: 'INVALID_PASSWORD',
                 message: 'Incorrect password'
             });
+        }
+
+        // =======================================================================
+        // Delete avatar from Cloudinary if exists
+        // We don't fail the whole operation if Cloudinary delete fails
+        // =======================================================================
+        if (user.avatar_url) {
+            try {
+                const publicId = extractPublicId(user.avatar_url);
+                if (publicId) {
+                    await cloudinary.uploader.destroy(publicId);
+                }
+            } catch (cloudinaryError) {
+                console.error('Failed to delete avatar from Cloudinary:', cloudinaryError);
+                // Continue with account deletion even if Cloudinary delete fails
+            }
         }
 
         // =======================================================================

@@ -298,38 +298,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                 color: Color(0xFF64748B),
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'RSVP to events to see them here',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF94A3B8),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            GestureDetector(
-                              onTap: widget.onViewAllEvents,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Text(
-                                  'Explore events',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
                           ],
                         ),
                       ),

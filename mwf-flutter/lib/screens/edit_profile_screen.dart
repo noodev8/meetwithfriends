@@ -161,7 +161,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _success = null;
     });
 
-    final result = await _userService.uploadAvatar(imageFile);
+    final result = await _userService.uploadAvatar(imageFile, currentAvatarUrl: _currentAvatarUrl);
 
     if (!mounted) return;
 

@@ -138,14 +138,7 @@ export default function MyEventsPage() {
                             {events.length === 0 ? (
                                 <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-sm">
                                     <div className="text-5xl mb-3">📅</div>
-                                    <h3 className="text-lg font-semibold text-slate-800 mb-1">No upcoming events</h3>
-                                    <p className="text-slate-500 text-sm mb-4">RSVP to events to see them here</p>
-                                    <Link
-                                        href="/explore"
-                                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all text-sm"
-                                    >
-                                        Explore events
-                                    </Link>
+                                    <h3 className="text-lg font-semibold text-slate-800">No upcoming events</h3>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

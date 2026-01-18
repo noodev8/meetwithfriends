@@ -373,7 +373,6 @@ export default function Dashboard() {
                                                 </svg>
                                             </div>
                                             <p className="text-slate-600 font-medium">No upcoming events</p>
-                                            <p className="text-slate-500 text-sm mt-1">Check your groups for new events</p>
                                         </div>
                                     )}
                                 </section>

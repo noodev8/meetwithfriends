@@ -18,7 +18,8 @@ class UserService {
 
   /// Upload avatar image to Cloudinary and update profile
   /// Returns the updated user with new avatar URL
-  Future<UserResult> uploadAvatar(File imageFile) async {
+  /// If user already has an avatar, deletes the old one from Cloudinary first
+  Future<UserResult> uploadAvatar(File imageFile, {String? currentAvatarUrl}) async {
     try {
       // Validate file size (5MB max)
       final fileSize = await imageFile.length();
@@ -27,6 +28,17 @@ class UserService {
           success: false,
           error: 'Image must be less than 5MB',
         );
+      }
+
+      // Delete old avatar from Cloudinary if exists
+      if (currentAvatarUrl != null && currentAvatarUrl.isNotEmpty) {
+        try {
+          await _api.post('/images/delete', {
+            'image_url': currentAvatarUrl,
+          });
+        } catch (_) {
+          // Ignore - uploading new image is more important
+        }
       }
 
       // Create multipart form data for Cloudinary

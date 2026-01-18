@@ -129,3 +129,31 @@ export async function deleteAccount(
         return_code: response.return_code,
     };
 }
+
+/*
+=======================================================================================================================================
+deleteImage
+=======================================================================================================================================
+Deletes an image from Cloudinary. Used when removing or replacing avatar images.
+=======================================================================================================================================
+*/
+export async function deleteImage(
+    token: string,
+    imageUrl: string
+): Promise<ApiResult> {
+    const response = await apiCall(
+        '/api/images/delete',
+        { image_url: imageUrl },
+        token
+    );
+
+    if (response.return_code === 'SUCCESS') {
+        return { success: true };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to delete image',
+        return_code: response.return_code,
+    };
+}
