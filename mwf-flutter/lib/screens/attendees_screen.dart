@@ -367,97 +367,164 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
 
   Widget _buildTabs() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         children: [
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildTab(
-                    AttendeeTab.going,
-                    'Going ($_attendingCount)',
-                    const Color(0xFF10B981),
-                  ),
-                  const SizedBox(width: 8),
-                  _buildTab(
-                    AttendeeTab.waitlist,
-                    'Waitlist ($_waitlistCount)',
-                    const Color(0xFFF59E0B),
-                  ),
-                  const SizedBox(width: 8),
-                  _buildTab(
-                    AttendeeTab.notGoing,
-                    'Not Going ($_notGoingCount)',
-                    const Color(0xFF64748B),
-                  ),
-                ],
-              ),
-            ),
+          _buildTab(
+            AttendeeTab.going,
+            'Going',
+            _attendingCount,
+            const Color(0xFF10B981),
           ),
-          const SizedBox(width: 12),
-          _buildSortDropdown(),
+          const SizedBox(width: 4),
+          _buildTab(
+            AttendeeTab.waitlist,
+            'Waitlist',
+            _waitlistCount,
+            const Color(0xFFF59E0B),
+          ),
+          const SizedBox(width: 4),
+          _buildTab(
+            AttendeeTab.notGoing,
+            'Not Going',
+            _notGoingCount,
+            const Color(0xFF64748B),
+          ),
+          const SizedBox(width: 4),
+          _buildSortButton(),
         ],
       ),
     );
   }
 
-  Widget _buildTab(AttendeeTab tab, String label, Color activeColor) {
+  Widget _buildTab(AttendeeTab tab, String label, int count, Color activeColor) {
     final isActive = _activeTab == tab;
-    return GestureDetector(
-      onTap: () => setState(() => _activeTab = tab),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive ? activeColor.withValues(alpha: 0.15) : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: isActive ? activeColor : const Color(0xFF64748B),
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _activeTab = tab),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isActive ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(15),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isActive ? activeColor : const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                count.toString(),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: isActive ? activeColor : const Color(0xFF94A3B8),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSortDropdown() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<SortBy>(
-          value: _sortBy,
-          isDense: true,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF1E293B),
+  Widget _buildSortButton() {
+    return PopupMenuButton<SortBy>(
+      initialValue: _sortBy,
+      onSelected: (value) => setState(() => _sortBy = value),
+      offset: const Offset(0, 40),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: SortBy.rsvpTime,
+          child: Row(
+            children: [
+              Icon(
+                Icons.access_time_rounded,
+                size: 18,
+                color: _sortBy == SortBy.rsvpTime
+                    ? const Color(0xFF7C3AED)
+                    : const Color(0xFF64748B),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'RSVP time',
+                style: TextStyle(
+                  color: _sortBy == SortBy.rsvpTime
+                      ? const Color(0xFF7C3AED)
+                      : const Color(0xFF1E293B),
+                  fontWeight: _sortBy == SortBy.rsvpTime
+                      ? FontWeight.w600
+                      : FontWeight.w500,
+                ),
+              ),
+            ],
           ),
-          items: const [
-            DropdownMenuItem(
-              value: SortBy.rsvpTime,
-              child: Text('RSVP time'),
-            ),
-            DropdownMenuItem(
-              value: SortBy.name,
-              child: Text('Name'),
+        ),
+        PopupMenuItem(
+          value: SortBy.name,
+          child: Row(
+            children: [
+              Icon(
+                Icons.sort_by_alpha_rounded,
+                size: 18,
+                color: _sortBy == SortBy.name
+                    ? const Color(0xFF7C3AED)
+                    : const Color(0xFF64748B),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Name',
+                style: TextStyle(
+                  color: _sortBy == SortBy.name
+                      ? const Color(0xFF7C3AED)
+                      : const Color(0xFF1E293B),
+                  fontWeight:
+                      _sortBy == SortBy.name ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(15),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
             ),
           ],
-          onChanged: (value) {
-            if (value != null) {
-              setState(() => _sortBy = value);
-            }
-          },
+        ),
+        child: const Icon(
+          Icons.sort_rounded,
+          size: 20,
+          color: Color(0xFF64748B),
         ),
       ),
     );
