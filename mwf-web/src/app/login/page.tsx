@@ -67,7 +67,7 @@ export default function LoginPage() {
         return (
             <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50">
                 <div className="text-center">
-                    <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <div className="w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                     <p className="text-slate-600">Signing you in...</p>
                 </div>
             </main>
@@ -103,7 +103,7 @@ export default function LoginPage() {
                                 id="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition"
                                 placeholder="you@example.com"
                             />
                         </div>
@@ -117,7 +117,7 @@ export default function LoginPage() {
                                 id="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition"
                                 placeholder="Your password"
                             />
                         </div>
@@ -125,21 +125,21 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-lg font-semibold hover:from-indigo-700 hover:to-violet-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full py-3 bg-gradient-to-r from-rose-500 to-orange-400 text-white rounded-lg font-semibold hover:from-rose-600 hover:to-orange-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isLoading ? 'Logging in...' : 'Log In'}
                         </button>
                     </form>
 
                     <div className="text-center mt-4">
-                        <Link href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-700">
+                        <Link href="/forgot-password" className="text-sm text-rose-600 hover:text-rose-700">
                             Forgot your password?
                         </Link>
                     </div>
 
                     <p className="text-center text-slate-600 mt-6">
                         Don&apos;t have an account?{' '}
-                        <Link href="/register" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                        <Link href="/register" className="text-rose-600 hover:text-rose-700 font-medium">
                             Create one
                         </Link>
                     </p>

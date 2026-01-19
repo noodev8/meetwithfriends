@@ -9,6 +9,7 @@ Warm, editorial design for social gatherings of all kinds.
 =======================================================================================================================================
 */
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -167,7 +168,7 @@ export default function Home() {
     if (isLoading || user) {
         return (
             <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50">
-                <div className="w-8 h-8 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-rose-300 border-t-rose-500 rounded-full animate-spin" />
             </main>
         );
     }
@@ -196,7 +197,7 @@ export default function Home() {
                     </Link>
                     <Link
                         href="/register"
-                        className="px-4 sm:px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-full hover:from-indigo-700 hover:to-violet-700 transition-all shadow-sm hover:shadow-md whitespace-nowrap text-sm sm:text-base"
+                        className="px-4 sm:px-5 py-2 bg-gradient-to-r from-rose-500 to-orange-400 text-white font-semibold rounded-full hover:from-rose-600 hover:to-orange-500 transition-all shadow-sm hover:shadow-md whitespace-nowrap text-sm sm:text-base"
                     >
                         Sign up
                     </Link>
@@ -206,22 +207,22 @@ export default function Home() {
             {/* Hero Section */}
             <section className="relative overflow-hidden">
                 {/* Background decoration */}
-                <div className="absolute inset-0 bg-gradient-to-b from-indigo-50 via-violet-50/50 to-slate-50" />
-                <div className="absolute top-20 -left-32 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl" />
-                <div className="absolute top-40 -right-32 w-80 h-80 bg-violet-200/30 rounded-full blur-3xl" />
+                <div className="absolute inset-0 bg-gradient-to-b from-rose-50 via-orange-50/50 to-slate-50" />
+                <div className="absolute top-20 -left-32 w-96 h-96 bg-rose-200/30 rounded-full blur-3xl" />
+                <div className="absolute top-40 -right-32 w-80 h-80 bg-orange-200/30 rounded-full blur-3xl" />
 
                 <div className="relative max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 py-16 sm:py-24 lg:py-32">
                     <div className="max-w-3xl">
                         {/* Eyebrow */}
-                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full border border-indigo-200/50 shadow-sm mb-6 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                            <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
+                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full border border-rose-200/50 shadow-sm mb-6 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                            <span className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
                             <span className="text-sm font-medium text-slate-600">A simpler way to make plans</span>
                         </div>
 
                         {/* Headline */}
                         <h1 className={`font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.1] mb-6 transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                             Real friends.
-                            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600">
+                            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500">
                                 Real plans.
                             </span>
                         </h1>
@@ -235,7 +236,7 @@ export default function Home() {
                         <div className={`flex flex-col sm:flex-row gap-3 sm:gap-4 transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                             <Link
                                 href="/register"
-                                className="group px-8 py-4 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-lg font-semibold rounded-full hover:from-indigo-700 hover:to-violet-700 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] text-center flex items-center justify-center gap-2"
+                                className="group px-8 py-4 bg-gradient-to-r from-rose-500 to-orange-400 text-white text-lg font-semibold rounded-full hover:from-rose-600 hover:to-orange-500 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] text-center flex items-center justify-center gap-2"
                             >
                                 Start Your Group
                                 <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -267,19 +268,25 @@ export default function Home() {
                                 rel="noopener noreferrer"
                                 className="h-[40px] hover:opacity-80 transition-opacity"
                             >
-                                <img
+                                <Image
                                     src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
                                     alt="Get it on Google Play"
-                                    className="h-[60px] -my-[10px]"
+                                    width={180}
+                                    height={60}
+                                    className="h-[60px] w-auto -my-[10px]"
+                                    unoptimized
                                 />
                             </a>
 
                             {/* App Store Badge - using official image */}
                             <div className="h-[40px] cursor-default">
-                                <img
+                                <Image
                                     src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
                                     alt="Download on the App Store"
-                                    className="h-full"
+                                    width={120}
+                                    height={40}
+                                    className="h-full w-auto"
+                                    unoptimized
                                 />
                             </div>
                         </div>
@@ -289,7 +296,7 @@ export default function Home() {
                     <div className="hidden lg:block absolute top-1/2 right-4 xl:right-12 -translate-y-1/2 w-[400px] h-[400px]">
                         {/* Background decorative ring */}
                         <div
-                            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full border border-indigo-200/30 transition-all duration-1000 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}
+                            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full border border-rose-200/30 transition-all duration-1000 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}
                             style={{ animation: mounted ? 'float-gentle 14s ease-in-out infinite' : 'none' }}
                         />
 
@@ -298,9 +305,9 @@ export default function Home() {
                             className={`absolute -top-4 right-8 w-44 h-44 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
                             style={{ transitionDelay: '200ms', animation: mounted ? 'float-gentle 8s ease-in-out infinite' : 'none' }}
                         >
-                            <div className="relative w-full h-full bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl shadow-indigo-500/10 border border-white/60 flex items-center justify-center overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/80 via-white/50 to-violet-50/80" />
-                                <div className="absolute -top-10 -right-10 w-28 h-28 bg-indigo-200/40 rounded-full blur-2xl" />
+                            <div className="relative w-full h-full bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl shadow-rose-500/10 border border-white/60 flex items-center justify-center overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-rose-50/80 via-white/50 to-orange-50/80" />
+                                <div className="absolute -top-10 -right-10 w-28 h-28 bg-rose-200/40 rounded-full blur-2xl" />
                                 <span className="relative text-8xl">🍽️</span>
                             </div>
                         </div>
@@ -310,9 +317,9 @@ export default function Home() {
                             className={`absolute top-24 -left-4 w-36 h-36 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
                             style={{ transitionDelay: '400ms', animation: mounted ? 'float-gentle 9s ease-in-out infinite 0.5s' : 'none' }}
                         >
-                            <div className="relative w-full h-full bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg shadow-violet-500/10 border border-white/60 flex items-center justify-center overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-br from-violet-50/80 via-white/50 to-purple-50/80" />
-                                <div className="absolute -bottom-8 -left-8 w-20 h-20 bg-violet-200/40 rounded-full blur-xl" />
+                            <div className="relative w-full h-full bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg shadow-orange-500/10 border border-white/60 flex items-center justify-center overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-orange-50/80 via-white/50 to-amber-50/80" />
+                                <div className="absolute -bottom-8 -left-8 w-20 h-20 bg-orange-200/40 rounded-full blur-xl" />
                                 <span className="relative text-6xl">📅</span>
                             </div>
                         </div>
@@ -609,7 +616,7 @@ export default function Home() {
             </section>
 
             {/* CTA Section */}
-            <section className="py-16 sm:py-24 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-600 relative overflow-hidden">
+            <section className="py-16 sm:py-24 bg-gradient-to-br from-rose-500 via-orange-400 to-amber-400 relative overflow-hidden">
                 {/* Background decoration */}
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-10 left-10 text-8xl">🎯</div>
@@ -626,7 +633,7 @@ export default function Home() {
                     </p>
                     <Link
                         href="/register"
-                        className="inline-flex items-center gap-2 px-8 py-4 bg-white text-indigo-600 text-lg font-bold rounded-full hover:bg-slate-50 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02]"
+                        className="inline-flex items-center gap-2 px-8 py-4 bg-white text-rose-600 text-lg font-bold rounded-full hover:bg-slate-50 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02]"
                     >
                         Get Started Free
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -645,11 +652,13 @@ export default function Home() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
                         <div className="col-span-2 md:col-span-1">
                             <div className="flex items-center gap-2 mb-4">
-                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-                                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    </svg>
-                                </div>
+                                <Image
+                                    src="/icon.png"
+                                    alt="MWF"
+                                    width={32}
+                                    height={32}
+                                    className="w-8 h-8 rounded-lg"
+                                />
                                 <span className="font-display font-bold text-white">
                                     Meet With Friends
                                 </span>

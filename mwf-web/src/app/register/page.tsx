@@ -85,7 +85,7 @@ export default function RegisterPage() {
         return (
             <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50">
                 <div className="text-center">
-                    <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <div className="w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                     <p className="text-slate-600">Setting up your account...</p>
                 </div>
             </main>
@@ -121,7 +121,7 @@ export default function RegisterPage() {
                                 id="name"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition"
                                 placeholder="Your name"
                             />
                         </div>
@@ -135,7 +135,7 @@ export default function RegisterPage() {
                                 id="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition"
                                 placeholder="you@example.com"
                             />
                         </div>
@@ -149,7 +149,7 @@ export default function RegisterPage() {
                                 id="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition"
                                 placeholder="At least 8 characters"
                             />
                         </div>
@@ -163,7 +163,7 @@ export default function RegisterPage() {
                                 id="confirmPassword"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition"
                                 placeholder="Confirm your password"
                             />
                         </div>
@@ -174,15 +174,15 @@ export default function RegisterPage() {
                                 id="acceptTerms"
                                 checked={acceptedTerms}
                                 onChange={(e) => setAcceptedTerms(e.target.checked)}
-                                className="mt-1 w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                                className="mt-1 w-4 h-4 text-rose-500 border-slate-300 rounded focus:ring-rose-500"
                             />
                             <label htmlFor="acceptTerms" className="text-sm text-slate-600">
                                 I agree to the{' '}
-                                <Link href="/terms" className="text-indigo-600 hover:text-indigo-700">
+                                <Link href="/terms" className="text-rose-600 hover:text-rose-700">
                                     Terms of Service
                                 </Link>
                                 {' '}and{' '}
-                                <Link href="/privacy" className="text-indigo-600 hover:text-indigo-700">
+                                <Link href="/privacy" className="text-rose-600 hover:text-rose-700">
                                     Privacy Policy
                                 </Link>
                             </label>
@@ -191,7 +191,7 @@ export default function RegisterPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-lg font-semibold hover:from-indigo-700 hover:to-violet-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full py-3 bg-gradient-to-r from-rose-500 to-orange-400 text-white rounded-lg font-semibold hover:from-rose-600 hover:to-orange-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isLoading ? 'Creating Account...' : 'Create Account'}
                         </button>
@@ -199,7 +199,7 @@ export default function RegisterPage() {
 
                     <p className="text-center text-slate-600 mt-6">
                         Already have an account?{' '}
-                        <Link href="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                        <Link href="/login" className="text-rose-600 hover:text-rose-700 font-medium">
                             Log in
                         </Link>
                     </p>
