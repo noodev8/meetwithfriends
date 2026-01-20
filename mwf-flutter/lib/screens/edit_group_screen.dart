@@ -450,7 +450,8 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
                             Switch(
                               value: _requireProfileImage,
                               onChanged: (value) => setState(() => _requireProfileImage = value),
-                              activeColor: const Color(0xFF7C3AED),
+                              activeTrackColor: const Color(0xFF7C3AED).withValues(alpha: 0.5),
+                              activeThumbColor: const Color(0xFF7C3AED),
                             ),
                           ],
                         ),

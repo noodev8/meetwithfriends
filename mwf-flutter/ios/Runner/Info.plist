@@ -49,16 +49,9 @@
 		<false/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
-		<key>NSAppTransportSecurity</key>
-		<dict>
-			<key>NSExceptionDomains</key>
-			<dict>
-				<key>localhost</key>
-				<dict>
-					<key>NSExceptionAllowsInsecureHTTPLoads</key>
-					<true/>
-				</dict>
-			</dict>
-		</dict>
+		<key>NSCameraUsageDescription</key>
+		<string>This app uses the camera to take photos for your profile and to upload menu images.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>This app accesses your photo library to select photos for your profile and menu images.</string>
 	</dict>
 </plist>

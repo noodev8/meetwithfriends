@@ -9,15 +9,9 @@
 
     <!-- Production domain - HTTPS only -->
     <domain-config cleartextTrafficPermitted="false">
-        <domain includeSubdomains="true">nook.noodev8.com</domain>
+        <domain includeSubdomains="true">meetwithfriends.noodev8.com</domain>
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
-    </domain-config>
-
-    <!-- Allow cleartext for localhost during development only -->
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="false">localhost</domain>
-        <domain includeSubdomains="false">10.0.2.2</domain>
     </domain-config>
 </network-security-config>

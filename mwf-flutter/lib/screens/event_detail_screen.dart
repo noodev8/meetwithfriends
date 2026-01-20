@@ -369,19 +369,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           ),
           if (_event != null) ...[
             Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  // TODO: Navigate to group
-                },
-                child: Text(
-                  _event!.groupName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF7C3AED),
-                  ),
-                  overflow: TextOverflow.ellipsis,
+              child: Text(
+                _event!.groupName,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF1E293B),
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ] else
@@ -1337,44 +1332,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   Widget _buildRsvpContent(EventDetail event) {
-    // Not logged in - would need auth check, for now assume logged in if isGroupMember exists
+    // Non-member viewing the event
     if (!_isGroupMember) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            'Join the group to RSVP',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF64748B),
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                // TODO: Navigate to group page
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF7C3AED),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-              child: const Text(
-                'View Group',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-        ],
+      return const Text(
+        'Join the group to RSVP',
+        style: TextStyle(
+          fontSize: 14,
+          color: Color(0xFF64748B),
+        ),
       );
     }
 

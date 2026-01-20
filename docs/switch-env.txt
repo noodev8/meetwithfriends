@@ -1,6 +1,62 @@
-mwf-flutter/lib/services/api_service.dart
+SWITCHING BETWEEN DEVELOPMENT AND PRODUCTION ENVIRONMENTS
+==========================================================
 
-LOCAL:  static const String baseUrl = 'http://192.168.1.136:3019/api';
-VPS:    static const String baseUrl = 'https://meetwithfriends.noodev8.com/api';
+When developing locally, you need to modify 3 files.
+IMPORTANT: Revert all changes before building for App Store/Play Store submission!
 
-Comment one, uncomment the other.
+
+1. API ENDPOINT
+---------------
+File: mwf-flutter/lib/services/api_service.dart
+
+PRODUCTION (default):
+  static const String baseUrl = 'https://meetwithfriends.noodev8.com/api';
+
+LOCAL DEVELOPMENT:
+  static const String baseUrl = 'http://192.168.1.136:3019/api';
+  (Replace IP with your local machine's IP address)
+
+
+2. iOS - Allow HTTP for localhost
+---------------------------------
+File: mwf-flutter/ios/Runner/Info.plist
+
+Add this section before the closing </dict> tag for LOCAL DEVELOPMENT:
+
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>localhost</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+            </dict>
+        </dict>
+    </dict>
+
+REMOVE this entire section before App Store submission!
+
+
+3. Android - Allow HTTP for localhost
+-------------------------------------
+File: mwf-flutter/android/app/src/main/res/xml/network_security_config.xml
+
+Add this section before the closing </network-security-config> tag for LOCAL DEVELOPMENT:
+
+    <!-- Allow cleartext for localhost during development only -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+
+REMOVE this entire section before Play Store submission!
+
+
+PRE-SUBMISSION CHECKLIST
+------------------------
+[ ] api_service.dart points to https://meetwithfriends.noodev8.com/api
+[ ] Info.plist has NO NSAppTransportSecurity localhost exception
+[ ] network_security_config.xml has NO localhost/10.0.2.2 entries
+[ ] Run: flutter build ipa --release
+[ ] Run: flutter build appbundle --release
