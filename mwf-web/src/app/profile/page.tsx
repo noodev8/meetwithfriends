@@ -112,8 +112,14 @@ export default function ProfilePage() {
         const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
         const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
+        // DEBUG: Log env var status
+        console.log('DEBUG Cloudinary config:', {
+            cloudName: cloudName ? `SET (${cloudName.substring(0, 4)}...)` : 'NOT SET',
+            uploadPreset: uploadPreset ? `SET (${uploadPreset.substring(0, 4)}...)` : 'NOT SET',
+        });
+
         if (!cloudName || !uploadPreset) {
-            setProfileError('Image upload not configured');
+            setProfileError(`Image upload not configured - cloudName: ${!!cloudName}, preset: ${!!uploadPreset}`);
             return;
         }
 
