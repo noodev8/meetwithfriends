@@ -453,38 +453,40 @@ export default function GroupDetailPage() {
                                 </div>
                                 <div className="space-y-3">
                                     {pendingMembers.slice(0, PENDING_PREVIEW_LIMIT).map(member => (
-                                        <div key={member.id} className="flex items-center gap-3 bg-white rounded-xl p-3">
-                                            {member.avatar_url ? (
-                                                <div className="relative w-10 h-10">
-                                                    <Image
-                                                        src={member.avatar_url}
-                                                        alt={member.name}
-                                                        fill
-                                                        className="rounded-full object-cover"
-                                                    />
+                                        <div key={member.id} className="bg-white rounded-xl p-3">
+                                            <div className="flex items-center gap-3">
+                                                {member.avatar_url ? (
+                                                    <div className="relative w-10 h-10 flex-shrink-0">
+                                                        <Image
+                                                            src={member.avatar_url}
+                                                            alt={member.name}
+                                                            fill
+                                                            className="rounded-full object-cover"
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-10 h-10 flex-shrink-0 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center">
+                                                        <span className="text-sm font-medium text-indigo-600">
+                                                            {member.name.charAt(0).toUpperCase()}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-medium text-slate-800">{member.name}</p>
                                                 </div>
-                                            ) : (
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center">
-                                                    <span className="text-sm font-medium text-indigo-600">
-                                                        {member.name.charAt(0).toUpperCase()}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-slate-800 truncate">{member.name}</p>
                                             </div>
-                                            <div className="flex gap-2">
+                                            <div className="flex gap-2 mt-3 ml-[52px]">
                                                 <button
                                                     onClick={() => handleApproveMember(member.id)}
                                                     disabled={processingMember === member.id}
-                                                    className="px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                                                    className="flex-1 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition disabled:opacity-50"
                                                 >
                                                     Approve
                                                 </button>
                                                 <button
                                                     onClick={() => handleRejectMember(member.id)}
                                                     disabled={processingMember === member.id}
-                                                    className="px-4 py-2.5 bg-slate-200 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-300 transition disabled:opacity-50"
+                                                    className="flex-1 px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-300 transition disabled:opacity-50"
                                                 >
                                                     Decline
                                                 </button>
