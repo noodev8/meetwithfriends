@@ -166,6 +166,7 @@ router.post('/', verifyToken, async (req, res) => {
                 event,
                 group,
                 user.name,
+                userId,
                 trimmedContent
             ).catch(err => {
                 console.error('Failed to queue comment email:', err);

@@ -185,7 +185,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
       if (result.success && result.comment != null) {
         setState(() {
-          _comments.add(result.comment!);
+          _comments.insert(0, result.comment!);
           _commentCount++;
           _commentController.clear();
         });

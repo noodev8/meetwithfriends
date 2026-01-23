@@ -290,7 +290,7 @@ export default function EventDetailPage() {
         setCommentLoading(false);
 
         if (result.success && result.data) {
-            setComments(prev => [...prev, result.data!]);
+            setComments(prev => [result.data!, ...prev]);
             setNewComment('');
         } else {
             alert(result.error || 'Failed to add comment');

@@ -160,18 +160,18 @@ async function sendEmail(to, subject, html, emailType, relatedId = null, replyTo
 queueEmail
 =======================================================================================================================================
 Add email to queue for later processing (used for bulk sends)
-Options: { groupId, eventId, groupName, replyTo, text, scheduledFor }
+Options: { groupId, eventId, groupName, replyTo, text, scheduledFor, senderId, senderName }
 =======================================================================================================================================
 */
 async function queueEmail(to, recipientName, subject, html, emailType, options = {}) {
-    const { groupId = null, eventId = null, groupName = null, replyTo = null, text = null, scheduledFor = null } = options;
+    const { groupId = null, eventId = null, groupName = null, replyTo = null, text = null, scheduledFor = null, senderId = null, senderName = null } = options;
     try {
         await query(
             `INSERT INTO email_queue
              (recipient_email, recipient_name, subject, html_content, text_content, email_type,
-              group_id, event_id, group_name, reply_to, scheduled_for)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, COALESCE($11, NOW()))`,
-            [to, recipientName, subject, html, text, emailType, groupId, eventId, groupName, replyTo, scheduledFor]
+              group_id, event_id, group_name, reply_to, scheduled_for, sender_id, sender_name)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, COALESCE($11, NOW()), $12, $13)`,
+            [to, recipientName, subject, html, text, emailType, groupId, eventId, groupName, replyTo, scheduledFor, senderId, senderName]
         );
         return { success: true, queued: true };
     } catch (error) {
@@ -1053,7 +1053,7 @@ Includes throttling: only one comment email per recipient per event within the c
 If a pending or recently sent email exists, skip queuing to avoid spamming during active conversations.
 =======================================================================================================================================
 */
-async function queueNewCommentEmail(email, userName, event, group, commenterName, commentContent) {
+async function queueNewCommentEmail(email, userName, event, group, commenterName, commenterId, commentContent) {
     // =======================================================================
     // Throttle check: skip if recipient already has a pending or recent email for this event
     // This prevents email spam during active conversations
@@ -1099,7 +1099,9 @@ async function queueNewCommentEmail(email, userName, event, group, commenterName
     return queueEmail(email, userName, `New comment on ${event.title}`, html, 'new_comment', {
         groupId: group.id,
         eventId: event.id,
-        groupName: group.name
+        groupName: group.name,
+        senderId: commenterId,
+        senderName: commenterName
     });
 }
 
