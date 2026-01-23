@@ -1048,10 +1048,35 @@ async function queueEventReminderEmail(email, userName, event, group, isHost = f
 =======================================================================================================================================
 queueNewCommentEmail
 =======================================================================================================================================
-Queue comment notification for later processing
+Queue comment notification for later processing.
+Includes throttling: only one comment email per recipient per event within the configured time window.
+If a pending or recently sent email exists, skip queuing to avoid spamming during active conversations.
 =======================================================================================================================================
 */
 async function queueNewCommentEmail(email, userName, event, group, commenterName, commentContent) {
+    // =======================================================================
+    // Throttle check: skip if recipient already has a pending or recent email for this event
+    // This prevents email spam during active conversations
+    // =======================================================================
+    const throttleHours = config.email.commentThrottleHours;
+    const throttleCheck = await query(
+        `SELECT 1 FROM email_queue
+         WHERE recipient_email = $1
+         AND event_id = $2
+         AND email_type = 'new_comment'
+         AND (
+             status = 'pending'
+             OR (status = 'sent' AND sent_at > NOW() - INTERVAL '1 hour' * $3)
+         )
+         LIMIT 1`,
+        [email, event.id, throttleHours]
+    );
+
+    if (throttleCheck.rows.length > 0) {
+        // Already has a pending or recent email - skip to avoid spam
+        return { success: true, throttled: true };
+    }
+
     // Truncate comment if too long for display
     const maxLength = 200;
     const truncatedComment = commentContent.length > maxLength
