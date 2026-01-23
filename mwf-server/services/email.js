@@ -284,7 +284,7 @@ async function getQueueStats() {
 
         const stats = { pending: 0, sent: 0, failed: 0, cancelled: 0, skipped: 0 };
         result.rows.forEach(row => {
-            if (stats.hasOwnProperty(row.status)) {
+            if (Object.hasOwn(stats, row.status)) {
                 stats[row.status] = parseInt(row.count, 10);
             }
         });

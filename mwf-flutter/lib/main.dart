@@ -55,10 +55,7 @@ class _MyAppState extends State<MyApp> {
 
     // Wait for navigator to be ready, then init deep links
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final context = _navigatorKey.currentContext;
-      if (context != null) {
-        _deepLinkService.init(context, _isLoggedIn);
-      }
+      _deepLinkService.init(_navigatorKey, _isLoggedIn);
     });
   }
 

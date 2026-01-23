@@ -45,7 +45,6 @@ const { optionalAuth } = require('../../middleware/auth');
 router.get('/:id', optionalAuth, async (req, res) => {
     try {
         const { id } = req.params;
-        const { code } = req.query;
         const userId = req.user?.id || null;
 
         // =======================================================================
