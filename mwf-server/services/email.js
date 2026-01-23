@@ -91,8 +91,19 @@ async function sendEmail(to, subject, html, emailType, relatedId = null, replyTo
         await logEmail(to, emailType, subject, 'intercepted', relatedId);
     }
 
-    // Handle override mode - redirect all emails to a specific address for testing
-    if (config.email.overrideRecipient && !isTestEmail) {
+    // Handle override mode - redirect certain emails to a specific address for testing
+    // Critical emails (welcome, password reset, RSVP) always go to real recipients
+    const criticalEmailTypes = [
+        'welcome',
+        'password_reset',
+        'rsvp_confirmed',
+        'promoted_from_waitlist',
+        'joined_group'
+    ];
+    const canOverride = config.email.overrideRecipient &&
+                        !isTestEmail &&
+                        !criticalEmailTypes.includes(emailType);
+    if (canOverride) {
         actualRecipient = config.email.overrideRecipient;
         actualSubject = `[TO: ${to}] ${subject}`;
     }
