@@ -29,6 +29,7 @@ These fire immediately when an action happens in existing endpoints.
 |---|-------|-------------------|--------|
 | 1 | Welcome to Meet With Friends | `auth/register.js` | ✅ |
 | 3 | RSVP confirmed | `events/rsvp.js` | ✅ |
+| 3b | New RSVP (to host) | `events/rsvp.js` | ✅ |
 | 5 | You've been removed from an event | `events/manage_attendee.js` | ✅ |
 | 6 | You've been moved from waitlist to attending | `events/manage_attendee.js` + `events/rsvp.js` (auto-promote) | ✅ |
 | 7 | Event cancelled | `events/cancel_event.js` | ✅ |
@@ -75,6 +76,7 @@ node scripts/send_reminders.js
 |----------|-------------|
 | Welcome | user.name |
 | RSVP confirmed | user.name, event.title, event.date_time, event.location |
+| New RSVP (to host) | host.name, member.name, event.title, event.date_time, attendee_count, capacity |
 | Removed from event | user.name, event.title, reason (waitlist/removed) |
 | Moved to attending | user.name, event.title, event.date_time, event.location |
 | Event cancelled | user.name, event.title, event.date_time |
@@ -111,6 +113,7 @@ CREATE INDEX idx_email_log_sent_at ON email_log(sent_at);
 |------|--------|
 | 2026-01-10 | Initial implementation complete - all 9 email types implemented |
 | 2026-01-10 | Added email #10: New comment notification to attendees + waitlist |
+| 2026-01-23 | Added email #3b: New RSVP notification to event host |
 
 ---
 

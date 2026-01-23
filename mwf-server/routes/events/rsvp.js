@@ -63,7 +63,7 @@ const router = express.Router();
 const { withTransaction } = require('../../utils/transaction');
 const { verifyToken } = require('../../middleware/auth');
 const { query } = require('../../database');
-const { sendRsvpConfirmedEmail, sendPromotedFromWaitlistEmail } = require('../../services/email');
+const { sendRsvpConfirmedEmail, sendPromotedFromWaitlistEmail, sendNewRsvpEmail } = require('../../services/email');
 
 router.post('/:id/rsvp', verifyToken, async (req, res) => {
     try {
@@ -106,7 +106,7 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
             // Lock event row for update (separate from count query)
             // ===================================================================
             const eventResult = await client.query(
-                `SELECT e.id, e.group_id, e.capacity, e.status, e.date_time, e.allow_guests, e.max_guests_per_rsvp, e.title, e.location,
+                `SELECT e.id, e.group_id, e.capacity, e.status, e.date_time, e.allow_guests, e.max_guests_per_rsvp, e.title, e.location, e.created_by,
                         g.name AS group_name
                  FROM event_list e
                  JOIN group_list g ON g.id = e.group_id
@@ -236,11 +236,21 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                         [id, userId, finalGuestCount]
                     );
 
+                    // Calculate new attendee count (including this new RSVP)
+                    const newAttendeeCount = attendeeCount + 1;
+
                     return {
                         return_code: 'SUCCESS',
                         rsvp: { status: 'attending', waitlist_position: null, guest_count: finalGuestCount },
                         message: "You're going to this event",
-                        _emailData: { type: 'rsvp_confirmed', userId, event, group: { id: event.group_id, name: event.group_name } }
+                        _emailData: {
+                            type: 'rsvp_confirmed',
+                            userId,
+                            event,
+                            group: { id: event.group_id, name: event.group_name },
+                            hostUserId: event.created_by,
+                            attendeeCount: newAttendeeCount
+                        }
                     };
                 } else {
                     // Add to waitlist - get next position (no guests on waitlist)
@@ -405,6 +415,17 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                     sendRsvpConfirmedEmail(user.email, user.name, emailData.event, emailData.group).catch(err => {
                         console.error('Failed to send RSVP confirmation email:', err);
                     });
+
+                    // Notify the host (if host is not the person RSVPing)
+                    if (emailData.hostUserId && emailData.hostUserId !== emailData.userId) {
+                        const hostResult = await query('SELECT name, email FROM app_user WHERE id = $1', [emailData.hostUserId]);
+                        if (hostResult.rows.length > 0) {
+                            const host = hostResult.rows[0];
+                            sendNewRsvpEmail(host.email, host.name, user.name, emailData.event, emailData.group, emailData.attendeeCount).catch(err => {
+                                console.error('Failed to send new RSVP notification to host:', err);
+                            });
+                        }
+                    }
                 }
             } else if (emailData.type === 'promoted_multiple') {
                 // Send promotion emails to all promoted users

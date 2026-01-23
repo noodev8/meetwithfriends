@@ -700,6 +700,50 @@ async function sendPasswordResetEmail(email, token) {
 
 /*
 =======================================================================================================================================
+sendNewRsvpEmail
+=======================================================================================================================================
+Sent to event host when a member RSVPs to their event
+=======================================================================================================================================
+*/
+async function sendNewRsvpEmail(email, hostName, memberName, event, group, attendeeCount) {
+    const eventDate = new Date(event.date_time).toLocaleDateString('en-GB', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+    const eventTime = new Date(event.date_time).toLocaleTimeString('en-GB', {
+        hour: '2-digit', minute: '2-digit'
+    });
+
+    const capacityText = event.capacity
+        ? `${attendeeCount} / ${event.capacity} spots filled`
+        : `${attendeeCount} attending`;
+
+    const html = wrapEmail(`
+        <h2 style="color: #333; margin-top: 0;">New RSVP for ${event.title}</h2>
+        <p style="color: #666; font-size: 16px;">
+            Hi ${hostName},
+        </p>
+        <p style="color: #666; font-size: 16px;">
+            <strong>${memberName}</strong> is going to your event.
+        </p>
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <p style="color: #333; font-size: 16px; margin: 0 0 10px 0;">
+                <strong>${event.title}</strong>
+            </p>
+            <p style="color: #666; font-size: 14px; margin: 0;">
+                ${eventDate} at ${eventTime}
+            </p>
+            <p style="color: #4f46e5; font-size: 14px; margin: 10px 0 0 0;">
+                ${capacityText}
+            </p>
+        </div>
+        ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Event')}
+    `);
+
+    return sendEmail(email, `New RSVP: ${memberName} is going to ${event.title}`, html, 'new_rsvp', event.id, null, null, group.name);
+}
+
+/*
+=======================================================================================================================================
 sendNewMemberEmail
 =======================================================================================================================================
 Sent to organiser when a new member joins their group (auto-join or after approval)
@@ -1123,6 +1167,7 @@ module.exports = {
     sendEventReminderEmail,
     sendPasswordResetEmail,
     sendNewMemberEmail,
+    sendNewRsvpEmail,
     sendNewCommentEmail,
     sendContactOrganiserEmail,
     sendContactHostEmail,
