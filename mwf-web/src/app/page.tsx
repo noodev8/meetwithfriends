@@ -279,7 +279,12 @@ export default function Home() {
                             </a>
 
                             {/* App Store Badge - using official image */}
-                            <div className="h-[40px] cursor-default">
+                            <a
+                                href="https://apps.apple.com/gb/app/id6757886965"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="h-[40px] hover:opacity-80 transition-opacity"
+                            >
                                 <Image
                                     src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
                                     alt="Download on the App Store"
@@ -288,7 +293,7 @@ export default function Home() {
                                     className="h-full w-auto"
                                     unoptimized
                                 />
-                            </div>
+                            </a>
                         </div>
                     </div>
 
