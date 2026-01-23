@@ -37,7 +37,7 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="https"
-                      android:host="meetwithfriends.net"
+                      android:host="www.meetwithfriends.net"
                       android:pathPrefix="/events"/>
             </intent-filter>
             <intent-filter android:autoVerify="true">
@@ -45,7 +45,7 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="https"
-                      android:host="meetwithfriends.net"
+                      android:host="www.meetwithfriends.net"
                       android:pathPrefix="/groups"/>
             </intent-filter>
         </activity>

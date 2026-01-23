@@ -722,7 +722,7 @@ async function sendNewMemberEmail(email, organiserName, newMemberName, group, to
         ${emailButton(config.frontendUrl + '/groups/' + group.id + '/members', 'View Members')}
     `);
 
-    return sendEmail(email, `New member joined ${group.name}`, html, 'new_member', group.id, null, null, group.name);
+    return sendEmail(email, `New member joined ${group.name}`, html, 'new_member', group.id);
 }
 
 /*
