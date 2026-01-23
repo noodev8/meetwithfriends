@@ -5,7 +5,7 @@
 -- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 17.4
 
--- Started on 2026-01-18 15:28:42
+-- Started on 2026-01-23 12:22:58
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -230,7 +230,9 @@ CREATE TABLE public.email_queue (
     error_message text,
     group_id integer,
     event_id integer,
-    group_name character varying(100)
+    group_name character varying(100),
+    sender_id integer,
+    sender_name character varying(255)
 );
 
 
@@ -1163,7 +1165,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENC
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO meetwithfriends_user;
 
 
--- Completed on 2026-01-18 15:28:44
+-- Completed on 2026-01-23 12:23:00
 
 --
 -- PostgreSQL database dump complete

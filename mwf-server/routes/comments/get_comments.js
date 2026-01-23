@@ -117,7 +117,7 @@ router.get('/:event_id', optionalAuth, async (req, res) => {
              FROM event_comment c
              JOIN app_user u ON c.user_id = u.id
              WHERE c.event_id = $1
-             ORDER BY c.created_at ASC`,
+             ORDER BY c.created_at DESC`,
             [event_id]
         );
 

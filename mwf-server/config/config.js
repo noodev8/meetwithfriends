@@ -28,7 +28,8 @@ module.exports = {
     email: {
         resendApiKey: process.env.RESEND_API_KEY,
         from: process.env.EMAIL_FROM || 'noreply@example.com',
-        fromName: process.env.EMAIL_FROM_NAME || 'Meet With Friends'
+        fromName: process.env.EMAIL_FROM_NAME || 'Meet With Friends',
+        overrideRecipient: process.env.EMAIL_OVERRIDE_RECIPIENT || null
     },
 
     // Frontend URL (for email links)

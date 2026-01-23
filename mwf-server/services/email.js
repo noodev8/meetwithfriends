@@ -91,6 +91,12 @@ async function sendEmail(to, subject, html, emailType, relatedId = null, replyTo
         await logEmail(to, emailType, subject, 'intercepted', relatedId);
     }
 
+    // Handle override mode - redirect all emails to a specific address for testing
+    if (config.email.overrideRecipient && !isTestEmail) {
+        actualRecipient = config.email.overrideRecipient;
+        actualSubject = `[TO: ${to}] ${subject}`;
+    }
+
     try {
         // Use custom fromName if provided, otherwise use default
         const senderName = fromName || config.email.fromName;
