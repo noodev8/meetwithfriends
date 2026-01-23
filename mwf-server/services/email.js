@@ -331,10 +331,10 @@ function wrapEmail(content) {
                 <!-- App Store Badges -->
                 <p style="margin: 0;">
                     <a href="https://play.google.com/store/apps/details?id=com.noodev8.meetwithfriends" style="display: inline-block; margin: 0 5px; vertical-align: middle;">
-                        <img src="${config.frontendUrl}/images/google-play-badge.png" alt="Get it on Google Play" style="height: 60px;" />
+                        <img src="${config.frontendUrl}/images/google-play-badge.png" alt="Get it on Google Play" style="height: 45px;" />
                     </a>
                     <a href="https://apps.apple.com/gb/app/id6757886965" style="display: inline-block; margin: 0 5px; vertical-align: middle;">
-                        <img src="${config.frontendUrl}/images/app-store-badge.png" alt="Download on the App Store" style="height: 40px;" />
+                        <img src="${config.frontendUrl}/images/app-store-badge.png" alt="Download on the App Store" style="height: 45px;" />
                     </a>
                 </p>
             </div>
