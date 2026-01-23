@@ -5,6 +5,7 @@ import 'screens/register_screen.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/main_shell.dart';
 import 'services/auth_service.dart';
+import 'services/deep_link_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,10 +22,13 @@ enum AuthScreen { login, register, forgotPassword }
 
 class _MyAppState extends State<MyApp> {
   final _authService = AuthService();
+  final _deepLinkService = DeepLinkService();
+  final _navigatorKey = GlobalKey<NavigatorState>();
   bool _isLoading = true;
   bool _isLoggedIn = false;
   AuthScreen _authScreen = AuthScreen.login;
   User? _user;
+  bool _deepLinksInitialized = false;
 
   @override
   void initState() {
@@ -40,7 +44,22 @@ class _MyAppState extends State<MyApp> {
         _isLoggedIn = result.success;
         _user = result.user != null ? User.fromJson(result.user!) : null;
       });
+      // Initialize deep links after auth check
+      _initDeepLinks();
     }
+  }
+
+  void _initDeepLinks() {
+    if (_deepLinksInitialized) return;
+    _deepLinksInitialized = true;
+
+    // Wait for navigator to be ready, then init deep links
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = _navigatorKey.currentContext;
+      if (context != null) {
+        _deepLinkService.init(context, _isLoggedIn);
+      }
+    });
   }
 
   void _onLoginSuccess(Map<String, dynamic> userData) {
@@ -71,6 +90,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'Meet With Friends',
       debugShowCheckedModeBanner: false,
+      navigatorKey: _navigatorKey,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF7C3AED)),
         useMaterial3: true,

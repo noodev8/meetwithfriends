@@ -46,6 +46,7 @@ dependencies:
   http: ^1.2.2
   open_filex: ^4.6.0
   package_info_plus: ^8.0.0
+  app_links: ^6.3.3
 
 dev_dependencies:
   flutter_test:
