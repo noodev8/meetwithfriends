@@ -529,6 +529,14 @@ export default function AttendeesPage() {
                                                         </span>
                                                     </div>
                                                 )}
+                                                {/* Pre-order badge - top right */}
+                                                {event?.preorders_enabled && activeTab === 'going' && attendee.food_order && (
+                                                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-sm">
+                                                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    </span>
+                                                )}
                                                 {isHostUser && (
                                                     <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-indigo-600 text-white text-xs font-medium rounded">
                                                         Host
