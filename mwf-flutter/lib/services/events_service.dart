@@ -168,6 +168,35 @@ class EventsService {
     );
   }
 
+  /// Update another user's pre-order (hosts/organisers only)
+  Future<UpdateOrderResult> updateOrder(
+    int eventId,
+    int userId, {
+    String? foodOrder,
+    String? dietaryNotes,
+  }) async {
+    final response = await _api.post('/events/$eventId/update-order', {
+      'user_id': userId,
+      'food_order': foodOrder ?? '',
+      'dietary_notes': dietaryNotes ?? '',
+    });
+
+    if (response['return_code'] == 'SUCCESS') {
+      final orderJson = response['order'] as Map<String, dynamic>?;
+      return UpdateOrderResult(
+        success: true,
+        userId: orderJson?['user_id'] as int?,
+        foodOrder: orderJson?['food_order'] as String?,
+        dietaryNotes: orderJson?['dietary_notes'] as String?,
+      );
+    }
+
+    return UpdateOrderResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to update order',
+    );
+  }
+
   /// Get attendees for an event
   Future<AttendeesResult> getAttendees(int eventId) async {
     final response = await _api.get('/events/$eventId/attendees');
@@ -612,4 +641,20 @@ class SubmitOrderResult {
   final String? error;
 
   SubmitOrderResult({required this.success, this.foodOrder, this.dietaryNotes, this.error});
+}
+
+class UpdateOrderResult {
+  final bool success;
+  final int? userId;
+  final String? foodOrder;
+  final String? dietaryNotes;
+  final String? error;
+
+  UpdateOrderResult({
+    required this.success,
+    this.userId,
+    this.foodOrder,
+    this.dietaryNotes,
+    this.error,
+  });
 }

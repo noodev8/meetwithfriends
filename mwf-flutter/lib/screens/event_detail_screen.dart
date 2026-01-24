@@ -147,6 +147,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           groupName: event.groupName,
           hostName: _hosts.isNotEmpty ? _hosts[0].name : null,
           preordersEnabled: event.preordersEnabled,
+          canEditOrders: _canEdit,
+          menuLink: event.menuLink,
+          menuImages: event.menuImages,
         ),
       ),
     );

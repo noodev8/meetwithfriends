@@ -11,6 +11,7 @@ import '../services/events_service.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../widgets/pre_order_bottom_sheet.dart';
 
 enum AttendeeTab { going, waitlist, notGoing }
 enum SortBy { rsvpTime, name }
@@ -23,6 +24,9 @@ class AttendeesScreen extends StatefulWidget {
   final String? groupName;
   final String? hostName;
   final bool preordersEnabled;
+  final bool canEditOrders;
+  final String? menuLink;
+  final List<String>? menuImages;
 
   const AttendeesScreen({
     super.key,
@@ -33,6 +37,9 @@ class AttendeesScreen extends StatefulWidget {
     this.groupName,
     this.hostName,
     this.preordersEnabled = false,
+    this.canEditOrders = false,
+    this.menuLink,
+    this.menuImages,
   });
 
   @override
@@ -909,6 +916,30 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
                           fontStyle: FontStyle.italic,
                         ),
                       ),
+                    // Edit Order button for hosts
+                    if (widget.canEditOrders) ...[
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            _showEditOrderSheet(attendee);
+                          },
+                          icon: const Icon(Icons.edit_rounded, size: 18),
+                          label: const Text('Edit Order'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF7C3AED),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ],
               ),
@@ -917,6 +948,77 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
         ),
       ),
     );
+  }
+
+  void _showEditOrderSheet(Attendee attendee) {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => PreOrderBottomSheet(
+        currentOrder: attendee.foodOrder,
+        currentNotes: attendee.dietaryNotes,
+        menuLink: widget.menuLink,
+        menuImages: widget.menuImages,
+        preorderCutoff: null,
+        onSubmit: (foodOrder, dietaryNotes) async {
+          final result = await _eventsService.updateOrder(
+            widget.eventId,
+            attendee.userId,
+            foodOrder: foodOrder,
+            dietaryNotes: dietaryNotes,
+          );
+
+          if (result.success) {
+            _updateAttendeeOrder(
+              attendee.userId,
+              result.foodOrder,
+              result.dietaryNotes,
+            );
+
+            if (mounted) {
+              scaffoldMessenger.showSnackBar(
+                SnackBar(
+                  content: Text('Updated order for ${attendee.name}'),
+                  backgroundColor: const Color(0xFF22C55E),
+                ),
+              );
+            }
+            return true;
+          } else {
+            if (mounted) {
+              scaffoldMessenger.showSnackBar(
+                SnackBar(
+                  content: Text(result.error ?? 'Failed to update order'),
+                  backgroundColor: Colors.red.shade600,
+                ),
+              );
+            }
+            return false;
+          }
+        },
+      ),
+    );
+  }
+
+  void _updateAttendeeOrder(int userId, String? foodOrder, String? dietaryNotes) {
+    setState(() {
+      final index = _attending.indexWhere((a) => a.userId == userId);
+      if (index != -1) {
+        final old = _attending[index];
+        _attending[index] = Attendee(
+          userId: old.userId,
+          name: old.name,
+          avatarUrl: old.avatarUrl,
+          guestCount: old.guestCount,
+          foodOrder: foodOrder,
+          dietaryNotes: dietaryNotes,
+          waitlistPosition: old.waitlistPosition,
+          rsvpAt: old.rsvpAt,
+        );
+      }
+    });
   }
 
   void _showOrdersSummary() {
