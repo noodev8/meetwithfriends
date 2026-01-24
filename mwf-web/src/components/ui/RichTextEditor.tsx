@@ -42,6 +42,8 @@ export default function RichTextEditor({
                 openOnClick: false,
                 HTMLAttributes: {
                     class: 'text-blue-600 underline',
+                    target: '_blank',
+                    rel: 'noopener noreferrer',
                 },
             }),
         ],

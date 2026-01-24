@@ -123,6 +123,24 @@ export default function EventDetailPage() {
     }, [fromParam, event]);
 
     // =======================================================================
+    // Sanitize HTML description for safe rendering (links open in new tab)
+    // =======================================================================
+    const sanitizedDescription = useMemo(() => {
+        if (!event?.description) return '';
+        if (typeof window === 'undefined') return event.description;
+        // Add hook to make all links open in new tab
+        DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+            if (node.tagName === 'A') {
+                node.setAttribute('target', '_blank');
+                node.setAttribute('rel', 'noopener noreferrer');
+            }
+        });
+        const result = DOMPurify.sanitize(event.description);
+        DOMPurify.removeHook('afterSanitizeAttributes');
+        return result;
+    }, [event?.description]);
+
+    // =======================================================================
     // Fetch event details, attendees, and comments
     // =======================================================================
     useEffect(() => {
@@ -564,13 +582,13 @@ export default function EventDetailPage() {
             <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto w-full">
                 <div className="space-y-6">
                         {/* Description */}
-                        {event.description && (
+                        {sanitizedDescription && (
                             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                                 <h2 className="text-lg font-bold text-slate-900 mb-4 font-display">About this event</h2>
                                 <div
                                     className="text-slate-600 prose prose-sm max-w-none prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline"
                                     dangerouslySetInnerHTML={{
-                                        __html: DOMPurify.sanitize(event.description)
+                                        __html: sanitizedDescription
                                     }}
                                 />
                             </div>

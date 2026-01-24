@@ -72,11 +72,20 @@ export default function GroupDetailPage() {
     // Check if user is the organiser (can edit group settings)
     const isOrganiser = membership?.status === 'active' && membership?.role === 'organiser';
 
-    // Sanitize HTML description for safe rendering
+    // Sanitize HTML description for safe rendering (links open in new tab)
     const sanitizedDescription = useMemo(() => {
         if (!group?.description) return '';
         if (typeof window === 'undefined') return group.description;
-        return DOMPurify.sanitize(group.description);
+        // Add hook to make all links open in new tab
+        DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+            if (node.tagName === 'A') {
+                node.setAttribute('target', '_blank');
+                node.setAttribute('rel', 'noopener noreferrer');
+            }
+        });
+        const result = DOMPurify.sanitize(group.description);
+        DOMPurify.removeHook('afterSanitizeAttributes');
+        return result;
     }, [group?.description]);
 
     // =======================================================================
