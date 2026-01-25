@@ -539,7 +539,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
                       Text(
                         _discoverableGroups.isNotEmpty
-                            ? 'Join an existing group or create your own to get started.'
+                            ? 'Tap a group below to join and see upcoming events.'
                             : 'Ready to bring your crew together? Start by creating your first group.',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
@@ -548,59 +548,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         ),
                       ),
 
-                      const SizedBox(height: 24),
-
-                      // Create Group button
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF6366F1), Color(0xFF7C3AED)],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          ),
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF7C3AED).withAlpha(77),
-                              blurRadius: 16,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => const CreateGroupScreen(),
-                              ),
-                            ).then((_) => _loadData()); // Refresh after returning
-                          },
-                          icon: const Icon(Icons.add_rounded, size: 20),
-                          label: const Text(
-                            'Create a Group',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            foregroundColor: Colors.white,
-                            shadowColor: Colors.transparent,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 32,
-                              vertical: 16,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Discoverable groups section
+                      // Discoverable groups section - show FIRST when available
                       if (_discoverableGroups.isNotEmpty) ...[
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 32),
 
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -633,8 +583,78 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         // Group cards
                         ...(_discoverableGroups.take(6).map((group) => Padding(
                           padding: const EdgeInsets.only(bottom: 12),
-                          child: _DiscoverGroupCard(group: group),
+                          child: _DiscoverGroupCard(group: group, onJoined: _loadData),
                         ))),
+
+                        // Secondary "Create a Group" option
+                        const SizedBox(height: 16),
+                        Center(
+                          child: TextButton.icon(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const CreateGroupScreen(),
+                                ),
+                              ).then((_) => _loadData());
+                            },
+                            icon: const Icon(Icons.add_rounded, size: 18),
+                            label: const Text('Or create your own group'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: const Color(0xFF64748B),
+                            ),
+                          ),
+                        ),
+                      ],
+
+                      // Primary Create Group button - only when no groups to join
+                      if (_discoverableGroups.isEmpty) ...[
+                        const SizedBox(height: 24),
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF6366F1), Color(0xFF7C3AED)],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF7C3AED).withAlpha(77),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const CreateGroupScreen(),
+                                ),
+                              ).then((_) => _loadData());
+                            },
+                            icon: const Icon(Icons.add_rounded, size: 20),
+                            label: const Text(
+                              'Create a Group',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 16,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
 
                       const SizedBox(height: 32),
@@ -753,121 +773,197 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 }
 
-class _DiscoverGroupCard extends StatelessWidget {
+class _DiscoverGroupCard extends StatefulWidget {
   final Group group;
+  final VoidCallback? onJoined;
 
-  const _DiscoverGroupCard({required this.group});
+  const _DiscoverGroupCard({required this.group, this.onJoined});
+
+  @override
+  State<_DiscoverGroupCard> createState() => _DiscoverGroupCardState();
+}
+
+class _DiscoverGroupCardState extends State<_DiscoverGroupCard> {
+  final GroupsService _groupsService = GroupsService();
+  bool _isJoining = false;
+
+  Future<void> _joinGroup() async {
+    setState(() => _isJoining = true);
+
+    final result = await _groupsService.joinGroup(widget.group.id);
+
+    if (!mounted) return;
+
+    setState(() => _isJoining = false);
+
+    if (result.success) {
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result.isPending
+                ? 'Request sent! Waiting for approval.'
+                : 'Welcome to ${widget.group.name}!',
+          ),
+          backgroundColor: result.isPending
+              ? const Color(0xFFF59E0B)
+              : const Color(0xFF10B981),
+        ),
+      );
+
+      // Refresh the parent and navigate to group
+      widget.onJoined?.call();
+
+      if (result.isActive) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => GroupDashboardScreen(
+              groupId: widget.group.id,
+              backLabel: 'Home',
+            ),
+          ),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.error ?? 'Failed to join group'),
+          backgroundColor: const Color(0xFFEF4444),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final theme = getGroupTheme(group.themeColor);
+    final theme = getGroupTheme(widget.group.themeColor);
 
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => GroupDashboardScreen(groupId: group.id, backLabel: 'Home'),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1E293B).withAlpha(10),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF1E293B).withAlpha(10),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: theme.bgColor.withAlpha(38),
+              borderRadius: BorderRadius.circular(12),
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Avatar
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: theme.bgColor.withAlpha(38),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Text(
-                  getGroupInitials(group.name),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: theme.bgColor,
-                  ),
+            child: Center(
+              child: Text(
+                getGroupInitials(widget.group.name),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: theme.bgColor,
                 ),
               ),
             ),
+          ),
 
-            const SizedBox(width: 14),
+          const SizedBox(width: 14),
 
-            // Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    group.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1E293B),
-                    ),
-                    overflow: TextOverflow.ellipsis,
+          // Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.group.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1E293B),
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.people_outline_rounded,
+                      size: 14,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${widget.group.memberCount} members',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                    if (widget.group.upcomingEventCount > 0) ...[
+                      const SizedBox(width: 12),
                       Icon(
-                        Icons.people_outline_rounded,
+                        Icons.event_rounded,
                         size: 14,
-                        color: const Color(0xFF94A3B8),
+                        color: const Color(0xFF6366F1),
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${group.memberCount} members',
+                        '${widget.group.upcomingEventCount} upcoming',
                         style: const TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF6366F1),
                         ),
                       ),
-                      if (group.upcomingEventCount > 0) ...[
-                        const SizedBox(width: 12),
-                        Icon(
-                          Icons.event_rounded,
-                          size: 14,
-                          color: const Color(0xFF6366F1),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${group.upcomingEventCount} upcoming',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF6366F1),
-                          ),
-                        ),
-                      ],
                     ],
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
+          ),
 
-            // Arrow
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: Color(0xFF94A3B8),
+          const SizedBox(width: 12),
+
+          // Join button
+          SizedBox(
+            height: 36,
+            child: ElevatedButton(
+              onPressed: _isJoining ? null : _joinGroup,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6366F1),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+              child: _isJoining
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text(
+                      'Join',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
