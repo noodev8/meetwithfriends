@@ -13,6 +13,7 @@
 | 8 | New join request | Host/Organiser | User requests to join group |
 | 9 | You have joined a group | User | Host/organiser manually approves join request (not auto-join) |
 | 10 | New comment on event | Attendees + Waitlist (except commenter) | User posts a comment. Shows latest comment with link to conversation. |
+| 11 | You're now a host in [group] | User | Organiser promotes member to host |
 
 ---
 

@@ -669,6 +669,36 @@ async function sendEventReminderEmail(email, userName, event, isHost = false, at
 
 /*
 =======================================================================================================================================
+sendPromotedToHostEmail
+=======================================================================================================================================
+Sent when an organiser promotes a member to host
+=======================================================================================================================================
+*/
+async function sendPromotedToHostEmail(email, userName, group) {
+    const html = wrapEmail(`
+        <h2 style="color: #2e7d32; margin-top: 0;">You're now a host!</h2>
+        <p style="color: #666; font-size: 16px;">
+            Hi ${userName},
+        </p>
+        <p style="color: #666; font-size: 16px;">
+            Great news! You've been promoted to <strong>host</strong> in <strong>${group.name}</strong>.
+        </p>
+        <p style="color: #666; font-size: 16px;">
+            As a host, you can now:
+        </p>
+        <ul style="color: #666; font-size: 16px;">
+            <li>Create and manage events</li>
+            <li>Manage RSVPs and attendees</li>
+            <li>Approve new member requests</li>
+        </ul>
+        ${emailButton(config.frontendUrl + '/groups/' + group.id, 'View Group')}
+    `);
+
+    return sendEmail(email, `You're now a host in ${group.name}`, html, 'promoted_to_host', group.id, null, null, group.name);
+}
+
+/*
+=======================================================================================================================================
 sendPasswordResetEmail (existing - kept for compatibility)
 =======================================================================================================================================
 Sends a password reset email with a link to reset the password.
@@ -1166,6 +1196,7 @@ module.exports = {
     sendNewEventEmail,
     sendEventReminderEmail,
     sendPasswordResetEmail,
+    sendPromotedToHostEmail,
     sendNewMemberEmail,
     sendNewRsvpEmail,
     sendNewCommentEmail,

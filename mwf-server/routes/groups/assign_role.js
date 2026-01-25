@@ -40,6 +40,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
+const { sendPromotedToHostEmail } = require('../../services/email');
 
 // Valid roles that can be assigned (organiser cannot be assigned)
 const ASSIGNABLE_ROLES = ['host', 'member'];
@@ -148,6 +149,31 @@ router.post('/:id/members/role', verifyToken, async (req, res) => {
             'UPDATE group_member SET role = $1 WHERE id = $2',
             [role, membership_id]
         );
+
+        // =======================================================================
+        // Send email notification if promoting to host (not demoting)
+        // =======================================================================
+        if (role === 'host' && member.role === 'member') {
+            // Get user email and group details for the notification
+            const userResult = await query(
+                'SELECT email FROM app_user WHERE id = $1',
+                [member.user_id]
+            );
+            const groupResult2 = await query(
+                'SELECT id, name FROM group_list WHERE id = $1',
+                [id]
+            );
+
+            if (userResult.rows.length > 0 && groupResult2.rows.length > 0) {
+                const userEmail = userResult.rows[0].email;
+                const group = groupResult2.rows[0];
+
+                // Send email (fire and forget - don't block response)
+                sendPromotedToHostEmail(userEmail, member.name, group).catch(err => {
+                    console.error('Error sending promoted to host email:', err);
+                });
+            }
+        }
 
         // =======================================================================
         // Return success response
