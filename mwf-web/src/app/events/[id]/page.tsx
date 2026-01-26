@@ -77,6 +77,14 @@ export default function EventDetailPage() {
     // Cancel RSVP confirmation modal
     const [showCancelModal, setShowCancelModal] = useState(false);
 
+    // Description expand/collapse state
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
+    // =======================================================================
+    // Constants
+    // =======================================================================
+    const DESCRIPTION_CHAR_LIMIT = 200;
+
     // =======================================================================
     // Compute back link based on navigation source
     // =======================================================================
@@ -139,6 +147,21 @@ export default function EventDetailPage() {
         DOMPurify.removeHook('afterSanitizeAttributes');
         return result;
     }, [event?.description]);
+
+    // Strip HTML tags for plain text display and character counting
+    const plainTextDescription = useMemo(() => {
+        if (!event?.description) return '';
+        return event.description
+            .replace(/<[^>]*>/g, '')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .trim();
+    }, [event?.description]);
+
+    const isLongDescription = plainTextDescription.length > DESCRIPTION_CHAR_LIMIT;
 
     // =======================================================================
     // Fetch event details, attendees, and comments
@@ -585,12 +608,26 @@ export default function EventDetailPage() {
                         {sanitizedDescription && (
                             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                                 <h2 className="text-lg font-bold text-slate-900 mb-4 font-display">About this event</h2>
-                                <div
-                                    className="text-slate-600 prose prose-sm max-w-none prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline"
-                                    dangerouslySetInnerHTML={{
-                                        __html: sanitizedDescription
-                                    }}
-                                />
+                                {isDescriptionExpanded || !isLongDescription ? (
+                                    <div
+                                        className="text-slate-600 prose prose-sm max-w-none prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline"
+                                        dangerouslySetInnerHTML={{
+                                            __html: sanitizedDescription
+                                        }}
+                                    />
+                                ) : (
+                                    <p className="text-slate-600 text-sm leading-relaxed">
+                                        {plainTextDescription.substring(0, DESCRIPTION_CHAR_LIMIT)}...
+                                    </p>
+                                )}
+                                {isLongDescription && (
+                                    <button
+                                        onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                                        className="mt-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                                    >
+                                        {isDescriptionExpanded ? 'Show less' : 'Read more'}
+                                    </button>
+                                )}
                             </div>
                         )}
 

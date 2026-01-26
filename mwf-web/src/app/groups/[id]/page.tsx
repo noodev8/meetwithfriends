@@ -62,6 +62,12 @@ export default function GroupDetailPage() {
     const [broadcastMessageText, setBroadcastMessageText] = useState('');
     const [broadcastLoading, setBroadcastLoading] = useState(false);
     const [showProfileImageModal, setShowProfileImageModal] = useState(false);
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
+    // =======================================================================
+    // Constants
+    // =======================================================================
+    const DESCRIPTION_CHAR_LIMIT = 200;
 
     // =======================================================================
     // Check if user can manage members (organiser or host)
@@ -87,6 +93,21 @@ export default function GroupDetailPage() {
         DOMPurify.removeHook('afterSanitizeAttributes');
         return result;
     }, [group?.description]);
+
+    // Strip HTML tags for plain text display and character counting
+    const plainTextDescription = useMemo(() => {
+        if (!group?.description) return '';
+        return group.description
+            .replace(/<[^>]*>/g, '')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .trim();
+    }, [group?.description]);
+
+    const isLongDescription = plainTextDescription.length > DESCRIPTION_CHAR_LIMIT;
 
     // =======================================================================
     // Fetch pending members (for organisers only)
@@ -510,10 +531,24 @@ export default function GroupDetailPage() {
                         {sanitizedDescription && (
                             <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6">
                                 <h2 className="font-display text-lg font-semibold text-slate-800 mb-4">About</h2>
-                                <div
-                                    className="prose prose-slate prose-sm max-w-none"
-                                    dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
-                                />
+                                {isDescriptionExpanded || !isLongDescription ? (
+                                    <div
+                                        className="prose prose-slate prose-sm max-w-none"
+                                        dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
+                                    />
+                                ) : (
+                                    <p className="text-slate-600 text-sm leading-relaxed">
+                                        {plainTextDescription.substring(0, DESCRIPTION_CHAR_LIMIT)}...
+                                    </p>
+                                )}
+                                {isLongDescription && (
+                                    <button
+                                        onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                                        className="mt-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                                    >
+                                        {isDescriptionExpanded ? 'Show less' : 'Read more'}
+                                    </button>
+                                )}
                             </div>
                         )}
 

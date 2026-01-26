@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:intl/intl.dart';
 import '../models/event.dart';
 import '../services/groups_service.dart';
@@ -44,6 +45,10 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
   int? _processingMemberId;
   bool _isLeaving = false;
   bool _isJoining = false;
+
+  // Description expand/collapse state
+  bool _isDescriptionExpanded = false;
+  static const int _descriptionCharLimit = 200;
 
   @override
   void initState() {
@@ -1580,7 +1585,22 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
     );
   }
 
+  String _stripHtmlTags(String htmlString) {
+    return htmlString
+        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"')
+        .trim();
+  }
+
   Widget _buildAboutSection(GroupDetail group) {
+    final description = group.description ?? '';
+    final plainText = _stripHtmlTags(description);
+    final isLongDescription = plainText.length > _descriptionCharLimit;
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -1602,28 +1622,60 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          Text(
-            _stripHtmlTags(group.description ?? ''),
-            style: const TextStyle(
-              fontSize: 14,
-              height: 1.6,
-              color: Color(0xFF475569),
+          if (_isDescriptionExpanded || !isLongDescription)
+            Html(
+              data: description,
+              style: {
+                "body": Style(
+                  fontSize: FontSize(14),
+                  lineHeight: LineHeight(1.6),
+                  color: const Color(0xFF475569),
+                  margin: Margins.zero,
+                  padding: HtmlPaddings.zero,
+                ),
+                "a": Style(
+                  color: const Color(0xFF4F46E5),
+                  textDecoration: TextDecoration.none,
+                ),
+                "ul": Style(
+                  margin: Margins.only(top: 8, bottom: 8),
+                ),
+                "li": Style(
+                  margin: Margins.only(bottom: 4),
+                ),
+              },
+            )
+          else
+            Text(
+              '${plainText.substring(0, _descriptionCharLimit)}...',
+              style: const TextStyle(
+                fontSize: 14,
+                height: 1.6,
+                color: Color(0xFF475569),
+              ),
             ),
-          ),
+          if (isLongDescription)
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _isDescriptionExpanded = !_isDescriptionExpanded;
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  _isDescriptionExpanded ? 'Show less' : 'Read more',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF4F46E5),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
-  }
-
-  String _stripHtmlTags(String htmlString) {
-    return htmlString
-        .replaceAll(RegExp(r'<[^>]*>'), '')
-        .replaceAll('&nbsp;', ' ')
-        .replaceAll('&amp;', '&')
-        .replaceAll('&lt;', '<')
-        .replaceAll('&gt;', '>')
-        .replaceAll('&quot;', '"')
-        .trim();
   }
 
   Widget _buildUpcomingEventsSection() {
