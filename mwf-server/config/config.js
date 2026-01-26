@@ -34,5 +34,8 @@ module.exports = {
     },
 
     // Frontend URL (for email links)
-    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000'
+    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+
+    // Backend URL (for API links in emails, e.g., calendar downloads)
+    backendUrl: process.env.BACKEND_URL || 'http://localhost:3019'
 };

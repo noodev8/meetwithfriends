@@ -376,6 +376,16 @@ function emailLink(url, text) {
     `;
 }
 
+// Calendar download link helper (for event emails)
+function calendarLink(eventId) {
+    const calendarUrl = `${config.backendUrl}/api/events/${eventId}/calendar.ics`;
+    return `
+        <p style="margin: 15px 0 25px 0;">
+            <a href="${calendarUrl}" style="color: #4f46e5; text-decoration: none; font-size: 14px;">📅 Add to Calendar</a>
+        </p>
+    `;
+}
+
 /*
 =======================================================================================================================================
 sendWelcomeEmail
@@ -430,6 +440,7 @@ async function sendRsvpConfirmedEmail(email, userName, event, group) {
                 <span style="color: #666;">${eventDate} at ${eventTime}</span>${event.location ? `<br><span style="color: #666;">${event.location}</span>` : ''}
             </p>
         </div>
+        ${calendarLink(event.id)}
         ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Event')}
     `);
 
@@ -507,6 +518,7 @@ async function sendPromotedFromWaitlistEmail(email, userName, event, group) {
                 ${eventDate} at ${eventTime}${event.location ? `<br>${event.location}` : ''}
             </p>
         </div>
+        ${calendarLink(event.id)}
         ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Event')}
     `);
 
