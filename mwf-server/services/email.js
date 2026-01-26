@@ -189,7 +189,7 @@ Returns: { processed, sent, failed }
 =======================================================================================================================================
 */
 async function processEmailQueue(limit = 50) {
-    const stats = { processed: 0, sent: 0, failed: 0, skipped: 0 };
+    const stats = { processed: 0, sent: 0, failed: 0, skipped: 0, cancelled: 0 };
 
     try {
         // Get pending emails that are scheduled for now or earlier
@@ -216,6 +216,22 @@ async function processEmailQueue(limit = 50) {
                 );
                 stats.skipped++;
                 continue;
+            }
+
+            // Cancel event_reminder emails if the event has already passed
+            if (email.email_type === 'event_reminder' && email.event_id) {
+                const eventCheck = await query(
+                    `SELECT 1 FROM event_list WHERE id = $1 AND date_time > NOW()`,
+                    [email.event_id]
+                );
+                if (eventCheck.rows.length === 0) {
+                    await query(
+                        `UPDATE email_queue SET status = 'cancelled', error_message = 'Event has already passed' WHERE id = $1`,
+                        [email.id]
+                    );
+                    stats.cancelled++;
+                    continue;
+                }
             }
 
             // Send the email (use group_name as sender if available)
@@ -1073,7 +1089,7 @@ queueEventReminderEmail
 Queue event reminder for later processing
 =======================================================================================================================================
 */
-async function queueEventReminderEmail(email, userName, event, group, isHost = false, attendeeSummary = null) {
+async function queueEventReminderEmail(email, userName, event, group, isHost = false, attendeeSummary = null, foodOrder = null) {
     const eventDate = new Date(event.date_time).toLocaleDateString('en-GB', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
@@ -1087,6 +1103,17 @@ async function queueEventReminderEmail(email, userName, event, group, isHost = f
             <div style="background-color: #e8f5e9; padding: 12px 15px; border-radius: 6px; margin: 15px 0;">
                 <p style="color: #2e7d32; font-size: 14px; margin: 0;">
                     <strong>Host Summary:</strong> ${attendeeSummary.attending} attending${attendeeSummary.waitlist > 0 ? `, ${attendeeSummary.waitlist} on waitlist` : ''}
+                </p>
+            </div>
+        `;
+    }
+
+    let foodOrderSection = '';
+    if (foodOrder) {
+        foodOrderSection = `
+            <div style="background-color: #fff3e0; padding: 12px 15px; border-radius: 6px; margin: 15px 0;">
+                <p style="color: #e65100; font-size: 14px; margin: 0;">
+                    <strong>Your Pre-order:</strong> ${foodOrder}
                 </p>
             </div>
         `;
@@ -1107,6 +1134,7 @@ async function queueEventReminderEmail(email, userName, event, group, isHost = f
             </p>
         </div>
         ${summarySection}
+        ${foodOrderSection}
         ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Event')}
     `);
 

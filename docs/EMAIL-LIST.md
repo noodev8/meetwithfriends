@@ -6,7 +6,7 @@
 | 2 | New event in your group | Group members | Host creates event |
 | 3 | RSVP confirmed | User | User RSVPs to event |
 | 3b | New RSVP: [name] is going to [event] | Host | User RSVPs to event (attending only, not waitlist) |
-| 4 | Event reminder (24 hours before) | Attendees + Host | Scheduled (24h before event). Host version includes attendee summary. |
+| 4 | Event reminder (24 hours before) | Confirmed attendees (status='attending') + Host | Scheduled (24h before event). Only sent to users with `receive_broadcasts=true`. Includes: event title, date/time, location, link to event page, food pre-order (if user has one). Host version includes attendee summary. |
 | 5 | You've been removed from an event | User | Host/organiser removes or demotes them |
 | 6 | You've been moved from waitlist to attending | User | Host/organiser promotes them OR auto-promoted when spot opens |
 | 7 | Event cancelled | Attendees | Host/organiser cancels event |

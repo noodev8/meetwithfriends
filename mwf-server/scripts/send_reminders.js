@@ -2,16 +2,18 @@
 =======================================================================================================================================
 Script: send_reminders
 =======================================================================================================================================
-Purpose: Queues event reminder emails 24 hours before events.
+Purpose: Queues event reminder emails for events happening within the next 48 hours.
 Usage: Run manually or via cron job (e.g., daily at 9am)
 
    node scripts/send_reminders.js
 
 This script:
-1. Finds events starting in the next 24-26 hours (gives a 2-hour window)
-2. Queues reminder emails to all attendees
-3. Hosts receive a version with attendee summary
-4. Run process_email_queue.js after to actually send the emails
+1. Finds events in the next 48 hours that haven't had reminders sent yet (checks email_log)
+2. Queues reminder emails to confirmed attendees only (status='attending')
+3. Respects user's receive_broadcasts preference
+4. Includes food pre-order if user has one
+5. Hosts receive a version with attendee summary
+6. Run process_email_queue.js after to actually send the emails
 =======================================================================================================================================
 */
 
@@ -20,17 +22,17 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const { query, pool } = require('../database');
 const { queueEventReminderEmail } = require('../services/email');
 
-// Time window: events starting between 24 and 26 hours from now
-const HOURS_BEFORE_MIN = 24;
-const HOURS_BEFORE_MAX = 26;
+// Time window: events in the next 48 hours (allows for late scheduler runs)
+const HOURS_AHEAD = 48;
 
 async function sendReminders() {
     console.log('Starting event reminder job...');
-    console.log(`Looking for events between ${HOURS_BEFORE_MIN} and ${HOURS_BEFORE_MAX} hours from now`);
+    console.log(`Looking for events in the next ${HOURS_AHEAD} hours that haven't been reminded yet`);
 
     try {
         // =======================================================================
-        // Find events in the reminder window (with group info)
+        // Find events in the next 48 hours that haven't had reminders sent yet
+        // Uses email_log to check if reminder was already sent (handles late scheduler runs)
         // =======================================================================
         const eventsResult = await query(
             `SELECT
@@ -43,8 +45,13 @@ async function sendReminders() {
              FROM event_list e
              JOIN group_list g ON e.group_id = g.id
              WHERE e.status = 'published'
-             AND e.date_time > NOW() + INTERVAL '${HOURS_BEFORE_MIN} hours'
-             AND e.date_time <= NOW() + INTERVAL '${HOURS_BEFORE_MAX} hours'`
+               AND e.date_time > NOW()
+               AND e.date_time <= NOW() + INTERVAL '${HOURS_AHEAD} hours'
+               AND NOT EXISTS (
+                   SELECT 1 FROM email_log
+                   WHERE email_type = 'event_reminder'
+                     AND related_id = e.id
+               )`
         );
 
         console.log(`Found ${eventsResult.rows.length} events to queue reminders for`);
@@ -87,21 +94,23 @@ async function sendReminders() {
             );
             const hostUserIds = hostsResult.rows.map(h => h.user_id);
 
-            // Get all attendees with their user info
+            // Get confirmed attendees who have broadcasts enabled, with their food pre-order
             const attendeesResult = await query(
-                `SELECT u.id, u.email, u.name, er.status
+                `SELECT u.id, u.email, u.name, er.food_order, er.dietary_notes
                  FROM event_rsvp er
                  JOIN app_user u ON er.user_id = u.id
                  WHERE er.event_id = $1
-                 AND er.status IN ('attending', 'waitlist')`,
+                   AND er.status = 'attending'
+                   AND u.receive_broadcasts = true`,
                 [event.id]
             );
 
-            console.log(`  - ${attendeesResult.rows.length} attendees to notify`);
+            console.log(`  - ${attendeesResult.rows.length} confirmed attendees to notify (with broadcasts enabled)`);
 
             // Queue emails for each attendee
             for (const attendee of attendeesResult.rows) {
                 const isHost = hostUserIds.includes(attendee.id);
+                const foodOrder = attendee.food_order || null;
 
                 try {
                     await queueEventReminderEmail(
@@ -110,10 +119,15 @@ async function sendReminders() {
                         event,
                         group,
                         isHost,
-                        isHost ? attendeeSummary : null
+                        isHost ? attendeeSummary : null,
+                        foodOrder
                     );
                     totalEmailsQueued++;
-                    console.log(`  - Queued for ${attendee.email}${isHost ? ' (host)' : ''}`);
+                    const extras = [
+                        isHost ? 'host' : null,
+                        foodOrder ? 'has pre-order' : null
+                    ].filter(Boolean).join(', ');
+                    console.log(`  - Queued for ${attendee.email}${extras ? ` (${extras})` : ''}`);
                 } catch (err) {
                     console.error(`  - Failed to queue for ${attendee.email}:`, err.message);
                 }
