@@ -65,7 +65,7 @@ router.get('/', verifyToken, async (req, res) => {
                    SELECT group_id FROM group_member WHERE user_id = $1
                )
              GROUP BY g.id
-             ORDER BY g.created_at DESC`,
+             ORDER BY CASE WHEN g.name = 'Brookfield Socials' THEN 0 ELSE 1 END, g.created_at DESC`,
             [userId]
         );
 
