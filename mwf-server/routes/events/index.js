@@ -27,6 +27,7 @@ const updateOrder = require('./update_order');
 const contactHost = require('./contact_host');
 const exportPreorders = require('./export_preorders');
 const calendar = require('./calendar');
+const venueAccess = require('./venue_access');
 
 // =======================================================================
 // Route definitions
@@ -47,6 +48,7 @@ router.use('/', updateOrder);     // POST /api/events/:id/update-order - host up
 router.use('/', contactHost);     // POST /api/events/:id/contact-host - contact event host(s)
 router.use('/', exportPreorders); // GET /api/events/:id/preorders/pdf - export pre-orders as PDF
 router.use('/', calendar);        // GET /api/events/:id/calendar.ics - download calendar file
+router.use('/', venueAccess);     // GET/POST/DELETE /api/events/:id/venue-access - manage venue access
 router.use('/', getEvent);        // GET /api/events/:id - get single event (must be last)
 
 module.exports = router;

@@ -55,6 +55,9 @@ app.use('/api/images', require('./routes/images'));
 // Email queue routes
 app.use('/api/emails', require('./routes/emails'));
 
+// Venue routes (public - token-based auth)
+app.use('/api/venue', require('./routes/venue'));
+
 // =======================================================================================================================================
 // Health check
 // =======================================================================================================================================
