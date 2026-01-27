@@ -583,7 +583,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         // Group cards
                         ...(_discoverableGroups.take(6).map((group) => Padding(
                           padding: const EdgeInsets.only(bottom: 12),
-                          child: _DiscoverGroupCard(group: group, onJoined: _loadData),
+                          child: _DiscoverGroupCard(group: group),
                         ))),
 
                         // Secondary "Create a Group" option
@@ -773,197 +773,140 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 }
 
-class _DiscoverGroupCard extends StatefulWidget {
+class _DiscoverGroupCard extends StatelessWidget {
   final Group group;
-  final VoidCallback? onJoined;
 
-  const _DiscoverGroupCard({required this.group, this.onJoined});
+  const _DiscoverGroupCard({required this.group});
 
   @override
-  State<_DiscoverGroupCard> createState() => _DiscoverGroupCardState();
-}
+  Widget build(BuildContext context) {
+    final theme = getGroupTheme(group.themeColor);
 
-class _DiscoverGroupCardState extends State<_DiscoverGroupCard> {
-  final GroupsService _groupsService = GroupsService();
-  bool _isJoining = false;
-
-  Future<void> _joinGroup() async {
-    setState(() => _isJoining = true);
-
-    final result = await _groupsService.joinGroup(widget.group.id);
-
-    if (!mounted) return;
-
-    setState(() => _isJoining = false);
-
-    if (result.success) {
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            result.isPending
-                ? 'Request sent! Waiting for approval.'
-                : 'Welcome to ${widget.group.name}!',
-          ),
-          backgroundColor: result.isPending
-              ? const Color(0xFFF59E0B)
-              : const Color(0xFF10B981),
-        ),
-      );
-
-      // Refresh the parent and navigate to group
-      widget.onJoined?.call();
-
-      if (result.isActive) {
+    return GestureDetector(
+      onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => GroupDashboardScreen(
-              groupId: widget.group.id,
+              groupId: group.id,
               backLabel: 'Home',
             ),
           ),
         );
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.error ?? 'Failed to join group'),
-          backgroundColor: const Color(0xFFEF4444),
-        ),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = getGroupTheme(widget.group.themeColor);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1E293B).withAlpha(10),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Avatar
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: theme.bgColor.withAlpha(38),
-              borderRadius: BorderRadius.circular(12),
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1E293B).withAlpha(10),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
-            child: Center(
-              child: Text(
-                getGroupInitials(widget.group.name),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: theme.bgColor,
+          ],
+        ),
+        child: Row(
+          children: [
+            // Avatar
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: theme.bgColor.withAlpha(38),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(
+                  getGroupInitials(group.name),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: theme.bgColor,
+                  ),
                 ),
               ),
             ),
-          ),
 
-          const SizedBox(width: 14),
+            const SizedBox(width: 14),
 
-          // Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.group.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E293B),
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    group.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1E293B),
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.people_outline_rounded,
-                      size: 14,
-                      color: const Color(0xFF94A3B8),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${widget.group.memberCount} members',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                    if (widget.group.upcomingEventCount > 0) ...[
-                      const SizedBox(width: 12),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
                       Icon(
-                        Icons.event_rounded,
+                        Icons.people_outline_rounded,
                         size: 14,
-                        color: const Color(0xFF6366F1),
+                        color: const Color(0xFF94A3B8),
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${widget.group.upcomingEventCount} upcoming',
+                        '${group.memberCount} members',
                         style: const TextStyle(
                           fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF6366F1),
+                          color: Color(0xFF64748B),
                         ),
                       ),
+                      if (group.upcomingEventCount > 0) ...[
+                        const SizedBox(width: 12),
+                        Icon(
+                          Icons.event_rounded,
+                          size: 14,
+                          color: const Color(0xFF6366F1),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${group.upcomingEventCount} upcoming',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF6366F1),
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          const SizedBox(width: 12),
+            const SizedBox(width: 12),
 
-          // Join button
-          SizedBox(
-            height: 36,
-            child: ElevatedButton(
-              onPressed: _isJoining ? null : _joinGroup,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6366F1),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
+            // Enter button
+            Container(
+              height: 36,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6366F1),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: const Center(
+                child: Text(
+                  'Enter',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-              child: _isJoining
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : const Text(
-                      'Join',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
