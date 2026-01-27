@@ -537,9 +537,13 @@ export default function GroupDetailPage() {
                                         dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
                                     />
                                 ) : (
-                                    <p className="text-slate-600 text-sm leading-relaxed">
-                                        {plainTextDescription.substring(0, DESCRIPTION_CHAR_LIMIT)}...
-                                    </p>
+                                    <div className="relative">
+                                        <div
+                                            className="prose prose-slate prose-sm max-w-none max-h-20 overflow-hidden"
+                                            dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
+                                        />
+                                        <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white to-transparent" />
+                                    </div>
                                 )}
                                 {isLongDescription && (
                                     <button

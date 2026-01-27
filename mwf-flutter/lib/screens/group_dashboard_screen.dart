@@ -1646,13 +1646,55 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
               },
             )
           else
-            Text(
-              '${plainText.substring(0, _descriptionCharLimit)}...',
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.6,
-                color: Color(0xFF475569),
-              ),
+            Stack(
+              children: [
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 80),
+                  child: ClipRect(
+                    child: Html(
+                      data: description,
+                      style: {
+                        "body": Style(
+                          fontSize: FontSize(14),
+                          lineHeight: LineHeight(1.6),
+                          color: const Color(0xFF475569),
+                          margin: Margins.zero,
+                          padding: HtmlPaddings.zero,
+                        ),
+                        "a": Style(
+                          color: const Color(0xFF4F46E5),
+                          textDecoration: TextDecoration.none,
+                        ),
+                        "ul": Style(
+                          margin: Margins.only(top: 8, bottom: 8),
+                        ),
+                        "li": Style(
+                          margin: Margins.only(bottom: 4),
+                        ),
+                      },
+                    ),
+                  ),
+                ),
+                // Fade out gradient at bottom
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: 40,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0x00FFFFFF),
+                          Color(0xFFFFFFFF),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           if (isLongDescription)
             GestureDetector(
