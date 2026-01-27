@@ -153,13 +153,22 @@ Response (Success):
 {
     "return_code": "SUCCESS",
     "event": {
+        "id": 1,
         "title": "Friday Dinner at Luigi's",
         "date_time": "2026-02-01T19:00:00Z",
         "location": "Luigi's Restaurant, 123 Main St",
-        "description": "Monthly dinner meetup"
+        "description": "Monthly dinner meetup",
+        "preorder_cutoff": "2026-01-30T12:00:00Z",  // null if not set
+        "status": "published"
     },
     "group": {
-        "name": "Downtown Foodies"
+        "name": "Downtown Foodies",
+        "description": "A group of food enthusiasts exploring Sydney's best restaurants"
+    },
+    "organiser": {
+        "name": "John Smith",
+        "email": "john@example.com",      // from contact_email
+        "mobile": "0412 345 678"          // from contact_mobile
     },
     "guests": [
         {
@@ -230,16 +239,38 @@ Return Codes: SUCCESS, INVALID_TOKEN, ACCESS_REVOKED, EXPIRED_TOKEN, SERVER_ERRO
 **Auth:** None (public page, token validates access)
 
 **Components:**
+- **Status banner** (see below)
 - Event header (title, date/time, location)
 - Group name badge
+- Organiser contact (name, email, mobile)
 - Summary stats (total guests, preorders count, dietary notes count)
 - Guest table with columns: Name, Food Order, Dietary Notes, +Guests
 - Venue notes textarea (auto-saves on blur or after 2s of no typing)
 - "Last updated" timestamp with manual refresh button
+- Print buttons (Introduction leaflet, Thank You leaflet)
+
+**Status Banner Logic:**
+
+The venue needs to know whether the guest list is final or still changing.
+
+| Scenario | Banner Style | Message |
+|----------|--------------|---------|
+| Has cutoff, before cutoff | Warning (amber) | "Pre-orders close [cutoff date]. Guest list may change until then." |
+| Has cutoff, after cutoff | Success (green) | "Pre-orders closed. This is the final guest list." |
+| No cutoff, before event | Info (blue) | "RSVPs open until [event date]. Guest list may change." |
+| Event day or after | Success (green) | "Final guest list." |
+
+Example banner:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ⏳ PRE-ORDERS CLOSE: Thu 30 Jan 2026, 12:00 PM                 │
+│  Guest list may change until then.                              │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 **UI States:**
 - Loading: Skeleton loader
-- Valid token: Full dashboard
+- Valid token: Full dashboard with status banner
 - Invalid/expired token: Error message with explanation
 - Revoked: "Access revoked" message
 
