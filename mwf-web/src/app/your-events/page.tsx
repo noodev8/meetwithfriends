@@ -18,7 +18,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getMyRsvps, EventWithDetails } from '@/lib/api/events';
-import { getMyGroups, discoverGroups, joinGroup, MyGroup, GroupWithCount } from '@/lib/api/groups';
+import { getMyGroups, discoverGroups, MyGroup, GroupWithCount } from '@/lib/api/groups';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 import EventCard from '@/components/ui/EventCard';
 import { getGroupTheme, getGroupInitials } from '@/lib/groupThemes';
@@ -141,8 +141,6 @@ export default function MyEventsPage() {
                                         <DiscoverGroupCard
                                             key={group.id}
                                             group={group}
-                                            token={token!}
-                                            onJoined={() => setDiscoverableGroups(prev => prev.filter(g => g.id !== group.id))}
                                         />
                                     ))}
                                 </div>
@@ -268,8 +266,6 @@ export default function MyEventsPage() {
                                         <DiscoverGroupCard
                                             key={group.id}
                                             group={group}
-                                            token={token!}
-                                            onJoined={() => setDiscoverableGroups(prev => prev.filter(g => g.id !== group.id))}
                                         />
                                     ))}
                                 </div>
@@ -328,29 +324,14 @@ function GroupCard({ group }: { group: MyGroup }) {
 // =======================================================================
 // Discover Group Card Component (with Join button)
 // =======================================================================
-function DiscoverGroupCard({ group, token, onJoined }: { group: GroupWithCount; token: string; onJoined: () => void }) {
-    const router = useRouter();
-    const [isJoining, setIsJoining] = useState(false);
+function DiscoverGroupCard({ group }: { group: GroupWithCount }) {
     const theme = getGroupTheme(group.theme_color);
 
-    const handleJoin = async (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        setIsJoining(true);
-        const result = await joinGroup(token, group.id);
-        setIsJoining(false);
-
-        if (result.success && result.data) {
-            onJoined();
-            if (result.data.status === 'active') {
-                router.push(`/groups/${group.id}`);
-            }
-        }
-    };
-
     return (
-        <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200">
+        <Link
+            href={`/groups/${group.id}`}
+            className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200"
+        >
             <div className="flex items-center gap-4">
                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${theme.gradientLight} flex items-center justify-center flex-shrink-0`}>
                     <span className={`text-lg font-bold ${theme.textColor}`}>
@@ -365,21 +346,10 @@ function DiscoverGroupCard({ group, token, onJoined }: { group: GroupWithCount; 
                         {group.member_count} {group.member_count === 1 ? 'member' : 'members'}
                     </p>
                 </div>
-                <button
-                    onClick={handleJoin}
-                    disabled={isJoining}
-                    className="flex-shrink-0 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-400 text-white text-sm font-semibold rounded-full transition-colors"
-                >
-                    {isJoining ? (
-                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                    ) : (
-                        'Join'
-                    )}
-                </button>
+                <span className="flex-shrink-0 px-4 py-2 bg-indigo-500 text-white text-sm font-semibold rounded-full">
+                    Enter
+                </span>
             </div>
-        </div>
+        </Link>
     );
 }
