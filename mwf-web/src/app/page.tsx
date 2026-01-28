@@ -4,7 +4,7 @@
 =======================================================================================================================================
 Landing Page
 =======================================================================================================================================
-Public landing page for strangers. Logged-in users are redirected to /dashboard.
+Public landing page for strangers. Logged-in users are redirected to /your-events.
 Warm, editorial design for social gatherings of all kinds.
 =======================================================================================================================================
 */

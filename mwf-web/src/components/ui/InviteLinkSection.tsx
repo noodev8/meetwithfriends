@@ -191,7 +191,7 @@ export default function InviteLinkSection({ type, id, token }: InviteLinkSection
                 // =======================================================================
                 <>
                     <p className="text-sm text-slate-600 mb-3">
-                        Share this link to invite people:
+                        Share this link to invite people to the {type === 'event' ? 'event' : 'group'}:
                     </p>
 
                     {/* Link display box */}

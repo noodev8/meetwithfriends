@@ -49,7 +49,7 @@ router.post('/:token', verifyToken, async (req, res) => {
         // =======================================================================
         // Validate token format
         // =======================================================================
-        if (!token || token.length !== 64 || !/^[a-f0-9]+$/i.test(token)) {
+        if (!token || token.length !== 16 || !/^[a-f0-9]+$/i.test(token)) {
             return res.json({
                 return_code: 'INVITE_NOT_FOUND',
                 message: 'Invalid invitation link'

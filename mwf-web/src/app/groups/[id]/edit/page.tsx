@@ -185,8 +185,8 @@ export default function EditGroupPage() {
             <SidebarLayout>
                 <div className="flex-1 flex flex-col items-center justify-center p-8">
                     <p className="text-slate-600 mb-4">{error || 'Access denied'}</p>
-                    <Link href="/dashboard" className="text-indigo-600 hover:text-indigo-700">
-                        Back to dashboard
+                    <Link href="/your-events" className="text-indigo-600 hover:text-indigo-700">
+                        Back to your events
                     </Link>
                 </div>
             </SidebarLayout>

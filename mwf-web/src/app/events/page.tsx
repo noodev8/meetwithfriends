@@ -15,7 +15,7 @@ export default function EventsPage() {
     const router = useRouter();
 
     useEffect(() => {
-        router.replace('/dashboard');
+        router.replace('/your-events');
     }, [router]);
 
     return (

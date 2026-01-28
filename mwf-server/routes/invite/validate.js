@@ -73,9 +73,9 @@ router.get('/:token', optionalAuth, async (req, res) => {
         const userId = req.user?.id || null;
 
         // =======================================================================
-        // Validate token format (should be 64-char hex)
+        // Validate token format (should be 16-char hex)
         // =======================================================================
-        if (!token || token.length !== 64 || !/^[a-f0-9]+$/i.test(token)) {
+        if (!token || token.length !== 16 || !/^[a-f0-9]+$/i.test(token)) {
             return res.json({
                 return_code: 'INVITE_NOT_FOUND',
                 valid: false,

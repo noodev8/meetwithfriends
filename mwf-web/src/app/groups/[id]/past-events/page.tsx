@@ -118,10 +118,10 @@ export default function PastEventsPage() {
                     <div className="text-6xl mb-4">📅</div>
                     <p className="text-slate-600 mb-4">{error || 'Group not found'}</p>
                     <Link
-                        href="/dashboard"
+                        href="/your-events"
                         className="text-indigo-600 hover:text-indigo-700 font-medium"
                     >
-                        Back to dashboard
+                        Back to your events
                     </Link>
                 </div>
             </SidebarLayout>

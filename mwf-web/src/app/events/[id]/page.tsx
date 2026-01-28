@@ -99,7 +99,7 @@ export default function EventDetailPage() {
         }
 
         if (fromParam === 'dashboard') {
-            return { href: '/dashboard', label: 'Dashboard' };
+            return { href: '/your-events', label: 'Your Events' };
         }
 
         if (fromParam === 'your-events') {
@@ -432,10 +432,10 @@ export default function EventDetailPage() {
                         <h1 className="text-2xl font-bold text-slate-900 mb-2">Event not found</h1>
                         <p className="text-slate-600 mb-6">{error || 'This event may have been removed or doesn\'t exist.'}</p>
                         <Link
-                            href="/dashboard"
+                            href="/your-events"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-600 hover:to-violet-700 transition-all shadow-md"
                         >
-                            Back to dashboard
+                            Back to your events
                         </Link>
                     </div>
                 </div>

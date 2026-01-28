@@ -81,7 +81,7 @@ export default function GroupsPage() {
                 <div className="flex justify-between items-start mb-6 sm:mb-8">
                     <div>
                         <Link
-                            href="/dashboard"
+                            href="/your-events"
                             className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-700 text-sm font-medium mb-2 transition-colors"
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -53,7 +53,17 @@ export default function LoginPage() {
             login(result.data.token, result.data.user);
             setIsLoading(false);
             setIsRedirecting(true);
-            router.push('/your-events');
+
+            // Check for pending invite redirect
+            const pendingToken = localStorage.getItem('pending_invite_token');
+            const pendingType = localStorage.getItem('pending_invite_type');
+            if (pendingToken && pendingType) {
+                localStorage.removeItem('pending_invite_token');
+                localStorage.removeItem('pending_invite_type');
+                router.push(`/invite/${pendingType}/${pendingToken}`);
+            } else {
+                router.push('/your-events');
+            }
         } else {
             setError(result.error || 'Login failed');
             setIsLoading(false);

@@ -227,7 +227,7 @@ export default function GroupDetailPage() {
         setShowLeaveModal(false);
 
         if (result.success) {
-            router.push('/dashboard');
+            router.push('/your-events');
         } else {
             alert(result.error || 'Failed to leave group');
         }
@@ -334,8 +334,8 @@ export default function GroupDetailPage() {
             <SidebarLayout>
                 <div className="flex-1 flex flex-col items-center justify-center p-8">
                     <p className="text-slate-600 mb-4">{error || 'Group not found'}</p>
-                    <Link href="/dashboard" className="text-indigo-600 hover:text-indigo-700">
-                        Back to dashboard
+                    <Link href="/your-events" className="text-indigo-600 hover:text-indigo-700">
+                        Back to your events
                     </Link>
                 </div>
             </SidebarLayout>

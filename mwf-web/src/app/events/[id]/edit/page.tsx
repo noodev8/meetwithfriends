@@ -248,7 +248,7 @@ export default function EditEventPage() {
         setCancelLoading(false);
 
         if (result.success) {
-            router.push('/dashboard');
+            router.push('/your-events');
         } else {
             setShowDeleteModal(false);
             setError(result.error || 'Failed to delete event');

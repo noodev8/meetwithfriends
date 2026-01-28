@@ -298,7 +298,7 @@ export default function CreateGroupPage() {
                                     {submitting ? 'Creating...' : 'Create Group'}
                                 </button>
                                 <Link
-                                    href="/dashboard"
+                                    href="/your-events"
                                     className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-100 transition text-center"
                                 >
                                     Cancel

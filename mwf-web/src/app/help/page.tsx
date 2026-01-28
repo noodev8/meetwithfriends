@@ -107,7 +107,7 @@ export default function HelpPage() {
             <div className="flex-1 px-4 sm:px-8 py-8 sm:py-12 max-w-3xl mx-auto w-full">
                 {/* Back to Dashboard link */}
                 <Link
-                    href="/dashboard"
+                    href="/your-events"
                     className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-6 transition-colors"
                 >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
