@@ -33,42 +33,43 @@ const { renderToBuffer, Document, Page, Text, View, StyleSheet } = require('@rea
 // =======================================================================
 const styles = StyleSheet.create({
     page: {
-        padding: 40,
+        padding: 32,
+        paddingBottom: 50,
         fontFamily: 'Helvetica',
-        fontSize: 11,
+        fontSize: 10,
         color: '#1e293b',
     },
     header: {
-        marginBottom: 24,
+        marginBottom: 14,
         borderBottom: '2px solid #7c3aed',
-        paddingBottom: 16,
+        paddingBottom: 10,
     },
     title: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: 'bold',
         color: '#7c3aed',
-        marginBottom: 4,
+        marginBottom: 3,
     },
     subtitle: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: 'bold',
         color: '#1e293b',
-        marginBottom: 8,
+        marginBottom: 5,
     },
     eventInfo: {
-        fontSize: 11,
+        fontSize: 10,
         color: '#64748b',
         marginBottom: 2,
     },
     section: {
-        marginBottom: 20,
+        marginBottom: 10,
     },
     sectionTitle: {
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: 'bold',
         color: '#1e293b',
-        marginBottom: 10,
-        paddingBottom: 4,
+        marginBottom: 6,
+        paddingBottom: 3,
         borderBottom: '1px solid #e2e8f0',
     },
     table: {
@@ -78,19 +79,19 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         backgroundColor: '#f8fafc',
         borderBottom: '1px solid #e2e8f0',
-        paddingVertical: 8,
+        paddingVertical: 5,
         paddingHorizontal: 8,
     },
     tableRow: {
         flexDirection: 'row',
         borderBottom: '1px solid #f1f5f9',
-        paddingVertical: 10,
+        paddingVertical: 5,
         paddingHorizontal: 8,
     },
     tableRowAlt: {
         flexDirection: 'row',
         borderBottom: '1px solid #f1f5f9',
-        paddingVertical: 10,
+        paddingVertical: 5,
         paddingHorizontal: 8,
         backgroundColor: '#fafafa',
     },
@@ -104,47 +105,47 @@ const styles = StyleSheet.create({
         width: '25%',
     },
     headerText: {
-        fontSize: 10,
+        fontSize: 9,
         fontWeight: 'bold',
         color: '#64748b',
         textTransform: 'uppercase',
     },
     cellText: {
-        fontSize: 11,
+        fontSize: 10,
         color: '#1e293b',
     },
     cellTextLight: {
-        fontSize: 10,
+        fontSize: 9,
         color: '#64748b',
         fontStyle: 'italic',
     },
     noOrder: {
-        fontSize: 10,
+        fontSize: 9,
         color: '#94a3b8',
         fontStyle: 'italic',
     },
     footer: {
         position: 'absolute',
-        bottom: 30,
-        left: 40,
-        right: 40,
+        bottom: 20,
+        left: 32,
+        right: 32,
         flexDirection: 'row',
         justifyContent: 'space-between',
         borderTop: '1px solid #e2e8f0',
-        paddingTop: 10,
+        paddingTop: 8,
     },
     footerText: {
-        fontSize: 10,
+        fontSize: 9,
         color: '#64748b',
     },
     summary: {
-        marginTop: 8,
-        padding: 12,
+        marginTop: 6,
+        padding: 8,
         backgroundColor: '#f8fafc',
         borderRadius: 4,
     },
     summaryText: {
-        fontSize: 11,
+        fontSize: 10,
         color: '#64748b',
     },
 });
@@ -218,7 +219,8 @@ const PreOrdersPDF = ({ event, groupName, hostName, attendees, stats }) => {
                     ...attendees.map((person, index) =>
                         React.createElement(View, {
                             key: person.user_id,
-                            style: index % 2 === 0 ? styles.tableRow : styles.tableRowAlt
+                            style: index % 2 === 0 ? styles.tableRow : styles.tableRowAlt,
+                            wrap: false
                         },
                             React.createElement(View, { style: styles.colName },
                                 React.createElement(Text, { style: styles.cellText }, person.name),
@@ -250,8 +252,8 @@ const PreOrdersPDF = ({ event, groupName, hostName, attendees, stats }) => {
                 )
             ),
 
-            // Footer
-            React.createElement(View, { style: styles.footer },
+            // Footer (fixed = repeats on every page)
+            React.createElement(View, { style: styles.footer, fixed: true },
                 React.createElement(Text, { style: styles.footerText },
                     `Generated ${generatedDate} at ${generatedTime}`
                 ),

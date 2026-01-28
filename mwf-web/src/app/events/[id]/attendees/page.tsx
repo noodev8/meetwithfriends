@@ -252,7 +252,7 @@ export default function AttendeesPage() {
         lines.push('');
 
         attending.forEach((person) => {
-            lines.push(person.name);
+            lines.push(`— ${person.name}`);
             if (person.food_order) {
                 lines.push(person.food_order);
             } else {

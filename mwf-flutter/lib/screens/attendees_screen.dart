@@ -1151,7 +1151,7 @@ class _OrdersSummarySheetState extends State<_OrdersSummarySheet> {
     lines.add('');
 
     for (final person in widget.attendees) {
-      lines.add(person.name);
+      lines.add('— ${person.name}');
       if (person.foodOrder != null && person.foodOrder!.isNotEmpty) {
         lines.add(person.foodOrder!);
         if (person.dietaryNotes != null && person.dietaryNotes!.isNotEmpty) {
