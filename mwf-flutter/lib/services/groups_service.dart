@@ -1,5 +1,6 @@
 import '../models/group.dart';
 import 'api_service.dart';
+import 'events_service.dart' show MagicLink, MagicLinkResult, MagicLinkActionResult;
 
 class GroupsService {
   final ApiService _api;
@@ -312,6 +313,79 @@ class GroupsService {
     return BroadcastResult(
       success: false,
       error: response['message'] as String? ?? 'Failed to send broadcast',
+    );
+  }
+
+  /// Get or create magic invite link for a group
+  Future<MagicLinkResult> getOrCreateMagicLink(int groupId) async {
+    final response = await _api.post('/groups/$groupId/magic-link', {});
+
+    if (response['return_code'] == 'SUCCESS') {
+      final linkJson = response['magic_link'] as Map<String, dynamic>;
+      return MagicLinkResult(
+        success: true,
+        magicLink: MagicLink.fromJson(linkJson),
+      );
+    }
+
+    return MagicLinkResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to get invite link',
+    );
+  }
+
+  /// Regenerate magic invite link (invalidates old link)
+  Future<MagicLinkResult> regenerateMagicLink(int groupId) async {
+    final response = await _api.post('/groups/$groupId/magic-link/regenerate', {});
+
+    if (response['return_code'] == 'SUCCESS') {
+      final linkJson = response['magic_link'] as Map<String, dynamic>;
+      return MagicLinkResult(
+        success: true,
+        magicLink: MagicLink.fromJson(linkJson),
+      );
+    }
+
+    return MagicLinkResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to regenerate invite link',
+    );
+  }
+
+  /// Disable magic invite link
+  Future<MagicLinkActionResult> disableMagicLink(int groupId) async {
+    final response = await _api.post('/groups/$groupId/magic-link/disable', {});
+
+    if (response['return_code'] == 'SUCCESS') {
+      return MagicLinkActionResult(
+        success: true,
+        isActive: response['is_active'] as bool? ?? false,
+      );
+    }
+
+    return MagicLinkActionResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to disable invite link',
+    );
+  }
+
+  /// Enable magic invite link
+  Future<MagicLinkActionResult> enableMagicLink(int groupId) async {
+    final response = await _api.post('/groups/$groupId/magic-link/enable', {});
+
+    if (response['return_code'] == 'SUCCESS') {
+      return MagicLinkActionResult(
+        success: true,
+        isActive: response['is_active'] as bool? ?? true,
+        expiresAt: response['expires_at'] != null
+            ? DateTime.parse(response['expires_at'] as String)
+            : null,
+      );
+    }
+
+    return MagicLinkActionResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to enable invite link',
     );
   }
 }

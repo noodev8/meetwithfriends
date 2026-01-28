@@ -54,7 +54,6 @@ export default function GroupDetailPage() {
     const [processingMember, setProcessingMember] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [events, setEvents] = useState<EventWithDetails[]>([]);
-    const [copied, setCopied] = useState(false);
     const [showLeaveModal, setShowLeaveModal] = useState(false);
     const [showContactModal, setShowContactModal] = useState(false);
     const [contactMessage, setContactMessage] = useState('');
@@ -268,19 +267,6 @@ export default function GroupDetailPage() {
         } else {
             alert(result.error || 'Failed to reject member');
         }
-    };
-
-    // =======================================================================
-    // Handle copy link
-    // =======================================================================
-    const handleCopyLink = async () => {
-        let url = `${window.location.origin}/groups/${group?.id}`;
-        if (group?.visibility === 'unlisted' && group?.invite_code) {
-            url += `?code=${group.invite_code}`;
-        }
-        await navigator.clipboard.writeText(url);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
     };
 
     // =======================================================================
@@ -760,40 +746,6 @@ export default function GroupDetailPage() {
                                 <p className="text-sm text-slate-500">Join the group to see members</p>
                             )}
                         </div>
-
-                        {/* Share/Invite Card - Hidden for unlisted groups unless organiser */}
-                        {(group.visibility !== 'unlisted' || isOrganiser) && (
-                            <div className="bg-white rounded-2xl border border-slate-200 p-5">
-                                <h3 className="font-display font-semibold text-slate-800 mb-3">
-                                    {group.visibility === 'unlisted' ? 'Invite People' : 'Share'}
-                                </h3>
-                                {group.visibility === 'unlisted' && (
-                                    <p className="text-sm text-slate-500 mb-3">
-                                        Share this link to invite people to your group.
-                                    </p>
-                                )}
-                                <button
-                                    onClick={handleCopyLink}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition text-slate-700"
-                                >
-                                    {copied ? (
-                                        <>
-                                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            Link copied!
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                            </svg>
-                                            Copy link
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        )}
 
                         {/* Leave group - tucked away at bottom */}
                         {membership?.status === 'active' && membership?.role !== 'organiser' && (

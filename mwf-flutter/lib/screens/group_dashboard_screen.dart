@@ -8,6 +8,7 @@ import '../services/events_service.dart';
 import '../config/event_categories.dart';
 import '../config/group_themes.dart';
 import '../widgets/bottom_nav_bar.dart';
+import '../widgets/invite_link_section.dart';
 import 'event_detail_screen.dart';
 import 'create_event_screen.dart';
 import 'edit_group_screen.dart';
@@ -749,6 +750,10 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                           if (group.description != null && group.description!.isNotEmpty)
                             _buildAboutSection(group),
 
+                          // Invite People Section (organisers/hosts only)
+                          if (canManageMembers)
+                            InviteLinkSection(type: 'group', id: group.id),
+
                           // Upcoming Events Section
                           _buildUpcomingEventsSection(),
 
@@ -1059,7 +1064,6 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                             initialJoinPolicy: _group!.joinPolicy,
                             initialVisibility: _group!.visibility,
                             initialRequireProfileImage: _group!.requireProfileImage,
-                            inviteCode: _group!.inviteCode,
                             onGroupUpdated: _loadGroup,
                           ),
                         ),

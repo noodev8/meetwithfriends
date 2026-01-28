@@ -364,6 +364,79 @@ class EventsService {
       error: response['message'] as String? ?? 'Failed to update event',
     );
   }
+
+  /// Get or create magic invite link for an event
+  Future<MagicLinkResult> getOrCreateMagicLink(int eventId) async {
+    final response = await _api.post('/events/$eventId/magic-link', {});
+
+    if (response['return_code'] == 'SUCCESS') {
+      final linkJson = response['magic_link'] as Map<String, dynamic>;
+      return MagicLinkResult(
+        success: true,
+        magicLink: MagicLink.fromJson(linkJson),
+      );
+    }
+
+    return MagicLinkResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to get invite link',
+    );
+  }
+
+  /// Regenerate magic invite link (invalidates old link)
+  Future<MagicLinkResult> regenerateMagicLink(int eventId) async {
+    final response = await _api.post('/events/$eventId/magic-link/regenerate', {});
+
+    if (response['return_code'] == 'SUCCESS') {
+      final linkJson = response['magic_link'] as Map<String, dynamic>;
+      return MagicLinkResult(
+        success: true,
+        magicLink: MagicLink.fromJson(linkJson),
+      );
+    }
+
+    return MagicLinkResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to regenerate invite link',
+    );
+  }
+
+  /// Disable magic invite link
+  Future<MagicLinkActionResult> disableMagicLink(int eventId) async {
+    final response = await _api.post('/events/$eventId/magic-link/disable', {});
+
+    if (response['return_code'] == 'SUCCESS') {
+      return MagicLinkActionResult(
+        success: true,
+        isActive: response['is_active'] as bool? ?? false,
+      );
+    }
+
+    return MagicLinkActionResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to disable invite link',
+    );
+  }
+
+  /// Enable magic invite link
+  Future<MagicLinkActionResult> enableMagicLink(int eventId) async {
+    final response = await _api.post('/events/$eventId/magic-link/enable', {});
+
+    if (response['return_code'] == 'SUCCESS') {
+      return MagicLinkActionResult(
+        success: true,
+        isActive: response['is_active'] as bool? ?? true,
+        expiresAt: response['expires_at'] != null
+            ? DateTime.parse(response['expires_at'] as String)
+            : null,
+      );
+    }
+
+    return MagicLinkActionResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to enable invite link',
+    );
+  }
 }
 
 class AttendeesResult {
@@ -655,6 +728,59 @@ class UpdateOrderResult {
     this.userId,
     this.foodOrder,
     this.dietaryNotes,
+    this.error,
+  });
+}
+
+class MagicLink {
+  final String token;
+  final String url;
+  final DateTime expiresAt;
+  final bool isActive;
+  final int useCount;
+  final int maxUses;
+
+  MagicLink({
+    required this.token,
+    required this.url,
+    required this.expiresAt,
+    required this.isActive,
+    required this.useCount,
+    required this.maxUses,
+  });
+
+  factory MagicLink.fromJson(Map<String, dynamic> json) {
+    return MagicLink(
+      token: json['token'] as String,
+      url: json['url'] as String,
+      expiresAt: DateTime.parse(json['expires_at'] as String),
+      isActive: json['is_active'] as bool? ?? true,
+      useCount: json['use_count'] as int? ?? 0,
+      maxUses: json['max_uses'] as int? ?? 50,
+    );
+  }
+
+  bool get isExpired => expiresAt.isBefore(DateTime.now());
+}
+
+class MagicLinkResult {
+  final bool success;
+  final MagicLink? magicLink;
+  final String? error;
+
+  MagicLinkResult({required this.success, this.magicLink, this.error});
+}
+
+class MagicLinkActionResult {
+  final bool success;
+  final bool? isActive;
+  final DateTime? expiresAt;
+  final String? error;
+
+  MagicLinkActionResult({
+    required this.success,
+    this.isActive,
+    this.expiresAt,
     this.error,
   });
 }

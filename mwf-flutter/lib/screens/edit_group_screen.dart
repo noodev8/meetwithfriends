@@ -12,7 +12,6 @@ class EditGroupScreen extends StatefulWidget {
   final String initialJoinPolicy;
   final String initialVisibility;
   final bool initialRequireProfileImage;
-  final String? inviteCode;
   final VoidCallback? onGroupUpdated;
 
   const EditGroupScreen({
@@ -24,7 +23,6 @@ class EditGroupScreen extends StatefulWidget {
     required this.initialJoinPolicy,
     required this.initialVisibility,
     this.initialRequireProfileImage = false,
-    this.inviteCode,
     this.onGroupUpdated,
   });
 
@@ -45,7 +43,6 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
   late bool _requireProfileImage;
 
   bool _isSubmitting = false;
-  bool _linkCopied = false;
   String? _error;
 
   static const List<Map<String, dynamic>> _themeOptions = [
@@ -328,85 +325,6 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
                         ],
                       ),
                     ),
-
-                    // Invite Link section (only for unlisted groups)
-                    if (_visibility == 'unlisted' && widget.inviteCode != null) ...[
-                      const SizedBox(height: 20),
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildLabel('Invite Link'),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'Share this link to invite people to your group.',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF64748B),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            GestureDetector(
-                              onTap: () async {
-                                final inviteUrl = 'https://www.meetwithfriends.net/groups/${widget.groupId}?code=${widget.inviteCode}';
-                                await Clipboard.setData(ClipboardData(text: inviteUrl));
-                                setState(() => _linkCopied = true);
-                                Future.delayed(const Duration(seconds: 2), () {
-                                  if (mounted) setState(() => _linkCopied = false);
-                                });
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF8FAFC),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        'www.meetwithfriends.net/groups/${widget.groupId}?code=${widget.inviteCode}',
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: Color(0xFF475569),
-                                          fontFamily: 'monospace',
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Icon(
-                                      _linkCopied ? Icons.check_rounded : Icons.copy_rounded,
-                                      size: 20,
-                                      color: _linkCopied ? const Color(0xFF10B981) : const Color(0xFF7C3AED),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            if (_linkCopied)
-                              const Padding(
-                                padding: EdgeInsets.only(top: 8),
-                                child: Text(
-                                  'Link copied to clipboard!',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Color(0xFF10B981),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ],
 
                     const SizedBox(height: 20),
 

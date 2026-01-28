@@ -7,6 +7,7 @@ import '../services/comments_service.dart';
 import '../config/event_categories.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/pre_order_section.dart';
+import '../widgets/invite_link_section.dart';
 import 'attendees_screen.dart';
 import 'edit_event_screen.dart';
 
@@ -427,6 +428,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         // About Section
                         if (event.description != null && event.description!.isNotEmpty)
                           _buildAboutSection(event, margin),
+
+                        // Invite People Section (hosts/organisers only)
+                        if (_canEdit && !event.isPast && !event.isCancelled)
+                          InviteLinkSection(type: 'event', id: event.id),
 
                         // Attendees Section
                         _buildAttendeesSection(event, margin),
