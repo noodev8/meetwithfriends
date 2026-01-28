@@ -26,6 +26,7 @@ const contactOrganiser = require('./contact_organiser');
 const regenerateInviteCode = require('./regenerate_invite_code');
 const broadcastMessage = require('./broadcast_message');
 const deleteGroup = require('./delete_group');
+const magicLink = require('./magic_link');
 
 // =======================================================================
 // Route definitions
@@ -45,6 +46,7 @@ router.use('/', contactOrganiser);     // POST /api/groups/:id/contact-organiser
 router.use('/', regenerateInviteCode); // POST /api/groups/:id/regenerate-code - regenerate invite code (organiser only)
 router.use('/', broadcastMessage);     // POST /api/groups/:id/broadcast - send broadcast to all members (organiser only)
 router.use('/', deleteGroup);          // POST /api/groups/:id/delete - delete group (organiser only)
+router.use('/', magicLink);            // POST /api/groups/:id/magic-link/* - manage magic invite links (organiser/host)
 router.use('/', getGroup);             // GET /api/groups/:id - get single group (must be last)
 
 module.exports = router;

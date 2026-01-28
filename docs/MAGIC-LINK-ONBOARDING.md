@@ -1339,14 +1339,14 @@ Deep link clicked: www.meetwithfriends.net/invite/e/abc123
 Track progress for session continuity. Mark items ✅ when complete.
 
 ### Backend Organiser Endpoints (Lowest Risk)
-- [ ] `POST /groups/:id/magic-link` (get/create)
-- [ ] `POST /events/:id/magic-link` (get/create)
-- [ ] `POST /groups/:id/magic-link/regenerate`
-- [ ] `POST /events/:id/magic-link/regenerate`
-- [ ] `POST /groups/:id/magic-link/disable`
-- [ ] `POST /events/:id/magic-link/disable`
-- [ ] `POST /groups/:id/magic-link/enable`
-- [ ] `POST /events/:id/magic-link/enable`
+- [x] `POST /groups/:id/magic-link` (get/create)
+- [x] `POST /events/:id/magic-link` (get/create)
+- [x] `POST /groups/:id/magic-link/regenerate`
+- [x] `POST /events/:id/magic-link/regenerate`
+- [x] `POST /groups/:id/magic-link/disable`
+- [x] `POST /events/:id/magic-link/disable`
+- [x] `POST /groups/:id/magic-link/enable`
+- [x] `POST /events/:id/magic-link/enable`
 
 ### Backend Invitee Endpoints (Low Risk)
 - [ ] `GET /invite/validate/:token`

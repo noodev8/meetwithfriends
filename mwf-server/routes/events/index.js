@@ -28,6 +28,7 @@ const contactHost = require('./contact_host');
 const exportPreorders = require('./export_preorders');
 const calendar = require('./calendar');
 const venueAccess = require('./venue_access');
+const magicLink = require('./magic_link');
 
 // =======================================================================
 // Route definitions
@@ -49,6 +50,7 @@ router.use('/', contactHost);     // POST /api/events/:id/contact-host - contact
 router.use('/', exportPreorders); // GET /api/events/:id/preorders/pdf - export pre-orders as PDF
 router.use('/', calendar);        // GET /api/events/:id/calendar.ics - download calendar file
 router.use('/', venueAccess);     // GET/POST/DELETE /api/events/:id/venue-access - manage venue access
+router.use('/', magicLink);       // POST /api/events/:id/magic-link/* - manage magic invite links (organiser/host)
 router.use('/', getEvent);        // GET /api/events/:id - get single event (must be last)
 
 module.exports = router;
