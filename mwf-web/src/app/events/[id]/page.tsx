@@ -31,6 +31,7 @@ import {
     CommentWithDetails,
 } from '@/lib/api/comments';
 import SidebarLayout from '@/components/layout/SidebarLayout';
+import InviteLinkSection from '@/components/ui/InviteLinkSection';
 import DOMPurify from 'dompurify';
 import { getCategoryConfig } from '@/lib/eventCategories';
 import { FEATURE_GUESTS_ENABLED } from '@/lib/featureFlags';
@@ -629,6 +630,11 @@ export default function EventDetailPage() {
                                     </button>
                                 )}
                             </div>
+                        )}
+
+                        {/* Invite People Section - visible to hosts and organisers */}
+                        {canEdit && !isPastEvent && event.status !== 'cancelled' && token && (
+                            <InviteLinkSection type="event" id={event.id} token={token} />
                         )}
 
                         {/* Pre-order Section - visible to attendees when pre-orders are enabled */}

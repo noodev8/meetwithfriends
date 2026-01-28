@@ -62,15 +62,15 @@ const { verifyToken } = require('../../middleware/auth');
 // =======================================================================
 // Configuration
 // =======================================================================
-const MAGIC_LINK_EXPIRY_DAYS = 365;
+const MAGIC_LINK_EXPIRY_DAYS = 30;
 const MAGIC_LINK_MAX_USES = 50;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://www.meetwithfriends.net';
 
 // =======================================================================
-// Helper: Generate a cryptographically secure 64-character hex token
+// Helper: Generate a cryptographically secure 16-character hex token
 // =======================================================================
 function generateMagicToken() {
-    return crypto.randomBytes(32).toString('hex');
+    return crypto.randomBytes(8).toString('hex');
 }
 
 // =======================================================================
@@ -184,9 +184,9 @@ router.post('/:id/magic-link', verifyToken, async (req, res) => {
         const event = eventResult.rows[0];
 
         // =======================================================================
-        // If magic link already exists and is active, return it
+        // If magic link already exists, return it (even if disabled)
         // =======================================================================
-        if (event.magic_link_token && event.magic_link_active) {
+        if (event.magic_link_token) {
             return res.json({
                 return_code: 'SUCCESS',
                 magic_link: formatMagicLinkResponse(event)

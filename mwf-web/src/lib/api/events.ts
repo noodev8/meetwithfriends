@@ -698,3 +698,139 @@ export async function contactHost(
         return_code: response.return_code,
     };
 }
+
+/*
+=======================================================================================================================================
+Magic Link Types and Functions
+=======================================================================================================================================
+API functions for managing event magic invite links.
+=======================================================================================================================================
+*/
+
+// Magic link data returned by API
+export interface MagicLink {
+    token: string;
+    url: string;
+    expires_at: string;
+    is_active: boolean;
+    use_count: number;
+    max_uses: number;
+}
+
+/*
+=======================================================================================================================================
+getOrCreateMagicLink
+=======================================================================================================================================
+Gets existing magic link or creates one if none exists.
+Permission: Group organiser or event host.
+=======================================================================================================================================
+*/
+export async function getOrCreateMagicLink(
+    token: string,
+    eventId: number
+): Promise<ApiResult<MagicLink>> {
+    const response = await apiCall(`/api/events/${eventId}/magic-link`, {}, token);
+
+    if (response.return_code === 'SUCCESS' && response.magic_link) {
+        return {
+            success: true,
+            data: response.magic_link as unknown as MagicLink,
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to get invite link',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+regenerateMagicLink
+=======================================================================================================================================
+Generates a new token, invalidates the old one, resets use count and expiry.
+Permission: Group organiser or event host.
+=======================================================================================================================================
+*/
+export async function regenerateMagicLink(
+    token: string,
+    eventId: number
+): Promise<ApiResult<MagicLink>> {
+    const response = await apiCall(`/api/events/${eventId}/magic-link/regenerate`, {}, token);
+
+    if (response.return_code === 'SUCCESS' && response.magic_link) {
+        return {
+            success: true,
+            data: response.magic_link as unknown as MagicLink,
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to regenerate invite link',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+disableMagicLink
+=======================================================================================================================================
+Disables the current magic link (sets is_active = false).
+Permission: Group organiser or event host.
+=======================================================================================================================================
+*/
+export async function disableMagicLink(
+    token: string,
+    eventId: number
+): Promise<ApiResult<{ is_active: boolean; expires_at: string | null }>> {
+    const response = await apiCall(`/api/events/${eventId}/magic-link/disable`, {}, token);
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: {
+                is_active: response.is_active as unknown as boolean,
+                expires_at: response.expires_at as unknown as string | null,
+            },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to disable invite link',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+enableMagicLink
+=======================================================================================================================================
+Re-enables the magic link and resets expiry to 365 days from now.
+Permission: Group organiser or event host.
+=======================================================================================================================================
+*/
+export async function enableMagicLink(
+    token: string,
+    eventId: number
+): Promise<ApiResult<{ is_active: boolean; expires_at: string }>> {
+    const response = await apiCall(`/api/events/${eventId}/magic-link/enable`, {}, token);
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: {
+                is_active: response.is_active as unknown as boolean,
+                expires_at: response.expires_at as unknown as string,
+            },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to enable invite link',
+        return_code: response.return_code,
+    };
+}

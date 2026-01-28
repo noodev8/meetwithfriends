@@ -32,6 +32,7 @@ import { getAllEvents, EventWithDetails } from '@/lib/api/events';
 
 import SidebarLayout from '@/components/layout/SidebarLayout';
 import EventCard from '@/components/ui/EventCard';
+import InviteLinkSection from '@/components/ui/InviteLinkSection';
 import { getGroupTheme, getGroupInitials } from '@/lib/groupThemes';
 
 // Number of pending members to show before "View all" link
@@ -554,6 +555,11 @@ export default function GroupDetailPage() {
                                     </button>
                                 )}
                             </div>
+                        )}
+
+                        {/* Invite People Section - visible to organisers and hosts */}
+                        {canManageMembers && token && (
+                            <InviteLinkSection type="group" id={group.id} token={token} />
                         )}
 
                         {/* Upcoming Events Section */}
