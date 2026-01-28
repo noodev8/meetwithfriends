@@ -1349,9 +1349,9 @@ Track progress for session continuity. Mark items ✅ when complete.
 - [x] `POST /events/:id/magic-link/enable`
 
 ### Backend Invitee Endpoints (Low Risk)
-- [ ] `GET /invite/validate/:token`
-- [ ] `POST /invite/accept/:token`
-- [ ] `POST /invite/accept-with-signup/:token`
+- [x] `GET /invite/validate/:token`
+- [x] `POST /invite/accept/:token`
+- [x] `POST /invite/accept-with-signup/:token`
 
 ### Web Organiser UI (Medium Risk)
 - [ ] Event Page - "Invite People" section
