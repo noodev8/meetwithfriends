@@ -6,7 +6,8 @@
         "appID": "43A5Y7KJMA.com.noodev8.meetwithfriends",
         "paths": [
           "/events/*",
-          "/groups/*"
+          "/groups/*",
+          "/invite/*"
         ]
       }
     ]
