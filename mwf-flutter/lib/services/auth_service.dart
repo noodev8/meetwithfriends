@@ -102,6 +102,12 @@ class AuthService {
     _api.setToken(null);
   }
 
+  /// Store a token (e.g. from invite signup flow)
+  Future<void> storeToken(String token) async {
+    await _storage.write(key: _tokenKey, value: token);
+    _api.setToken(token);
+  }
+
   /// Get the current auth token (if any)
   Future<String?> getToken() async {
     return await _storage.read(key: _tokenKey);

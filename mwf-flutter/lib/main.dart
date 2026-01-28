@@ -3,6 +3,7 @@ import 'models/user.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/forgot_password_screen.dart';
+import 'screens/invite_screen.dart';
 import 'screens/main_shell.dart';
 import 'services/auth_service.dart';
 import 'services/deep_link_service.dart';
@@ -30,6 +31,10 @@ class _MyAppState extends State<MyApp> {
   User? _user;
   bool _deepLinksInitialized = false;
 
+  // Pending invite for login-redirect flow
+  String? _pendingInviteToken;
+  String? _pendingInviteType;
+
   @override
   void initState() {
     super.initState();
@@ -55,8 +60,52 @@ class _MyAppState extends State<MyApp> {
 
     // Wait for navigator to be ready, then init deep links
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _deepLinkService.init(_navigatorKey, _isLoggedIn);
+      _deepLinkService.init(
+        _navigatorKey,
+        _isLoggedIn,
+        onInviteLink: _handleInviteLink,
+      );
     });
+  }
+
+  void _handleInviteLink(String token, String type) {
+    final navigator = _navigatorKey.currentState;
+    if (navigator == null) return;
+
+    navigator.push(
+      MaterialPageRoute(
+        builder: (context) => InviteScreen(
+          token: token,
+          type: type,
+          isLoggedIn: _isLoggedIn,
+          user: _user,
+          onAuthSuccess: _onInviteAuthSuccess,
+          onNavigateToLogin: () => _onInviteLoginRequested(token, type),
+        ),
+      ),
+    );
+  }
+
+  void _onInviteAuthSuccess(Map<String, dynamic> userData, String jwtToken) async {
+    await _authService.storeToken(jwtToken);
+    if (mounted) {
+      setState(() {
+        _isLoggedIn = true;
+        _user = User.fromJson(userData);
+      });
+      _deepLinkService.updateLoginState(true);
+    }
+  }
+
+  void _onInviteLoginRequested(String token, String type) {
+    _pendingInviteToken = token;
+    _pendingInviteType = type;
+
+    // Pop the invite screen — user lands on login screen
+    final navigator = _navigatorKey.currentState;
+    if (navigator != null && navigator.canPop()) {
+      navigator.pop();
+    }
   }
 
   void _onLoginSuccess(Map<String, dynamic> userData) {
@@ -64,6 +113,19 @@ class _MyAppState extends State<MyApp> {
       _isLoggedIn = true;
       _user = User.fromJson(userData);
     });
+    _deepLinkService.updateLoginState(true);
+
+    // Check for pending invite
+    if (_pendingInviteToken != null && _pendingInviteType != null) {
+      final token = _pendingInviteToken!;
+      final type = _pendingInviteType!;
+      _pendingInviteToken = null;
+      _pendingInviteType = null;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleInviteLink(token, type);
+      });
+    }
   }
 
   void _onUserUpdated(User updatedUser) {
@@ -79,6 +141,7 @@ class _MyAppState extends State<MyApp> {
         _isLoggedIn = false;
         _user = null;
       });
+      _deepLinkService.updateLoginState(false);
     }
   }
 
