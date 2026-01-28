@@ -51,12 +51,37 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
 
         if (result.success && result.data) {
             setInvite(result.data);
+
+            // Auto-accept event invites for logged-in users
+            if (user && authToken && result.data.type === 'event' && result.data.invite.event) {
+                // Already attending → redirect straight to event page
+                if (result.data.user_status?.is_event_rsvp) {
+                    setStep('redirecting');
+                    router.push(`/events/${result.data.invite.event.id}`);
+                    return;
+                }
+
+                // Not yet attending → auto-accept
+                const acceptResult = await acceptInvite(token, authToken);
+                if (acceptResult.success && acceptResult.data) {
+                    setStep('redirecting');
+                    router.push(acceptResult.data.redirect_to);
+                } else {
+                    setErrorCode(acceptResult.return_code || 'UNKNOWN');
+                    if (acceptResult.return_code === 'EVENT_ENDED' || acceptResult.return_code === 'EVENT_CANCELLED') {
+                        setErrorGroupId(result.data.invite.group.id);
+                    }
+                    setStep('error');
+                }
+                return;
+            }
+
             setStep('intro');
         } else {
             setErrorCode(result.return_code || 'UNKNOWN');
             setStep('error');
         }
-    }, [token, authToken]);
+    }, [token, authToken, user, router]);
 
     useEffect(() => {
         if (authLoading) return;
