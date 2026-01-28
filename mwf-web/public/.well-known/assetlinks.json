@@ -5,7 +5,8 @@
       "namespace": "android_app",
       "package_name": "com.noodev8.meetwithfriends",
       "sha256_cert_fingerprints": [
-        "E1:24:68:EE:B1:AE:56:B1:01:E0:F7:BE:36:08:31:C2:6E:B9:B9:56:B4:31:6F:7C:7B:FC:43:0D:3F:26:A3:31"
+        "E1:24:68:EE:B1:AE:56:B1:01:E0:F7:BE:36:08:31:C2:6E:B9:B9:56:B4:31:6F:7C:7B:FC:43:0D:3F:26:A3:31",
+        "47:2D:B6:BF:68:5D:C4:A5:00:11:A5:69:EF:31:54:34:B9:01:E2:0F:4F:08:B9:33:A1:70:8E:08:9A:3A:4A:5D"
       ]
     }
   }
