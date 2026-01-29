@@ -405,7 +405,7 @@ async function sendWelcomeEmail(email, userName) {
         <p style="color: #666; font-size: 16px;">
             Start by joining a group or browsing upcoming events.
         </p>
-        ${emailButton(config.frontendUrl + '/dashboard', 'Go to Dashboard')}
+        ${emailButton(config.frontendUrl + '/your-events', 'Go to Your Events')}
     `);
 
     return sendEmail(email, 'Welcome to Meet With Friends', html, 'welcome');
