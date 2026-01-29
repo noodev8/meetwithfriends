@@ -5,9 +5,10 @@
 InviteFlow Component
 =======================================================================================================================================
 Main orchestrator for the invite acceptance flow. Manages a step-based state machine:
-  loading → intro → signup/processing → redirecting (with error branch)
+  loading → intro → signup/photo-upload/processing → redirecting (with error branch)
 
 Handles both logged-in (auto-accept) and new user (signup form) flows.
+Intercepts PROFILE_IMAGE_REQUIRED to show a photo upload screen before retrying.
 =======================================================================================================================================
 */
 
@@ -20,11 +21,13 @@ import {
     acceptInviteWithSignup,
     InviteData,
 } from '@/lib/api/invite';
+import { updateProfile } from '@/lib/api/users';
 import InviteIntro from './InviteIntro';
 import InviteSignupForm from './InviteSignupForm';
+import InvitePhotoUpload from './InvitePhotoUpload';
 import InviteError from './InviteError';
 
-type FlowStep = 'loading' | 'intro' | 'signup' | 'processing' | 'redirecting' | 'error';
+type FlowStep = 'loading' | 'intro' | 'signup' | 'photo-upload' | 'processing' | 'redirecting' | 'error';
 
 interface InviteFlowProps {
     token: string;
@@ -33,7 +36,7 @@ interface InviteFlowProps {
 
 export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
     const router = useRouter();
-    const { user, token: authToken, isLoading: authLoading, login, logout } = useAuth();
+    const { user, token: authToken, isLoading: authLoading, login, logout, updateUser } = useAuth();
 
     const [step, setStep] = useState<FlowStep>('loading');
     const [invite, setInvite] = useState<InviteData | null>(null);
@@ -42,6 +45,10 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
     const [signupError, setSignupError] = useState('');
     const [isAccepting, setIsAccepting] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [photoUploadOrigin, setPhotoUploadOrigin] = useState<'logged-in' | 'signup' | null>(null);
+    const [pendingSignupPayload, setPendingSignupPayload] = useState<{ name: string; email: string; password: string } | null>(null);
+    const [photoUploadError, setPhotoUploadError] = useState('');
+    const [isPhotoProcessing, setIsPhotoProcessing] = useState(false);
 
     // =======================================================================
     // Validate invite token once auth state is resolved
@@ -66,6 +73,9 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
                 if (acceptResult.success && acceptResult.data) {
                     setStep('redirecting');
                     router.push(acceptResult.data.redirect_to);
+                } else if (acceptResult.return_code === 'PROFILE_IMAGE_REQUIRED') {
+                    setPhotoUploadOrigin('logged-in');
+                    setStep('photo-upload');
                 } else {
                     setErrorCode(acceptResult.return_code || 'UNKNOWN');
                     if (acceptResult.return_code === 'EVENT_ENDED' || acceptResult.return_code === 'EVENT_CANCELLED') {
@@ -100,8 +110,10 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
         if (result.success && result.data) {
             setStep('redirecting');
             router.push(result.data.redirect_to);
+        } else if (result.return_code === 'PROFILE_IMAGE_REQUIRED') {
+            setPhotoUploadOrigin('logged-in');
+            setStep('photo-upload');
         } else {
-            // Show error if accept failed (e.g. PROFILE_IMAGE_REQUIRED)
             setErrorCode(result.return_code || 'UNKNOWN');
             if (result.return_code === 'EVENT_ENDED' || result.return_code === 'EVENT_CANCELLED') {
                 setErrorGroupId(invite?.invite.group.id);
@@ -162,6 +174,10 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
             login(result.data.token, result.data.user);
             setStep('redirecting');
             router.push(result.data.redirect_to);
+        } else if (result.return_code === 'PROFILE_IMAGE_REQUIRED') {
+            setPendingSignupPayload(payload);
+            setPhotoUploadOrigin('signup');
+            setStep('photo-upload');
         } else {
             if (result.return_code === 'EMAIL_EXISTS') {
                 setSignupError('An account with this email already exists.');
@@ -171,6 +187,52 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
         }
 
         setIsSubmitting(false);
+    };
+
+    // =======================================================================
+    // Handle photo upload continue (retry join with avatar)
+    // =======================================================================
+    const handlePhotoUploadContinue = async (avatarUrl: string) => {
+        setPhotoUploadError('');
+        setIsPhotoProcessing(true);
+
+        if (photoUploadOrigin === 'logged-in' && authToken) {
+            // Save photo to existing account, then retry join
+            const profileResult = await updateProfile(authToken, { avatar_url: avatarUrl });
+            if (profileResult.success && profileResult.data) {
+                updateUser(profileResult.data);
+
+                const retryResult = await acceptInvite(token, authToken);
+                if (retryResult.success && retryResult.data) {
+                    setStep('redirecting');
+                    router.push(retryResult.data.redirect_to);
+                } else {
+                    setPhotoUploadError(retryResult.error || 'Failed to join. Please try again.');
+                }
+            } else {
+                setPhotoUploadError(profileResult.error || 'Failed to save photo. Please try again.');
+            }
+        } else if (photoUploadOrigin === 'signup' && pendingSignupPayload) {
+            // Retry signup with avatar included
+            const retryResult = await acceptInviteWithSignup(token, {
+                ...pendingSignupPayload,
+                avatar_url: avatarUrl,
+            });
+
+            if (retryResult.success && retryResult.data) {
+                // Ensure avatar_url is in the user object stored in AuthContext
+                const userWithAvatar = retryResult.data.user.avatar_url
+                    ? retryResult.data.user
+                    : { ...retryResult.data.user, avatar_url: avatarUrl };
+                login(retryResult.data.token, userWithAvatar);
+                setStep('redirecting');
+                router.push(retryResult.data.redirect_to);
+            } else {
+                setPhotoUploadError(retryResult.error || 'Failed to create account. Please try again.');
+            }
+        }
+
+        setIsPhotoProcessing(false);
     };
 
     // =======================================================================
@@ -202,6 +264,17 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
                     </p>
                 </div>
             </main>
+        );
+    }
+
+    if (step === 'photo-upload' && invite) {
+        return (
+            <InvitePhotoUpload
+                groupName={invite.invite.group.name}
+                isProcessing={isPhotoProcessing}
+                error={photoUploadError}
+                onPhotoReady={handlePhotoUploadContinue}
+            />
         );
     }
 

@@ -64,8 +64,8 @@ export default function InviteIntro({ invite, user, isAccepting, onAccept, onLog
                     </h1>
                     <p className="text-slate-500 mt-2">
                         {isEvent
-                            ? <>You have been invited to the event by <span className="font-semibold text-slate-700">{details.inviter_name}</span></>
-                            : <>You have been invited to join the group by <span className="font-semibold text-slate-700">{details.inviter_name}</span></>
+                            ? <><span className="font-semibold text-slate-700">{details.inviter_name}</span> has invited you to the event</>
+                            : <><span className="font-semibold text-slate-700">{details.inviter_name}</span> has invited you to join the group</>
                         }
                     </p>
                 </div>
