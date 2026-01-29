@@ -212,6 +212,8 @@ class _MyAppState extends State<MyApp> {
           onLoginSuccess: _onLoginSuccess,
           onNavigateToRegister: _navigateToRegister,
           onNavigateToForgotPassword: _navigateToForgotPassword,
+          // To test invite flow, uncomment with a valid token:
+          // onDebugInvite: () => _handleInviteLink('TOKEN', 'g'), // g=group, e=event
         );
     }
   }

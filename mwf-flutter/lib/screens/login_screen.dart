@@ -5,12 +5,14 @@ class LoginScreen extends StatefulWidget {
   final Function(Map<String, dynamic> user) onLoginSuccess;
   final VoidCallback onNavigateToRegister;
   final VoidCallback onNavigateToForgotPassword;
+  final VoidCallback? onDebugInvite; // TODO: TEMP - remove after testing
 
   const LoginScreen({
     super.key,
     required this.onLoginSuccess,
     required this.onNavigateToRegister,
     required this.onNavigateToForgotPassword,
+    this.onDebugInvite,
   });
 
   @override
@@ -86,13 +88,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Title
-                    Text(
-                      'Meet With Friends',
-                      style: TextStyle(
-                        fontSize: titleFontSize,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF1E293B),
+                    // Title (long-press to test invite flow)
+                    // TODO: TEMP - remove GestureDetector after testing
+                    GestureDetector(
+                      onLongPress: widget.onDebugInvite,
+                      child: Text(
+                        'Meet With Friends',
+                        style: TextStyle(
+                          fontSize: titleFontSize,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF1E293B),
+                        ),
                       ),
                     ),
                     SizedBox(height: isSmallScreen ? 24 : 32),

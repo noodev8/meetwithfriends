@@ -230,13 +230,18 @@ class InviteService {
     String token,
     String name,
     String email,
-    String password,
-  ) async {
-    final response = await _api.post('/invite/accept-with-signup/$token', {
+    String password, {
+    String? avatarUrl,
+  }) async {
+    final body = {
       'name': name,
       'email': email,
       'password': password,
-    });
+    };
+    if (avatarUrl != null) {
+      body['avatar_url'] = avatarUrl;
+    }
+    final response = await _api.post('/invite/accept-with-signup/$token', body);
 
     if (response['return_code'] == 'SUCCESS') {
       final redirect = _parseRedirect(response['redirect_to'] as String?);
