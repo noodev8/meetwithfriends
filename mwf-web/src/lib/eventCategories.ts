@@ -34,7 +34,7 @@ export const EVENT_CATEGORIES: Record<EventCategory, CategoryConfig> = {
         key: 'games',
         label: 'Games & Sports',
         emoji: '🎱',
-        gradient: 'from-violet-500 via-purple-400 to-indigo-300',
+        gradient: 'from-red-500 via-rose-400 to-orange-300',
     },
     coffee: {
         key: 'coffee',

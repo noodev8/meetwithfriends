@@ -13,8 +13,8 @@ module.exports = {
     'from-indigo-500', 'via-purple-400', 'to-pink-300',
     // Outdoor: emerald -> teal -> cyan
     'from-emerald-500', 'via-teal-400', 'to-cyan-300',
-    // Games: violet -> purple -> indigo
-    'from-violet-500', 'via-purple-400', 'to-indigo-300',
+    // Games: red -> rose -> orange
+    'from-red-500', 'via-rose-400', 'to-orange-300',
     // Coffee: amber -> orange -> yellow
     'from-amber-500', 'via-orange-400', 'to-yellow-300',
     // Arts: rose -> pink -> fuchsia
