@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import '../services/image_upload_service.dart';
 
 /// Widget for picking and uploading menu images
@@ -123,6 +124,55 @@ class _MenuImagePickerState extends State<MenuImagePicker> {
     }
   }
 
+  Future<void> _pickPdf() async {
+    if (!_canAddMore) {
+      setState(() => _error = 'Maximum ${widget.maxImages} menu pages allowed');
+      return;
+    }
+
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      final filePath = result.files.single.path;
+      if (filePath == null) return;
+
+      setState(() {
+        _isUploading = true;
+        _error = null;
+      });
+
+      final uploadResult = await _uploadService.uploadMenuPdf(File(filePath));
+
+      if (mounted) {
+        setState(() => _isUploading = false);
+
+        if (uploadResult.success && uploadResult.pageUrls.isNotEmpty) {
+          final totalAfter = widget.images.length + uploadResult.pageCount;
+          if (totalAfter > widget.maxImages) {
+            setState(() => _error =
+                'This PDF has ${uploadResult.pageCount} pages which would bring the total to $totalAfter. Maximum is ${widget.maxImages} menu pages.');
+            return;
+          }
+          widget.onImagesChanged([...widget.images, ...uploadResult.pageUrls]);
+        } else {
+          setState(() => _error = uploadResult.error ?? 'Failed to upload PDF');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+          _error = 'Failed to pick PDF';
+        });
+      }
+    }
+  }
+
   void _removeImage(int index) {
     final newImages = List<String>.from(widget.images);
     newImages.removeAt(index);
@@ -153,7 +203,7 @@ class _MenuImagePickerState extends State<MenuImagePicker> {
             ),
             const SizedBox(height: 20),
             const Text(
-              'Add Menu Photo',
+              'Add Menu',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -178,6 +228,16 @@ class _MenuImagePickerState extends State<MenuImagePicker> {
               onTap: () {
                 Navigator.pop(context);
                 _pickMultipleImages();
+              },
+            ),
+            const SizedBox(height: 12),
+            // PDF option
+            _buildOption(
+              icon: Icons.picture_as_pdf_rounded,
+              label: 'Upload PDF',
+              onTap: () {
+                Navigator.pop(context);
+                _pickPdf();
               },
             ),
           ],
@@ -265,8 +325,8 @@ class _MenuImagePickerState extends State<MenuImagePicker> {
           padding: const EdgeInsets.only(top: 8),
           child: Text(
             widget.images.isEmpty
-                ? 'Upload photos of the menu (max ${widget.maxImages})'
-                : '${widget.images.length} of ${widget.maxImages} images',
+                ? 'Upload menu photos or PDF (max ${widget.maxImages})'
+                : '${widget.images.length} of ${widget.maxImages} menu pages',
             style: const TextStyle(
               fontSize: 12,
               color: Color(0xFF64748B),
@@ -475,7 +535,7 @@ class _MenuImagePickerState extends State<MenuImagePicker> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _isUploading ? 'Uploading...' : 'Add Menu Photos',
+                    _isUploading ? 'Uploading...' : 'Add Menu',
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
@@ -484,7 +544,7 @@ class _MenuImagePickerState extends State<MenuImagePicker> {
                   ),
                   const SizedBox(height: 2),
                   const Text(
-                    'Take a photo or choose from gallery',
+                    'Photo, gallery, or PDF',
                     style: TextStyle(
                       fontSize: 12,
                       color: Color(0xFF64748B),
