@@ -388,6 +388,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            if (_canEdit && !_event!.isPast)
+              IconButton(
+                onPressed: () => _navigateToEditEvent(),
+                icon: const Icon(Icons.edit_outlined, size: 20),
+                color: const Color(0xFF1E293B),
+              ),
           ] else
             const Spacer(),
         ],
@@ -441,16 +447,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         if (event.description != null && event.description!.isNotEmpty)
                           _buildAboutSection(event, margin),
 
-                        // Invite People Section (hosts/organisers only)
-                        if (_canEdit && !event.isPast && !event.isCancelled)
-                          InviteLinkSection(type: 'event', id: event.id),
-
                         // Attendees Section
                         _buildAttendeesSection(event, margin),
 
                         // Discussion Section (for group members)
                         if (_isGroupMember)
                           _buildDiscussionSection(event, margin),
+
+                        // Invite People Section (hosts/organisers only)
+                        if (_canEdit && !event.isPast && !event.isCancelled)
+                          InviteLinkSection(type: 'event', id: event.id),
 
                         // RSVP Section (inline, at bottom)
                         if (!event.isPast && !event.isCancelled)
@@ -641,59 +647,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   ),
                 ],
 
-                // Status badges and actions
-                if (_buildStatusRow(event) != null) ...[
-                  const SizedBox(height: 16),
-                  _buildStatusRow(event)!,
-                ],
               ],
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget? _buildStatusRow(EventDetail event) {
-    // Only show if there's an edit button to display
-    if (!_canEdit || event.isPast) return null;
-
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: [
-        // Edit button (styled)
-        GestureDetector(
-          onTap: () => _navigateToEditEvent(),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.edit_outlined,
-                  size: 16,
-                  color: Colors.grey.shade600,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Edit',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 

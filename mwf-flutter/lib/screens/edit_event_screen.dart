@@ -270,7 +270,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
       return Scaffold(
         backgroundColor: const Color(0xFFFAFAFC),
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: const Color(0xFFFAFAFC),
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF1E293B)),
@@ -296,7 +296,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFC),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFFFAFAFC),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF1E293B)),
@@ -307,7 +307,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color: Color(0xFF7C3AED),
+            color: Color(0xFF1E293B),
           ),
         ),
         titleSpacing: 0,
@@ -373,7 +373,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFC),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFFFAFAFC),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF1E293B)),
