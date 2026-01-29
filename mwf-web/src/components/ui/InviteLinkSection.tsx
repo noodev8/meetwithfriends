@@ -43,7 +43,6 @@ export default function InviteLinkSection({ type, id, token }: InviteLinkSection
     // =======================================================================
     // Select API functions based on type
     // =======================================================================
-    const getOrCreateMagicLink = type === 'event' ? getEventMagicLink : getOrCreateGroupMagicLink;
     const regenerateMagicLink = type === 'event' ? regenerateEventMagicLink : regenerateGroupMagicLink;
     const disableMagicLink = type === 'event' ? disableEventMagicLink : disableGroupMagicLink;
     const enableMagicLink = type === 'event' ? enableEventMagicLink : enableGroupMagicLink;
