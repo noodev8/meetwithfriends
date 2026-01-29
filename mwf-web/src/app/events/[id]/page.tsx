@@ -18,7 +18,6 @@ import {
     getAttendees,
     rsvpEvent,
     updateRsvp,
-    submitOrder,
     EventWithDetails,
     RsvpStatus,
     Attendee,
@@ -64,13 +63,6 @@ export default function EventDetailPage() {
     const [newComment, setNewComment] = useState('');
     const [commentLoading, setCommentLoading] = useState(false);
     const [deletingComment, setDeletingComment] = useState<number | null>(null);
-
-    // Pre-order state
-    const [foodOrder, setFoodOrder] = useState('');
-    const [dietaryNotes, setDietaryNotes] = useState('');
-    const [orderLoading, setOrderLoading] = useState(false);
-    const [orderSuccess, setOrderSuccess] = useState('');
-    const [showOrderModal, setShowOrderModal] = useState(false);
 
     // Profile modal state
     const [selectedAttendee, setSelectedAttendee] = useState<Attendee | null>(null);
@@ -184,8 +176,6 @@ export default function EventDetailPage() {
                 setEvent(eventResult.data.event);
                 setRsvp(eventResult.data.rsvp);
                 setSelectedGuestCount(eventResult.data.rsvp?.guest_count || 0);
-                setFoodOrder(eventResult.data.rsvp?.food_order || '');
-                setDietaryNotes(eventResult.data.rsvp?.dietary_notes || '');
                 setHosts(eventResult.data.hosts);
                 setIsGroupMember(eventResult.data.is_group_member);
                 setCanEdit(eventResult.data.can_edit);
@@ -273,43 +263,6 @@ export default function EventDetailPage() {
             }
         } else {
             alert(result.error || 'Failed to update guests');
-        }
-    };
-
-    // =======================================================================
-    // =======================================================================
-    // Handle submit own food order
-    // =======================================================================
-    const handleSubmitOrder = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!token || !event) return;
-
-        setOrderLoading(true);
-        setOrderSuccess('');
-        const result = await submitOrder(token, event.id, foodOrder.trim() || null, dietaryNotes.trim() || null);
-        setOrderLoading(false);
-
-        if (result.success) {
-            setOrderSuccess('Order saved');
-            setShowOrderModal(false);
-            // Update local rsvp state
-            if (rsvp) {
-                setRsvp({
-                    ...rsvp,
-                    food_order: foodOrder.trim() || null,
-                    dietary_notes: dietaryNotes.trim() || null,
-                });
-            }
-            // Refresh attendees to show updated orders
-            const attendeesResult = await getAttendees(event.id, token);
-            if (attendeesResult.success && attendeesResult.data) {
-                setAttending(attendeesResult.data.attending);
-                setWaitlist(attendeesResult.data.waitlist);
-            }
-            // Clear success message after 3 seconds
-            setTimeout(() => setOrderSuccess(''), 3000);
-        } else {
-            alert(result.error || 'Failed to submit order');
         }
     };
 
@@ -597,6 +550,94 @@ export default function EventDetailPage() {
                                     </Link>
                                 )}
                             </div>
+
+                            {/* Pre-order Banner — above the fold CTA */}
+                            {event.preorders_enabled && rsvp && rsvp.status !== 'not_going'
+                                && !isPastEvent && event.status !== 'cancelled' && (
+                                <div className="mt-5">
+                                    {isCutoffPassed ? (
+                                        /* Cutoff passed — slate banner with view link */
+                                        <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 via-slate-50 to-slate-100">
+                                            <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 sm:px-5 py-3.5">
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center">
+                                                        <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-semibold text-slate-700">
+                                                            {rsvp.food_order || rsvp.dietary_notes ? 'Order submitted — deadline passed' : 'Order deadline passed'}
+                                                        </p>
+                                                        {rsvp.food_order && (
+                                                            <p className="text-xs text-slate-500 truncate max-w-xs sm:max-w-sm">
+                                                                {rsvp.food_order}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <Link
+                                                    href={`/events/${event.id}/order`}
+                                                    className="w-full sm:w-auto flex-shrink-0 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-200 hover:bg-slate-300 rounded-lg transition-colors text-center"
+                                                >
+                                                    View Order & Menu
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    ) : rsvp.food_order || rsvp.dietary_notes ? (
+                                        /* Has order — green confirmation banner */
+                                        <div className="relative overflow-hidden rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 via-green-50 to-teal-50">
+                                            <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '16px 16px' }} />
+                                            <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 sm:px-5 py-3.5">
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                                                        <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-semibold text-emerald-800">Order submitted</p>
+                                                        {rsvp.food_order && (
+                                                            <p className="text-xs text-emerald-600/80 truncate max-w-xs sm:max-w-sm">
+                                                                {rsvp.food_order}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <Link
+                                                    href={`/events/${event.id}/order`}
+                                                    className="w-full sm:w-auto flex-shrink-0 px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 rounded-lg transition-colors text-center"
+                                                >
+                                                    Edit Order
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        /* No order yet — indigo/violet prompt banner */
+                                        <div className="relative overflow-hidden rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50 via-violet-50 to-purple-50">
+                                            <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '16px 16px' }} />
+                                            <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 sm:px-5 py-3.5">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                                                        <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                                        </svg>
+                                                    </div>
+                                                    <p className="text-sm font-semibold text-indigo-800">
+                                                        Menu available — place your pre-order
+                                                    </p>
+                                                </div>
+                                                <Link
+                                                    href={`/events/${event.id}/order`}
+                                                    className="w-full sm:w-auto flex-shrink-0 px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 rounded-lg shadow-sm transition-all text-center"
+                                                >
+                                                    Place Order
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -635,223 +676,6 @@ export default function EventDetailPage() {
                         {/* Invite People Section - visible to hosts and organisers */}
                         {canEdit && !isPastEvent && event.status !== 'cancelled' && token && (
                             <InviteLinkSection type="event" id={event.id} token={token} />
-                        )}
-
-                        {/* Pre-order Section - visible to attendees when pre-orders are enabled */}
-                        {event.preorders_enabled && rsvp && (
-                            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-lg font-bold text-slate-900 font-display">Your Order</h2>
-                                    {orderSuccess && (
-                                        <span className="text-sm text-green-600 font-medium">{orderSuccess}</span>
-                                    )}
-                                </div>
-                                {isCutoffPassed ? (
-                                    <div>
-                                        {rsvp.food_order || rsvp.dietary_notes ? (
-                                            <div className="space-y-2">
-                                                {rsvp.food_order && (
-                                                    <div>
-                                                        <span className="text-sm font-medium text-slate-700">Order: </span>
-                                                        <span className="text-slate-600">{rsvp.food_order}</span>
-                                                    </div>
-                                                )}
-                                                {rsvp.dietary_notes && (
-                                                    <div>
-                                                        <span className="text-sm font-medium text-slate-700">Notes: </span>
-                                                        <span className="text-slate-600">{rsvp.dietary_notes}</span>
-                                                    </div>
-                                                )}
-                                                <p className="text-sm text-slate-500 mt-2">
-                                                    Order deadline has passed. Contact a host if you need to make changes.
-                                                </p>
-                                            </div>
-                                        ) : (
-                                            <p className="text-slate-500">
-                                                Order deadline has passed. You did not submit an order.
-                                            </p>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div>
-                                        {/* Show current order summary or prompt */}
-                                        {rsvp.food_order || rsvp.dietary_notes ? (
-                                            <div className="space-y-2 mb-4">
-                                                {rsvp.food_order && (
-                                                    <div>
-                                                        <span className="text-sm font-medium text-slate-700">Order: </span>
-                                                        <span className="text-slate-600">{rsvp.food_order}</span>
-                                                    </div>
-                                                )}
-                                                {rsvp.dietary_notes && (
-                                                    <div>
-                                                        <span className="text-sm font-medium text-slate-700">Notes: </span>
-                                                        <span className="text-slate-600">{rsvp.dietary_notes}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ) : (
-                                            <p className="text-slate-500 mb-4">
-                                                You haven&apos;t submitted an order yet.
-                                            </p>
-                                        )}
-
-                                        {/* Menu Images */}
-                                        {event.menu_images && event.menu_images.length > 0 && (
-                                            <div className="mb-4">
-                                                <p className="text-sm font-medium text-slate-700 mb-2">Menu</p>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {event.menu_images.map((url, idx) => (
-                                                        <a
-                                                            key={idx}
-                                                            href={url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="relative w-20 h-28 rounded-lg overflow-hidden border border-slate-200 hover:border-indigo-400 transition group"
-                                                        >
-                                                            <Image
-                                                                src={url}
-                                                                alt={`Menu page ${idx + 1}`}
-                                                                fill
-                                                                className="object-cover"
-                                                            />
-                                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition" />
-                                                            {event.menu_images && event.menu_images.length > 1 && (
-                                                                <span className="absolute bottom-1 right-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
-                                                                    {idx + 1}/{event.menu_images.length}
-                                                                </span>
-                                                            )}
-                                                        </a>
-                                                    ))}
-                                                </div>
-                                                <p className="text-xs text-slate-500 mt-1">Click to view full size</p>
-                                            </div>
-                                        )}
-
-                                        {/* Edit/Add button and Menu link */}
-                                        <div className="flex flex-wrap items-center gap-3">
-                                            <button
-                                                onClick={() => setShowOrderModal(true)}
-                                                className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-600 hover:to-violet-700 transition-all shadow-md"
-                                            >
-                                                {rsvp.food_order || rsvp.dietary_notes ? 'Edit Order' : 'Add Order'}
-                                            </button>
-                                            {!event.menu_images?.length && event.menu_link && (
-                                                <a
-                                                    href={event.menu_link}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="px-4 py-2.5 text-indigo-600 hover:text-indigo-700 font-medium transition"
-                                                >
-                                                    View Menu →
-                                                </a>
-                                            )}
-                                        </div>
-
-                                        {/* Deadline info */}
-                                        {event.preorder_cutoff && (
-                                            <p className="text-sm text-slate-500 mt-3">
-                                                Order by {new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at {new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}.
-                                            </p>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Order Modal */}
-                        {showOrderModal && event && (
-                            <div
-                                className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-                                onClick={(e) => {
-                                    if (e.target === e.currentTarget) setShowOrderModal(false);
-                                }}
-                            >
-                                <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
-                                    {/* Header */}
-                                    <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-                                        <h3 className="text-lg font-bold text-slate-900 font-display">Your Order</h3>
-                                        <button
-                                            onClick={() => setShowOrderModal(false)}
-                                            className="text-slate-400 hover:text-slate-600 transition-colors"
-                                        >
-                                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    </div>
-
-                                    {/* Form */}
-                                    <form onSubmit={handleSubmitOrder} className="p-6 space-y-5">
-                                        {/* Order textarea */}
-                                        <div>
-                                            <div className="flex items-center justify-between mb-2">
-                                                <label htmlFor="modalFoodOrder" className="block text-sm font-medium text-slate-700">
-                                                    Your Order
-                                                </label>
-                                                <span className={`text-xs ${foodOrder.length > 450 ? 'text-indigo-600' : 'text-slate-400'}`}>
-                                                    {foodOrder.length}/500
-                                                </span>
-                                            </div>
-                                            <textarea
-                                                id="modalFoodOrder"
-                                                value={foodOrder}
-                                                onChange={(e) => setFoodOrder(e.target.value)}
-                                                placeholder="e.g., Chicken Caesar Salad, no croutons"
-                                                rows={4}
-                                                maxLength={500}
-                                                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 resize-none transition text-base"
-                                            />
-                                        </div>
-
-                                        {/* Notes textarea */}
-                                        <div>
-                                            <div className="flex items-center justify-between mb-2">
-                                                <label htmlFor="modalDietaryNotes" className="block text-sm font-medium text-slate-700">
-                                                    Notes / Preferences
-                                                </label>
-                                                <span className={`text-xs ${dietaryNotes.length > 180 ? 'text-indigo-600' : 'text-slate-400'}`}>
-                                                    {dietaryNotes.length}/200
-                                                </span>
-                                            </div>
-                                            <textarea
-                                                id="modalDietaryNotes"
-                                                value={dietaryNotes}
-                                                onChange={(e) => setDietaryNotes(e.target.value)}
-                                                placeholder="e.g., Vegetarian, nut allergy, extra spicy"
-                                                rows={2}
-                                                maxLength={200}
-                                                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 resize-none transition text-base"
-                                            />
-                                        </div>
-
-                                        {/* Deadline notice */}
-                                        {event.preorder_cutoff && (
-                                            <p className="text-sm text-indigo-600">
-                                                Order by {new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at {new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                                            </p>
-                                        )}
-
-                                        {/* Actions */}
-                                        <div className="flex gap-3 pt-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowOrderModal(false)}
-                                                className="flex-1 px-5 py-3 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                disabled={orderLoading}
-                                                className="flex-1 px-5 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-600 hover:to-violet-700 transition-all shadow-md disabled:opacity-50"
-                                            >
-                                                {orderLoading ? 'Saving...' : 'Save Order'}
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
                         )}
 
                         {/* Attendees Section - Meetup style */}
@@ -1281,7 +1105,7 @@ export default function EventDetailPage() {
                                     disabled={rsvpLoading}
                                     className="px-6 py-2.5 text-slate-500 hover:text-slate-700 font-medium transition disabled:opacity-50"
                                 >
-                                    Can't make it
+                                    Can&apos;t make it
                                 </button>
                             </div>
                         ) : (
