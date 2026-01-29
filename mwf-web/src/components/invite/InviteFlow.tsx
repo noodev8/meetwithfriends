@@ -5,7 +5,7 @@
 InviteFlow Component
 =======================================================================================================================================
 Main orchestrator for the invite acceptance flow. Manages a step-based state machine:
-  loading → intro → signup/photo-upload/processing → redirecting (with error branch)
+  loading → intro → signup/photo-upload/processing → accepted → redirecting (with error branch)
 
 Handles both logged-in (auto-accept) and new user (signup form) flows.
 Intercepts PROFILE_IMAGE_REQUIRED to show a photo upload screen before retrying.
@@ -27,7 +27,7 @@ import InviteSignupForm from './InviteSignupForm';
 import InvitePhotoUpload from './InvitePhotoUpload';
 import InviteError from './InviteError';
 
-type FlowStep = 'loading' | 'intro' | 'signup' | 'photo-upload' | 'processing' | 'redirecting' | 'error';
+type FlowStep = 'loading' | 'intro' | 'signup' | 'photo-upload' | 'processing' | 'accepted' | 'redirecting' | 'error';
 
 interface InviteFlowProps {
     token: string;
@@ -49,6 +49,8 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
     const [pendingSignupPayload, setPendingSignupPayload] = useState<{ name: string; email: string; password: string } | null>(null);
     const [photoUploadError, setPhotoUploadError] = useState('');
     const [isPhotoProcessing, setIsPhotoProcessing] = useState(false);
+    const [acceptedRsvpStatus, setAcceptedRsvpStatus] = useState<string | null>(null);
+    const [acceptedRedirectTo, setAcceptedRedirectTo] = useState('');
 
     // =======================================================================
     // Validate invite token once auth state is resolved
@@ -72,9 +74,10 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
                 // Not yet attending → auto-accept
                 const acceptResult = await acceptInvite(token, authToken);
                 if (acceptResult.success && acceptResult.data) {
-                    setStep('redirecting');
                     localStorage.setItem('show_app_download', 'true');
-                    router.push(acceptResult.data.redirect_to);
+                    setAcceptedRsvpStatus(acceptResult.data.actions.rsvp_status);
+                    setAcceptedRedirectTo(acceptResult.data.redirect_to);
+                    setStep('accepted');
                 } else if (acceptResult.return_code === 'PROFILE_IMAGE_REQUIRED') {
                     setPhotoUploadOrigin('logged-in');
                     setStep('photo-upload');
@@ -110,9 +113,10 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
         const result = await acceptInvite(token, authToken);
 
         if (result.success && result.data) {
-            setStep('redirecting');
             localStorage.setItem('show_app_download', 'true');
-            router.push(result.data.redirect_to);
+            setAcceptedRsvpStatus(result.data.actions.rsvp_status);
+            setAcceptedRedirectTo(result.data.redirect_to);
+            setStep('accepted');
         } else if (result.return_code === 'PROFILE_IMAGE_REQUIRED') {
             setPhotoUploadOrigin('logged-in');
             setStep('photo-upload');
@@ -175,9 +179,10 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
         if (result.success && result.data) {
             // Log the user in
             login(result.data.token, result.data.user);
-            setStep('redirecting');
             localStorage.setItem('show_app_download', 'true');
-            router.push(result.data.redirect_to);
+            setAcceptedRsvpStatus(result.data.actions.rsvp_status);
+            setAcceptedRedirectTo(result.data.redirect_to);
+            setStep('accepted');
         } else if (result.return_code === 'PROFILE_IMAGE_REQUIRED') {
             setPendingSignupPayload(payload);
             setPhotoUploadOrigin('signup');
@@ -208,9 +213,10 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
 
                 const retryResult = await acceptInvite(token, authToken);
                 if (retryResult.success && retryResult.data) {
-                    setStep('redirecting');
                     localStorage.setItem('show_app_download', 'true');
-                    router.push(retryResult.data.redirect_to);
+                    setAcceptedRsvpStatus(retryResult.data.actions.rsvp_status);
+                    setAcceptedRedirectTo(retryResult.data.redirect_to);
+                    setStep('accepted');
                 } else {
                     setPhotoUploadError(retryResult.error || 'Failed to join. Please try again.');
                 }
@@ -230,9 +236,10 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
                     ? retryResult.data.user
                     : { ...retryResult.data.user, avatar_url: avatarUrl };
                 login(retryResult.data.token, userWithAvatar);
-                setStep('redirecting');
                 localStorage.setItem('show_app_download', 'true');
-                router.push(retryResult.data.redirect_to);
+                setAcceptedRsvpStatus(retryResult.data.actions.rsvp_status);
+                setAcceptedRedirectTo(retryResult.data.redirect_to);
+                setStep('accepted');
             } else {
                 setPhotoUploadError(retryResult.error || 'Failed to create account. Please try again.');
             }
@@ -258,6 +265,78 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
 
     if (step === 'error') {
         return <InviteError returnCode={errorCode} groupId={errorGroupId} />;
+    }
+
+    if (step === 'accepted') {
+        const isWaitlist = acceptedRsvpStatus === 'waitlist';
+        const isGroupOnly = invite?.type === 'group' || !acceptedRsvpStatus;
+        const eventTitle = invite?.invite.event?.title;
+        const groupName = invite?.invite.group.name;
+
+        return (
+            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50">
+                <div className="w-full max-w-md text-center">
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+                        {isGroupOnly ? (
+                            <>
+                                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
+                                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <h1 className="text-2xl font-bold text-slate-900 font-display mb-2">
+                                    You&apos;ve joined the group!
+                                </h1>
+                                <p className="text-slate-600">
+                                    Welcome to <span className="font-medium text-slate-800">{groupName}</span>.
+                                </p>
+                            </>
+                        ) : isWaitlist ? (
+                            <>
+                                <div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mx-auto mb-5">
+                                    <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <h1 className="text-2xl font-bold text-slate-900 font-display mb-2">
+                                    You&apos;re on the waitlist
+                                </h1>
+                                {eventTitle && (
+                                    <p className="text-slate-800 font-medium mb-1">{eventTitle}</p>
+                                )}
+                                <p className="text-slate-600 text-sm">
+                                    This event is currently full. If a spot opens up, you&apos;ll be moved in automatically.
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
+                                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <h1 className="text-2xl font-bold text-slate-900 font-display mb-2">
+                                    You&apos;re going!
+                                </h1>
+                                {eventTitle && (
+                                    <p className="text-slate-800 font-medium mb-1">{eventTitle}</p>
+                                )}
+                                <p className="text-slate-600 text-sm">
+                                    Your spot is confirmed. See you there!
+                                </p>
+                            </>
+                        )}
+
+                        <button
+                            onClick={() => router.push(acceptedRedirectTo)}
+                            className="mt-6 w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-violet-700 transition shadow-sm"
+                        >
+                            Continue
+                        </button>
+                    </div>
+                </div>
+            </main>
+        );
     }
 
     if (step === 'redirecting') {
