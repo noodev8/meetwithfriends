@@ -529,7 +529,7 @@ export default function CreateEventPage() {
                                     </div>
                                     )}
 
-                                    {/* Attendee Requests Card */}
+                                    {/* Pre-Orders Card */}
                                     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                                         <button
                                             type="button"
@@ -543,7 +543,7 @@ export default function CreateEventPage() {
                                                     </svg>
                                                 </div>
                                                 <div>
-                                                    <span className="font-medium text-slate-800">Pre Orders or Requests</span>
+                                                    <span className="font-medium text-slate-800">Pre-Orders</span>
                                                     <span className="text-slate-400 mx-2">·</span>
                                                     <span className="text-sm text-slate-500">
                                                         {preordersEnabled ? 'On' : 'Off'}

@@ -881,7 +881,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
 
     return _buildExpandableCard(
       icon: Icons.receipt_long_rounded,
-      title: 'Pre Orders or Requests',
+      title: 'Pre-Orders',
       summary: summaryText,
       isExpanded: _preordersExpanded,
       onTap: () => setState(() => _preordersExpanded = !_preordersExpanded),

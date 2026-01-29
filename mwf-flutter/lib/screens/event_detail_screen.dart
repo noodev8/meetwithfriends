@@ -6,10 +6,10 @@ import '../services/events_service.dart';
 import '../services/comments_service.dart';
 import '../config/event_categories.dart';
 import '../widgets/bottom_nav_bar.dart';
-import '../widgets/pre_order_section.dart';
 import '../widgets/invite_link_section.dart';
 import 'attendees_screen.dart';
 import 'edit_event_screen.dart';
+import 'order_screen.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final int eventId;
@@ -395,6 +395,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
+  bool get _showPreOrder =>
+      _event != null &&
+      _event!.preordersEnabled &&
+      _rsvp != null &&
+      _rsvp!.status != 'not_going' &&
+      !_event!.isPast &&
+      !_event!.isCancelled;
+
   Widget _buildContent() {
     final event = _event!;
     final categoryConfig = getCategoryConfig(event.category);
@@ -425,6 +433,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         // Hero Card
                         _buildHeroCard(event, categoryConfig, dateFormat, timeFormat),
 
+                        // Pre-Order Banner — prominent, right below hero (matches web)
+                        if (_showPreOrder)
+                          _buildPreOrderBanner(event, margin),
+
                         // About Section
                         if (event.description != null && event.description!.isNotEmpty)
                           _buildAboutSection(event, margin),
@@ -435,10 +447,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
                         // Attendees Section
                         _buildAttendeesSection(event, margin),
-
-                        // Pre-Order Section (only for events with pre-orders and RSVP'd users)
-                        if (event.preordersEnabled && _rsvp != null && _rsvp!.status != 'not_going')
-                          _buildPreOrderSection(event, margin),
 
                         // Discussion Section (for group members)
                         if (_isGroupMember)
@@ -633,21 +641,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   ),
                 ],
 
-                // Divider
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Container(
-                    height: 1,
-                    color: const Color(0xFFE2E8F0),
-                  ),
-                ),
-
-                // Host
-                _buildHostRow(),
-
                 // Status badges and actions
-                const SizedBox(height: 16),
-                _buildStatusRow(event),
+                if (_buildStatusRow(event) != null) ...[
+                  const SizedBox(height: 16),
+                  _buildStatusRow(event)!,
+                ],
               ],
             ),
           ),
@@ -656,155 +654,45 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
-  Widget _buildHostRow() {
-    final host = _hosts.isNotEmpty ? _hosts[0] : null;
-    final hostName = host?.name ?? _event!.creatorName;
-    final hostAvatarUrl = host?.avatarUrl;
-    final hostInitial = hostName.isNotEmpty ? hostName[0].toUpperCase() : '?';
+  Widget? _buildStatusRow(EventDetail event) {
+    // Only show if there's an edit button to display
+    if (!_canEdit || event.isPast) return null;
 
-    return Row(
-      children: [
-        // Host Avatar (tappable)
-        GestureDetector(
-          onTap: host != null ? () => _showHostAvatarPopup(host) : null,
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              gradient: hostAvatarUrl == null
-                  ? const LinearGradient(
-                      colors: [Color(0xFFE0E7FF), Color(0xFFEDE9FE)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                  : null,
-              borderRadius: BorderRadius.circular(20),
-              image: hostAvatarUrl != null
-                  ? DecorationImage(
-                      image: NetworkImage(hostAvatarUrl),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
-            ),
-            child: hostAvatarUrl == null
-                ? Center(
-                    child: Text(
-                      hostInitial,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF6366F1),
-                      ),
-                    ),
-                  )
-                : null,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Hosted by',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade500,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                _hosts.length > 1
-                    ? '$hostName +${_hosts.length - 1} other${_hosts.length > 2 ? 's' : ''}'
-                    : hostName,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatusRow(EventDetail event) {
     return Wrap(
       spacing: 10,
       runSpacing: 10,
       children: [
-        // RSVP Status
-        if (_rsvp != null && _rsvp!.status != 'not_going' && !event.isPast && !event.isCancelled)
-          Container(
+        // Edit button (styled)
+        GestureDetector(
+          onTap: () => _navigateToEditEvent(),
+          child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: _rsvp!.isAttending
-                  ? const Color(0xFFDCFCE7)
-                  : const Color(0xFFFEF9C3),
+              color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  _rsvp!.isAttending ? Icons.check_circle : Icons.schedule,
+                  Icons.edit_outlined,
                   size: 16,
-                  color: _rsvp!.isAttending
-                      ? const Color(0xFF166534)
-                      : const Color(0xFF854D0E),
+                  color: Colors.grey.shade600,
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  _rsvp!.isAttending
-                      ? "You're going"
-                      : 'Waitlist #${_rsvp!.waitlistPosition}',
+                  'Edit',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: _rsvp!.isAttending
-                        ? const Color(0xFF166534)
-                        : const Color(0xFF854D0E),
+                    color: Colors.grey.shade600,
                   ),
                 ),
               ],
             ),
           ),
-
-        // Edit button (styled)
-        if (_canEdit && !event.isPast)
-          GestureDetector(
-            onTap: () => _navigateToEditEvent(),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.edit_outlined,
-                    size: 16,
-                    color: Colors.grey.shade600,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Edit',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
+        ),
       ],
     );
   }
@@ -1315,64 +1203,237 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
-  Widget _buildPreOrderSection(EventDetail event, double margin) {
-    final padding = _cardPadding(context);
-
-    return Container(
-      margin: EdgeInsets.fromLTRB(margin, 0, margin, margin),
-      child: PreOrderSection(
-        foodOrder: _rsvp?.foodOrder,
-        dietaryNotes: _rsvp?.dietaryNotes,
-        menuLink: event.menuLink,
-        menuImages: event.menuImages,
-        preorderCutoff: event.preorderCutoff,
-        onSubmit: _handleSubmitOrder,
-        padding: padding,
+  Future<void> _navigateToOrder() async {
+    if (_event == null) return;
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => OrderScreen(eventId: _event!.id),
       ),
     );
+    if (result == true) {
+      _loadEvent();
+    }
   }
 
-  Future<bool> _handleSubmitOrder(String? foodOrder, String? dietaryNotes) async {
-    if (_event == null || _rsvp == null) return false;
+  Widget _buildPreOrderBanner(EventDetail event, double margin) {
+    final isCutoffPassed = event.preorderCutoff != null &&
+        DateTime.now().isAfter(event.preorderCutoff!);
+    final hasOrder =
+        _rsvp?.foodOrder != null && _rsvp!.foodOrder!.isNotEmpty;
 
-    final result = await _eventsService.submitOrder(
-      _event!.id,
-      foodOrder: foodOrder,
-      dietaryNotes: dietaryNotes,
-    );
-
-    if (result.success) {
-      // Update local RSVP with new order values
-      setState(() {
-        _rsvp = RsvpStatus(
-          status: _rsvp!.status,
-          waitlistPosition: _rsvp!.waitlistPosition,
-          guestCount: _rsvp!.guestCount,
-          foodOrder: result.foodOrder,
-          dietaryNotes: result.dietaryNotes,
-        );
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Order saved'),
-            backgroundColor: Color(0xFF22C55E),
-            duration: Duration(seconds: 2),
+    if (isCutoffPassed) {
+      // Muted slate card — deadline passed
+      return Container(
+        margin: EdgeInsets.fromLTRB(margin, 0, margin, margin),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: InkWell(
+          onTap: _navigateToOrder,
+          borderRadius: BorderRadius.circular(16),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.schedule_rounded,
+                    size: 20, color: Color(0xFF64748B)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      hasOrder ? 'Order submitted' : 'Order deadline passed',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF475569),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      hasOrder ? 'Deadline passed' : 'No order was submitted',
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF94A3B8)),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded,
+                  color: Color(0xFF94A3B8)),
+            ],
           ),
-        );
-      }
-      return true;
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.error ?? 'Failed to save order'),
-            backgroundColor: Colors.red.shade600,
-          ),
-        );
-      }
-      return false;
+        ),
+      );
     }
+
+    if (hasOrder) {
+      // Green confirmation card — order submitted, can edit
+      return Container(
+        margin: EdgeInsets.fromLTRB(margin, 0, margin, margin),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFECFDF5), Color(0xFFD1FAE5)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFA7F3D0)),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _navigateToOrder,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.check_rounded,
+                        size: 22, color: Colors.white),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Order submitted',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF065F46),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _rsvp!.foodOrder!,
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF047857)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFA7F3D0),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'Edit',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF065F46),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Bold primary CTA card — no order yet, action needed
+    return Container(
+      margin: EdgeInsets.fromLTRB(margin, 0, margin, margin),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF6366F1), Color(0xFF7C3AED)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF7C3AED).withAlpha(60),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _navigateToOrder,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(40),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.restaurant_menu_rounded,
+                      size: 24, color: Colors.white),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Place your pre-order',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'View menu & submit your order',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFFE0E7FF),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(40),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.arrow_forward_rounded,
+                      size: 20, color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildRsvpSection(EventDetail event, double margin) {
