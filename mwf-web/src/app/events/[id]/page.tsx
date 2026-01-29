@@ -34,6 +34,7 @@ import InviteLinkSection from '@/components/ui/InviteLinkSection';
 import DOMPurify from 'dompurify';
 import { getCategoryConfig } from '@/lib/eventCategories';
 import { FEATURE_GUESTS_ENABLED } from '@/lib/featureFlags';
+import AppDownloadBanner from '@/components/ui/AppDownloadBanner';
 
 export default function EventDetailPage() {
     const { user, token } = useAuth();
@@ -642,6 +643,8 @@ export default function EventDetailPage() {
                     </div>
                 </div>
             </div>
+
+            <AppDownloadBanner />
 
             {/* Main Content - Full Width */}
             <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto w-full">

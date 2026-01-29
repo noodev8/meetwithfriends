@@ -34,6 +34,7 @@ import SidebarLayout from '@/components/layout/SidebarLayout';
 import EventCard from '@/components/ui/EventCard';
 import InviteLinkSection from '@/components/ui/InviteLinkSection';
 import { getGroupTheme, getGroupInitials } from '@/lib/groupThemes';
+import AppDownloadBanner from '@/components/ui/AppDownloadBanner';
 
 // Number of pending members to show before "View all" link
 const PENDING_PREVIEW_LIMIT = 3;
@@ -440,6 +441,8 @@ export default function GroupDetailPage() {
                     </div>
                 </div>
             </div>
+
+            <AppDownloadBanner />
 
             {/* Main Content */}
             <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto w-full">

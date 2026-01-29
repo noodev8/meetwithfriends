@@ -64,6 +64,7 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
                 // Already attending → redirect straight to event page
                 if (result.data.user_status?.is_event_rsvp) {
                     setStep('redirecting');
+                    localStorage.setItem('show_app_download', 'true');
                     router.push(`/events/${result.data.invite.event.id}`);
                     return;
                 }
@@ -72,6 +73,7 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
                 const acceptResult = await acceptInvite(token, authToken);
                 if (acceptResult.success && acceptResult.data) {
                     setStep('redirecting');
+                    localStorage.setItem('show_app_download', 'true');
                     router.push(acceptResult.data.redirect_to);
                 } else if (acceptResult.return_code === 'PROFILE_IMAGE_REQUIRED') {
                     setPhotoUploadOrigin('logged-in');
@@ -109,6 +111,7 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
 
         if (result.success && result.data) {
             setStep('redirecting');
+            localStorage.setItem('show_app_download', 'true');
             router.push(result.data.redirect_to);
         } else if (result.return_code === 'PROFILE_IMAGE_REQUIRED') {
             setPhotoUploadOrigin('logged-in');
@@ -173,6 +176,7 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
             // Log the user in
             login(result.data.token, result.data.user);
             setStep('redirecting');
+            localStorage.setItem('show_app_download', 'true');
             router.push(result.data.redirect_to);
         } else if (result.return_code === 'PROFILE_IMAGE_REQUIRED') {
             setPendingSignupPayload(payload);
@@ -205,6 +209,7 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
                 const retryResult = await acceptInvite(token, authToken);
                 if (retryResult.success && retryResult.data) {
                     setStep('redirecting');
+                    localStorage.setItem('show_app_download', 'true');
                     router.push(retryResult.data.redirect_to);
                 } else {
                     setPhotoUploadError(retryResult.error || 'Failed to join. Please try again.');
@@ -226,6 +231,7 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
                     : { ...retryResult.data.user, avatar_url: avatarUrl };
                 login(retryResult.data.token, userWithAvatar);
                 setStep('redirecting');
+                localStorage.setItem('show_app_download', 'true');
                 router.push(retryResult.data.redirect_to);
             } else {
                 setPhotoUploadError(retryResult.error || 'Failed to create account. Please try again.');
