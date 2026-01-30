@@ -1111,9 +1111,11 @@ class _OrdersSummarySheetState extends State<_OrdersSummarySheet> {
 
       final result = await OpenFilex.open(file.path);
       if (result.type != ResultType.done) {
-        await Share.shareXFiles(
-          [XFile(file.path)],
-          subject: '${widget.eventTitle} - Pre-Orders',
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [XFile(file.path)],
+            subject: '${widget.eventTitle} - Pre-Orders',
+          ),
         );
       }
     } catch (e) {
