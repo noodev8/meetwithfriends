@@ -2,6 +2,7 @@
 # General (Windows/macOS/IDEs)
 .DS_Store
 Thumbs.db
+nul
 *.log
 *.swp
 *.swo
