@@ -194,7 +194,7 @@ export default function EventOrderPage() {
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
-                            Back to {event.title}
+                            Back to event
                         </Link>
                     </div>
                 </div>
@@ -232,7 +232,7 @@ export default function EventOrderPage() {
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
-                            Back to {event.title}
+                            Back to event
                         </Link>
                     </div>
                 </div>
@@ -275,7 +275,7 @@ export default function EventOrderPage() {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
-                        Back to {event.title}
+                        Back to event
                     </Link>
 
                     <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display mb-2">
@@ -288,7 +288,7 @@ export default function EventOrderPage() {
                         {event.preorder_cutoff && (
                             <>
                                 <span className="text-slate-300">·</span>
-                                <span className="text-indigo-600 font-medium">
+                                <span className="text-slate-500 font-medium">
                                     Order by {new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} at {new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                             </>
@@ -384,7 +384,7 @@ export default function EventOrderPage() {
                                     )}
                                     <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
                                         <p className="text-sm text-amber-700">
-                                            The order deadline has passed. Contact a host if you need to make changes.
+                                            The order deadline has closed. Contact a host if you need to make changes.
                                         </p>
                                     </div>
                                 </div>
@@ -443,15 +443,6 @@ export default function EventOrderPage() {
                                         className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 resize-none transition text-base"
                                     />
                                 </div>
-
-                                {/* Deadline notice */}
-                                {event.preorder_cutoff && (
-                                    <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl">
-                                        <p className="text-sm text-indigo-700">
-                                            Order by {new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at {new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                                        </p>
-                                    </div>
-                                )}
 
                                 {/* Save button */}
                                 <button

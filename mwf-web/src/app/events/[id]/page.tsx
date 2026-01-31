@@ -612,7 +612,7 @@ export default function EventDetailPage() {
                                                     </div>
                                                     <div className="min-w-0">
                                                         <p className="text-sm font-semibold text-slate-700">
-                                                            {rsvp.food_order || rsvp.dietary_notes ? 'Order submitted — deadline passed' : 'Order deadline passed'}
+                                                            {rsvp.food_order || rsvp.dietary_notes ? 'Order submitted — deadline closed' : 'Order deadline closed'}
                                                         </p>
                                                         {rsvp.food_order && (
                                                             <p className="text-xs text-slate-500 truncate max-w-xs sm:max-w-sm">
