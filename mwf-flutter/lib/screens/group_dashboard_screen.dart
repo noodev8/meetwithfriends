@@ -730,9 +730,6 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                           if (canManageMembers)
                             _buildInviteTile(group),
 
-                          // Bottom actions section
-                          _buildBottomActions(group, canManageMembers, isOrganiser, membership?.isActive == true),
-
                           // Leave group link (for active members who are not organisers)
                           if (membership?.isActive == true && !isOrganiser)
                             _buildLeaveGroupLink(),
@@ -749,65 +746,6 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildBottomActions(GroupDetail group, bool canManageMembers, bool isOrganiser, bool isActiveMember) {
-    if (!canManageMembers) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CreateEventScreen(
-                groupId: group.id,
-                groupName: group.name,
-                canCreateEvents: _membership?.canManageMembers ?? false,
-                onEventCreated: () {
-                  _loadGroup();
-                },
-              ),
-            ),
-          );
-        },
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: _theme.gradient,
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: _theme.gradient[0].withAlpha(80),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.add_rounded, color: Colors.white, size: 22),
-              SizedBox(width: 8),
-              Text(
-                'Create Event',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -950,12 +888,67 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
               ],
             ),
           ),
-          // Broadcast and Settings buttons for organisers - in separate row below
-          if (isOrganiser) ...[
+          // Admin actions
+          if (canManageMembers) ...[
             const SizedBox(height: 12),
+            // Create Event - primary action
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CreateEventScreen(
+                      groupId: group.id,
+                      groupName: group.name,
+                      canCreateEvents: _membership?.canManageMembers ?? false,
+                      onEventCreated: () {
+                        _loadGroup();
+                      },
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: _theme.gradient,
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _theme.gradient[0].withAlpha(80),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_rounded, color: Colors.white, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Create Event',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          // Broadcast and Settings - secondary actions (organiser only)
+          if (isOrganiser) ...[
+            const SizedBox(height: 10),
             Row(
               children: [
-                // Broadcast button
                 Expanded(
                   child: GestureDetector(
                     onTap: _showBroadcastDialog,
@@ -991,7 +984,6 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Settings button
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
