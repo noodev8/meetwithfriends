@@ -258,7 +258,7 @@ async function processEmailQueue(limit = 50) {
                          JOIN app_user u ON ec.user_id = u.id
                          WHERE ec.event_id = $1
                          AND ec.created_at > $2
-                         ORDER BY ec.created_at ASC`,
+                         ORDER BY ec.created_at DESC`,
                         [email.event_id, bookmark]
                     )
                     : await query(
@@ -266,7 +266,7 @@ async function processEmailQueue(limit = 50) {
                          FROM event_comment ec
                          JOIN app_user u ON ec.user_id = u.id
                          WHERE ec.event_id = $1
-                         ORDER BY ec.created_at ASC`,
+                         ORDER BY ec.created_at DESC`,
                         [email.event_id]
                     );
 
