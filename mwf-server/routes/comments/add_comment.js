@@ -107,15 +107,15 @@ router.post('/', verifyToken, async (req, res) => {
         const { rsvp_status, member_role, is_host } = eventResult.rows[0];
 
         // =======================================================================
-        // Verify user can comment: attending, waitlist, host, or organiser
+        // Verify user can comment: any RSVP status (attending, waitlist, not_going), host, or organiser
         // =======================================================================
-        const isAttendingOrWaitlist = rsvp_status === 'attending' || rsvp_status === 'waitlist';
+        const hasRsvp = rsvp_status === 'attending' || rsvp_status === 'waitlist' || rsvp_status === 'not_going';
         const isHostOrOrganiser = is_host || member_role === 'organiser';
 
-        if (!isAttendingOrWaitlist && !isHostOrOrganiser) {
+        if (!hasRsvp && !isHostOrOrganiser) {
             return res.json({
                 return_code: 'NOT_ATTENDING',
-                message: 'You must be attending or on the waitlist to comment'
+                message: 'You must have RSVPed to this event to comment'
             });
         }
 
@@ -143,14 +143,14 @@ router.post('/', verifyToken, async (req, res) => {
         const event = eventResult.rows[0];
 
         // =======================================================================
-        // Queue notification emails to attendees, waitlist, and hosts (except commenter)
+        // Queue notification emails to all RSVPed users and hosts (except commenter)
         // =======================================================================
         const recipientsResult = await query(
             `SELECT DISTINCT u.email, u.name
              FROM app_user u
              WHERE u.id != $2
              AND (
-                 u.id IN (SELECT er.user_id FROM event_rsvp er WHERE er.event_id = $1 AND er.status IN ('attending', 'waitlist'))
+                 u.id IN (SELECT er.user_id FROM event_rsvp er WHERE er.event_id = $1 AND er.status IN ('attending', 'waitlist', 'not_going'))
                  OR u.id IN (SELECT eh.user_id FROM event_host eh WHERE eh.event_id = $1)
              )`,
             [event_id, userId]
