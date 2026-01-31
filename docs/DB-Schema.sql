@@ -5,7 +5,7 @@
 -- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 17.4
 
--- Started on 2026-01-31 10:52:04
+-- Started on 2026-01-31 17:43:40
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -118,7 +118,7 @@ ALTER SEQUENCE public.app_user_id_seq OWNED BY public.app_user.id;
 
 
 --
--- TOC entry 237 (class 1259 OID 23877)
+-- TOC entry 235 (class 1259 OID 23877)
 -- Name: audit_log; Type: TABLE; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -139,7 +139,7 @@ CREATE TABLE public.audit_log (
 ALTER TABLE public.audit_log OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 236 (class 1259 OID 23876)
+-- TOC entry 234 (class 1259 OID 23876)
 -- Name: audit_log_id_seq; Type: SEQUENCE; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -156,7 +156,7 @@ ALTER SEQUENCE public.audit_log_id_seq OWNER TO meetwithfriends_user;
 
 --
 -- TOC entry 3619 (class 0 OID 0)
--- Dependencies: 236
+-- Dependencies: 234
 -- Name: audit_log_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -208,7 +208,7 @@ ALTER SEQUENCE public.email_log_id_seq OWNED BY public.email_log.id;
 
 
 --
--- TOC entry 235 (class 1259 OID 23840)
+-- TOC entry 239 (class 1259 OID 24029)
 -- Name: email_queue; Type: TABLE; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -218,8 +218,6 @@ CREATE TABLE public.email_queue (
     recipient_email character varying(255) NOT NULL,
     recipient_name character varying(255),
     subject character varying(255) NOT NULL,
-    html_content text,
-    text_content text,
     reply_to character varying(255),
     status character varying(20) DEFAULT 'pending'::character varying,
     attempts integer DEFAULT 0,
@@ -232,14 +230,16 @@ CREATE TABLE public.email_queue (
     event_id integer,
     group_name character varying(100),
     sender_id integer,
-    sender_name character varying(255)
+    sender_name character varying(255),
+    html_content text,
+    text_content text
 );
 
 
 ALTER TABLE public.email_queue OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 234 (class 1259 OID 23839)
+-- TOC entry 238 (class 1259 OID 24028)
 -- Name: email_queue_id_seq; Type: SEQUENCE; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -256,7 +256,7 @@ ALTER SEQUENCE public.email_queue_id_seq OWNER TO meetwithfriends_user;
 
 --
 -- TOC entry 3621 (class 0 OID 0)
--- Dependencies: 234
+-- Dependencies: 238
 -- Name: email_queue_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -626,7 +626,7 @@ ALTER SEQUENCE public.password_reset_token_id_seq OWNED BY public.password_reset
 
 
 --
--- TOC entry 239 (class 1259 OID 23954)
+-- TOC entry 237 (class 1259 OID 23954)
 -- Name: venue_access_token; Type: TABLE; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -644,7 +644,7 @@ CREATE TABLE public.venue_access_token (
 ALTER TABLE public.venue_access_token OWNER TO meetwithfriends_user;
 
 --
--- TOC entry 238 (class 1259 OID 23953)
+-- TOC entry 236 (class 1259 OID 23953)
 -- Name: venue_access_token_id_seq; Type: SEQUENCE; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -661,7 +661,7 @@ ALTER SEQUENCE public.venue_access_token_id_seq OWNER TO meetwithfriends_user;
 
 --
 -- TOC entry 3631 (class 0 OID 0)
--- Dependencies: 238
+-- Dependencies: 236
 -- Name: venue_access_token_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -677,7 +677,7 @@ ALTER TABLE ONLY public.app_user ALTER COLUMN id SET DEFAULT nextval('public.app
 
 
 --
--- TOC entry 3373 (class 2604 OID 23880)
+-- TOC entry 3367 (class 2604 OID 23880)
 -- Name: audit_log id; Type: DEFAULT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -693,7 +693,7 @@ ALTER TABLE ONLY public.email_log ALTER COLUMN id SET DEFAULT nextval('public.em
 
 
 --
--- TOC entry 3367 (class 2604 OID 23843)
+-- TOC entry 3371 (class 2604 OID 24032)
 -- Name: email_queue id; Type: DEFAULT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -757,7 +757,7 @@ ALTER TABLE ONLY public.password_reset_token ALTER COLUMN id SET DEFAULT nextval
 
 
 --
--- TOC entry 3375 (class 2604 OID 23957)
+-- TOC entry 3369 (class 2604 OID 23957)
 -- Name: venue_access_token id; Type: DEFAULT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -783,7 +783,7 @@ ALTER TABLE ONLY public.app_user
 
 
 --
--- TOC entry 3438 (class 2606 OID 23885)
+-- TOC entry 3431 (class 2606 OID 23885)
 -- Name: audit_log audit_log_pkey; Type: CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -801,7 +801,7 @@ ALTER TABLE ONLY public.email_log
 
 
 --
--- TOC entry 3431 (class 2606 OID 23852)
+-- TOC entry 3444 (class 2606 OID 24041)
 -- Name: email_queue email_queue_pkey; Type: CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -909,7 +909,7 @@ ALTER TABLE ONLY public.password_reset_token
 
 
 --
--- TOC entry 3447 (class 2606 OID 23962)
+-- TOC entry 3440 (class 2606 OID 23962)
 -- Name: venue_access_token venue_access_token_pkey; Type: CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -918,7 +918,7 @@ ALTER TABLE ONLY public.venue_access_token
 
 
 --
--- TOC entry 3449 (class 2606 OID 23964)
+-- TOC entry 3442 (class 2606 OID 23964)
 -- Name: venue_access_token venue_access_token_token_key; Type: CONSTRAINT; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -935,7 +935,7 @@ CREATE INDEX idx_app_user_email ON public.app_user USING btree (email);
 
 
 --
--- TOC entry 3439 (class 1259 OID 23887)
+-- TOC entry 3432 (class 1259 OID 23887)
 -- Name: idx_audit_log_action; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -943,7 +943,7 @@ CREATE INDEX idx_audit_log_action ON public.audit_log USING btree (action);
 
 
 --
--- TOC entry 3440 (class 1259 OID 23888)
+-- TOC entry 3433 (class 1259 OID 23888)
 -- Name: idx_audit_log_created_at; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -951,7 +951,7 @@ CREATE INDEX idx_audit_log_created_at ON public.audit_log USING btree (created_a
 
 
 --
--- TOC entry 3441 (class 1259 OID 23890)
+-- TOC entry 3434 (class 1259 OID 23890)
 -- Name: idx_audit_log_event_id; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -959,7 +959,7 @@ CREATE INDEX idx_audit_log_event_id ON public.audit_log USING btree (event_id);
 
 
 --
--- TOC entry 3442 (class 1259 OID 23889)
+-- TOC entry 3435 (class 1259 OID 23889)
 -- Name: idx_audit_log_group_id; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -967,7 +967,7 @@ CREATE INDEX idx_audit_log_group_id ON public.audit_log USING btree (group_id);
 
 
 --
--- TOC entry 3443 (class 1259 OID 23886)
+-- TOC entry 3436 (class 1259 OID 23886)
 -- Name: idx_audit_log_user_id; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -983,7 +983,7 @@ CREATE INDEX idx_email_log_sent_at ON public.email_log USING btree (sent_at);
 
 
 --
--- TOC entry 3432 (class 1259 OID 23855)
+-- TOC entry 3445 (class 1259 OID 24044)
 -- Name: idx_email_queue_created; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -991,7 +991,7 @@ CREATE INDEX idx_email_queue_created ON public.email_queue USING btree (created_
 
 
 --
--- TOC entry 3433 (class 1259 OID 23857)
+-- TOC entry 3446 (class 1259 OID 24046)
 -- Name: idx_email_queue_event; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -999,7 +999,7 @@ CREATE INDEX idx_email_queue_event ON public.email_queue USING btree (event_id);
 
 
 --
--- TOC entry 3434 (class 1259 OID 23856)
+-- TOC entry 3447 (class 1259 OID 24045)
 -- Name: idx_email_queue_group; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1007,7 +1007,7 @@ CREATE INDEX idx_email_queue_group ON public.email_queue USING btree (group_id);
 
 
 --
--- TOC entry 3435 (class 1259 OID 23854)
+-- TOC entry 3448 (class 1259 OID 24043)
 -- Name: idx_email_queue_scheduled; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1015,7 +1015,7 @@ CREATE INDEX idx_email_queue_scheduled ON public.email_queue USING btree (schedu
 
 
 --
--- TOC entry 3436 (class 1259 OID 23853)
+-- TOC entry 3449 (class 1259 OID 24042)
 -- Name: idx_email_queue_status; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1119,7 +1119,7 @@ CREATE INDEX idx_password_reset_token_token ON public.password_reset_token USING
 
 
 --
--- TOC entry 3444 (class 1259 OID 23976)
+-- TOC entry 3437 (class 1259 OID 23976)
 -- Name: idx_venue_access_token_event_id; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1127,7 +1127,7 @@ CREATE INDEX idx_venue_access_token_event_id ON public.venue_access_token USING 
 
 
 --
--- TOC entry 3445 (class 1259 OID 23975)
+-- TOC entry 3438 (class 1259 OID 23975)
 -- Name: idx_venue_access_token_token; Type: INDEX; Schema: public; Owner: meetwithfriends_user
 --
 
@@ -1318,7 +1318,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENC
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO meetwithfriends_user;
 
 
--- Completed on 2026-01-31 10:52:06
+-- Completed on 2026-01-31 17:43:42
 
 --
 -- PostgreSQL database dump complete
