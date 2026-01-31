@@ -143,15 +143,16 @@ router.post('/', verifyToken, async (req, res) => {
         const event = eventResult.rows[0];
 
         // =======================================================================
-        // Queue notification emails to attendees and waitlist (except commenter)
+        // Queue notification emails to attendees, waitlist, and hosts (except commenter)
         // =======================================================================
         const recipientsResult = await query(
-            `SELECT u.email, u.name
-             FROM event_rsvp er
-             JOIN app_user u ON er.user_id = u.id
-             WHERE er.event_id = $1
-             AND er.status IN ('attending', 'waitlist')
-             AND er.user_id != $2`,
+            `SELECT DISTINCT u.email, u.name
+             FROM app_user u
+             WHERE u.id != $2
+             AND (
+                 u.id IN (SELECT er.user_id FROM event_rsvp er WHERE er.event_id = $1 AND er.status IN ('attending', 'waitlist'))
+                 OR u.id IN (SELECT eh.user_id FROM event_host eh WHERE eh.event_id = $1)
+             )`,
             [event_id, userId]
         );
 
