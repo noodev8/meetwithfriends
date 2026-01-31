@@ -553,10 +553,31 @@ export default function EventDetailPage() {
                             </div>
 
                             {/* Pre-order Banner — above the fold CTA */}
-                            {event.preorders_enabled && rsvp && rsvp.status !== 'not_going'
-                                && !isPastEvent && event.status !== 'cancelled' && (
+                            {event.preorders_enabled && !isPastEvent && event.status !== 'cancelled' && (
                                 <div className="mt-5">
-                                    {isCutoffPassed ? (
+                                    {!rsvp || rsvp.status === 'not_going' ? (
+                                        /* Not attending — neutral banner with View Menu link */
+                                        <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 via-slate-50 to-indigo-50">
+                                            <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 sm:px-5 py-3.5">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                                                        <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                                        </svg>
+                                                    </div>
+                                                    <p className="text-sm font-semibold text-slate-700">
+                                                        Menu available for this event
+                                                    </p>
+                                                </div>
+                                                <Link
+                                                    href={`/events/${event.id}/order`}
+                                                    className="w-full sm:w-auto flex-shrink-0 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-100 hover:bg-indigo-200 rounded-lg transition-colors text-center"
+                                                >
+                                                    View Menu
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    ) : isCutoffPassed ? (
                                         /* Cutoff passed — slate banner with view link */
                                         <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 via-slate-50 to-slate-100">
                                             <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 sm:px-5 py-3.5">
