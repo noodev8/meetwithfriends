@@ -5,10 +5,10 @@ import '../services/groups_service.dart';
 import '../services/events_service.dart';
 import '../config/group_themes.dart';
 import '../widgets/bottom_nav_bar.dart';
-import '../widgets/invite_link_section.dart';
 import 'create_event_screen.dart';
 import 'edit_group_screen.dart';
 import 'group_members_screen.dart';
+import 'invite_link_screen.dart';
 
 import 'group_events_screen.dart';
 
@@ -37,7 +37,6 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
   GroupDetail? _group;
   GroupMembership? _membership;
   int _upcomingEventCount = 0;
-  List<GroupMember> _members = [];
   List<GroupMember> _pendingMembers = [];
   int? _processingMemberId;
   bool _isLeaving = false;
@@ -80,11 +79,6 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
         }
       });
 
-      // Load members if user is an active member
-      if (groupResult.success && groupResult.membership?.isActive == true) {
-        _loadMembers();
-      }
-
       // Load pending members if user can manage members (organiser/host)
       if (groupResult.success && groupResult.membership?.canManageMembers == true) {
         _loadPendingMembers();
@@ -106,19 +100,6 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
     }
   }
 
-  Future<void> _loadMembers() async {
-    final result = await _groupsService.getGroupMembers(
-      widget.groupId,
-      limit: 12, // Just need preview
-    );
-
-    if (mounted && result.success) {
-      setState(() {
-        _members = result.members ?? [];
-      });
-    }
-  }
-
   Future<void> _handleApproveMember(GroupMember member) async {
     setState(() => _processingMemberId = member.id);
 
@@ -128,12 +109,11 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
       setState(() => _processingMemberId = null);
 
       if (result.success) {
-        // Remove from pending list and refresh members
+        // Remove from pending list and refresh member count
         setState(() {
           _pendingMembers.removeWhere((m) => m.id == member.id);
         });
-        _loadMembers();
-        _loadGroup(); // Refresh member count
+        _loadGroup();
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -742,16 +722,16 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                           // Events Section
                           _buildUpcomingEventsSection(),
 
-                          // Members Section (always show, but content varies by membership)
-                          _buildMembersSection(group, membership?.isActive == true),
+                          // Members tile
+                          _buildMembersTile(group),
 
                           // About Section
                           if (group.description != null && group.description!.isNotEmpty)
                             _buildAboutSection(group),
 
-                          // Invite People Section (organisers/hosts only)
+                          // Invite People tile (organisers/hosts only)
                           if (canManageMembers)
-                            InviteLinkSection(type: 'group', id: group.id),
+                            _buildInviteTile(group),
 
                           // Bottom actions section
                           _buildBottomActions(group, canManageMembers, isOrganiser, membership?.isActive == true),
@@ -1430,159 +1410,76 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
     );
   }
 
-  Widget _buildMembersSection(GroupDetail group, bool isMember) {
+  Widget _buildMembersTile(GroupDetail group) {
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header row with title and "See all" link (only for members)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Text(
-                    'Members',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1E293B),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${group.memberCount}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF94A3B8),
-                    ),
-                  ),
-                ],
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => GroupMembersScreen(
+                groupId: group.id,
+                groupName: group.name,
               ),
-              if (isMember)
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => GroupMembersScreen(
-                          groupId: group.id,
-                          groupName: group.name,
-                        ),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    'See all',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF7C3AED),
-                    ),
-                  ),
-                ),
-            ],
+            ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
-
-          const SizedBox(height: 16),
-
-          // Content varies based on membership
-          if (!isMember)
-            // Non-member: show message to join
-            const Text(
-              'Join the group to see members',
-              style: TextStyle(
-                fontSize: 14,
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.people_rounded,
+                  size: 20,
+                  color: Color(0xFF6366F1),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Members',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF94A3B8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
                 color: Color(0xFF94A3B8),
               ),
-            )
-          else if (_members.isEmpty)
-            // Member but still loading
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                  'Loading members...',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF94A3B8),
-                  ),
-                ),
-              ),
-            )
-          else
-            // Member: show avatar grid
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                ..._members.take(12).map((member) => _buildMemberAvatar(member)),
-                if (group.memberCount > 12)
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '+${group.memberCount - 12}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-        ],
+            ],
+          ),
+        ),
       ),
-    );
-  }
-
-  Widget _buildMemberAvatar(GroupMember member) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: member.avatarUrl == null
-            ? const LinearGradient(
-                colors: [Color(0xFF818CF8), Color(0xFFA78BFA)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
-            : null,
-        image: member.avatarUrl != null
-            ? DecorationImage(
-                image: NetworkImage(member.avatarUrl!),
-                fit: BoxFit.cover,
-              )
-            : null,
-      ),
-      child: member.avatarUrl == null
-          ? Center(
-              child: Text(
-                member.initials,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            )
-          : null,
     );
   }
 
@@ -1797,6 +1694,79 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
           ),
 
         ],
+      ),
+    );
+  }
+
+  Widget _buildInviteTile(GroupDetail group) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => InviteLinkScreen(
+                type: 'group',
+                id: group.id,
+                name: group.name,
+              ),
+            ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.person_add_rounded,
+                  size: 20,
+                  color: Color(0xFF6366F1),
+                ),
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Invite People',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Share a link to invite',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF94A3B8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: Color(0xFF94A3B8),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
