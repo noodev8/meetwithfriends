@@ -234,6 +234,76 @@ async function processEmailQueue(limit = 50) {
                 }
             }
 
+            // Build comment_digest content at send time
+            if (email.email_type === 'comment_digest' && email.event_id) {
+                // Find the recipient's user_id from their email
+                const recipientUser = await query(
+                    `SELECT id FROM app_user WHERE email = $1`,
+                    [email.recipient_email]
+                );
+                const recipientUserId = recipientUser.rows[0]?.id;
+
+                // Find the last sent_at for a comment_digest to this recipient for this event
+                const lastSent = await query(
+                    `SELECT sent_at FROM email_queue
+                     WHERE recipient_email = $1
+                     AND event_id = $2
+                     AND email_type = 'comment_digest'
+                     AND status = 'sent'
+                     ORDER BY sent_at DESC
+                     LIMIT 1`,
+                    [email.recipient_email, email.event_id]
+                );
+                const bookmark = lastSent.rows.length > 0 ? lastSent.rows[0].sent_at : null;
+
+                // Query comments posted after the bookmark (or after digest creation if first digest)
+                const since = bookmark || email.created_at;
+                const commentsQuery = `SELECT ec.content, u.name
+                     FROM event_comment ec
+                     JOIN app_user u ON ec.user_id = u.id
+                     WHERE ec.event_id = $1
+                     AND ec.created_at > $2
+                     ${recipientUserId ? 'AND ec.user_id != $3' : ''}
+                     ORDER BY ec.created_at ASC`;
+                const commentsParams = recipientUserId
+                    ? [email.event_id, since, recipientUserId]
+                    : [email.event_id, since];
+
+                const commentsResult = await query(commentsQuery, commentsParams);
+
+                if (commentsResult.rows.length === 0) {
+                    await query(
+                        `UPDATE email_queue SET status = 'cancelled', error_message = 'No new comments found' WHERE id = $1`,
+                        [email.id]
+                    );
+                    stats.cancelled++;
+                    continue;
+                }
+
+                // Get event title
+                const eventResult = await query(
+                    `SELECT title FROM event_list WHERE id = $1`,
+                    [email.event_id]
+                );
+                const eventTitle = eventResult.rows[0]?.title || 'an event';
+
+                // Build digest HTML
+                const { subject, html } = buildCommentDigestHtml(
+                    eventTitle,
+                    email.event_id,
+                    commentsResult.rows,
+                    commentsResult.rows.length
+                );
+
+                // Update the queue record with built content
+                await query(
+                    `UPDATE email_queue SET subject = $1, html_content = $2 WHERE id = $3`,
+                    [subject, html, email.id]
+                );
+                email.subject = subject;
+                email.html_content = html;
+            }
+
             // Send the email (use group_name as sender if available)
             const sendResult = await sendEmail(
                 email.recipient_email,
@@ -384,6 +454,50 @@ function calendarLink(eventId) {
             <a href="${calendarUrl}" style="color: #4f46e5; text-decoration: none; font-size: 14px;">📅 Add to Calendar</a>
         </p>
     `;
+}
+
+/*
+=======================================================================================================================================
+buildCommentDigestHtml
+=======================================================================================================================================
+Builds a Meetup-style digest email showing up to 4 comments, with "and N more..." if exceeded.
+Returns { subject, html } for use by processEmailQueue.
+=======================================================================================================================================
+*/
+function buildCommentDigestHtml(eventTitle, eventId, comments, totalCount) {
+    const MAX_SHOWN = 4;
+    const shown = comments.slice(0, MAX_SHOWN);
+
+    let commentsHtml = shown.map(c => {
+        const truncated = c.content.length > 200
+            ? c.content.substring(0, 200) + '...'
+            : c.content;
+        return `
+            <div style="background-color: #f8f9fa; padding: 12px 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #4f46e5;">
+                <p style="color: #333; font-size: 14px; margin: 0 0 4px 0;"><strong>${c.name}</strong></p>
+                <p style="color: #666; font-size: 15px; font-style: italic; margin: 0;">"${truncated}"</p>
+            </div>
+        `;
+    }).join('');
+
+    if (totalCount > MAX_SHOWN) {
+        const moreCount = totalCount - MAX_SHOWN;
+        commentsHtml += `
+            <p style="color: #999; font-size: 14px; margin: 10px 0;">
+                and ${moreCount} more comment${moreCount !== 1 ? 's' : ''}...
+            </p>
+        `;
+    }
+
+    const subject = `${totalCount} new comment${totalCount !== 1 ? 's' : ''} in ${eventTitle}`;
+
+    const html = wrapEmail(`
+        <h2 style="color: #333; margin-top: 0;">${subject}</h2>
+        ${commentsHtml}
+        ${emailButton(config.frontendUrl + '/events/' + eventId, 'Read and reply to comments')}
+    `);
+
+    return { subject, html };
 }
 
 /*
@@ -1162,61 +1276,45 @@ async function queueEventReminderEmail(email, userName, event, group, isHost = f
 =======================================================================================================================================
 queueNewCommentEmail
 =======================================================================================================================================
-Queue comment notification for later processing.
-Includes throttling: only one comment email per recipient per event within the configured time window.
-If a pending or recently sent email exists, skip queuing to avoid spamming during active conversations.
+Ensures a digest email is pending for this recipient + event.
+If one already exists, does nothing (the existing digest will pick up all new comments at send time).
+If not, queues a comment_digest record scheduled for NOW() + configured digest window (default 15 min).
+No HTML is stored — content is built at send time by processEmailQueue.
 =======================================================================================================================================
 */
-async function queueNewCommentEmail(email, userName, event, group, commenterName, commenterId, commentContent) {
-    // =======================================================================
-    // Throttle check: skip if recipient already has a pending or recent email for this event
-    // This prevents email spam during active conversations
-    // =======================================================================
-    const throttleHours = config.email.commentThrottleHours;
-    const throttleCheck = await query(
+async function queueNewCommentEmail(email, userName, event, group, commenterId) {
+    // Check if a pending comment_digest already exists for this recipient + event
+    const pendingCheck = await query(
         `SELECT 1 FROM email_queue
          WHERE recipient_email = $1
          AND event_id = $2
-         AND email_type = 'new_comment'
-         AND (
-             status = 'pending'
-             OR (status = 'sent' AND sent_at > NOW() - INTERVAL '1 hour' * $3)
-         )
+         AND email_type = 'comment_digest'
+         AND status = 'pending'
          LIMIT 1`,
-        [email, event.id, throttleHours]
+        [email, event.id]
     );
 
-    if (throttleCheck.rows.length > 0) {
-        // Already has a pending or recent email - skip to avoid spam
-        return { success: true, throttled: true };
+    if (pendingCheck.rows.length > 0) {
+        return { success: true, digestPending: true };
     }
 
-    // Truncate comment if too long for display
-    const maxLength = 200;
-    const truncatedComment = commentContent.length > maxLength
-        ? commentContent.substring(0, maxLength) + '...'
-        : commentContent;
+    // Insert a digest queue record with no HTML (built at send time)
+    const digestMinutes = config.email.commentDigestMinutes;
+    const scheduledFor = `NOW() + INTERVAL '${digestMinutes} minutes'`;
 
-    const html = wrapEmail(`
-        <h2 style="color: #333; margin-top: 0;">New comment on ${event.title}</h2>
-        <p style="color: #666; font-size: 16px;">
-            <strong>${commenterName}</strong> commented:
-        </p>
-        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #4f46e5;">
-            <p style="color: #666; font-size: 16px; font-style: italic; margin: 0;">
-                "${truncatedComment}"
-            </p>
-        </div>
-        ${emailButton(config.frontendUrl + '/events/' + event.id, 'View Conversation')}
-    `);
-
-    return queueEmail(email, userName, `New comment on ${event.title}`, html, 'new_comment', {
-        groupId: group.id,
-        eventId: event.id,
-        groupName: group.name,
-        senderId: commenterId,
-        senderName: commenterName
-    });
+    try {
+        await query(
+            `INSERT INTO email_queue
+             (recipient_email, recipient_name, subject, html_content, email_type,
+              group_id, event_id, group_name, scheduled_for, sender_id)
+             VALUES ($1, $2, '', NULL, 'comment_digest', $3, $4, $5, ${scheduledFor}, $6)`,
+            [email, userName, group.id, event.id, group.name, commenterId]
+        );
+        return { success: true, queued: true };
+    } catch (error) {
+        console.error('Error queueing comment digest:', error);
+        return { success: false, error: error.message };
+    }
 }
 
 /*

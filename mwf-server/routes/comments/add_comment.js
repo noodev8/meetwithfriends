@@ -158,18 +158,16 @@ router.post('/', verifyToken, async (req, res) => {
         // Create group object for email queue
         const group = { id: event.group_id, name: event.group_name };
 
-        // Queue emails for all recipients
+        // Queue digest emails for all recipients
         for (const recipient of recipientsResult.rows) {
             queueNewCommentEmail(
                 recipient.email,
                 recipient.name,
                 event,
                 group,
-                user.name,
-                userId,
-                trimmedContent
+                userId
             ).catch(err => {
-                console.error('Failed to queue comment email:', err);
+                console.error('Failed to queue comment digest:', err);
             });
         }
 

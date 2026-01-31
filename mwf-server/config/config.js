@@ -30,7 +30,7 @@ module.exports = {
         from: process.env.EMAIL_FROM || 'noreply@example.com',
         fromName: process.env.EMAIL_FROM_NAME || 'Meet With Friends',
         overrideRecipient: process.env.EMAIL_OVERRIDE_RECIPIENT || null,
-        commentThrottleHours: parseInt(process.env.EMAIL_COMMENT_THROTTLE_HOURS, 10) || 2
+        commentDigestMinutes: parseInt(process.env.EMAIL_COMMENT_DIGEST_MINUTES, 10) || 15
     },
 
     // Frontend URL (for email links)
