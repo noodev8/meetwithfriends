@@ -133,7 +133,7 @@ class _OrderScreenState extends State<OrderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
@@ -143,13 +143,27 @@ class _OrderScreenState extends State<OrderScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           color: const Color(0xFF1E293B),
         ),
-        title: Text(
-          _rsvp != null && _rsvp!.status != 'not_going' ? 'Your Order' : 'Menu',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1E293B),
-          ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _rsvp != null && _rsvp!.status != 'not_going' ? 'Your Order' : 'Menu',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            if (_event != null && !_event!.isCancelled && !_event!.isPast && _event!.preordersEnabled && _event!.preorderCutoff != null && !_isCutoffPassed)
+              Text(
+                'Order by ${DateFormat('EEE d MMM, h:mm a').format(_event!.preorderCutoff!)}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF94A3B8),
+                ),
+              ),
+          ],
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -240,38 +254,102 @@ class _OrderScreenState extends State<OrderScreen> {
 
     final canOrder = _rsvp != null && _rsvp!.status != 'not_going';
 
-    // Main content
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Event info header
-              _buildEventInfo(event),
-              const SizedBox(height: 16),
-
-              // Menu card (always visible)
-              if (_hasMenu) ...[
-                _buildMenuCard(),
-                const SizedBox(height: 16),
+    // Non-editable states: scrollable
+    if (!canOrder || _isCutoffPassed) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (_hasMenu) ...[
+                  _buildMenuCard(),
+                  const SizedBox(height: 20),
+                ],
+                if (!canOrder)
+                  _buildRsvpPrompt()
+                else
+                  _buildReadOnlyOrder(),
               ],
-
-              // Order section — depends on RSVP status
-              if (!canOrder)
-                _buildRsvpPrompt()
-              else if (_isCutoffPassed)
-                _buildReadOnlyOrder()
-              else
-                _buildOrderForm(),
-
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
         ),
-      ),
+      );
+    }
+
+    // Editable order: form fills available space
+    return Column(
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (_hasMenu) ...[
+                      _buildMenuCard(),
+                      const SizedBox(height: 20),
+                    ],
+                    Expanded(child: _buildOrderForm()),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Pinned save button
+        Container(
+          padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + MediaQuery.of(context).padding.bottom),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _handleSubmit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF7C3AED),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                    disabledBackgroundColor:
+                        const Color(0xFF7C3AED).withAlpha(153),
+                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Save Order',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -363,72 +441,6 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
-  Widget _buildEventInfo(EventDetail event) {
-    final dateFormat = DateFormat('EEE d MMM yyyy');
-    final timeFormat = DateFormat('h:mm a');
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            event.title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1E293B),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(
-                Icons.calendar_today_outlined,
-                size: 14,
-                color: Color(0xFF64748B),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${dateFormat.format(event.dateTime)} at ${timeFormat.format(event.dateTime)}',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF64748B),
-                ),
-              ),
-            ],
-          ),
-          if (event.preorderCutoff != null) ...[
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(
-                  Icons.schedule_rounded,
-                  size: 14,
-                  color: Color(0xFF92400E),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Order by ${dateFormat.format(event.preorderCutoff!)}, ${timeFormat.format(event.preorderCutoff!)}',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF92400E),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
   Widget _buildMenuCard() {
     final event = _event!;
 
@@ -497,37 +509,21 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Widget _buildOrderForm() {
-    final cutoffText = _event?.preorderCutoff != null
-        ? 'Order by ${DateFormat('EEE d MMM').format(_event!.preorderCutoff!)}, ${DateFormat('h:mm a').format(_event!.preorderCutoff!)}'
-        : null;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Order field
-          const Text(
-            'What would you like?',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF475569),
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Order field
+        Expanded(
+          child: TextField(
             controller: _orderController,
             maxLength: 500,
-            maxLines: 4,
-            minLines: 3,
+            expands: true,
+            maxLines: null,
+            minLines: null,
+            textAlignVertical: TextAlignVertical.top,
+            buildCounter: (context, {required currentLength, required isFocused, required maxLength}) => null,
             decoration: InputDecoration(
-              hintText: 'e.g., Chicken Caesar Salad, no croutons',
+              hintText: 'What would you like to order?\ne.g., Chicken Caesar Salad, no croutons',
               hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
               filled: true,
               fillColor: const Color(0xFFF8FAFC),
@@ -545,227 +541,157 @@ class _OrderScreenState extends State<OrderScreen> {
                 borderSide:
                     const BorderSide(color: Color(0xFF7C3AED), width: 2),
               ),
-              counterStyle: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF94A3B8),
-              ),
             ),
           ),
-          const SizedBox(height: 16),
+        ),
+        const SizedBox(height: 12),
 
-          // Dietary notes field
-          const Text(
-            'Dietary notes (optional)',
-            style: TextStyle(
+        // Dietary notes field
+        const Text(
+          'Dietary notes (optional)',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF94A3B8),
+          ),
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: _notesController,
+          maxLength: 200,
+          maxLines: 1,
+          style: const TextStyle(fontSize: 14),
+          buildCounter: (context, {required currentLength, required isFocused, required maxLength}) => null,
+          decoration: InputDecoration(
+            hintText: 'e.g., Vegetarian, nut allergy',
+            hintStyle: const TextStyle(
+              color: Color(0xFF94A3B8),
               fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF475569),
+            ),
+            filled: true,
+            fillColor: const Color(0xFFF8FAFC),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide:
+                  const BorderSide(color: Color(0xFF7C3AED), width: 2),
+            ),
+            counterStyle: const TextStyle(
+              fontSize: 11,
+              color: Color(0xFF94A3B8),
             ),
           ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _notesController,
-            maxLength: 200,
-            maxLines: 2,
-            decoration: InputDecoration(
-              hintText: 'e.g., Vegetarian, nut allergy',
-              hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
-              filled: true,
-              fillColor: const Color(0xFFF8FAFC),
-              contentPadding: const EdgeInsets.all(16),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    const BorderSide(color: Color(0xFF7C3AED), width: 2),
-              ),
-              counterStyle: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF94A3B8),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Cutoff reminder
-          if (cutoffText != null) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFEF3C7),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.schedule_rounded,
-                    size: 18,
-                    color: Color(0xFF92400E),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    cutoffText,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF92400E),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-
-          // Submit button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _isSubmitting ? null : _handleSubmit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF7C3AED),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-                disabledBackgroundColor:
-                    const Color(0xFF7C3AED).withAlpha(153),
-              ),
-              child: _isSubmitting
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text(
-                      'Save Order',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildReadOnlyOrder() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Deadline passed banner
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.schedule_rounded,
-                  size: 16,
-                  color: Color(0xFF64748B),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _hasOrder
-                        ? 'Order deadline has passed. Contact a host to make changes.'
-                        : 'Order deadline has passed. You didn\'t submit an order.',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF64748B),
-                    ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Deadline passed banner
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.schedule_rounded,
+                size: 16,
+                color: Color(0xFF64748B),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _hasOrder
+                      ? 'Order deadline has passed. Contact a host to make changes.'
+                      : 'Order deadline has passed. You didn\'t submit an order.',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF64748B),
                   ),
                 ),
+              ),
+            ],
+          ),
+        ),
+
+        // Show existing order if any
+        if (_hasOrder) ...[
+          const SizedBox(height: 16),
+          const Text(
+            'Your order',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF475569),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _rsvp!.foodOrder!,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: Color(0xFF1E293B),
+                    height: 1.4,
+                  ),
+                ),
+                if (_rsvp!.dietaryNotes != null &&
+                    _rsvp!.dietaryNotes!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.info_outline_rounded,
+                        size: 14,
+                        color: Color(0xFF7C3AED),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          _rsvp!.dietaryNotes!,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF7C3AED),
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
-
-          // Show existing order if any
-          if (_hasOrder) ...[
-            const SizedBox(height: 16),
-            const Text(
-              'Your order',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF475569),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _rsvp!.foodOrder!,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Color(0xFF1E293B),
-                      height: 1.4,
-                    ),
-                  ),
-                  if (_rsvp!.dietaryNotes != null &&
-                      _rsvp!.dietaryNotes!.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(
-                          Icons.info_outline_rounded,
-                          size: 14,
-                          color: Color(0xFF7C3AED),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            _rsvp!.dietaryNotes!,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: Color(0xFF7C3AED),
-                              height: 1.3,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
         ],
-      ),
+      ],
     );
   }
 }
