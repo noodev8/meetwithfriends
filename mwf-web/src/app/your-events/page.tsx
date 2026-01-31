@@ -161,7 +161,7 @@ export default function MyEventsPage() {
                                     </div>
                                     <div>
                                         <p className="text-2xl font-bold text-slate-900">{allEvents.length}</p>
-                                        <p className="text-sm text-slate-500">Events</p>
+                                        <p className="text-sm text-slate-500">Total Events</p>
                                     </div>
                                 </div>
                             </Link>
@@ -187,7 +187,7 @@ export default function MyEventsPage() {
                         {/* Next Up section */}
                         <section>
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-semibold text-slate-800">Next Up</h2>
+                                <h2 className="text-lg font-semibold text-slate-800">Next Up For You</h2>
                                 {rsvpEvents.length > 0 && (
                                     <Link
                                         href="/your-events/all?filter=going"
