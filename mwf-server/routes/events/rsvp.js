@@ -107,7 +107,7 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
             // ===================================================================
             const eventResult = await client.query(
                 `SELECT e.id, e.group_id, e.capacity, e.status, e.date_time, e.allow_guests, e.max_guests_per_rsvp, e.title, e.location, e.created_by,
-                        g.name AS group_name
+                        e.waitlist_enabled, g.name AS group_name
                  FROM event_list e
                  JOIN group_list g ON g.id = e.group_id
                  WHERE e.id = $1
@@ -253,6 +253,14 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                         }
                     };
                 } else {
+                    // Event is full - check if waitlist is enabled
+                    if (!event.waitlist_enabled) {
+                        return {
+                            return_code: 'EVENT_FULL',
+                            message: 'This event is full'
+                        };
+                    }
+
                     // Add to waitlist - get next position (no guests on waitlist)
                     const maxPosResult = await client.query(
                         `SELECT COALESCE(MAX(waitlist_position), 0) + 1 AS next_pos

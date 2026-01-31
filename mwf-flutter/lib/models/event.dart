@@ -11,6 +11,7 @@ class Event {
   final String? category;
   final String? imageUrl;
   final String status;
+  final bool waitlistEnabled;
   final int attendeeCount;
   final int waitlistCount;
   final String? rsvpStatus; // 'attending', 'waitlist', or null
@@ -30,6 +31,7 @@ class Event {
     this.category,
     this.imageUrl,
     required this.status,
+    this.waitlistEnabled = true,
     required this.attendeeCount,
     required this.waitlistCount,
     this.rsvpStatus,
@@ -51,6 +53,7 @@ class Event {
       category: json['category'] as String?,
       imageUrl: json['image_url'] as String?,
       status: json['status'] as String? ?? 'published',
+      waitlistEnabled: json['waitlist_enabled'] as bool? ?? true,
       attendeeCount: json['attendee_count'] as int? ?? 0,
       waitlistCount: json['waitlist_count'] as int? ?? 0,
       rsvpStatus: json['rsvp_status'] as String?,

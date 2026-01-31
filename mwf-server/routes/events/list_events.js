@@ -65,6 +65,7 @@ router.get('/', optionalAuth, async (req, res) => {
                 e.allow_guests,
                 e.max_guests_per_rsvp,
                 e.status,
+                e.waitlist_enabled,
                 e.created_at,
                 COUNT(r.id) FILTER (WHERE r.status = 'attending') AS attendee_count,
                 COALESCE(SUM(r.guest_count) FILTER (WHERE r.status = 'attending'), 0) AS total_guest_count,

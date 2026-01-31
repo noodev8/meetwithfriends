@@ -65,6 +65,7 @@ export interface Event {
     menu_images?: string[];
     preorder_cutoff?: string;
     category?: 'food' | 'outdoor' | 'games' | 'coffee' | 'arts' | 'learning' | 'other';
+    waitlist_enabled?: boolean;
     status: 'published' | 'cancelled';
     created_at: string;
     attendee_count?: number;

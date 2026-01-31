@@ -58,6 +58,7 @@ export interface UpdateEventPayload {
     menu_images?: string[] | null;
     preorder_cutoff?: string | null;
     category?: 'food' | 'outdoor' | 'games' | 'coffee' | 'arts' | 'learning' | 'other';
+    waitlist_enabled?: boolean;
 }
 
 // Attendee type
@@ -89,6 +90,7 @@ export interface CreateEventPayload {
     menu_images?: string[];
     preorder_cutoff?: string;
     category: 'food' | 'outdoor' | 'games' | 'coffee' | 'arts' | 'learning' | 'other';
+    waitlist_enabled?: boolean;
 }
 
 /*

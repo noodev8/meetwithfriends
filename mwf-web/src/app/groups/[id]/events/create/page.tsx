@@ -51,6 +51,7 @@ export default function CreateEventPage() {
     const [preordersEnabled, setPreordersEnabled] = useState(false);
     const [menuLink, setMenuLink] = useState('');
     const [menuImages, setMenuImages] = useState<string[]>([]);
+    const [waitlistEnabled, setWaitlistEnabled] = useState(true);
     const [preorderCutoffDate, setPreorderCutoffDate] = useState('');
     const [preorderCutoffTime, setPreorderCutoffTime] = useState('');
 
@@ -111,6 +112,7 @@ export default function CreateEventPage() {
                 setAllowGuests(evt.allow_guests || false);
                 setMaxGuestsPerRsvp(evt.max_guests_per_rsvp || 1);
                 setPreordersEnabled(evt.preorders_enabled || false);
+                setWaitlistEnabled(evt.waitlist_enabled !== false);
                 setMenuLink(evt.menu_link || '');
                 setMenuImages(evt.menu_images || []);
                 // Expand sections that have values
@@ -183,6 +185,7 @@ export default function CreateEventPage() {
             menu_link: preordersEnabled ? (menuLink.trim() || undefined) : undefined,
             menu_images: preordersEnabled && menuImages.length > 0 ? menuImages : undefined,
             preorder_cutoff: preordersEnabled ? preorderCutoff : undefined,
+            waitlist_enabled: capacity ? waitlistEnabled : undefined,
         });
 
         setSubmitting(false);
@@ -457,6 +460,28 @@ export default function CreateEventPage() {
                                                             className="w-20 h-11 px-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none transition text-center"
                                                         />
                                                     </div>
+                                                    {/* Waitlist toggle - only visible when capacity is set */}
+                                                    {capacity && (
+                                                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                                                            <div>
+                                                                <p className="font-medium text-slate-800">Waitlist</p>
+                                                                <p className="text-sm text-slate-500">Allow members to join a waitlist when full</p>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setWaitlistEnabled(!waitlistEnabled)}
+                                                                className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+                                                                    waitlistEnabled ? 'bg-indigo-600' : 'bg-slate-300'
+                                                                }`}
+                                                            >
+                                                                <span
+                                                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
+                                                                        waitlistEnabled ? 'translate-x-5' : 'translate-x-0'
+                                                                    }`}
+                                                                />
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}

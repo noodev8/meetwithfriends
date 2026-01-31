@@ -27,6 +27,7 @@ class AttendeesScreen extends StatefulWidget {
   final bool canEditOrders;
   final String? menuLink;
   final List<String>? menuImages;
+  final bool waitlistEnabled;
 
   const AttendeesScreen({
     super.key,
@@ -40,6 +41,7 @@ class AttendeesScreen extends StatefulWidget {
     this.canEditOrders = false,
     this.menuLink,
     this.menuImages,
+    this.waitlistEnabled = true,
   });
 
   @override
@@ -388,13 +390,15 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
             _attendingCount,
             const Color(0xFF10B981),
           ),
-          const SizedBox(width: 4),
-          _buildTab(
-            AttendeeTab.waitlist,
-            'Waitlist',
-            _waitlistCount,
-            const Color(0xFFF59E0B),
-          ),
+          if (_waitlistCount > 0 || widget.waitlistEnabled) ...[
+            const SizedBox(width: 4),
+            _buildTab(
+              AttendeeTab.waitlist,
+              'Waitlist',
+              _waitlistCount,
+              const Color(0xFFF59E0B),
+            ),
+          ],
           const SizedBox(width: 4),
           _buildTab(
             AttendeeTab.notGoing,

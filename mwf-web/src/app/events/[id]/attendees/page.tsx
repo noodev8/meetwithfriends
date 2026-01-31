@@ -461,6 +461,7 @@ export default function AttendeesPage() {
                         >
                             Going ({attendingCount}{FEATURE_GUESTS_ENABLED && totalGuestCount > 0 ? ` +${totalGuestCount}` : ''})
                         </button>
+                        {(waitlistCount > 0 || event?.waitlist_enabled !== false) && (
                         <button
                             onClick={() => setActiveTab('waitlist')}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition ${
@@ -471,6 +472,7 @@ export default function AttendeesPage() {
                         >
                             Waitlist ({waitlistCount})
                         </button>
+                        )}
                         <button
                             onClick={() => setActiveTab('not_going')}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition ${
@@ -739,7 +741,7 @@ export default function AttendeesPage() {
                             {/* Action buttons for hosts/organisers */}
                             {canManageAttendees && (isInGoing || isInWaitlist) && (
                                 <div className="p-4 bg-slate-50 flex flex-wrap justify-center gap-2">
-                                    {isInGoing && (
+                                    {isInGoing && event?.waitlist_enabled !== false && (
                                         <button
                                             onClick={() => handleManageAttendee(selectedAttendee.user_id, 'demote')}
                                             disabled={isLoading}

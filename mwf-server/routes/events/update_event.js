@@ -60,7 +60,7 @@ const VALID_CATEGORIES = ['food', 'outdoor', 'games', 'coffee', 'arts', 'learnin
 router.post('/:id/update', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, location, date_time, capacity, category, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, menu_images, preorder_cutoff } = req.body;
+        const { title, description, location, date_time, capacity, category, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, menu_images, preorder_cutoff, waitlist_enabled } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -303,6 +303,11 @@ router.post('/:id/update', verifyToken, async (req, res) => {
             values.push(preorder_cutoff ? new Date(preorder_cutoff).toISOString() : null);
         }
 
+        if (waitlist_enabled !== undefined) {
+            updates.push(`waitlist_enabled = $${paramCount++}`);
+            values.push(Boolean(waitlist_enabled));
+        }
+
         // Always update updated_at
         updates.push(`updated_at = NOW()`);
 
@@ -336,9 +341,9 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         const updatedEvent = updateResult.rows[0];
 
         // =======================================================================
-        // Promote waitlisted people if capacity increased
+        // Promote waitlisted people if capacity increased (only if waitlist still enabled)
         // =======================================================================
-        if (capacity !== undefined) {
+        if (capacity !== undefined && updatedEvent.waitlist_enabled) {
             const newCapacity = updatedEvent.capacity;
 
             // Only process if there's a capacity (not unlimited)
@@ -411,6 +416,18 @@ router.post('/:id/update', verifyToken, async (req, res) => {
                     });
                 }
             }
+        }
+
+        // =======================================================================
+        // Clear waitlist if waitlist was disabled
+        // =======================================================================
+        if (waitlist_enabled === false) {
+            await query(
+                `UPDATE event_rsvp
+                 SET status = 'not_going', waitlist_position = NULL, guest_count = 0
+                 WHERE event_id = $1 AND status = 'waitlist'`,
+                [id]
+            );
         }
 
         return res.json({

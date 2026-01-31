@@ -240,6 +240,7 @@ class EventsService {
     String? menuLink,
     List<String>? menuImages,
     DateTime? preorderCutoff,
+    bool? waitlistEnabled,
   }) async {
     final body = <String, dynamic>{
       'group_id': groupId,
@@ -272,6 +273,9 @@ class EventsService {
       if (preorderCutoff != null) {
         body['preorder_cutoff'] = preorderCutoff.toUtc().toIso8601String();
       }
+    }
+    if (waitlistEnabled != null && capacity != null) {
+      body['waitlist_enabled'] = waitlistEnabled;
     }
 
     final response = await _api.post('/events/create', body);
@@ -313,6 +317,7 @@ class EventsService {
     bool? menuImagesCleared, // Set to true to clear menu images
     DateTime? preorderCutoff,
     bool? preorderCutoffCleared, // Set to true to clear preorder cutoff
+    bool? waitlistEnabled,
   }) async {
     final body = <String, dynamic>{};
 
@@ -351,6 +356,9 @@ class EventsService {
       body['preorder_cutoff'] = null;
     } else if (preorderCutoff != null) {
       body['preorder_cutoff'] = preorderCutoff.toUtc().toIso8601String();
+    }
+    if (waitlistEnabled != null) {
+      body['waitlist_enabled'] = waitlistEnabled;
     }
 
     final response = await _api.post('/events/$eventId/update', body);
@@ -565,6 +573,7 @@ class EventDetail {
   final String? menuLink;
   final List<String>? menuImages;
   final DateTime? preorderCutoff;
+  final bool waitlistEnabled;
   final String status;
   final int attendeeCount;
   final int totalGuestCount;
@@ -592,6 +601,7 @@ class EventDetail {
     this.menuLink,
     this.menuImages,
     this.preorderCutoff,
+    this.waitlistEnabled = true,
     required this.status,
     required this.attendeeCount,
     required this.totalGuestCount,
@@ -624,6 +634,7 @@ class EventDetail {
       preorderCutoff: json['preorder_cutoff'] != null
           ? DateTime.parse(json['preorder_cutoff'] as String)
           : null,
+      waitlistEnabled: json['waitlist_enabled'] as bool? ?? true,
       status: json['status'] as String? ?? 'published',
       attendeeCount: json['attendee_count'] as int? ?? 0,
       totalGuestCount: json['total_guest_count'] as int? ?? 0,

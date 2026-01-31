@@ -96,6 +96,7 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
                     e.title,
                     e.location,
                     e.date_time,
+                    e.waitlist_enabled,
                     g.name AS group_name,
                     gm.role AS current_user_role,
                     EXISTS(SELECT 1 FROM event_host eh WHERE eh.event_id = e.id AND eh.user_id = $2) AS is_host
@@ -212,6 +213,13 @@ router.post('/:id/manage-attendee', verifyToken, async (req, res) => {
             // Handle DEMOTE action (attending → waitlist)
             // ===================================================================
             if (action === 'demote') {
+                if (!event.waitlist_enabled) {
+                    return {
+                        return_code: 'WAITLIST_DISABLED',
+                        message: 'Cannot demote - waitlist is disabled'
+                    };
+                }
+
                 if (targetRsvp.status !== 'attending') {
                     return {
                         return_code: 'USER_NOT_ATTENDING',

@@ -109,6 +109,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
                 e.menu_images,
                 e.preorder_cutoff,
                 e.status,
+                e.waitlist_enabled,
                 e.created_at,
                 COUNT(r.id) FILTER (WHERE r.status = 'attending') AS attendee_count,
                 COALESCE(SUM(r.guest_count) FILTER (WHERE r.status = 'attending'), 0) AS total_guest_count,

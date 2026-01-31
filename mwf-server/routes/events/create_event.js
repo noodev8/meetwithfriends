@@ -76,7 +76,7 @@ const VALID_CATEGORIES = ['food', 'outdoor', 'games', 'coffee', 'arts', 'learnin
 
 router.post('/create', verifyToken, async (req, res) => {
     try {
-        const { group_id, title, description, location, date_time, capacity, category, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, menu_images, preorder_cutoff } = req.body;
+        const { group_id, title, description, location, date_time, capacity, category, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, menu_images, preorder_cutoff, waitlist_enabled } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -232,10 +232,10 @@ router.post('/create', verifyToken, async (req, res) => {
         const result = await withTransaction(async (client) => {
             // Create the event
             const eventResult = await client.query(
-                `INSERT INTO event_list (group_id, created_by, title, description, location, date_time, capacity, category, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, menu_images, preorder_cutoff)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-                 RETURNING id, group_id, created_by, title, description, location, date_time, capacity, category, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, menu_images, preorder_cutoff, status, created_at`,
-                [group_id, userId, title.trim(), description?.trim() || null, location?.trim() || null, eventDate, capacity || null, category, image_url?.trim() || null, image_position || 'center', allow_guests || false, finalMaxGuests, preorders_enabled || false, menu_link?.trim() || null, validatedMenuImages, cutoffDate]
+                `INSERT INTO event_list (group_id, created_by, title, description, location, date_time, capacity, category, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, menu_images, preorder_cutoff, waitlist_enabled)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+                 RETURNING id, group_id, created_by, title, description, location, date_time, capacity, category, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, menu_images, preorder_cutoff, waitlist_enabled, status, created_at`,
+                [group_id, userId, title.trim(), description?.trim() || null, location?.trim() || null, eventDate, capacity || null, category, image_url?.trim() || null, image_position || 'center', allow_guests || false, finalMaxGuests, preorders_enabled || false, menu_link?.trim() || null, validatedMenuImages, cutoffDate, waitlist_enabled !== false]
             );
 
             const newEvent = eventResult.rows[0];

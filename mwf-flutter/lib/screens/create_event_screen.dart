@@ -39,6 +39,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   String? _selectedTime;
   EventCategory _selectedCategory = EventCategory.food;
   int? _capacity;
+  bool _waitlistEnabled = true;
   bool _capacityExpanded = false;
   bool _preordersExpanded = false;
   bool _preordersEnabled = false;
@@ -162,6 +163,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           ? null
           : _locationController.text.trim(),
       capacity: _capacity,
+      waitlistEnabled: _capacity != null ? _waitlistEnabled : null,
       preordersEnabled: _preordersEnabled,
       menuImages: _menuImages.isNotEmpty ? _menuImages : null,
       menuLink: _menuLinkController.text.trim().isEmpty
@@ -792,6 +794,44 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               ),
             ],
           ),
+          // Waitlist toggle - only visible when capacity is set
+          if (_capacity != null) ...[
+            const SizedBox(height: 16),
+            const Divider(height: 1, color: Color(0xFFF1F5F9)),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'Waitlist',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Allow members to join a waitlist when full',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch.adaptive(
+                  value: _waitlistEnabled,
+                  onChanged: (val) => setState(() => _waitlistEnabled = val),
+                  activeColor: const Color(0xFF7C3AED),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

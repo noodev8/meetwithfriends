@@ -156,6 +156,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           canEditOrders: _canEdit,
           menuLink: event.menuLink,
           menuImages: event.menuImages,
+          waitlistEnabled: event.waitlistEnabled,
         ),
       ),
     );
@@ -751,7 +752,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final padding = _cardPadding(context);
     final spotsText = event.capacity != null
         ? event.isFull
-            ? 'Waitlist open'
+            ? (event.waitlistEnabled ? 'Waitlist open' : 'Event full')
             : '${event.spotsRemaining} spots left'
         : null;
     final dateFormat = DateFormat('EEE d MMM');
@@ -824,10 +825,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             Row(
               children: [
                 Icon(
-                  event.isFull ? Icons.hourglass_empty : Icons.event_seat_outlined,
+                  event.isFull
+                      ? (event.waitlistEnabled ? Icons.hourglass_empty : Icons.block)
+                      : Icons.event_seat_outlined,
                   size: 14,
                   color: event.isFull
-                      ? const Color(0xFFD97706)
+                      ? (event.waitlistEnabled ? const Color(0xFFD97706) : const Color(0xFFEF4444))
                       : const Color(0xFF64748B),
                 ),
                 const SizedBox(width: 6),
@@ -837,7 +840,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     fontSize: 13,
                     fontWeight: event.isFull ? FontWeight.w600 : FontWeight.w400,
                     color: event.isFull
-                        ? const Color(0xFFD97706)
+                        ? (event.waitlistEnabled ? const Color(0xFFD97706) : const Color(0xFFEF4444))
                         : const Color(0xFF64748B),
                   ),
                 ),
@@ -1555,8 +1558,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       );
     }
 
-    // Not RSVP'd - show join button
-    final buttonText = event.isFull ? 'Join Waitlist' : 'Count me in';
+    // Not RSVP'd - show join button or disabled "Event Full"
+    final isFullNoWaitlist = event.isFull && !event.waitlistEnabled;
+    final buttonText = isFullNoWaitlist
+        ? 'Event Full'
+        : (event.isFull ? 'Join Waitlist' : 'Count me in');
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1564,16 +1570,17 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: _rsvpLoading ? null : () => _handleRsvp('join'),
+            onPressed: isFullNoWaitlist || _rsvpLoading ? null : () => _handleRsvp('join'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF7C3AED),
+              backgroundColor: isFullNoWaitlist ? Colors.grey.shade400 : const Color(0xFF7C3AED),
               foregroundColor: Colors.white,
+              disabledBackgroundColor: isFullNoWaitlist ? Colors.grey.shade300 : const Color(0xFF7C3AED).withAlpha(153),
+              disabledForegroundColor: isFullNoWaitlist ? Colors.grey.shade500 : Colors.white.withAlpha(179),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               elevation: 0,
-              disabledBackgroundColor: const Color(0xFF7C3AED).withAlpha(153),
             ),
             child: _rsvpLoading
                 ? const SizedBox(

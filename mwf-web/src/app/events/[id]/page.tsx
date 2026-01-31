@@ -710,8 +710,8 @@ export default function EventDetailPage() {
                                     <span className="text-sm text-slate-500">
                                         {attendingCount} going
                                         {event.capacity && (
-                                            <span className={spotsRemaining === 0 ? 'text-amber-600 font-medium' : 'text-slate-400'}>
-                                                {' '}· {spotsRemaining === 0 ? 'Waitlist open' : `${spotsRemaining} spots left`}
+                                            <span className={spotsRemaining === 0 ? (event.waitlist_enabled !== false ? 'text-amber-600 font-medium' : 'text-red-600 font-medium') : 'text-slate-400'}>
+                                                {' '}· {spotsRemaining === 0 ? (event.waitlist_enabled !== false ? 'Waitlist open' : 'Event full') : `${spotsRemaining} spots left`}
                                             </span>
                                         )}
                                     </span>
@@ -853,7 +853,7 @@ export default function EventDetailPage() {
                                                                 <span className="text-sm font-medium text-slate-900">
                                                                     +{remaining.length} more
                                                                 </span>
-                                                                {waitlistCount > 0 && (
+                                                                {waitlistCount > 0 && event.waitlist_enabled !== false && (
                                                                     <span className="text-xs text-yellow-600">
                                                                         {waitlistCount} on waitlist
                                                                     </span>
@@ -862,7 +862,7 @@ export default function EventDetailPage() {
                                                         )}
 
                                                         {/* Show waitlist separately if no cluster */}
-                                                        {remaining.length === 0 && waitlistCount > 0 && (
+                                                        {remaining.length === 0 && waitlistCount > 0 && event.waitlist_enabled !== false && (
                                                             <Link
                                                                 href={`/events/${event.id}/attendees`}
                                                                 className="flex flex-col items-center justify-center text-center hover:opacity-80 transition"
@@ -1147,18 +1147,27 @@ export default function EventDetailPage() {
                                         ))}
                                     </select>
                                 )}
-                                <button
-                                    onClick={() => handleRsvp('join', selectedGuestCount)}
-                                    disabled={rsvpLoading}
-                                    className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-xl hover:from-indigo-600 hover:to-violet-700 transition-all shadow-lg disabled:opacity-50"
-                                >
-                                    {rsvpLoading ? 'Updating...' : spotsRemaining === 0 ? 'Join Waitlist' : 'Count me in'}
-                                </button>
+                                {spotsRemaining === 0 && event.waitlist_enabled === false ? (
+                                    <button
+                                        disabled
+                                        className="px-8 py-3 bg-slate-400 text-white font-semibold rounded-xl cursor-not-allowed opacity-75"
+                                    >
+                                        Event Full
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => handleRsvp('join', selectedGuestCount)}
+                                        disabled={rsvpLoading}
+                                        className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-xl hover:from-indigo-600 hover:to-violet-700 transition-all shadow-lg disabled:opacity-50"
+                                    >
+                                        {rsvpLoading ? 'Updating...' : spotsRemaining === 0 ? 'Join Waitlist' : 'Count me in'}
+                                    </button>
+                                )}
                                 <span className="text-sm text-slate-500">
                                     {attendingCount} going
                                     {event.capacity && (
-                                        <span className={spotsRemaining === 0 ? 'text-amber-600' : 'text-slate-400'}>
-                                            {' '}· {spotsRemaining === 0 ? 'Waitlist open' : `${spotsRemaining} spots left`}
+                                        <span className={spotsRemaining === 0 ? (event.waitlist_enabled !== false ? 'text-amber-600' : 'text-red-600') : 'text-slate-400'}>
+                                            {' '}· {spotsRemaining === 0 ? (event.waitlist_enabled !== false ? 'Waitlist open' : 'Event full') : `${spotsRemaining} spots left`}
                                         </span>
                                     )}
                                 </span>

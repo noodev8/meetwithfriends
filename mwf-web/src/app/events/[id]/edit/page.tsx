@@ -50,6 +50,7 @@ export default function EditEventPage() {
     const [preordersEnabled, setPreordersEnabled] = useState(false);
     const [menuLink, setMenuLink] = useState('');
     const [menuImages, setMenuImages] = useState<string[]>([]);
+    const [waitlistEnabled, setWaitlistEnabled] = useState(true);
     const [preorderCutoffDate, setPreorderCutoffDate] = useState('');
     const [preorderCutoffTime, setPreorderCutoffTime] = useState('');
 
@@ -98,6 +99,7 @@ export default function EditEventPage() {
                 setAllowGuests(evt.allow_guests || false);
                 setMaxGuestsPerRsvp(evt.max_guests_per_rsvp || 1);
                 setPreordersEnabled(evt.preorders_enabled || false);
+                setWaitlistEnabled(evt.waitlist_enabled !== false);
                 setMenuLink(evt.menu_link || '');
                 setMenuImages(evt.menu_images || []);
 
@@ -225,6 +227,7 @@ export default function EditEventPage() {
             menu_link: preordersEnabled ? (menuLink.trim() || null) : null,
             menu_images: preordersEnabled && menuImages.length > 0 ? menuImages : null,
             preorder_cutoff: preordersEnabled ? preorderCutoff : null,
+            waitlist_enabled: capacity ? waitlistEnabled : undefined,
         });
 
         setSubmitting(false);
@@ -580,6 +583,35 @@ export default function EditEventPage() {
                                                             className="w-20 h-11 px-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-center"
                                                         />
                                                     </div>
+                                                    {/* Waitlist toggle - only visible when capacity is set */}
+                                                    {capacity && (
+                                                        <div className="mt-4 pt-4 border-t border-slate-100">
+                                                            <div className="flex items-center justify-between">
+                                                                <div>
+                                                                    <p className="font-medium text-slate-800">Waitlist</p>
+                                                                    <p className="text-sm text-slate-500">Allow members to join a waitlist when full</p>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setWaitlistEnabled(!waitlistEnabled)}
+                                                                    className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+                                                                        waitlistEnabled ? 'bg-indigo-500' : 'bg-slate-300'
+                                                                    }`}
+                                                                >
+                                                                    <span
+                                                                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
+                                                                            waitlistEnabled ? 'translate-x-5' : 'translate-x-0'
+                                                                        }`}
+                                                                    />
+                                                                </button>
+                                                            </div>
+                                                            {!waitlistEnabled && (event.waitlist_count || 0) > 0 && (
+                                                                <p className="mt-2 text-sm text-amber-700">
+                                                                    This will remove {event.waitlist_count} {event.waitlist_count === 1 ? 'person' : 'people'} currently on the waitlist
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
