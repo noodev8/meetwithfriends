@@ -685,26 +685,26 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
     final isOrganiser = membership?.isOrganiser ?? false;
     final canManageMembers = membership?.canManageMembers ?? false;
 
-    return Stack(
-      children: [
-        SafeArea(
-          bottom: false,
-          child: RefreshIndicator(
-            onRefresh: _loadGroup,
-            color: const Color(0xFF7C3AED),
-            child: CustomScrollView(
-              slivers: [
-                // App Bar
-                SliverToBoxAdapter(child: _buildAppBar()),
+    return SafeArea(
+      bottom: false,
+      child: Column(
+        children: [
+          // Pinned app bar
+          _buildAppBar(),
 
-                // Constrained content for tablets
-                SliverToBoxAdapter(
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 600),
-                      child: Column(
-                        children: [
-                          // Hero Section (includes role badge)
+          // Scrollable content
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _loadGroup,
+              color: const Color(0xFF7C3AED),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Column(
+                      children: [
+                          // Hero section
                           _buildHeroSection(group, isOrganiser, canManageMembers),
 
                           // Join card (only for non-members)
@@ -741,11 +741,10 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -888,157 +887,115 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
               ],
             ),
           ),
-          // Admin actions
+          // Admin action row
           if (canManageMembers) ...[
             const SizedBox(height: 12),
-            // Create Event - primary action
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CreateEventScreen(
-                      groupId: group.id,
-                      groupName: group.name,
-                      canCreateEvents: _membership?.canManageMembers ?? false,
-                      onEventCreated: () {
-                        _loadGroup();
-                      },
-                    ),
-                  ),
-                );
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: _theme.gradient,
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _theme.gradient[0].withAlpha(80),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.add_rounded, color: Colors.white, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'Create Event',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-          // Broadcast and Settings - secondary actions (organiser only)
-          if (isOrganiser) ...[
-            const SizedBox(height: 10),
             Row(
               children: [
+                // New Event
                 Expanded(
-                  child: GestureDetector(
-                    onTap: _showBroadcastDialog,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: _theme.gradient[0].withAlpha(25),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _theme.gradient[0].withAlpha(40),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.campaign_rounded,
-                            size: 18,
-                            color: _theme.gradient[0],
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Broadcast',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: _theme.gradient[0],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: GestureDetector(
+                  child: _buildHeroActionButton(
+                    icon: Icons.add_rounded,
+                    label: 'New Event',
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => EditGroupScreen(
-                            groupId: _group!.id,
-                            initialName: _group!.name,
-                            initialDescription: _group!.description,
-                            initialThemeColor: _group!.themeColor ?? 'indigo',
-                            initialJoinPolicy: _group!.joinPolicy,
-                            initialVisibility: _group!.visibility,
-                            initialRequireProfileImage: _group!.requireProfileImage,
-                            initialAllMembersHost: _group!.allMembersHost,
-                            onGroupUpdated: _loadGroup,
+                          builder: (context) => CreateEventScreen(
+                            groupId: group.id,
+                            groupName: group.name,
+                            canCreateEvents: _membership?.canManageMembers ?? false,
+                            onEventCreated: () {
+                              _loadGroup();
+                            },
                           ),
                         ),
                       );
                     },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: _theme.gradient[0].withAlpha(25),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _theme.gradient[0].withAlpha(40),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.settings_rounded,
-                            size: 18,
-                            color: _theme.gradient[0],
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Settings',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: _theme.gradient[0],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ),
+                // Broadcast (organiser only)
+                if (isOrganiser) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildHeroActionButton(
+                      icon: Icons.campaign_rounded,
+                      label: 'Broadcast',
+                      onTap: _showBroadcastDialog,
+                    ),
+                  ),
+                ],
+                // Settings (organiser only)
+                if (isOrganiser) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildHeroActionButton(
+                      icon: Icons.settings_rounded,
+                      label: 'Settings',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditGroupScreen(
+                              groupId: _group!.id,
+                              initialName: _group!.name,
+                              initialDescription: _group!.description,
+                              initialThemeColor: _group!.themeColor ?? 'indigo',
+                              initialJoinPolicy: _group!.joinPolicy,
+                              initialVisibility: _group!.visibility,
+                              initialRequireProfileImage: _group!.requireProfileImage,
+                              initialAllMembersHost: _group!.allMembersHost,
+                              onGroupUpdated: _loadGroup,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ],
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildHeroActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: _theme.gradient[0].withAlpha(25),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _theme.gradient[0].withAlpha(40),
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: _theme.gradient[0],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: _theme.gradient[0],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

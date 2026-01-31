@@ -48,6 +48,16 @@ class _MainShellState extends State<MainShell> {
     }
   }
 
+  /// Switch tab and keep the controller in sync so nested screens
+  /// can always navigate back to the correct tab via ValueNotifier.
+  void _switchTab(int index) {
+    setState(() => _currentIndex = index);
+    // Sync the controller so the ValueNotifier always reflects the
+    // current tab – prevents stale values when nested screens call
+    // switchToTab with the same index later.
+    _tabController.tabIndex.value = index;
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -60,19 +70,20 @@ class _MainShellState extends State<MainShell> {
           index: _currentIndex,
           children: [
             HomeScreen(
-              userName: widget.user.name,
+              user: widget.user,
               onViewAllEvents: () {
                 _eventsScreenKey.currentState?.setFilter(EventFilter.all);
-                setState(() => _currentIndex = 1);
+                _switchTab(1);
               },
               onViewEventsGoing: () {
                 _eventsScreenKey.currentState?.setFilter(EventFilter.going);
-                setState(() => _currentIndex = 1);
+                _switchTab(1);
               },
-              onViewAllGroups: () => setState(() => _currentIndex = 2),
+              onViewAllGroups: () => _switchTab(2),
+              onViewProfile: () => _switchTab(3),
             ),
-            EventsScreen(key: _eventsScreenKey, onBackToHome: () => setState(() => _currentIndex = 0)),
-            GroupsScreen(onBackToHome: () => setState(() => _currentIndex = 0)),
+            EventsScreen(key: _eventsScreenKey, onBackToHome: () => _switchTab(0)),
+            GroupsScreen(onBackToHome: () => _switchTab(0)),
             ProfileScreen(
               user: widget.user,
               onLogout: widget.onLogout,
@@ -114,7 +125,7 @@ class _MainShellState extends State<MainShell> {
     final isSelected = _currentIndex == index;
 
     return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () => _switchTab(index),
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),

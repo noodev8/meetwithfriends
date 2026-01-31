@@ -31,37 +31,37 @@ class CategoryConfig {
 const Map<EventCategory, CategoryConfig> eventCategories = {
   EventCategory.food: CategoryConfig(
     key: EventCategory.food,
-    label: 'Dinners & Drinks',
+    label: 'Dining',
     icon: Icons.restaurant_rounded,
     gradient: [Color(0xFF6366F1), Color(0xFFA855F7), Color(0xFFF472B6)],
   ),
   EventCategory.outdoor: CategoryConfig(
     key: EventCategory.outdoor,
-    label: 'Outdoor & Active',
+    label: 'Outdoor',
     icon: Icons.hiking_rounded,
     gradient: [Color(0xFF10B981), Color(0xFF2DD4BF), Color(0xFF22D3EE)],
   ),
   EventCategory.games: CategoryConfig(
     key: EventCategory.games,
-    label: 'Games & Sports',
+    label: 'Games',
     icon: Icons.sports_esports_rounded,
     gradient: [Color(0xFF8B5CF6), Color(0xFFA855F7), Color(0xFF6366F1)],
   ),
   EventCategory.coffee: CategoryConfig(
     key: EventCategory.coffee,
-    label: 'Coffee & Casual',
+    label: 'Coffee',
     icon: Icons.coffee_rounded,
     gradient: [Color(0xFFF59E0B), Color(0xFFFB923C), Color(0xFFFBBF24)],
   ),
   EventCategory.arts: CategoryConfig(
     key: EventCategory.arts,
-    label: 'Arts & Culture',
+    label: 'Arts',
     icon: Icons.palette_rounded,
     gradient: [Color(0xFFF43F5E), Color(0xFFEC4899), Color(0xFFD946EF)],
   ),
   EventCategory.learning: CategoryConfig(
     key: EventCategory.learning,
-    label: 'Learning & Skills',
+    label: 'Learning',
     icon: Icons.menu_book_rounded,
     gradient: [Color(0xFF3B82F6), Color(0xFF6366F1), Color(0xFF8B5CF6)],
   ),

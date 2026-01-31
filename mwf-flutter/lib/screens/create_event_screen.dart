@@ -205,11 +205,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             onPressed: () => Navigator.of(context).pop(),
           ),
           title: Text(
-            'Back to ${widget.groupName}',
+            widget.groupName,
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF7C3AED),
+              color: Color(0xFF1E293B),
             ),
           ),
           titleSpacing: 0,
@@ -232,14 +232,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF1E293B),
                         letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'for ${widget.groupName}',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: Color(0xFF64748B),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -341,21 +333,17 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Main card with essentials
+          // Title, date, time
           _buildEssentialsCard(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
-          // Options section
-          const Text(
-            'OPTIONS',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF64748B),
-              letterSpacing: 1,
-            ),
-          ),
-          const SizedBox(height: 12),
+          // Event type
+          _buildEventTypeCard(),
+          const SizedBox(height: 16),
+
+          // Location, description
+          _buildDetailsCard(),
+          const SizedBox(height: 16),
           _buildCapacityCard(),
           const SizedBox(height: 12),
           _buildPreordersCard(),
@@ -368,7 +356,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
   }
 
-  Widget _buildEssentialsCard() {
+  Widget _buildSectionCard({required List<Widget> children}) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -385,141 +373,130 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Error message
-          if (_error != null) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.red.shade200),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _error!,
-                      style: TextStyle(
-                        color: Colors.red.shade700,
-                        fontSize: 14,
+        children: children,
+      ),
+    );
+  }
+
+  Widget _buildEssentialsCard() {
+    return _buildSectionCard(
+      children: [
+        // Error message
+        if (_error != null) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.red.shade200),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _error!,
+                    style: TextStyle(
+                      color: Colors.red.shade700,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+
+        // Title field
+        TextFormField(
+          controller: _titleController,
+          decoration: _inputDecoration('e.g., Friday Evening Dinner'),
+          textCapitalization: TextCapitalization.words,
+          maxLength: 200,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Title is required';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 20),
+
+        // Date and Time row
+        Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                    onTap: _selectDate,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFFCBD5E1)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _selectedDate != null
+                                  ? DateFormat('dd/MM/yyyy').format(_selectedDate!)
+                                  : 'dd/mm/yyyy',
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: _selectedDate != null
+                                    ? const Color(0xFF1E293B)
+                                    : const Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ),
+                          const Icon(
+                            Icons.calendar_today_rounded,
+                            size: 20,
+                            color: Color(0xFF64748B),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildTimeDropdown(),
             ),
-            const SizedBox(height: 20),
           ],
+        ),
+      ],
+    );
+  }
 
-          // Title field
-          _buildLabel('Event Title', required: true),
-          const SizedBox(height: 8),
-          TextFormField(
-            controller: _titleController,
-            decoration: _inputDecoration('e.g., Friday Evening Dinner'),
-            textCapitalization: TextCapitalization.words,
-            maxLength: 200,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Title is required';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 20),
+  Widget _buildDetailsCard() {
+    return _buildSectionCard(
+      children: [
+        // Location
+        _buildLabel('Location'),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _locationController,
+          decoration: _inputDecoration('e.g., The Beacon Hotel, Copthorne'),
+          textCapitalization: TextCapitalization.words,
+        ),
+        const SizedBox(height: 20),
 
-          // Date and Time row
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildLabel('Date', required: true),
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: _selectDate,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFFCBD5E1)),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                _selectedDate != null
-                                    ? DateFormat('dd/MM/yyyy').format(_selectedDate!)
-                                    : 'dd/mm/yyyy',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: _selectedDate != null
-                                      ? const Color(0xFF1E293B)
-                                      : const Color(0xFF94A3B8),
-                                ),
-                              ),
-                            ),
-                            const Icon(
-                              Icons.calendar_today_rounded,
-                              size: 20,
-                              color: Color(0xFF64748B),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildLabel('Time', required: true),
-                    const SizedBox(height: 8),
-                    _buildTimeDropdown(),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Event Type
-          _buildLabel('Event Type', required: true),
-          const SizedBox(height: 12),
-          _buildCategorySelector(),
-          const SizedBox(height: 20),
-
-          // Location
-          _buildLabel('Location'),
-          const SizedBox(height: 8),
-          TextFormField(
-            controller: _locationController,
-            decoration: _inputDecoration('e.g., The Beacon Hotel, Copthorne'),
-            textCapitalization: TextCapitalization.words,
-          ),
-          const SizedBox(height: 20),
-
-          // Description
-          _buildLabel('Description'),
-          const SizedBox(height: 8),
-          TextFormField(
-            controller: _descriptionController,
-            decoration: _inputDecoration('Tell people what to expect...'),
-            textCapitalization: TextCapitalization.sentences,
-            maxLines: 4,
-          ),
-        ],
-      ),
+        // Description
+        _buildLabel('Description'),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _descriptionController,
+          decoration: _inputDecoration('Tell people what to expect...'),
+          textCapitalization: TextCapitalization.sentences,
+          maxLines: 4,
+        ),
+      ],
     );
   }
 
@@ -561,7 +538,16 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
   }
 
-  Widget _buildTimeDropdown() {
+  String _formatTimeDisplay(String time) {
+    final parts = time.split(':');
+    final hour = int.parse(parts[0]);
+    final minute = parts[1];
+    final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+    final ampm = hour < 12 ? 'AM' : 'PM';
+    return '$displayHour:$minute $ampm';
+  }
+
+  void _showTimePicker() {
     final times = <String>[];
     for (var h = 0; h < 24; h++) {
       for (var m = 0; m < 60; m += 30) {
@@ -569,94 +555,74 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       }
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFFCBD5E1)),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _selectedTime,
-          hint: const Text(
-            'Select time...',
-            style: TextStyle(color: Color(0xFF94A3B8), fontSize: 15),
-          ),
-          isExpanded: true,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
-          items: times.map((time) {
-            final parts = time.split(':');
-            final hour = int.parse(parts[0]);
-            final minute = parts[1];
-            final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
-            final ampm = hour < 12 ? 'AM' : 'PM';
-            return DropdownMenuItem(
-              value: time,
-              child: Text(
-                '$displayHour:$minute $ampm',
-                style: const TextStyle(fontSize: 15, color: Color(0xFF1E293B)),
-              ),
-            );
-          }).toList(),
-          onChanged: (value) => setState(() => _selectedTime = value),
-        ),
-      ),
-    );
-  }
+    // Scroll to selected time, or 6pm if none
+    final targetTime = _selectedTime ?? '18:00';
+    final targetIndex = times.indexOf(targetTime).clamp(0, times.length - 1);
+    const itemHeight = 48.0;
+    // Center the target in the sheet (sheet is ~40% of screen)
+    final sheetHeight = MediaQuery.of(context).size.height * 0.4;
+    final initialOffset = (targetIndex * itemHeight - sheetHeight / 2 + itemHeight / 2)
+        .clamp(0.0, (times.length * itemHeight - sheetHeight).clamp(0.0, double.infinity));
+    final scrollController = ScrollController(initialScrollOffset: initialOffset);
 
-  Widget _buildCategorySelector() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 2.2,
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      itemCount: categoryOptions.length,
-      itemBuilder: (context, index) {
-        final cat = categoryOptions[index];
-        final isSelected = _selectedCategory == cat.key;
-
-        return GestureDetector(
-          onTap: () => setState(() => _selectedCategory = cat.key),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFEEF2FF) : Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: isSelected ? const Color(0xFF7C3AED) : const Color(0xFFE2E8F0),
-                width: isSelected ? 2 : 1,
-              ),
-            ),
-            child: Row(
+      builder: (context) {
+        return SafeArea(
+          child: SizedBox(
+            height: sheetHeight,
+            child: Column(
               children: [
+                // Handle bar
                 Container(
+                  margin: const EdgeInsets.only(top: 12, bottom: 8),
                   width: 36,
-                  height: 36,
+                  height: 4,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: cat.gradient,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(10),
+                    color: const Color(0xFFE2E8F0),
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  child: Icon(cat.icon, color: Colors.white, size: 18),
                 ),
-                const SizedBox(width: 10),
+                // List
                 Expanded(
-                  child: Text(
-                    cat.label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? const Color(0xFF7C3AED) : const Color(0xFF475569),
-                    ),
-                    overflow: TextOverflow.ellipsis,
+                  child: ListView.builder(
+                    controller: scrollController,
+                    itemCount: times.length,
+                    itemExtent: itemHeight,
+                    itemBuilder: (context, index) {
+                      final time = times[index];
+                      final isSelected = time == _selectedTime;
+                      return GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          setState(() => _selectedTime = time);
+                          Navigator.of(context).pop();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          color: isSelected
+                              ? const Color(0xFFF5F3FF)
+                              : Colors.transparent,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              _formatTimeDisplay(time),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                color: isSelected
+                                    ? const Color(0xFF7C3AED)
+                                    : const Color(0xFF1E293B),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -664,6 +630,112 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildTimeDropdown() {
+    return GestureDetector(
+      onTap: _showTimePicker,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFFCBD5E1)),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                _selectedTime != null
+                    ? _formatTimeDisplay(_selectedTime!)
+                    : 'Time',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: _selectedTime != null
+                      ? const Color(0xFF1E293B)
+                      : const Color(0xFF94A3B8),
+                ),
+              ),
+            ),
+            const Icon(
+              Icons.schedule_rounded,
+              size: 20,
+              color: Color(0xFF64748B),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEventTypeCard() {
+    return _buildSectionCard(
+      children: [
+        _buildLabel('Event Type'),
+        const SizedBox(height: 12),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 0.75,
+          ),
+          itemCount: categoryOptions.length,
+          itemBuilder: (context, index) {
+            final cat = categoryOptions[index];
+            final isSelected = _selectedCategory == cat.key;
+            return GestureDetector(
+              onTap: () => setState(() => _selectedCategory = cat.key),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected ? const Color(0xFFEEF2FF) : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected ? const Color(0xFF7C3AED) : const Color(0xFFE2E8F0),
+                    width: isSelected ? 2 : 1,
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: cat.gradient,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(cat.icon, color: Colors.white, size: 16),
+                    ),
+                    const SizedBox(height: 4),
+                    Flexible(
+                      child: Text(
+                        cat.label,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? const Color(0xFF7C3AED) : const Color(0xFF475569),
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
