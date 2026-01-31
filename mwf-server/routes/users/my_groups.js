@@ -74,11 +74,18 @@ router.get('/my-groups', verifyToken, async (req, res) => {
         // =======================================================================
         // Transform results to ensure counts are numbers
         // =======================================================================
-        const groups = result.rows.map(group => ({
+        let groups = result.rows.map(group => ({
             ...group,
             member_count: parseInt(group.member_count, 10) || 0,
             upcoming_event_count: parseInt(group.upcoming_event_count, 10) || 0
         }));
+
+        // =======================================================================
+        // Hide test group from creator's view when HIDE_TEST_DATA is enabled
+        // =======================================================================
+        if (process.env.HIDE_TEST_DATA === 'true' && userId === 21) {
+            groups = groups.filter(g => g.id !== 15);
+        }
 
         // =======================================================================
         // Return success response

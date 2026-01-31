@@ -86,11 +86,18 @@ router.get('/my-rsvps', verifyToken, async (req, res) => {
         // =======================================================================
         // Transform results to ensure counts are numbers
         // =======================================================================
-        const events = result.rows.map(event => ({
+        let events = result.rows.map(event => ({
             ...event,
             attendee_count: parseInt(event.attendee_count, 10) || 0,
             waitlist_count: parseInt(event.waitlist_count, 10) || 0
         }));
+
+        // =======================================================================
+        // Hide test group events from creator's view when HIDE_TEST_DATA is enabled
+        // =======================================================================
+        if (process.env.HIDE_TEST_DATA === 'true' && userId === 21) {
+            events = events.filter(e => e.group_id !== 15);
+        }
 
         // =======================================================================
         // Return success response

@@ -142,6 +142,13 @@ router.get('/', optionalAuth, async (req, res) => {
         }));
 
         // =======================================================================
+        // Hide test group events from creator's view when HIDE_TEST_DATA is enabled
+        // =======================================================================
+        if (process.env.HIDE_TEST_DATA === 'true' && userId === 21) {
+            events = events.filter(e => e.group_id !== 15);
+        }
+
+        // =======================================================================
         // Check if there are more results (for pagination)
         // =======================================================================
         let hasMore = false;
