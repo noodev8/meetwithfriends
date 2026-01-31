@@ -6,24 +6,51 @@ import '../widgets/bottom_nav_bar.dart';
 import 'group_dashboard_screen.dart';
 
 class DiscoverGroupsScreen extends StatefulWidget {
-  final List<Group> groups;
-
-  const DiscoverGroupsScreen({
-    super.key,
-    required this.groups,
-  });
+  const DiscoverGroupsScreen({super.key});
 
   @override
   State<DiscoverGroupsScreen> createState() => _DiscoverGroupsScreenState();
 }
 
 class _DiscoverGroupsScreenState extends State<DiscoverGroupsScreen> {
-  late List<Group> _groups;
+  final GroupsService _groupsService = GroupsService();
+  List<Group> _groups = [];
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _groups = List.from(widget.groups);
+    _loadGroups();
+  }
+
+  Future<void> _loadGroups() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    final results = await Future.wait([
+      _groupsService.discoverGroups(),
+      _groupsService.getMyGroups(),
+    ]);
+
+    final discoverResult = results[0];
+    final myGroupsResult = results[1];
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        if (discoverResult.success) {
+          final myGroupIds = (myGroupsResult.groups ?? []).map((g) => g.id).toSet();
+          _groups = (discoverResult.groups ?? [])
+              .where((g) => !myGroupIds.contains(g.id))
+              .toList();
+        } else {
+          _error = discoverResult.error ?? 'Failed to load groups';
+        }
+      });
+    }
   }
 
   void _onGroupJoined(int groupId) {
@@ -54,25 +81,77 @@ class _DiscoverGroupsScreenState extends State<DiscoverGroupsScreen> {
         centerTitle: false,
       ),
       body: SafeArea(
-        child: _groups.isEmpty
-            ? _buildEmptyState()
-            : ListView.builder(
-                padding: const EdgeInsets.all(20),
-                itemCount: _groups.length,
-                itemBuilder: (context, index) {
-                  final group = _groups[index];
-                  return _DiscoverGroupCard(
-                    group: group,
-                    onJoined: () => _onGroupJoined(group.id),
-                  );
-                },
-              ),
+        child: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFF7C3AED),
+                ),
+              )
+            : _error != null
+                ? _buildErrorState()
+                : _groups.isEmpty
+                    ? _buildEmptyState()
+                    : RefreshIndicator(
+                        onRefresh: _loadGroups,
+                        color: const Color(0xFF7C3AED),
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(20),
+                          itemCount: _groups.length,
+                          itemBuilder: (context, index) {
+                            final group = _groups[index];
+                            return _DiscoverGroupCard(
+                              group: group,
+                              onJoined: () => _onGroupJoined(group.id),
+                            );
+                          },
+                        ),
+                      ),
       ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: -1,
         onTap: (index) {
           navigateToMainTab(context, index);
         },
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 64,
+              color: Colors.red.shade300,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _error!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _loadGroups,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF7C3AED),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -296,7 +375,7 @@ class _DiscoverGroupCardState extends State<_DiscoverGroupCard> {
                         ),
                       )
                     : const Text(
-                        'Join',
+                        'Enter',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,

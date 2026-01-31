@@ -8,7 +8,6 @@ Primary landing screen for logged-in users. Dashboard approach showing:
 - Greeting with event count
 - My Events section (committed events)
 - My Groups section (groups user belongs to)
-- Discover Groups section (groups to join)
 See USER-FLOW.md for design rationale.
 =======================================================================================================================================
 */
@@ -18,21 +17,19 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getMyRsvps, EventWithDetails } from '@/lib/api/events';
-import { getMyGroups, discoverGroups, MyGroup, GroupWithCount } from '@/lib/api/groups';
+import { getMyGroups, MyGroup } from '@/lib/api/groups';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 import EventCard from '@/components/ui/EventCard';
 import { getGroupTheme, getGroupInitials } from '@/lib/groupThemes';
 
 const MAX_EVENTS_PREVIEW = 4;
 const MAX_GROUPS_PREVIEW = 4;
-const MAX_DISCOVER_PREVIEW = 4;
 
 export default function MyEventsPage() {
     const { user, token, isLoading } = useAuth();
     const router = useRouter();
     const [events, setEvents] = useState<EventWithDetails[]>([]);
     const [groups, setGroups] = useState<MyGroup[]>([]);
-    const [discoverableGroups, setDiscoverableGroups] = useState<GroupWithCount[]>([]);
     const [loading, setLoading] = useState(true);
 
     // =======================================================================
@@ -51,10 +48,9 @@ export default function MyEventsPage() {
         async function fetchData() {
             if (!token) return;
 
-            const [eventsResult, groupsResult, discoverResult] = await Promise.all([
+            const [eventsResult, groupsResult] = await Promise.all([
                 getMyRsvps(token),
                 getMyGroups(token),
-                discoverGroups(token),
             ]);
 
             if (eventsResult.success && eventsResult.data) {
@@ -62,9 +58,6 @@ export default function MyEventsPage() {
             }
             if (groupsResult.success && groupsResult.data) {
                 setGroups(groupsResult.data);
-            }
-            if (discoverResult.success && discoverResult.data) {
-                setDiscoverableGroups(discoverResult.data);
             }
             setLoading(false);
         }
@@ -91,8 +84,6 @@ export default function MyEventsPage() {
     const hasMoreGroups = groups.length > MAX_GROUPS_PREVIEW;
     const displayEvents = hasMoreEvents ? events.slice(0, MAX_EVENTS_PREVIEW) : events;
     const displayGroups = hasMoreGroups ? groups.slice(0, MAX_GROUPS_PREVIEW) : groups;
-    const displayDiscover = discoverableGroups.slice(0, MAX_DISCOVER_PREVIEW);
-
     // New user = no groups yet
     const isNewUser = !loading && groups.length === 0;
 
@@ -121,59 +112,30 @@ export default function MyEventsPage() {
                                 Welcome, {firstName}!
                             </h1>
                             <p className="text-slate-500">
-                                {discoverableGroups.length > 0
-                                    ? 'Join a group below to see events and connect with others.'
-                                    : 'Create a group to start organizing events with friends.'}
+                                Create a group to start organizing events, or browse existing ones.
                             </p>
                         </div>
 
-                        {/* Groups to Join */}
-                        {discoverableGroups.length > 0 && (
-                            <section className="mb-8">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-lg font-semibold text-slate-800">
-                                        Groups to Join
-                                        <span className="ml-2 text-slate-400 font-normal">{discoverableGroups.length}</span>
-                                    </h2>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {discoverableGroups.map(group => (
-                                        <DiscoverGroupCard
-                                            key={group.id}
-                                            group={group}
-                                        />
-                                    ))}
-                                </div>
-
-                                {/* Secondary CTA */}
-                                <div className="text-center mt-6">
-                                    <Link
-                                        href="/groups/create"
-                                        className="inline-flex items-center gap-1 text-slate-500 hover:text-indigo-600 font-medium transition-colors"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                        </svg>
-                                        Or create your own group
-                                    </Link>
-                                </div>
-                            </section>
-                        )}
-
-                        {/* No groups to discover - show create CTA */}
-                        {discoverableGroups.length === 0 && (
-                            <div className="text-center">
-                                <Link
-                                    href="/groups/create"
-                                    className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-full transition-colors"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    Create a Group
-                                </Link>
-                            </div>
-                        )}
+                        <div className="flex flex-col items-center gap-4">
+                            <Link
+                                href="/groups/create"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-full transition-colors"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Create a Group
+                            </Link>
+                            <Link
+                                href="/explore"
+                                className="inline-flex items-center gap-1 text-slate-500 hover:text-indigo-600 font-medium transition-colors"
+                            >
+                                Browse groups
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </Link>
+                        </div>
                     </div>
                 ) : (
                     /* ============================================================
@@ -246,31 +208,6 @@ export default function MyEventsPage() {
                             </div>
                         </section>
 
-                        {/* Discover Groups Section */}
-                        {displayDiscover.length > 0 && (
-                            <section className="mb-10">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-lg font-semibold text-slate-800">Discover Groups</h2>
-                                    <Link
-                                        href="/explore"
-                                        className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
-                                    >
-                                        See more
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </Link>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {displayDiscover.map(group => (
-                                        <DiscoverGroupCard
-                                            key={group.id}
-                                            group={group}
-                                        />
-                                    ))}
-                                </div>
-                            </section>
-                        )}
                     </>
                 )}
             </div>
@@ -321,35 +258,3 @@ function GroupCard({ group }: { group: MyGroup }) {
     );
 }
 
-// =======================================================================
-// Discover Group Card Component (with Join button)
-// =======================================================================
-function DiscoverGroupCard({ group }: { group: GroupWithCount }) {
-    const theme = getGroupTheme(group.theme_color);
-
-    return (
-        <Link
-            href={`/groups/${group.id}`}
-            className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200"
-        >
-            <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${theme.gradientLight} flex items-center justify-center flex-shrink-0`}>
-                    <span className={`text-lg font-bold ${theme.textColor}`}>
-                        {getGroupInitials(group.name)}
-                    </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-slate-800 truncate">
-                        {group.name}
-                    </h3>
-                    <p className="text-sm text-slate-400 mt-0.5">
-                        {group.member_count} {group.member_count === 1 ? 'member' : 'members'}
-                    </p>
-                </div>
-                <span className="flex-shrink-0 px-4 py-2 bg-indigo-500 text-white text-sm font-semibold rounded-full">
-                    Enter
-                </span>
-            </div>
-        </Link>
-    );
-}

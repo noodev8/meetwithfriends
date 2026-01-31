@@ -4,6 +4,7 @@ import '../models/event.dart';
 import '../services/events_service.dart';
 import '../config/event_categories.dart';
 import 'event_detail_screen.dart';
+import 'past_events_screen.dart';
 
 class GroupEventsScreen extends StatefulWidget {
   final int groupId;
@@ -109,8 +110,11 @@ class _GroupEventsScreenState extends State<GroupEventsScreen> {
                                   color: const Color(0xFF7C3AED),
                                   child: ListView.builder(
                                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                                    itemCount: _events.length,
+                                    itemCount: _events.length + 1,
                                     itemBuilder: (context, index) {
+                                      if (index == _events.length) {
+                                        return _buildPastEventsLink();
+                                      }
                                       final event = _events[index];
                                       return _EventCard(event: event);
                                     },
@@ -184,7 +188,46 @@ class _GroupEventsScreenState extends State<GroupEventsScreen> {
               color: Color(0xFF64748B),
             ),
           ),
+          const SizedBox(height: 24),
+          _buildPastEventsLink(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPastEventsLink() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => PastEventsScreen(
+              groupId: widget.groupId,
+              groupName: widget.groupName,
+            ),
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.history_rounded,
+              size: 16,
+              color: Colors.grey.shade500,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'View past events',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

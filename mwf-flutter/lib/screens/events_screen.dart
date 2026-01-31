@@ -11,15 +11,22 @@ class EventsScreen extends StatefulWidget {
   const EventsScreen({super.key, this.onBackToHome});
 
   @override
-  State<EventsScreen> createState() => _EventsScreenState();
+  State<EventsScreen> createState() => EventsScreenState();
 }
 
-class _EventsScreenState extends State<EventsScreen> {
+enum EventFilter { all, going }
+
+class EventsScreenState extends State<EventsScreen> {
   final EventsService _eventsService = EventsService();
 
   bool _isLoading = true;
   String? _error;
   List<Event> _events = [];
+  EventFilter _filter = EventFilter.all;
+
+  void setFilter(EventFilter filter) {
+    setState(() => _filter = filter);
+  }
 
   @override
   void initState() {
@@ -33,7 +40,7 @@ class _EventsScreenState extends State<EventsScreen> {
       _error = null;
     });
 
-    final result = await _eventsService.getMyRsvps();
+    final result = await _eventsService.getMyEvents();
 
     if (mounted) {
       setState(() {
@@ -45,6 +52,13 @@ class _EventsScreenState extends State<EventsScreen> {
         }
       });
     }
+  }
+
+  List<Event> get _filteredEvents {
+    if (_filter == EventFilter.going) {
+      return _events.where((e) => e.isGoing || e.isWaitlisted).toList();
+    }
+    return _events;
   }
 
   @override
@@ -97,7 +111,7 @@ class _EventsScreenState extends State<EventsScreen> {
               const Padding(
                 padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
                 child: Text(
-                  'My Events',
+                  'Events',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
@@ -111,7 +125,7 @@ class _EventsScreenState extends State<EventsScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
                 child: Text(
-                  '${_events.length} event${_events.length == 1 ? '' : 's'} you\'re attending or waitlisted for',
+                  '${_filteredEvents.length} upcoming event${_filteredEvents.length == 1 ? '' : 's'}',
                   style: const TextStyle(
                     fontSize: 14,
                     color: Color(0xFF64748B),
@@ -119,7 +133,27 @@ class _EventsScreenState extends State<EventsScreen> {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              // Filter chips
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                child: Row(
+                  children: [
+                    _FilterChip(
+                      label: 'All',
+                      selected: _filter == EventFilter.all,
+                      onTap: () => setState(() => _filter = EventFilter.all),
+                    ),
+                    const SizedBox(width: 8),
+                    _FilterChip(
+                      label: 'Going',
+                      selected: _filter == EventFilter.going,
+                      onTap: () => setState(() => _filter = EventFilter.going),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 8),
 
               // Events list
               Expanded(
@@ -131,7 +165,7 @@ class _EventsScreenState extends State<EventsScreen> {
                       )
                     : _error != null
                         ? _buildErrorState()
-                        : _buildEventsList(_events),
+                        : _buildEventsList(_filteredEvents),
               ),
             ],
           ),
@@ -192,9 +226,11 @@ class _EventsScreenState extends State<EventsScreen> {
               color: Colors.grey.shade300,
             ),
             const SizedBox(height: 16),
-            const Text(
-              'No events yet',
-              style: TextStyle(
+            Text(
+              _filter == EventFilter.going
+                  ? 'No events you\'re going to'
+                  : 'No upcoming events',
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF64748B),
@@ -382,6 +418,16 @@ class _CompactEventCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
+                      event.groupName.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF94A3B8),
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
                       '${dateFormat.format(event.dateTime)} · ${timeFormat.format(event.dateTime)}',
                       style: const TextStyle(
                         fontSize: 13,
@@ -427,6 +473,43 @@ class _CompactEventCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF6366F1) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? const Color(0xFF6366F1) : const Color(0xFFE2E8F0),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: selected ? Colors.white : const Color(0xFF64748B),
           ),
         ),
       ),

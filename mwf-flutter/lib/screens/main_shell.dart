@@ -26,6 +26,7 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
   final _tabController = MainTabController();
+  final _eventsScreenKey = GlobalKey<EventsScreenState>();
 
   @override
   void initState() {
@@ -60,10 +61,17 @@ class _MainShellState extends State<MainShell> {
           children: [
             HomeScreen(
               userName: widget.user.name,
-              onViewAllEvents: () => setState(() => _currentIndex = 1),
+              onViewAllEvents: () {
+                _eventsScreenKey.currentState?.setFilter(EventFilter.all);
+                setState(() => _currentIndex = 1);
+              },
+              onViewEventsGoing: () {
+                _eventsScreenKey.currentState?.setFilter(EventFilter.going);
+                setState(() => _currentIndex = 1);
+              },
               onViewAllGroups: () => setState(() => _currentIndex = 2),
             ),
-            EventsScreen(onBackToHome: () => setState(() => _currentIndex = 0)),
+            EventsScreen(key: _eventsScreenKey, onBackToHome: () => setState(() => _currentIndex = 0)),
             GroupsScreen(onBackToHome: () => setState(() => _currentIndex = 0)),
             ProfileScreen(
               user: widget.user,

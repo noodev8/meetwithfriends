@@ -1,25 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import '../models/event.dart';
-import '../models/group.dart';
 import '../services/events_service.dart';
 import '../services/groups_service.dart';
-import '../config/event_categories.dart';
-import '../config/group_themes.dart';
-import 'group_dashboard_screen.dart';
-import 'event_detail_screen.dart';
 import 'create_group_screen.dart';
 import 'discover_groups_screen.dart';
+
 
 class HomeScreen extends StatefulWidget {
   final String userName;
   final VoidCallback onViewAllEvents;
+  final VoidCallback onViewEventsGoing;
   final VoidCallback onViewAllGroups;
 
   const HomeScreen({
     super.key,
     required this.userName,
     required this.onViewAllEvents,
+    required this.onViewEventsGoing,
     required this.onViewAllGroups,
   });
 
@@ -37,9 +33,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   bool _isLoading = true;
   String? _error;
-  List<Event> _events = [];
-  List<Group> _groups = [];
-  List<Group> _discoverableGroups = [];
+  int _totalEventCount = 0;
+  int _goingCount = 0;
+  int _groupCount = 0;
+  bool _hasGroups = false;
 
   @override
   void initState() {
@@ -81,29 +78,24 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       _error = null;
     });
 
-    // Fetch RSVPs (committed events), groups, and discoverable groups in parallel
     final results = await Future.wait([
-      _eventsService.getMyRsvps(),
+      _eventsService.getMyEvents(),
       _groupsService.getMyGroups(),
-      _groupsService.discoverGroups(),
     ]);
 
     final eventsResult = results[0] as EventsResult;
     final groupsResult = results[1] as GroupsResult;
-    final discoverResult = results[2] as GroupsResult;
 
     if (mounted) {
       setState(() {
         _isLoading = false;
         if (eventsResult.success && groupsResult.success) {
-          _events = eventsResult.events ?? [];
-          _groups = groupsResult.groups ?? [];
-
-          // Filter out groups user is already in
-          final myGroupIds = _groups.map((g) => g.id).toSet();
-          _discoverableGroups = (discoverResult.groups ?? [])
-              .where((g) => !myGroupIds.contains(g.id))
-              .toList();
+          final events = eventsResult.events ?? [];
+          final groups = groupsResult.groups ?? [];
+          _totalEventCount = events.length;
+          _goingCount = events.where((e) => e.isGoing || e.isWaitlisted).length;
+          _groupCount = groups.length;
+          _hasGroups = groups.isNotEmpty;
 
           _animationController.forward();
         } else {
@@ -166,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     }
 
     // New user empty state - no groups yet
-    if (_groups.isEmpty) {
+    if (!_hasGroups) {
       return _buildNewUserEmptyState(firstName);
     }
 
@@ -178,18 +170,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           child: RefreshIndicator(
             onRefresh: _loadData,
             color: const Color(0xFF7C3AED),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 800),
-                child: CustomScrollView(
-                  slivers: [
-                    // Header
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 800),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Greeting
                         Text(
                           'Hello, $firstName!',
                           style: const TextStyle(
@@ -199,278 +190,54 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             letterSpacing: -0.5,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _events.isEmpty
-                              ? 'No events yet'
-                              : '${_events.length} event${_events.length == 1 ? '' : 's'} coming up',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF64748B),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
 
-                // Upcoming Events Section
-                if (_events.isNotEmpty) ...[
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'My Events',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF1E293B),
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: widget.onViewAllEvents,
-                            child: const Row(
-                              children: [
-                                Text(
-                                  'View all',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF7C3AED),
-                                  ),
-                                ),
-                                SizedBox(width: 4),
-                                Icon(
-                                  Icons.arrow_forward_rounded,
-                                  size: 16,
-                                  color: Color(0xFF7C3AED),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                        const SizedBox(height: 28),
 
-                  // Event Cards (max 3)
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final event = _events[index];
-                        return _EventCard(event: event);
-                      },
-                      childCount: _events.length > 3 ? 3 : _events.length,
-                    ),
-                  ),
-                ],
+                        // Navigation boxes
+                        _DashboardCard(
+                          icon: Icons.event_rounded,
+                          iconColor: const Color(0xFF6366F1),
+                          iconBgColor: const Color(0xFFEEF2FF),
+                          title: 'Events',
+                          subtitle: _totalEventCount == 0
+                              ? 'No upcoming events'
+                              : '$_totalEventCount upcoming',
+                          subtitleColor: _totalEventCount > 0
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFF94A3B8),
+                          onTap: widget.onViewAllEvents,
+                        ),
 
-                // Empty state for events
-                if (_events.isEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-                      child: Container(
-                        padding: const EdgeInsets.all(32),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.event_rounded,
-                              size: 48,
-                              color: Colors.grey.shade300,
-                            ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'No upcoming events',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF64748B),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                        const SizedBox(height: 12),
 
-                // My Groups Section
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 32, 20, 12),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'My Groups',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1E293B),
-                            letterSpacing: -0.3,
-                          ),
+                        _DashboardCard(
+                          icon: Icons.check_circle_outline_rounded,
+                          iconColor: const Color(0xFF10B981),
+                          iconBgColor: const Color(0xFFECFDF5),
+                          title: 'Going',
+                          subtitle: _goingCount == 0
+                              ? 'No RSVPs yet'
+                              : '$_goingCount event${_goingCount == 1 ? '' : 's'}',
+                          subtitleColor: _goingCount > 0
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFF94A3B8),
+                          onTap: widget.onViewEventsGoing,
                         ),
-                        GestureDetector(
+
+                        const SizedBox(height: 12),
+
+                        _DashboardCard(
+                          icon: Icons.people_rounded,
+                          iconColor: const Color(0xFF7C3AED),
+                          iconBgColor: const Color(0xFFF5F3FF),
+                          title: 'My Groups',
+                          subtitle: '$_groupCount group${_groupCount == 1 ? '' : 's'}',
+                          subtitleColor: const Color(0xFF64748B),
                           onTap: widget.onViewAllGroups,
-                          child: const Row(
-                            children: [
-                              Text(
-                                'See all',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF7C3AED),
-                                ),
-                              ),
-                              SizedBox(width: 4),
-                              Icon(
-                                Icons.arrow_forward_rounded,
-                                size: 16,
-                                color: Color(0xFF7C3AED),
-                              ),
-                            ],
-                          ),
                         ),
                       ],
                     ),
                   ),
-                ),
-
-                // Group Cards
-                if (_groups.isNotEmpty)
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final group = _groups[index];
-                        return _GroupCard(group: group);
-                      },
-                      childCount: _groups.length,
-                    ),
-                  ),
-
-                // Empty state for groups
-                if (_groups.isEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                      child: Container(
-                        padding: const EdgeInsets.all(32),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.people_rounded,
-                              size: 48,
-                              color: Colors.grey.shade300,
-                            ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'No groups yet',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF64748B),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'Create or join a group to get started',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF94A3B8),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                // Discover Section
-                if (_discoverableGroups.isNotEmpty) ...[
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 32, 20, 12),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Discover',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF1E293B),
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => DiscoverGroupsScreen(
-                                    groups: _discoverableGroups,
-                                  ),
-                                ),
-                              ).then((_) => _loadData());
-                            },
-                            child: const Row(
-                              children: [
-                                Text(
-                                  'View all',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF7C3AED),
-                                  ),
-                                ),
-                                SizedBox(width: 4),
-                                Icon(
-                                  Icons.arrow_forward_rounded,
-                                  size: 16,
-                                  color: Color(0xFF7C3AED),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Discover Group Cards (max 3)
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final group = _discoverableGroups[index];
-                        return Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                          child: _DiscoverGroupCard(group: group),
-                        );
-                      },
-                      childCount: _discoverableGroups.length > 3 ? 3 : _discoverableGroups.length,
-                    ),
-                  ),
-                ],
-
-                // Bottom padding
-                    const SliverToBoxAdapter(
-                      child: SizedBox(height: 24),
-                    ),
-                  ],
                 ),
               ),
             ),
@@ -537,125 +304,82 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
                       const SizedBox(height: 8),
 
-                      Text(
-                        _discoverableGroups.isNotEmpty
-                            ? 'Tap a group below to join and see upcoming events.'
-                            : 'Ready to bring your crew together? Start by creating your first group.',
+                      const Text(
+                        'Create a group to start organizing events, or browse existing ones.',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           color: Color(0xFF64748B),
                         ),
                       ),
 
-                      // Discoverable groups section - show FIRST when available
-                      if (_discoverableGroups.isNotEmpty) ...[
-                        const SizedBox(height: 32),
+                      const SizedBox(height: 24),
 
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                const Text(
-                                  'Groups to Join',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF1E293B),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '${_discoverableGroups.length}',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    color: Color(0xFF94A3B8),
-                                  ),
-                                ),
-                              ],
+                      // Create Group button
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF6366F1), Color(0xFF7C3AED)],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF7C3AED).withAlpha(77),
+                              blurRadius: 16,
+                              offset: const Offset(0, 6),
                             ),
                           ],
                         ),
-
-                        const SizedBox(height: 16),
-
-                        // Group cards
-                        ...(_discoverableGroups.take(6).map((group) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _DiscoverGroupCard(group: group),
-                        ))),
-
-                        // Secondary "Create a Group" option
-                        const SizedBox(height: 16),
-                        Center(
-                          child: TextButton.icon(
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const CreateGroupScreen(),
-                                ),
-                              ).then((_) => _loadData());
-                            },
-                            icon: const Icon(Icons.add_rounded, size: 18),
-                            label: const Text('Or create your own group'),
-                            style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFF64748B),
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const CreateGroupScreen(),
+                              ),
+                            ).then((_) => _loadData());
+                          },
+                          icon: const Icon(Icons.add_rounded, size: 20),
+                          label: const Text(
+                            'Create a Group',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            shadowColor: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 16,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
                             ),
                           ),
                         ),
-                      ],
+                      ),
 
-                      // Primary Create Group button - only when no groups to join
-                      if (_discoverableGroups.isEmpty) ...[
-                        const SizedBox(height: 24),
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF6366F1), Color(0xFF7C3AED)],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
+                      const SizedBox(height: 16),
+
+                      // Browse groups link
+                      TextButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const DiscoverGroupsScreen(),
                             ),
-                            borderRadius: BorderRadius.circular(30),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF7C3AED).withAlpha(77),
-                                blurRadius: 16,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const CreateGroupScreen(),
-                                ),
-                              ).then((_) => _loadData());
-                            },
-                            icon: const Icon(Icons.add_rounded, size: 20),
-                            label: const Text(
-                              'Create a Group',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              foregroundColor: Colors.white,
-                              shadowColor: Colors.transparent,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 32,
-                                vertical: 16,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                            ),
-                          ),
+                          ).then((_) => _loadData());
+                        },
+                        icon: const Icon(Icons.explore_outlined, size: 18),
+                        label: const Text('Browse groups'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFF64748B),
                         ),
-                      ],
+                      ),
 
                       const SizedBox(height: 32),
 
@@ -773,26 +497,29 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 }
 
-class _DiscoverGroupCard extends StatelessWidget {
-  final Group group;
+class _DashboardCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final Color iconBgColor;
+  final String title;
+  final String subtitle;
+  final Color subtitleColor;
+  final VoidCallback onTap;
 
-  const _DiscoverGroupCard({required this.group});
+  const _DashboardCard({
+    required this.icon,
+    required this.iconColor,
+    required this.iconBgColor,
+    required this.title,
+    required this.subtitle,
+    required this.subtitleColor,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = getGroupTheme(group.themeColor);
-
     return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => GroupDashboardScreen(
-              groupId: group.id,
-              backLabel: 'Home',
-            ),
-          ),
-        );
-      },
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -809,505 +536,45 @@ class _DiscoverGroupCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Avatar
             Container(
-              width: 48,
-              height: 48,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: theme.bgColor.withAlpha(38),
+                color: iconBgColor,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Center(
-                child: Text(
-                  getGroupInitials(group.name),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: theme.bgColor,
-                  ),
-                ),
-              ),
+              child: Icon(icon, size: 22, color: iconColor),
             ),
-
             const SizedBox(width: 14),
-
-            // Info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    group.name,
+                    title,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF1E293B),
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.people_outline_rounded,
-                        size: 14,
-                        color: const Color(0xFF94A3B8),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${group.memberCount} members',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                      if (group.upcomingEventCount > 0) ...[
-                        const SizedBox(width: 12),
-                        Icon(
-                          Icons.event_rounded,
-                          size: 14,
-                          color: const Color(0xFF6366F1),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${group.upcomingEventCount} upcoming',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF6366F1),
-                          ),
-                        ),
-                      ],
-                    ],
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: subtitleColor,
+                    ),
                   ),
                 ],
               ),
             ),
-
-            const SizedBox(width: 12),
-
-            // Enter button
-            Container(
-              height: 36,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF6366F1),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: const Center(
-                child: Text(
-                  'Enter',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFF94A3B8),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _EventCard extends StatelessWidget {
-  final Event event;
-
-  const _EventCard({required this.event});
-
-  @override
-  Widget build(BuildContext context) {
-    final categoryConfig = getCategoryConfig(event.category);
-    final gradient = categoryConfig.gradient;
-    final dateFormat = DateFormat('EEE d MMM');
-    final timeFormat = DateFormat('HH:mm');
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => EventDetailScreen(eventId: event.id),
-            ),
-          );
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: gradient[0].withAlpha(77),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: gradient,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Stack(
-                children: [
-                  // Background icon
-                  Positioned(
-                    right: -20,
-                    top: -20,
-                    child: Icon(
-                      categoryConfig.icon,
-                      size: 120,
-                      color: Colors.white.withAlpha(38),
-                    ),
-                  ),
-
-                  // Content
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Top row: attendance and status
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Attendance pill
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withAlpha(51),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                event.capacity != null
-                                    ? '${event.attendeeCount}/${event.capacity} going'
-                                    : '${event.attendeeCount} going',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-
-                            // Status badges
-                            Row(
-                              children: [
-                                // Host badge
-                                if (event.isHost)
-                                  Container(
-                                    margin: const EdgeInsets.only(right: 6),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF59E0B),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: const Text(
-                                      'Host',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                // RSVP status badge
-                                if (event.isGoing)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF10B981),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: const Text(
-                                      'Going',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                else if (event.isWaitlisted)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF8B5CF6),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: const Text(
-                                      'Waitlist',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                else if (event.isFull && !event.isCancelled)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF59E0B),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: const Text(
-                                      'Waitlist',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 40),
-
-                        // Group name
-                        Text(
-                          event.groupName.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white.withAlpha(217),
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-
-                        const SizedBox(height: 4),
-
-                        // Event name
-                        Text(
-                          event.title,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        // Date and location
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.calendar_today_rounded,
-                              size: 14,
-                              color: Colors.white.withAlpha(230),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              '${dateFormat.format(event.dateTime)} · ${timeFormat.format(event.dateTime)}',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white.withAlpha(230),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        if (event.location != null) ...[
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.location_on_rounded,
-                                size: 14,
-                                color: Colors.white.withAlpha(230),
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  event.location!,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white.withAlpha(230),
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GroupCard extends StatelessWidget {
-  final Group group;
-
-  const _GroupCard({required this.group});
-
-  bool get _isLeader => group.role.toLowerCase() == 'organiser' || group.role.toLowerCase() == 'host';
-
-  Color get _roleColor {
-    switch (group.role.toLowerCase()) {
-      case 'organiser':
-        return const Color(0xFF7C3AED);
-      case 'host':
-        return const Color(0xFFF59E0B);
-      default:
-        return const Color(0xFF64748B);
-    }
-  }
-
-  GroupTheme get _theme => getGroupTheme(group.themeColor);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => GroupDashboardScreen(groupId: group.id, backLabel: 'Home'),
-            ),
-          );
-        },
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: const Color(0xFFE2E8F0),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF1E293B).withAlpha(10),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              // Avatar
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: _theme.bgColor.withAlpha(38),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Text(
-                    getGroupInitials(group.name),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: _theme.bgColor,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 14),
-
-              // Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            group.name,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF1E293B),
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        // Only show badge for organiser/host
-                        if (_isLeader) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _roleColor.withAlpha(26),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              group.role.toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: _roleColor,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${group.memberCount} members',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Arrow
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: Color(0xFF94A3B8),
-              ),
-            ],
-          ),
         ),
       ),
     );

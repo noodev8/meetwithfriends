@@ -4,6 +4,7 @@ import '../services/groups_service.dart';
 import '../config/group_themes.dart';
 import 'group_dashboard_screen.dart';
 import 'create_group_screen.dart';
+import 'discover_groups_screen.dart';
 
 class GroupsScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -152,6 +153,44 @@ class _GroupsScreenState extends State<GroupsScreen> {
             ),
           ),
 
+          // Discover groups link
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const DiscoverGroupsScreen(),
+                  ),
+                ).then((_) => _loadGroups());
+              },
+              child: const Row(
+                children: [
+                  Icon(
+                    Icons.explore_outlined,
+                    size: 16,
+                    color: Color(0xFF7C3AED),
+                  ),
+                  SizedBox(width: 6),
+                  Text(
+                    'Discover groups',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF7C3AED),
+                    ),
+                  ),
+                  SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 14,
+                    color: Color(0xFF7C3AED),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           const SizedBox(height: 16),
 
           // Content
@@ -264,6 +303,21 @@ class _GroupsScreenState extends State<GroupsScreen> {
               style: TextStyle(
                 fontSize: 14,
                 color: Color(0xFF94A3B8),
+              ),
+            ),
+            const SizedBox(height: 20),
+            TextButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const DiscoverGroupsScreen(),
+                  ),
+                ).then((_) => _loadGroups());
+              },
+              icon: const Icon(Icons.explore_outlined, size: 18),
+              label: const Text('Browse groups'),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF7C3AED),
               ),
             ),
           ],

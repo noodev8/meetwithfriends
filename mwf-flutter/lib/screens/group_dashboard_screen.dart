@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:intl/intl.dart';
-import '../models/event.dart';
 import '../services/groups_service.dart';
 import '../services/events_service.dart';
-import '../config/event_categories.dart';
 import '../config/group_themes.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/invite_link_section.dart';
-import 'event_detail_screen.dart';
 import 'create_event_screen.dart';
 import 'edit_group_screen.dart';
 import 'group_members_screen.dart';
-import 'past_events_screen.dart';
+
 import 'group_events_screen.dart';
 
 class GroupDashboardScreen extends StatefulWidget {
@@ -40,7 +36,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
   String? _error;
   GroupDetail? _group;
   GroupMembership? _membership;
-  List<Event> _events = [];
+  int _upcomingEventCount = 0;
   List<GroupMember> _members = [];
   List<GroupMember> _pendingMembers = [];
   int? _processingMemberId;
@@ -78,7 +74,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
         if (groupResult.success) {
           _group = groupResult.group;
           _membership = groupResult.membership;
-          _events = eventsResult.events ?? [];
+          _upcomingEventCount = (eventsResult.events ?? []).length;
         } else {
           _error = groupResult.error ?? 'Failed to load group';
         }
@@ -743,6 +739,9 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                           if (canManageMembers && _pendingMembers.isNotEmpty)
                             _buildPendingRequestsSection(),
 
+                          // Events Section
+                          _buildUpcomingEventsSection(),
+
                           // Members Section (always show, but content varies by membership)
                           _buildMembersSection(group, membership?.isActive == true),
 
@@ -753,9 +752,6 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                           // Invite People Section (organisers/hosts only)
                           if (canManageMembers)
                             InviteLinkSection(type: 'group', id: group.id),
-
-                          // Upcoming Events Section
-                          _buildUpcomingEventsSection(),
 
                           // Bottom actions section
                           _buildBottomActions(group, canManageMembers, isOrganiser, membership?.isActive == true),
@@ -1728,336 +1724,78 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Upcoming Events${_events.isNotEmpty ? ' (${_events.length})' : ''}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-              if (_events.length > 3)
-                GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => GroupEventsScreen(
-                          groupId: widget.groupId,
-                          groupName: _group?.name ?? '',
-                        ),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    'See all',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF7C3AED),
-                    ),
+          // Upcoming events link
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => GroupEventsScreen(
+                    groupId: widget.groupId,
+                    groupName: _group?.name ?? '',
                   ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (_events.isEmpty)
-            Container(
-              padding: const EdgeInsets.all(32),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.event_rounded,
-                      size: 48,
-                      color: Colors.grey.shade300,
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'No upcoming events',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Check back later for new events',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF94A3B8),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
-            // Show up to 3 events
-            ...(_events.take(3).map((event) => _buildEventCard(event))),
-
-          // View past events link
-          const SizedBox(height: 8),
-          GestureDetector(
-            onTap: () => _navigateToPastEvents(),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.history_rounded,
-                    size: 16,
-                    color: Colors.grey.shade500,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'View past events',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade600,
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEEF2FF),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.event_rounded,
+                      size: 20,
+                      color: Color(0xFF6366F1),
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _navigateToPastEvents() {
-    if (_group == null) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => PastEventsScreen(
-          groupId: _group!.id,
-          groupName: _group!.name,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEventCard(Event event) {
-    final categoryConfig = getCategoryConfig(event.category);
-    final gradient = categoryConfig.gradient;
-    final dateFormat = DateFormat('EEE d MMM');
-    final timeFormat = DateFormat('HH:mm');
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => EventDetailScreen(eventId: event.id),
-            ),
-          );
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: gradient[0].withAlpha(60),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: gradient,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Stack(
-                children: [
-                  // Background icon
-                  Positioned(
-                    right: -15,
-                    top: -15,
-                    child: Icon(
-                      categoryConfig.icon,
-                      size: 100,
-                      color: Colors.white.withAlpha(30),
-                    ),
-                  ),
-
-                  // Content
-                  Padding(
-                    padding: const EdgeInsets.all(16),
+                  const SizedBox(width: 14),
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Top row: attendance and status
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withAlpha(40),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Text(
-                                event.capacity != null
-                                    ? '${event.attendeeCount}/${event.capacity} going'
-                                    : '${event.attendeeCount} going',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                            // Status badges
-                            if (event.isGoing)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF10B981),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: const Text(
-                                  'Going',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              )
-                            else if (event.isWaitlisted)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF8B5CF6),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: const Text(
-                                  'Waitlist',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              )
-                            else if (event.isFull && !event.isCancelled)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF59E0B),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: const Text(
-                                  'Waitlist',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Event name
-                        Text(
-                          event.title,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            letterSpacing: -0.3,
+                        const Text(
+                          'Events',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1E293B),
                           ),
                         ),
-
-                        const SizedBox(height: 10),
-
-                        // Date and location
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.calendar_today_rounded,
-                              size: 13,
-                              color: Colors.white.withAlpha(220),
+                        if (_upcomingEventCount > 0) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            '$_upcomingEventCount upcoming',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF10B981),
                             ),
-                            const SizedBox(width: 5),
-                            Text(
-                              '${dateFormat.format(event.dateTime)} · ${timeFormat.format(event.dateTime)}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white.withAlpha(220),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        if (event.location != null) ...[
-                          const SizedBox(height: 5),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.location_on_rounded,
-                                size: 13,
-                                color: Colors.white.withAlpha(220),
-                              ),
-                              const SizedBox(width: 5),
-                              Expanded(
-                                child: Text(
-                                  event.location!,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white.withAlpha(220),
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
                           ),
                         ],
                       ],
                     ),
                   ),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Color(0xFF94A3B8),
+                  ),
                 ],
               ),
             ),
           ),
-        ),
+
+        ],
       ),
     );
   }
