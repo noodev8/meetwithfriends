@@ -35,6 +35,7 @@ import DOMPurify from 'dompurify';
 import { getCategoryConfig } from '@/lib/eventCategories';
 import { FEATURE_GUESTS_ENABLED } from '@/lib/featureFlags';
 import AppDownloadBanner from '@/components/ui/AppDownloadBanner';
+import ManageHostsModal from '@/components/ui/ManageHostsModal';
 
 export default function EventDetailPage() {
     const { user, token } = useAuth();
@@ -70,6 +71,9 @@ export default function EventDetailPage() {
 
     // Cancel RSVP confirmation modal
     const [showCancelModal, setShowCancelModal] = useState(false);
+
+    // Manage hosts modal state
+    const [showManageHosts, setShowManageHosts] = useState(false);
 
     // Description expand/collapse state
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
@@ -509,11 +513,29 @@ export default function EventDetailPage() {
                                                 {hosts.length > 1 && ` +${hosts.length - 1} other${hosts.length > 2 ? 's' : ''}`}
                                             </span>
                                         </p>
+                                        {canEdit && !isPastEvent && event.status !== 'cancelled' && (
+                                            <button
+                                                onClick={() => setShowManageHosts(true)}
+                                                className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors ml-2"
+                                            >
+                                                Manage
+                                            </button>
+                                        )}
                                     </>
                                 ) : (
-                                    <p className="text-slate-500">
-                                        Hosted by <span className="font-medium text-slate-700">{event.creator_name}</span>
-                                    </p>
+                                    <>
+                                        <p className="text-slate-500">
+                                            Hosted by <span className="font-medium text-slate-700">{event.creator_name}</span>
+                                        </p>
+                                        {canEdit && !isPastEvent && event.status !== 'cancelled' && (
+                                            <button
+                                                onClick={() => setShowManageHosts(true)}
+                                                className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors ml-2"
+                                            >
+                                                Manage
+                                            </button>
+                                        )}
+                                    </>
                                 )}
                             </div>
 
@@ -1175,6 +1197,17 @@ export default function EventDetailPage() {
                         )}
                     </div>
                 </div>
+            )}
+
+            {/* Manage Hosts Modal */}
+            {showManageHosts && event && (
+                <ManageHostsModal
+                    eventId={event.id}
+                    groupId={event.group_id}
+                    hosts={hosts}
+                    onClose={() => setShowManageHosts(false)}
+                    onHostsChanged={(updatedHosts) => setHosts(updatedHosts)}
+                />
             )}
 
             {/* Cancel RSVP Confirmation Modal */}

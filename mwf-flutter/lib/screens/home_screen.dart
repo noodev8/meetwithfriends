@@ -1,22 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../config/event_categories.dart';
+import '../models/event.dart';
+import '../models/user.dart';
 import '../services/events_service.dart';
 import '../services/groups_service.dart';
 import 'create_group_screen.dart';
 import 'discover_groups_screen.dart';
+import 'event_detail_screen.dart';
 
 
 class HomeScreen extends StatefulWidget {
-  final String userName;
+  final User user;
   final VoidCallback onViewAllEvents;
   final VoidCallback onViewEventsGoing;
   final VoidCallback onViewAllGroups;
+  final VoidCallback onViewProfile;
 
   const HomeScreen({
     super.key,
-    required this.userName,
+    required this.user,
     required this.onViewAllEvents,
     required this.onViewEventsGoing,
     required this.onViewAllGroups,
+    required this.onViewProfile,
   });
 
   @override
@@ -34,9 +41,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   bool _isLoading = true;
   String? _error;
   int _totalEventCount = 0;
-  int _goingCount = 0;
   int _groupCount = 0;
   bool _hasGroups = false;
+  Event? _nextEvent;
 
   @override
   void initState() {
@@ -93,9 +100,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           final events = eventsResult.events ?? [];
           final groups = groupsResult.groups ?? [];
           _totalEventCount = events.length;
-          _goingCount = events.where((e) => e.isGoing || e.isWaitlisted).length;
+          final goingEvents = events.where((e) => e.isGoing || e.isWaitlisted).toList();
           _groupCount = groups.length;
           _hasGroups = groups.isNotEmpty;
+
+          // Find next upcoming event the user is going to
+          final now = DateTime.now();
+          final upcoming = goingEvents
+              .where((e) => e.dateTime.isAfter(now) && !e.isCancelled)
+              .toList()
+            ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+          _nextEvent = upcoming.isNotEmpty ? upcoming.first : null;
 
           _animationController.forward();
         } else {
@@ -107,7 +122,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final firstName = widget.userName.split(' ').first;
+    final firstName = widget.user.name.split(' ').first;
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
     if (_isLoading) {
       return const Center(
@@ -180,67 +197,347 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Greeting
-                        Text(
-                          'Hello, $firstName!',
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1E293B),
-                            letterSpacing: -0.5,
-                          ),
+                        // Greeting with avatar
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: widget.onViewProfile,
+                              child: Container(
+                                width: 52,
+                                height: 52,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: const Color(0xFF7C3AED).withAlpha(80),
+                                    width: 2.5,
+                                  ),
+                                ),
+                                child: ClipOval(
+                                  child: widget.user.avatarUrl != null && widget.user.avatarUrl!.isNotEmpty
+                                      ? Image.network(
+                                          widget.user.avatarUrl!,
+                                          width: 47,
+                                          height: 47,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, _, _) => _buildInitialsAvatar(),
+                                        )
+                                      : _buildInitialsAvatar(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '$greeting,',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                  Text(
+                                    firstName,
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF1E293B),
+                                      letterSpacing: -0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
 
                         const SizedBox(height: 28),
 
-                        // Navigation boxes
-                        _DashboardCard(
-                          icon: Icons.event_rounded,
-                          iconColor: const Color(0xFF6366F1),
-                          iconBgColor: const Color(0xFFEEF2FF),
-                          title: 'Events',
-                          subtitle: _totalEventCount == 0
-                              ? 'No upcoming events'
-                              : '$_totalEventCount upcoming',
-                          subtitleColor: _totalEventCount > 0
-                              ? const Color(0xFF10B981)
-                              : const Color(0xFF94A3B8),
-                          onTap: widget.onViewAllEvents,
+                        // Stat tiles
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _StatTile(
+                                icon: Icons.event_rounded,
+                                iconColor: const Color(0xFF7C3AED),
+                                iconBgColor: const Color(0xFFF5F3FF),
+                                title: 'Events',
+                                subtitle: _totalEventCount == 0
+                                    ? 'No upcoming'
+                                    : '$_totalEventCount upcoming',
+                                subtitleColor: const Color(0xFF64748B),
+                                onTap: widget.onViewAllEvents,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _StatTile(
+                                icon: Icons.people_rounded,
+                                iconColor: const Color(0xFF7C3AED),
+                                iconBgColor: const Color(0xFFF5F3FF),
+                                title: 'Groups',
+                                subtitle: '$_groupCount active',
+                                subtitleColor: const Color(0xFF64748B),
+                                onTap: widget.onViewAllGroups,
+                              ),
+                            ),
+                          ],
                         ),
 
-                        const SizedBox(height: 12),
-
-                        _DashboardCard(
-                          icon: Icons.check_circle_outline_rounded,
-                          iconColor: const Color(0xFF10B981),
-                          iconBgColor: const Color(0xFFECFDF5),
-                          title: 'Going',
-                          subtitle: _goingCount == 0
-                              ? 'No RSVPs yet'
-                              : '$_goingCount event${_goingCount == 1 ? '' : 's'}',
-                          subtitleColor: _goingCount > 0
-                              ? const Color(0xFF10B981)
-                              : const Color(0xFF94A3B8),
-                          onTap: widget.onViewEventsGoing,
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        _DashboardCard(
-                          icon: Icons.people_rounded,
-                          iconColor: const Color(0xFF7C3AED),
-                          iconBgColor: const Color(0xFFF5F3FF),
-                          title: 'My Groups',
-                          subtitle: '$_groupCount group${_groupCount == 1 ? '' : 's'}',
-                          subtitleColor: const Color(0xFF64748B),
-                          onTap: widget.onViewAllGroups,
-                        ),
+                        // Next Up section
+                        if (_nextEvent != null) ...[
+                          const SizedBox(height: 28),
+                          _buildNextUpSection(_nextEvent!),
+                        ],
                       ],
                     ),
                   ),
                 ),
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _relativeDate(DateTime dateTime) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final eventDay = DateTime(dateTime.year, dateTime.month, dateTime.day);
+    final diff = eventDay.difference(today).inDays;
+
+    if (diff == 0) return 'TODAY';
+    if (diff == 1) return 'TOMORROW';
+    if (diff < 7) return DateFormat('EEEE').format(dateTime).toUpperCase();
+    return DateFormat('MMM d').format(dateTime).toUpperCase();
+  }
+
+  Widget _buildNextUpSection(Event event) {
+    final catConfig = getCategoryConfig(event.category);
+    final relDate = _relativeDate(event.dateTime);
+    final time = DateFormat('HH:mm').format(event.dateTime);
+    final capacityText = event.capacity != null
+        ? '${event.attendeeCount}/${event.capacity}'
+        : '${event.attendeeCount}';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text(
+              'Next Up',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            const Spacer(),
+            GestureDetector(
+              onTap: widget.onViewEventsGoing,
+              child: const Row(
+                children: [
+                  Text(
+                    'See all',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF7C3AED),
+                    ),
+                  ),
+                  SizedBox(width: 2),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 16,
+                    color: Color(0xFF7C3AED),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => EventDetailScreen(eventId: event.id),
+              ),
+            ).then((_) => _loadData());
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF1E293B).withAlpha(10),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Gradient header strip
+                Container(
+                  height: 6,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: catConfig.gradient),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Date label + attendee count
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: relDate == 'TODAY' || relDate == 'TOMORROW'
+                                  ? const Color(0xFF7C3AED).withAlpha(20)
+                                  : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '$relDate  ·  $time',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: relDate == 'TODAY' || relDate == 'TOMORROW'
+                                    ? const Color(0xFF7C3AED)
+                                    : const Color(0xFF64748B),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          Icon(
+                            Icons.people_rounded,
+                            size: 14,
+                            color: const Color(0xFF64748B),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$capacityText going',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      // Event title
+                      Text(
+                        event.title,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1E293B),
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (event.location != null && event.location!.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: 14,
+                              color: const Color(0xFF94A3B8),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                event.location!,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF64748B),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: 8),
+                      // Group name
+                      Row(
+                        children: [
+                          Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: catConfig.gradient.first.withAlpha(30),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
+                              catConfig.icon,
+                              size: 12,
+                              color: catConfig.gradient.first,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              event.groupName,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF94A3B8),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInitialsAvatar() {
+    return Container(
+      width: 47,
+      height: 47,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF6366F1), Color(0xFF7C3AED)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Text(
+          widget.user.initials,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
           ),
         ),
       ),
@@ -497,7 +794,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 }
 
-class _DashboardCard extends StatelessWidget {
+class _StatTile extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final Color iconBgColor;
@@ -506,7 +803,7 @@ class _DashboardCard extends StatelessWidget {
   final Color subtitleColor;
   final VoidCallback onTap;
 
-  const _DashboardCard({
+  const _StatTile({
     required this.icon,
     required this.iconColor,
     required this.iconBgColor,
@@ -534,45 +831,35 @@ class _DashboardCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 color: iconBgColor,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: 22, color: iconColor),
+              child: Icon(icon, size: 20, color: iconColor),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1E293B),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: subtitleColor,
-                    ),
-                  ),
-                ],
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1E293B),
               ),
             ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: Color(0xFF94A3B8),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: subtitleColor,
+              ),
             ),
           ],
         ),

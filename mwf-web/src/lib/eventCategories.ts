@@ -20,37 +20,37 @@ export interface CategoryConfig {
 export const EVENT_CATEGORIES: Record<EventCategory, CategoryConfig> = {
     food: {
         key: 'food',
-        label: 'Dinners & Drinks',
+        label: 'Dining',
         emoji: '🍽️',
         gradient: 'from-indigo-500 via-purple-400 to-pink-300',
     },
     outdoor: {
         key: 'outdoor',
-        label: 'Outdoor & Active',
+        label: 'Outdoor',
         emoji: '🥾',
         gradient: 'from-emerald-500 via-teal-400 to-cyan-300',
     },
     games: {
         key: 'games',
-        label: 'Games & Sports',
+        label: 'Games',
         emoji: '🎱',
         gradient: 'from-red-500 via-rose-400 to-orange-300',
     },
     coffee: {
         key: 'coffee',
-        label: 'Coffee & Casual',
+        label: 'Coffee',
         emoji: '☕',
         gradient: 'from-amber-500 via-orange-400 to-yellow-300',
     },
     arts: {
         key: 'arts',
-        label: 'Arts & Culture',
+        label: 'Arts',
         emoji: '🎨',
         gradient: 'from-rose-500 via-pink-400 to-fuchsia-300',
     },
     learning: {
         key: 'learning',
-        label: 'Learning & Skills',
+        label: 'Learning',
         emoji: '📚',
         gradient: 'from-blue-500 via-indigo-400 to-violet-300',
     },

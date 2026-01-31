@@ -409,6 +409,48 @@ class EventsService {
     );
   }
 
+  /// Add a host to an event
+  Future<AddHostResult> addHost(int eventId, int userId) async {
+    final response = await _api.post('/events/$eventId/hosts/add', {
+      'user_id': userId,
+    });
+
+    if (response['return_code'] == 'SUCCESS') {
+      final hostJson = response['host'] as Map<String, dynamic>?;
+      return AddHostResult(
+        success: true,
+        host: hostJson != null ? EventHost.fromJson(hostJson) : null,
+        message: response['message'] as String?,
+      );
+    }
+
+    return AddHostResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to add host',
+      returnCode: response['return_code'] as String?,
+    );
+  }
+
+  /// Remove a host from an event
+  Future<RemoveHostResult> removeHost(int eventId, int userId) async {
+    final response = await _api.post('/events/$eventId/hosts/remove', {
+      'user_id': userId,
+    });
+
+    if (response['return_code'] == 'SUCCESS') {
+      return RemoveHostResult(
+        success: true,
+        message: response['message'] as String?,
+      );
+    }
+
+    return RemoveHostResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to remove host',
+      returnCode: response['return_code'] as String?,
+    );
+  }
+
   /// Disable magic invite link
   Future<MagicLinkActionResult> disableMagicLink(int eventId) async {
     final response = await _api.post('/events/$eventId/magic-link/disable', {});
@@ -793,5 +835,35 @@ class MagicLinkActionResult {
     this.isActive,
     this.expiresAt,
     this.error,
+  });
+}
+
+class AddHostResult {
+  final bool success;
+  final EventHost? host;
+  final String? message;
+  final String? error;
+  final String? returnCode;
+
+  AddHostResult({
+    required this.success,
+    this.host,
+    this.message,
+    this.error,
+    this.returnCode,
+  });
+}
+
+class RemoveHostResult {
+  final bool success;
+  final String? message;
+  final String? error;
+  final String? returnCode;
+
+  RemoveHostResult({
+    required this.success,
+    this.message,
+    this.error,
+    this.returnCode,
   });
 }

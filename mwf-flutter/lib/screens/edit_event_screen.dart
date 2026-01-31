@@ -878,7 +878,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
                 Switch.adaptive(
                   value: _waitlistEnabled,
                   onChanged: (val) => setState(() => _waitlistEnabled = val),
-                  activeColor: const Color(0xFF7C3AED),
+                  activeTrackColor: const Color(0xFF7C3AED),
                 ),
               ],
             ),
