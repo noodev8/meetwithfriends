@@ -390,6 +390,25 @@ class GroupsService {
       error: response['message'] as String? ?? 'Failed to enable invite link',
     );
   }
+
+  /// Contact the group organiser (active members only, rate limited to 3/hour)
+  Future<ContactOrganiserResult> contactOrganiser(int groupId, String message) async {
+    final response = await _api.post('/groups/$groupId/contact-organiser', {
+      'message': message,
+    });
+
+    if (response['return_code'] == 'SUCCESS') {
+      return ContactOrganiserResult(
+        success: true,
+        message: response['message'] as String?,
+      );
+    }
+
+    return ContactOrganiserResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to send message',
+    );
+  }
 }
 
 class BroadcastResult {
@@ -402,6 +421,18 @@ class BroadcastResult {
     required this.success,
     this.message,
     this.queuedCount = 0,
+    this.error,
+  });
+}
+
+class ContactOrganiserResult {
+  final bool success;
+  final String? message;
+  final String? error;
+
+  ContactOrganiserResult({
+    required this.success,
+    this.message,
     this.error,
   });
 }

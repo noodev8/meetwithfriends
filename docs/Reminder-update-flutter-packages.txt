@@ -1,0 +1,1 @@
+Run flutter pub get and update packages safely and in parts

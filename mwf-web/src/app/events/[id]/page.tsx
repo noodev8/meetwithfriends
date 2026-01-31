@@ -65,6 +65,7 @@ export default function EventDetailPage() {
     const [newComment, setNewComment] = useState('');
     const [commentLoading, setCommentLoading] = useState(false);
     const [deletingComment, setDeletingComment] = useState<number | null>(null);
+    const [visibleCommentCount, setVisibleCommentCount] = useState(3);
 
     // Profile modal state
     const [selectedAttendee, setSelectedAttendee] = useState<Attendee | null>(null);
@@ -965,7 +966,7 @@ export default function EventDetailPage() {
                                     {/* Comments List */}
                                     {comments.length > 0 ? (
                                         <div className="space-y-4">
-                                            {comments.map(comment => (
+                                            {comments.slice(0, visibleCommentCount).map(comment => (
                                                 <div key={comment.id} className="flex gap-3">
                                                     {comment.user_avatar_url ? (
                                                         <div className="relative w-10 h-10 flex-shrink-0">
@@ -1008,6 +1009,22 @@ export default function EventDetailPage() {
                                                     </div>
                                                 </div>
                                             ))}
+                                            {visibleCommentCount < comments.length && (
+                                                <button
+                                                    onClick={() => setVisibleCommentCount(prev => Math.min(prev + 10, comments.length))}
+                                                    className="w-full text-center text-sm font-medium text-indigo-600 hover:text-indigo-700 transition py-1"
+                                                >
+                                                    Show more comments ({comments.length - visibleCommentCount} remaining)
+                                                </button>
+                                            )}
+                                            {visibleCommentCount > 3 && (
+                                                <button
+                                                    onClick={() => setVisibleCommentCount(3)}
+                                                    className="w-full text-center text-sm font-medium text-indigo-600 hover:text-indigo-700 transition py-1"
+                                                >
+                                                    Show less
+                                                </button>
+                                            )}
                                         </div>
                                     ) : (
                                         <p className="text-slate-500 text-center py-4">
