@@ -121,29 +121,14 @@ export default function GroupEventsPage() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    Back to {group?.name || 'group'}
+                    Back to group
                 </Link>
 
-                <div className="flex items-start justify-between gap-4 mb-1">
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display">
-                            Events
-                        </h1>
-                        {group && (
-                            <p className="text-slate-500 mt-1">{group.name}</p>
-                        )}
-                    </div>
-                    {canCreateEvents && (
-                        <Link
-                            href={`/groups/${params.id}/events/create`}
-                            className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 mt-1"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            Create Event
-                        </Link>
-                    )}
+                <div className="mb-1">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display">
+                        {group?.name || 'Events'}
+                    </h1>
+                    <p className="text-slate-500 mt-1">Events</p>
                 </div>
 
                 {/* Filter Tabs */}
@@ -206,14 +191,6 @@ export default function GroupEventsPage() {
                                 View all events
                             </button>
                         )}
-                        {filter === 'all' && canCreateEvents && (
-                            <Link
-                                href={`/groups/${params.id}/events/create`}
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all shadow-md"
-                            >
-                                Create an event
-                            </Link>
-                        )}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -223,15 +200,6 @@ export default function GroupEventsPage() {
                     </div>
                 )}
 
-                {/* Past events link */}
-                <div className="mt-6 pt-4 border-t border-slate-100 text-center">
-                    <Link
-                        href={`/groups/${params.id}/past-events`}
-                        className="text-sm text-slate-400 hover:text-slate-600 transition"
-                    >
-                        View past events
-                    </Link>
-                </div>
             </div>
         </SidebarLayout>
     );

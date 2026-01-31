@@ -448,8 +448,44 @@ export default function GroupDetailPage() {
             {/* Main Content */}
             <div className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto w-full">
                 <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-                    {/* Left Column - Main Content */}
+                    {/* Left Column - Content */}
                     <div className="flex-1 lg:flex-[3] space-y-6">
+                        {/* Members & Events */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <Link
+                                href={`/groups/${group.id}/members`}
+                                className="group bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all duration-200"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-2xl sm:text-3xl font-bold text-slate-900">{group.member_count}</p>
+                                        <p className="text-sm sm:text-base font-semibold text-slate-600 mt-0.5">Members</p>
+                                    </div>
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-violet-50 group-hover:bg-violet-100 flex items-center justify-center transition-colors">
+                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </Link>
+                            <Link
+                                href={`/groups/${group.id}/events`}
+                                className="group bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all duration-200"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-2xl sm:text-3xl font-bold text-slate-900">{events.length}</p>
+                                        <p className="text-sm sm:text-base font-semibold text-slate-600 mt-0.5">Events</p>
+                                    </div>
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-50 group-hover:bg-indigo-100 flex items-center justify-center transition-colors">
+                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </Link>
+                        </div>
+
                         {/* Pending Members Alert - Only visible to organisers */}
                         {isOrganiser && pendingMembers.length > 0 && (
                             <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-5">
@@ -547,172 +583,101 @@ export default function GroupDetailPage() {
                             </div>
                         )}
 
-                        {/* Invite People - visible to organisers and hosts */}
-                        {canManageMembers && token && (
-                            <button
-                                onClick={() => setShowInviteModal(true)}
-                                className="w-full bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:border-indigo-200 transition-all duration-200 text-left"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                                        <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                                        </svg>
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="font-medium text-slate-800">Invite People</p>
-                                        <p className="text-sm text-slate-500">Share a link to invite others</p>
-                                    </div>
-                                    <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </div>
-                            </button>
-                        )}
-
-                        {/* Events count card */}
-                        <Link
-                            href={`/groups/${group.id}/events`}
-                            className="block bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:border-indigo-200 transition-all duration-200"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-2xl font-bold text-slate-900">{events.length}</p>
-                                    <p className="text-sm text-slate-500">Upcoming Events</p>
-                                </div>
-                                <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </div>
-                        </Link>
-
-                        {/* Next Event */}
-                        {events.length > 0 ? (
-                            <div>
-                                <h2 className="text-lg font-semibold text-slate-800 mb-4">Next Event</h2>
-                                <div className="max-w-md">
-                                    <EventCard event={events[0]} from={`group-${params.id}`} />
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
-                                <div className="text-5xl mb-3">📅</div>
-                                <p className="text-slate-600 font-medium">No upcoming events</p>
-                                {canManageMembers && (
-                                    <p className="text-slate-500 text-sm mt-1">
-                                        Create an event to get your group together!
-                                    </p>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Past events link */}
-                        <div className="text-center">
-                            <Link
-                                href={`/groups/${group.id}/past-events`}
-                                className="text-sm text-slate-400 hover:text-slate-600 transition"
-                            >
-                                View past events
-                            </Link>
-                        </div>
                     </div>
 
                     {/* Right Column - Sidebar */}
-                    <aside className="lg:flex-[1.2] space-y-4">
-                        {/* Join/Status Card */}
-                        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-                            {!user ? (
-                                <button
-                                    onClick={() => router.push('/login')}
-                                    className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all shadow-sm"
-                                >
-                                    Log in to join
-                                </button>
-                            ) : membership ? (
-                                membership.status === 'pending' ? (
-                                    <div className="text-center">
-                                        <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center mx-auto mb-3">
-                                            <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
+                    <aside className="lg:flex-[1.2]">
+                        <div className="bg-white rounded-2xl border border-slate-200">
+                            {/* Join/Status */}
+                            <div className="p-5">
+                                {!user ? (
+                                    <button
+                                        onClick={() => router.push('/login')}
+                                        className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all shadow-sm"
+                                    >
+                                        Log in to join
+                                    </button>
+                                ) : membership ? (
+                                    membership.status === 'pending' ? (
+                                        <div className="text-center">
+                                            <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center mx-auto mb-3">
+                                                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </div>
+                                            <p className="font-semibold text-slate-800">Request Pending</p>
+                                            <p className="text-sm text-slate-500 mt-1">Waiting for admin approval</p>
                                         </div>
-                                        <p className="font-semibold text-slate-800">Request Pending</p>
-                                        <p className="text-sm text-slate-500 mt-1">Waiting for admin approval</p>
-                                    </div>
+                                    ) : (
+                                        <div className="text-center">
+                                            <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center mx-auto mb-3">
+                                                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </div>
+                                            <p className="font-semibold text-slate-800">
+                                                {membership.role === 'organiser' ? 'Admin' : (membership.role === 'host' && group.all_members_host) ? 'Member' : membership.role === 'host' ? 'Host' : 'Member'}
+                                            </p>
+                                            <p className="text-sm text-slate-500 mt-1">You're part of this group</p>
+                                        </div>
+                                    )
                                 ) : (
-                                    <div className="text-center">
-                                        <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center mx-auto mb-3">
-                                            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    <button
+                                        onClick={handleJoinGroup}
+                                        disabled={joining}
+                                        className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all shadow-sm disabled:opacity-50"
+                                    >
+                                        {joining ? 'Joining...' : group.join_policy === 'auto' ? 'Join Group' : 'Request to Join'}
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Action links */}
+                            {(canManageMembers || canContactOrganiser) && (
+                                <div className="border-t border-slate-100 px-5 py-4 space-y-1">
+                                    {canManageMembers && token && (
+                                        <button
+                                            onClick={() => setShowInviteModal(true)}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition text-left"
+                                        >
+                                            <svg className="w-4 h-4 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                             </svg>
-                                        </div>
-                                        <p className="font-semibold text-slate-800">
-                                            {membership.role === 'organiser' ? 'Admin' : (membership.role === 'host' && group.all_members_host) ? 'Member' : membership.role === 'host' ? 'Host' : 'Member'}
-                                        </p>
-                                        <p className="text-sm text-slate-500 mt-1">You're part of this group</p>
-                                    </div>
-                                )
-                            ) : (
-                                <button
-                                    onClick={handleJoinGroup}
-                                    disabled={joining}
-                                    className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all shadow-sm disabled:opacity-50"
-                                >
-                                    {joining ? 'Joining...' : group.join_policy === 'auto' ? 'Join Group' : 'Request to Join'}
-                                </button>
+                                            <span className="text-sm font-medium text-slate-700">Invite People</span>
+                                        </button>
+                                    )}
+                                    {canContactOrganiser && (
+                                        <button
+                                            onClick={() => setShowContactModal(true)}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition text-left"
+                                        >
+                                            <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                            </svg>
+                                            <span className="text-sm font-medium text-slate-700">Contact Admin</span>
+                                        </button>
+                                    )}
+                                </div>
                             )}
-                        </div>
 
-                        {/* Members Card */}
-                        <Link
-                            href={`/groups/${group.id}/members`}
-                            className="block bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:border-indigo-200 transition-all duration-200"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-2xl font-bold text-slate-900">{group.member_count}</p>
-                                    <p className="text-sm text-slate-500">Members</p>
-                                </div>
-                                <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </div>
-                        </Link>
-
-                        {/* Contact Organiser */}
-                        {canContactOrganiser && (
-                            <button
-                                onClick={() => setShowContactModal(true)}
-                                className="w-full px-4 py-2.5 border border-slate-200 bg-white text-slate-700 font-medium rounded-2xl hover:bg-slate-50 transition flex items-center justify-center gap-2"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
-                                Contact Admin
-                            </button>
-                        )}
-
-                        {/* Leave group - tucked away at bottom */}
-                        {membership?.status === 'active' && membership?.role !== 'organiser' && (
-                            <div className="text-center pt-4">
-                                <button
-                                    onClick={() => setShowLeaveModal(true)}
-                                    className="text-xs text-slate-400 hover:text-slate-700 transition"
+                            {/* Footer links */}
+                            <div className="border-t border-slate-100 px-5 py-3 flex items-center justify-between">
+                                <Link
+                                    href={`/groups/${group.id}/past-events`}
+                                    className="text-sm text-slate-400 hover:text-indigo-600 transition"
                                 >
-                                    Leave group
-                                </button>
+                                    Past events
+                                </Link>
+                                {membership?.status === 'active' && membership?.role !== 'organiser' && (
+                                    <button
+                                        onClick={() => setShowLeaveModal(true)}
+                                        className="text-sm text-slate-400 hover:text-slate-600 transition"
+                                    >
+                                        Leave group
+                                    </button>
+                                )}
                             </div>
-                        )}
+                        </div>
                     </aside>
                 </div>
             </div>
