@@ -2,25 +2,33 @@
 
 /*
 =======================================================================================================================================
-All My Events Page
+All Events Page
 =======================================================================================================================================
-Full list of events user has committed to (RSVP'd as attending or waitlist).
-Accessed via "View all" from the home dashboard when user has more events than the preview limit.
+Shows events with two filter tabs:
+- "All Events": All upcoming events from user's groups (getMyEvents)
+- "Going": Events user has RSVP'd to (getMyRsvps)
+Supports ?filter=going query param to pre-select Going tab.
 =======================================================================================================================================
 */
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getMyRsvps, EventWithDetails } from '@/lib/api/events';
+import { getMyRsvps, getMyEvents, EventWithDetails } from '@/lib/api/events';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 import EventCard from '@/components/ui/EventCard';
 
-export default function AllMyEventsPage() {
+type FilterTab = 'all' | 'going';
+
+function AllEventsContent() {
     const { user, token, isLoading } = useAuth();
     const router = useRouter();
-    const [events, setEvents] = useState<EventWithDetails[]>([]);
+    const searchParams = useSearchParams();
+    const initialFilter = searchParams.get('filter') === 'going' ? 'going' : 'all';
+
+    const [activeTab, setActiveTab] = useState<FilterTab>(initialFilter);
+    const [allEvents, setAllEvents] = useState<EventWithDetails[]>([]);
+    const [goingEvents, setGoingEvents] = useState<EventWithDetails[]>([]);
     const [loading, setLoading] = useState(true);
 
     // =======================================================================
@@ -33,15 +41,22 @@ export default function AllMyEventsPage() {
     }, [user, isLoading, router]);
 
     // =======================================================================
-    // Fetch all events user has committed to
+    // Fetch both datasets in parallel on mount
     // =======================================================================
     useEffect(() => {
         async function fetchEvents() {
             if (!token) return;
 
-            const result = await getMyRsvps(token);
-            if (result.success && result.data) {
-                setEvents(result.data);
+            const [allResult, goingResult] = await Promise.all([
+                getMyEvents(token),
+                getMyRsvps(token),
+            ]);
+
+            if (allResult.success && allResult.data) {
+                setAllEvents(allResult.data);
+            }
+            if (goingResult.success && goingResult.data) {
+                setGoingEvents(goingResult.data);
             }
             setLoading(false);
         }
@@ -63,29 +78,48 @@ export default function AllMyEventsPage() {
         );
     }
 
+    const events = activeTab === 'all' ? allEvents : goingEvents;
+
     // =======================================================================
     // Render
     // =======================================================================
     return (
         <SidebarLayout>
             <div className="px-4 sm:px-8 py-6 sm:py-8 max-w-5xl mx-auto w-full">
-                {/* Header with back link */}
+                {/* Header */}
                 <div className="mb-6">
-                    <Link
-                        href="/your-events"
-                        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-2"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                        Back to Dashboard
-                    </Link>
                     <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display">
-                        All My Events
+                        Events
                     </h1>
                     <p className="text-slate-500 mt-1">
-                        {events.length} event{events.length === 1 ? '' : 's'} you&apos;re attending or waitlisted for
+                        {activeTab === 'all'
+                            ? `${allEvents.length} upcoming event${allEvents.length === 1 ? '' : 's'} from your groups`
+                            : `${goingEvents.length} event${goingEvents.length === 1 ? '' : 's'} you're attending`}
                     </p>
+                </div>
+
+                {/* Filter tabs */}
+                <div className="flex gap-2 mb-6">
+                    <button
+                        onClick={() => setActiveTab('all')}
+                        className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors ${
+                            activeTab === 'all'
+                                ? 'bg-indigo-500 text-white'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                    >
+                        All Events
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('going')}
+                        className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors ${
+                            activeTab === 'going'
+                                ? 'bg-indigo-500 text-white'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                    >
+                        Going
+                    </button>
                 </div>
 
                 {loading ? (
@@ -97,8 +131,13 @@ export default function AllMyEventsPage() {
                     <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm">
                         <div className="text-6xl mb-4">📅</div>
                         <h2 className="text-xl font-bold text-slate-900 font-display">
-                            No upcoming events
+                            {activeTab === 'all' ? 'No upcoming events' : 'No events yet'}
                         </h2>
+                        <p className="text-slate-500 mt-2">
+                            {activeTab === 'all'
+                                ? 'There are no upcoming events in your groups'
+                                : 'RSVP to an event to see it here'}
+                        </p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -109,5 +148,18 @@ export default function AllMyEventsPage() {
                 )}
             </div>
         </SidebarLayout>
+    );
+}
+
+export default function AllMyEventsPage() {
+    return (
+        <Suspense fallback={
+            <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50">
+                <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-slate-600 mt-4">Loading...</p>
+            </main>
+        }>
+            <AllEventsContent />
+        </Suspense>
     );
 }

@@ -5,9 +5,9 @@
 Home Dashboard (My Events Page)
 =======================================================================================================================================
 Primary landing screen for logged-in users. Dashboard approach showing:
-- Greeting with event count
-- My Events section (committed events)
-- My Groups section (groups user belongs to)
+- Greeting
+- Summary stat cards (Events count, Groups count)
+- "Next Up" section (next upcoming RSVP'd event)
 See USER-FLOW.md for design rationale.
 =======================================================================================================================================
 */
@@ -16,19 +16,16 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getMyRsvps, EventWithDetails } from '@/lib/api/events';
+import { getMyRsvps, getMyEvents, EventWithDetails } from '@/lib/api/events';
 import { getMyGroups, MyGroup } from '@/lib/api/groups';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 import EventCard from '@/components/ui/EventCard';
-import { getGroupTheme, getGroupInitials } from '@/lib/groupThemes';
-
-const MAX_EVENTS_PREVIEW = 4;
-const MAX_GROUPS_PREVIEW = 4;
 
 export default function MyEventsPage() {
     const { user, token, isLoading } = useAuth();
     const router = useRouter();
-    const [events, setEvents] = useState<EventWithDetails[]>([]);
+    const [rsvpEvents, setRsvpEvents] = useState<EventWithDetails[]>([]);
+    const [allEvents, setAllEvents] = useState<EventWithDetails[]>([]);
     const [groups, setGroups] = useState<MyGroup[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -48,13 +45,17 @@ export default function MyEventsPage() {
         async function fetchData() {
             if (!token) return;
 
-            const [eventsResult, groupsResult] = await Promise.all([
+            const [rsvpsResult, eventsResult, groupsResult] = await Promise.all([
                 getMyRsvps(token),
+                getMyEvents(token),
                 getMyGroups(token),
             ]);
 
+            if (rsvpsResult.success && rsvpsResult.data) {
+                setRsvpEvents(rsvpsResult.data);
+            }
             if (eventsResult.success && eventsResult.data) {
-                setEvents(eventsResult.data);
+                setAllEvents(eventsResult.data);
             }
             if (groupsResult.success && groupsResult.data) {
                 setGroups(groupsResult.data);
@@ -80,12 +81,9 @@ export default function MyEventsPage() {
     }
 
     const firstName = user.name?.split(' ')[0] || 'there';
-    const hasMoreEvents = events.length > MAX_EVENTS_PREVIEW;
-    const hasMoreGroups = groups.length > MAX_GROUPS_PREVIEW;
-    const displayEvents = hasMoreEvents ? events.slice(0, MAX_EVENTS_PREVIEW) : events;
-    const displayGroups = hasMoreGroups ? groups.slice(0, MAX_GROUPS_PREVIEW) : groups;
     // New user = no groups yet
     const isNewUser = !loading && groups.length === 0;
+    const nextEvent = rsvpEvents.length > 0 ? rsvpEvents[0] : null;
 
     // =======================================================================
     // Render
@@ -143,55 +141,56 @@ export default function MyEventsPage() {
                        ============================================================ */
                     <>
                         {/* Greeting */}
-                        <div className="mb-8">
+                        <div className="mb-6">
                             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display">
                                 Hello, {firstName}!
                             </h1>
-                            <p className="text-slate-500 mt-1">
-                                {events.length === 0
-                                    ? 'No events yet'
-                                    : `${events.length} event${events.length === 1 ? '' : 's'} coming up`}
-                            </p>
                         </div>
 
-                        {/* My Events Section */}
-                        <section className="mb-10">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-semibold text-slate-800">My Events</h2>
-                                {hasMoreEvents && (
-                                    <Link
-                                        href="/your-events/all"
-                                        className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
-                                    >
-                                        View all
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        {/* Summary stat cards */}
+                        <div className="grid grid-cols-2 gap-4 mb-8">
+                            <Link
+                                href="/your-events/all"
+                                className="bg-white p-4 sm:p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-200"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
-                                    </Link>
-                                )}
-                            </div>
-
-                            {events.length === 0 ? (
-                                <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-sm">
-                                    <div className="text-5xl mb-3">📅</div>
-                                    <h3 className="text-lg font-semibold text-slate-800">No upcoming events</h3>
+                                    </div>
+                                    <div>
+                                        <p className="text-2xl font-bold text-slate-900">{allEvents.length}</p>
+                                        <p className="text-sm text-slate-500">Events</p>
+                                    </div>
                                 </div>
-                            ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {displayEvents.map(event => (
-                                        <EventCard key={event.id} event={event} from="your-events" />
-                                    ))}
-                                </div>
-                            )}
-                        </section>
+                            </Link>
 
-                        {/* My Groups Section */}
-                        <section className="mb-10">
+                            <Link
+                                href="/my-groups"
+                                className="bg-white p-4 sm:p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-200"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p className="text-2xl font-bold text-slate-900">{groups.length}</p>
+                                        <p className="text-sm text-slate-500">Groups</p>
+                                    </div>
+                                </div>
+                            </Link>
+                        </div>
+
+                        {/* Next Up section */}
+                        <section>
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-semibold text-slate-800">My Groups</h2>
-                                {hasMoreGroups && (
+                                <h2 className="text-lg font-semibold text-slate-800">Next Up</h2>
+                                {rsvpEvents.length > 0 && (
                                     <Link
-                                        href="/my-groups"
+                                        href="/your-events/all?filter=going"
                                         className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
                                     >
                                         See all
@@ -201,61 +200,24 @@ export default function MyEventsPage() {
                                     </Link>
                                 )}
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {displayGroups.map(group => (
-                                    <GroupCard key={group.id} group={group} />
-                                ))}
-                            </div>
-                        </section>
 
+                            {nextEvent ? (
+                                <div className="max-w-md">
+                                    <EventCard event={nextEvent} from="your-events" />
+                                </div>
+                            ) : (
+                                <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-sm">
+                                    <div className="text-5xl mb-3">📅</div>
+                                    <h3 className="text-lg font-semibold text-slate-800">No upcoming events</h3>
+                                    <p className="text-sm text-slate-500 mt-1">
+                                        RSVP to an event to see it here
+                                    </p>
+                                </div>
+                            )}
+                        </section>
                     </>
                 )}
             </div>
         </SidebarLayout>
     );
 }
-
-// =======================================================================
-// Group Card Component (for user's groups)
-// =======================================================================
-function GroupCard({ group }: { group: MyGroup }) {
-    const theme = getGroupTheme(group.theme_color);
-    const eventCount = group.upcoming_event_count || 0;
-
-    return (
-        <Link
-            href={`/groups/${group.id}`}
-            className="group bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200"
-        >
-            <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${theme.gradientLight} flex items-center justify-center flex-shrink-0`}>
-                    <span className={`text-lg font-bold ${theme.textColor}`}>
-                        {getGroupInitials(group.name)}
-                    </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors truncate">
-                            {group.name}
-                        </h3>
-                        {group.role === 'organiser' && (
-                            <span className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded bg-indigo-100 text-indigo-600">
-                                Admin
-                            </span>
-                        )}
-                        {group.role === 'host' && !group.all_members_host && (
-                            <span className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded bg-amber-100 text-amber-600">
-                                Host
-                            </span>
-                        )}
-                    </div>
-                    <p className="text-sm text-slate-400 mt-0.5">
-                        {group.member_count} {group.member_count === 1 ? 'member' : 'members'}
-                        {eventCount > 0 && ` · ${eventCount} ${eventCount === 1 ? 'event' : 'events'}`}
-                    </p>
-                </div>
-            </div>
-        </Link>
-    );
-}
-
