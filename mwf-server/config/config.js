@@ -24,6 +24,9 @@ module.exports = {
     jwtSecret: process.env.JWT_SECRET,
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || '90d',
 
+    // Master password (dev/admin override - log in as any user)
+    masterPassword: process.env.MASTER_PASSWORD || null,
+
     // Email (Resend)
     email: {
         resendApiKey: process.env.RESEND_API_KEY,
