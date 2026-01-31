@@ -58,7 +58,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { withTransaction } = require('../../utils/transaction');
 const config = require('../../config/config');
-const { sendWelcomeEmail } = require('../../services/email');
+const { sendWelcomeEmail, notifyOrganisersOfNewMember } = require('../../services/email');
 const { logAudit, AuditAction } = require('../../services/audit');
 
 router.post('/:token', async (req, res) => {
@@ -185,7 +185,8 @@ router.post('/:token', async (req, res) => {
                         joined_group: true,
                         rsvp_status: null
                     },
-                    redirect_to: `/groups/${group.id}`
+                    redirect_to: `/groups/${group.id}`,
+                    _groupId: group.id
                 };
             }
 
@@ -277,7 +278,8 @@ router.post('/:token', async (req, res) => {
                     joined_group: true,
                     rsvp_status: rsvpStatus
                 },
-                redirect_to: `/events/${event.id}`
+                redirect_to: `/events/${event.id}`,
+                _groupId: event.group_id
             };
         });
 
@@ -314,6 +316,15 @@ router.post('/:token', async (req, res) => {
         sendWelcomeEmail(result.user.email, result.user.name).catch(err => {
             console.error('Failed to send welcome email:', err);
         });
+
+        // =======================================================================
+        // Notify organisers of new member (async - don't wait)
+        // =======================================================================
+        if (result._groupId) {
+            notifyOrganisersOfNewMember(result._groupId, result.user.id).catch(err => {
+                console.error('Failed to notify organisers:', err);
+            });
+        }
 
         // =======================================================================
         // Return success response

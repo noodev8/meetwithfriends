@@ -32,6 +32,7 @@ const router = express.Router();
 const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
 const { sendJoinedGroupEmail } = require('../../services/email');
+const { logAudit, AuditAction } = require('../../services/audit');
 
 router.post('/:id/members/approve', verifyToken, async (req, res) => {
     try {
@@ -136,13 +137,25 @@ router.post('/:id/members/approve', verifyToken, async (req, res) => {
         const approvedUserId = membershipResult.rows[0].user_id;
 
         // =======================================================================
-        // Send email to the approved member
+        // Send email to the approved member and log audit
         // =======================================================================
         const userResult = await query('SELECT name, email FROM app_user WHERE id = $1', [approvedUserId]);
         if (userResult.rows.length > 0) {
             const user = userResult.rows[0];
             sendJoinedGroupEmail(user.email, user.name, group).catch(err => {
                 console.error('Failed to send joined group email:', err);
+            });
+
+            const organiserResult = await query('SELECT name FROM app_user WHERE id = $1', [userId]);
+            const organiserName = organiserResult.rows[0]?.name || null;
+
+            await logAudit({
+                action: AuditAction.MEMBER_APPROVED,
+                userId,
+                userName: organiserName,
+                targetUserId: approvedUserId,
+                targetUserName: user.name,
+                groupId: parseInt(id, 10)
             });
         }
 

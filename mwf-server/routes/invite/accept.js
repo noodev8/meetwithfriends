@@ -40,6 +40,7 @@ const express = require('express');
 const router = express.Router();
 const { withTransaction } = require('../../utils/transaction');
 const { verifyToken } = require('../../middleware/auth');
+const { notifyOrganisersOfNewMember } = require('../../services/email');
 
 router.post('/:token', verifyToken, async (req, res) => {
     try {
@@ -138,7 +139,8 @@ router.post('/:token', verifyToken, async (req, res) => {
                         joined_group: joinedGroup,
                         rsvp_status: null
                     },
-                    redirect_to: `/groups/${group.id}`
+                    redirect_to: `/groups/${group.id}`,
+                    _groupId: joinedGroup ? group.id : null
                 };
             }
 
@@ -273,9 +275,18 @@ router.post('/:token', verifyToken, async (req, res) => {
                     joined_group: joinedGroup,
                     rsvp_status: rsvpStatus
                 },
-                redirect_to: `/events/${event.id}`
+                redirect_to: `/events/${event.id}`,
+                _groupId: joinedGroup ? event.group_id : null
             };
         });
+
+        // Notify organisers if a new member joined via magic link
+        if (result._groupId) {
+            notifyOrganisersOfNewMember(result._groupId, userId).catch(err => {
+                console.error('Failed to notify organisers:', err);
+            });
+        }
+        delete result._groupId;
 
         return res.json(result);
 

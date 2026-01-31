@@ -1219,6 +1219,49 @@ async function queueNewCommentEmail(email, userName, event, group, commenterName
     });
 }
 
+/*
+=======================================================================================================================================
+notifyOrganisersOfNewMember
+=======================================================================================================================================
+Fetches organisers and sends sendNewMemberEmail to each. Used by magic link accept routes
+where the organiser notification is not part of the join flow.
+=======================================================================================================================================
+*/
+async function notifyOrganisersOfNewMember(groupId, userId) {
+    try {
+        const groupResult = await query('SELECT id, name FROM group_list WHERE id = $1', [groupId]);
+        if (groupResult.rows.length === 0) return;
+        const group = groupResult.rows[0];
+
+        const userResult = await query('SELECT name FROM app_user WHERE id = $1', [userId]);
+        const memberName = userResult.rows[0]?.name || 'A user';
+
+        const organisersResult = await query(
+            `SELECT u.email, u.name
+             FROM group_member gm
+             JOIN app_user u ON gm.user_id = u.id
+             WHERE gm.group_id = $1
+             AND gm.status = 'active'
+             AND gm.role = 'organiser'`,
+            [groupId]
+        );
+
+        const countResult = await query(
+            `SELECT COUNT(*) as count FROM group_member WHERE group_id = $1 AND status = 'active'`,
+            [groupId]
+        );
+        const totalMembers = parseInt(countResult.rows[0].count, 10);
+
+        organisersResult.rows.forEach(organiser => {
+            sendNewMemberEmail(organiser.email, organiser.name, memberName, group, totalMembers).catch(err => {
+                console.error('Failed to send new member email:', err);
+            });
+        });
+    } catch (err) {
+        console.error('Failed to notify organisers of new member:', err);
+    }
+}
+
 module.exports = {
     // Core functions
     sendEmail,
@@ -1238,6 +1281,7 @@ module.exports = {
     sendPasswordResetEmail,
     sendPromotedToHostEmail,
     sendNewMemberEmail,
+    notifyOrganisersOfNewMember,
     sendNewRsvpEmail,
     sendNewCommentEmail,
     sendContactOrganiserEmail,
