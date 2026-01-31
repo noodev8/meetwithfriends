@@ -236,13 +236,6 @@ async function processEmailQueue(limit = 50) {
 
             // Build comment_digest content at send time
             if (email.email_type === 'comment_digest' && email.event_id) {
-                // Find the recipient's user_id from their email
-                const recipientUser = await query(
-                    `SELECT id FROM app_user WHERE email = $1`,
-                    [email.recipient_email]
-                );
-                const recipientUserId = recipientUser.rows[0]?.id;
-
                 // Find the last sent_at for a comment_digest to this recipient for this event
                 const lastSent = await query(
                     `SELECT sent_at FROM email_queue
@@ -256,20 +249,17 @@ async function processEmailQueue(limit = 50) {
                 );
                 const bookmark = lastSent.rows.length > 0 ? lastSent.rows[0].sent_at : null;
 
-                // Query comments posted after the bookmark (or after digest creation if first digest)
+                // Query all comments posted after the bookmark (including recipient's own for context)
                 const since = bookmark || email.created_at;
-                const commentsQuery = `SELECT ec.content, u.name
+                const commentsResult = await query(
+                    `SELECT ec.content, u.name
                      FROM event_comment ec
                      JOIN app_user u ON ec.user_id = u.id
                      WHERE ec.event_id = $1
                      AND ec.created_at > $2
-                     ${recipientUserId ? 'AND ec.user_id != $3' : ''}
-                     ORDER BY ec.created_at ASC`;
-                const commentsParams = recipientUserId
-                    ? [email.event_id, since, recipientUserId]
-                    : [email.event_id, since];
-
-                const commentsResult = await query(commentsQuery, commentsParams);
+                     ORDER BY ec.created_at ASC`,
+                    [email.event_id, since]
+                );
 
                 if (commentsResult.rows.length === 0) {
                     await query(
