@@ -6,7 +6,7 @@ import '../services/events_service.dart';
 import '../services/comments_service.dart';
 import '../config/event_categories.dart';
 import '../widgets/bottom_nav_bar.dart';
-import '../widgets/invite_link_section.dart';
+import 'invite_link_screen.dart';
 import 'attendees_screen.dart';
 import 'edit_event_screen.dart';
 import 'manage_hosts_screen.dart';
@@ -36,7 +36,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   EventDetail? _event;
   RsvpStatus? _rsvp;
   List<EventHost> _hosts = [];
-  List<Attendee> _attendees = []; // Preview of attendees for avatar display
+
   bool _isGroupMember = false;
   bool _canEdit = false;
 
@@ -44,6 +44,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   List<Comment> _comments = [];
   int _commentCount = 0;
   bool _addingComment = false;
+  int _visibleCommentCount = 3;
   final TextEditingController _commentController = TextEditingController();
 
   // Description expand/collapse state
@@ -88,8 +89,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
     if (mounted) {
       if (result.success) {
-        // Also fetch attendees for avatar preview and comments
-        final attendeesResult = await _eventsService.getAttendees(widget.eventId);
+        // Also fetch comments for discussion section
         final commentsResult = await _commentsService.getComments(widget.eventId);
 
         setState(() {
@@ -99,9 +99,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           _hosts = result.hosts ?? [];
           _isGroupMember = result.isGroupMember;
           _canEdit = result.canEdit;
-          if (attendeesResult.success) {
-            _attendees = attendeesResult.attending;
-          }
           if (commentsResult.success) {
             _comments = commentsResult.comments;
             _commentCount = commentsResult.commentCount;
@@ -455,26 +452,24 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Hero Card
-                        _buildHeroCard(event, categoryConfig, dateFormat, timeFormat),
+                        _buildHeroCard(event, categoryConfig, timeFormat),
 
                         // Pre-Order Banner — prominent, right below hero (matches web)
                         if (_showPreOrder)
                           _buildPreOrderBanner(event, margin),
 
-                        // About Section
-                        if (event.description != null && event.description!.isNotEmpty)
-                          _buildAboutSection(event, margin),
-
-                        // Attendees Section
+                        // Attendees & Invite tiles (navigation actions together)
                         _buildAttendeesSection(event, margin),
+                        if (_canEdit && !event.isPast && !event.isCancelled)
+                          _buildInviteTile(event, margin),
 
                         // Discussion Section (for group members)
                         if (_isGroupMember)
                           _buildDiscussionSection(event, margin),
 
-                        // Invite People Section (hosts/organisers only)
-                        if (_canEdit && !event.isPast && !event.isCancelled)
-                          InviteLinkSection(type: 'event', id: event.id),
+                        // About Section
+                        if (event.description != null && event.description!.isNotEmpty)
+                          _buildAboutSection(event, margin),
 
                         // RSVP Section (inline, at bottom)
                         if (!event.isPast && !event.isCancelled)
@@ -496,7 +491,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   Widget _buildHeroCard(
     EventDetail event,
     CategoryConfig categoryConfig,
-    DateFormat dateFormat,
     DateFormat timeFormat,
   ) {
     final margin = _cardMargin(context);
@@ -596,130 +590,127 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
           ),
 
-          // Event Info
+          // Event Info — compact tile grid
           Padding(
-            padding: EdgeInsets.all(padding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: EdgeInsets.fromLTRB(padding, padding, padding, padding / 2),
+            child: Row(
               children: [
-                // Date & Time
-                Row(
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.calendar_today_outlined,
-                        size: 18,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        '${dateFormat.format(event.dateTime)} at ${timeFormat.format(event.dateTime)}',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF1E293B),
-                        ),
-                      ),
-                    ),
-                  ],
+                Expanded(
+                  child: _buildInfoTile(
+                    icon: Icons.calendar_today_outlined,
+                    label: DateFormat('EEE, d MMM').format(event.dateTime),
+                    sublabel: timeFormat.format(event.dateTime),
+                  ),
                 ),
-
-                // Location
                 if (event.location != null) ...[
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.location_on_outlined,
-                          size: 18,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          event.location!,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF1E293B),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-
-                // Manage Hosts button (hosts/organisers only, active events)
-                if (_canEdit && !event.isPast && !event.isCancelled) ...[
-                  const SizedBox(height: 12),
-                  GestureDetector(
-                    onTap: _navigateToManageHosts,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.people_outline_rounded,
-                            size: 18,
-                            color: Color(0xFF64748B),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _hosts.isNotEmpty
-                                ? 'Hosted by ${_hosts[0].name}${_hosts.length > 1 ? " +${_hosts.length - 1}" : ""}'
-                                : 'Manage Hosts',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF1E293B),
-                            ),
-                          ),
-                        ),
-                        const Text(
-                          'Manage',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF7C3AED),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(
-                          Icons.chevron_right_rounded,
-                          size: 18,
-                          color: Color(0xFF7C3AED),
-                        ),
-                      ],
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildInfoTile(
+                      icon: Icons.location_on_outlined,
+                      label: event.location!,
                     ),
                   ),
                 ],
-
               ],
             ),
           ),
+
+          // Manage Hosts row (hosts/organisers only, active events)
+          if (_canEdit && !event.isPast && !event.isCancelled)
+            Padding(
+              padding: EdgeInsets.fromLTRB(padding, padding / 2, padding, padding / 2),
+              child: GestureDetector(
+                onTap: _navigateToManageHosts,
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.people_outline_rounded,
+                        size: 16,
+                        color: Color(0xFF64748B),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _hosts.isNotEmpty
+                              ? 'Hosted by ${_hosts[0].name}${_hosts.length > 1 ? " +${_hosts.length - 1}" : ""}'
+                              : 'Manage Hosts',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ),
+                      const Text(
+                        'Manage',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF7C3AED),
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 16,
+                        color: Color(0xFF7C3AED),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+          SizedBox(height: padding / 2),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoTile({
+    required IconData icon,
+    required String label,
+    String? sublabel,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: const Color(0xFF94A3B8)),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1E293B),
+            ),
+          ),
+          if (sublabel != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              sublabel,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF64748B),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -820,416 +811,89 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   Widget _buildAttendeesSection(EventDetail event, double margin) {
-    final padding = _cardPadding(context);
-    final spotsText = event.capacity != null
-        ? event.isFull
-            ? (event.waitlistEnabled ? 'Waitlist open' : 'Event full')
-            : '${event.spotsRemaining} spots left'
-        : null;
     final dateFormat = DateFormat('EEE d MMM');
     final timeFormat = DateFormat('HH:mm');
 
+    // Build subtitle text
+    String subtitle;
+    Color subtitleColor = const Color(0xFF94A3B8);
+    if (!_isGroupMember) {
+      subtitle = 'Join group to see attendees';
+    } else if (event.attendeeCount == 0) {
+      subtitle = 'Be the first to RSVP!';
+    } else if (event.capacity != null && event.isFull) {
+      subtitle = '${event.attendeeCount} going · ${event.waitlistEnabled ? 'Waitlist open' : 'Event full'}';
+      subtitleColor = event.waitlistEnabled ? const Color(0xFFD97706) : const Color(0xFFEF4444);
+    } else if (event.capacity != null) {
+      subtitle = '${event.attendeeCount} going · ${event.spotsRemaining} spots left';
+    } else {
+      subtitle = '${event.attendeeCount} going';
+    }
+
     return Container(
-      margin: EdgeInsets.fromLTRB(margin, 0, margin, margin),
-      padding: EdgeInsets.all(padding),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header row
-          Row(
+      margin: EdgeInsets.fromLTRB(margin, 0, margin, 16),
+      child: GestureDetector(
+        onTap: _isGroupMember
+            ? () => _navigateToAttendees(event, dateFormat, timeFormat)
+            : null,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
             children: [
-              const Text(
-                'Attendees',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-              const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(10),
+                  color: const Color(0xFFF5F3FF),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(
-                  '${event.attendeeCount} going',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF64748B),
-                  ),
+                child: Icon(
+                  _isGroupMember ? Icons.people_rounded : Icons.lock_outline,
+                  size: 20,
+                  color: _isGroupMember
+                      ? const Color(0xFF7C3AED)
+                      : const Color(0xFF94A3B8),
                 ),
               ),
-              const Spacer(),
-              if (_isGroupMember)
-                GestureDetector(
-                  onTap: () => _navigateToAttendees(event, dateFormat, timeFormat),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF7C3AED).withAlpha(15),
-                      borderRadius: BorderRadius.circular(16),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Attendees',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E293B),
+                      ),
                     ),
-                    child: const Text(
-                      'See all',
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
                       style: TextStyle(
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF7C3AED),
+                        fontWeight: FontWeight.w500,
+                        color: subtitleColor,
                       ),
                     ),
-                  ),
-                ),
-            ],
-          ),
-
-          // Spots left indicator
-          if (spotsText != null) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(
-                  event.isFull
-                      ? (event.waitlistEnabled ? Icons.hourglass_empty : Icons.block)
-                      : Icons.event_seat_outlined,
-                  size: 14,
-                  color: event.isFull
-                      ? (event.waitlistEnabled ? const Color(0xFFD97706) : const Color(0xFFEF4444))
-                      : const Color(0xFF64748B),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  spotsText,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: event.isFull ? FontWeight.w600 : FontWeight.w400,
-                    color: event.isFull
-                        ? (event.waitlistEnabled ? const Color(0xFFD97706) : const Color(0xFFEF4444))
-                        : const Color(0xFF64748B),
-                  ),
-                ),
-              ],
-            ),
-          ],
-
-          const SizedBox(height: 16),
-
-          if (_isGroupMember && event.attendeeCount > 0)
-            // Dynamic avatar row based on available width
-            LayoutBuilder(
-              builder: (context, constraints) {
-                const avatarSize = 56.0;
-                const avatarSpacing = 12.0;
-                final availableWidth = constraints.maxWidth;
-                final maxAvatars = ((availableWidth + avatarSpacing) / (avatarSize + avatarSpacing)).floor().clamp(3, 8);
-
-                // Use actual attendees if we have them, otherwise fall back to hosts
-                final hasAttendees = _attendees.isNotEmpty;
-                final totalToShow = hasAttendees ? _attendees.length : _hosts.length;
-                final totalAttendees = event.attendeeCount;
-
-                // Determine how many avatars to show and whether we need "+N"
-                int avatarsToShow;
-                int remaining;
-                if (totalAttendees <= maxAvatars) {
-                  // Can show all - no +N needed
-                  avatarsToShow = totalToShow.clamp(0, maxAvatars);
-                  remaining = totalAttendees - avatarsToShow;
-                } else {
-                  // More attendees than slots - reserve 1 for +N
-                  avatarsToShow = (maxAvatars - 1).clamp(0, totalToShow);
-                  remaining = totalAttendees - avatarsToShow;
-                }
-
-                return Row(
-                  children: [
-                    if (hasAttendees)
-                      ..._attendees.take(avatarsToShow).map((attendee) => Padding(
-                            padding: const EdgeInsets.only(right: avatarSpacing),
-                            child: _buildAttendeeAvatarFromAttendee(attendee, avatarSize),
-                          ))
-                    else
-                      ..._hosts.take(avatarsToShow).map((host) => Padding(
-                            padding: const EdgeInsets.only(right: avatarSpacing),
-                            child: _buildAttendeeAvatar(host, avatarSize),
-                          )),
-                    if (remaining > 0)
-                      _buildMoreAvatars(remaining, avatarSize),
                   ],
-                );
-              },
-            )
-          else if (!_isGroupMember)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.lock_outline,
-                    size: 20,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'Join this group to see who\'s attending',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.celebration_outlined,
-                    size: 20,
-                    color: Color(0xFF7C3AED),
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    'Be the first to RSVP!',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF64748B),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAttendeeAvatar(EventHost host, double size) {
-    return GestureDetector(
-      onTap: () => _showHostAvatarPopup(host),
-      child: Column(
-        children: [
-          Stack(
-            children: [
-              Container(
-                width: size,
-                height: size,
-                decoration: BoxDecoration(
-                  gradient: host.avatarUrl == null
-                      ? const LinearGradient(
-                          colors: [Color(0xFFE0E7FF), Color(0xFFEDE9FE)],
-                        )
-                      : null,
-                  borderRadius: BorderRadius.circular(size / 2),
-                  image: host.avatarUrl != null
-                      ? DecorationImage(
-                          image: NetworkImage(host.avatarUrl!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: host.avatarUrl == null
-                    ? Center(
-                        child: Text(
-                          host.name.isNotEmpty
-                              ? host.name[0].toUpperCase()
-                              : '?',
-                          style: TextStyle(
-                            fontSize: size * 0.36,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF6366F1),
-                          ),
-                        ),
-                      )
-                    : null,
-              ),
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6366F1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text(
-                      'Host',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          SizedBox(
-            width: size + 4,
-            child: Text(
-              host.name.split(' ').first,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF1E293B),
-              ),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAttendeeAvatarFromAttendee(Attendee attendee, double size) {
-    // Check if this attendee is also a host
-    final isHost = _hosts.any((h) => h.userId == attendee.userId);
-
-    return GestureDetector(
-      onTap: () => _showAttendeeAvatarPopup(attendee),
-      child: Column(
-        children: [
-          Stack(
-            children: [
-              Container(
-                width: size,
-                height: size,
-                decoration: BoxDecoration(
-                  gradient: attendee.avatarUrl == null
-                      ? const LinearGradient(
-                          colors: [Color(0xFFE0E7FF), Color(0xFFEDE9FE)],
-                        )
-                      : null,
-                  borderRadius: BorderRadius.circular(size / 2),
-                  image: attendee.avatarUrl != null
-                      ? DecorationImage(
-                          image: NetworkImage(attendee.avatarUrl!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: attendee.avatarUrl == null
-                    ? Center(
-                        child: Text(
-                          attendee.name.isNotEmpty
-                              ? attendee.name[0].toUpperCase()
-                              : '?',
-                          style: TextStyle(
-                            fontSize: size * 0.36,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF6366F1),
-                          ),
-                        ),
-                      )
-                    : null,
-              ),
-              if (isHost)
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6366F1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        'Host',
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
+              if (_isGroupMember)
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Color(0xFF94A3B8),
                 ),
             ],
           ),
-          const SizedBox(height: 6),
-          SizedBox(
-            width: size + 4,
-            child: Text(
-              attendee.name.split(' ').first,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF1E293B),
-              ),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
+        ),
       ),
-    );
-  }
-
-  Widget _buildMoreAvatars(int count, double size) {
-    return Column(
-      children: [
-        Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(size / 2),
-          ),
-          child: Center(
-            child: Text(
-              '+$count',
-              style: TextStyle(
-                fontSize: size * 0.28,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF64748B),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'more',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF64748B),
-          ),
-        ),
-      ],
     );
   }
 
@@ -1530,17 +1194,82 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
-  Widget _buildRsvpSection(EventDetail event, double margin) {
-    final padding = _cardPadding(context);
-
+  Widget _buildInviteTile(EventDetail event, double margin) {
     return Container(
-      margin: EdgeInsets.fromLTRB(margin, 0, margin, margin),
-      padding: EdgeInsets.all(padding),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+      margin: EdgeInsets.fromLTRB(margin, 0, margin, 16),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => InviteLinkScreen(
+                type: 'event',
+                id: event.id,
+                name: event.title,
+              ),
+            ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F3FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.person_add_rounded,
+                  size: 20,
+                  color: Color(0xFF7C3AED),
+                ),
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Invite People',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Share a link to invite',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF94A3B8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: Color(0xFF94A3B8),
+              ),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _buildRsvpSection(EventDetail event, double margin) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(margin, 0, margin, margin),
       child: _buildRsvpContent(event),
     );
   }
@@ -1762,7 +1491,62 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             const SizedBox(height: 16),
             const Divider(height: 1, color: Color(0xFFE2E8F0)),
             const SizedBox(height: 16),
-            ..._comments.map((comment) => _buildCommentItem(comment)),
+            ..._comments
+                .take(_visibleCommentCount)
+                .map((comment) => _buildCommentItem(comment)),
+            if (_visibleCommentCount < _comments.length)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Center(
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        _visibleCommentCount = (_visibleCommentCount + 10)
+                            .clamp(0, _comments.length);
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      child: Text(
+                        'Show more comments (${_comments.length - _visibleCommentCount} remaining)',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF4F46E5),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (_visibleCommentCount > 3)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Center(
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        _visibleCommentCount = 3;
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      child: Text(
+                        'Show less',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF4F46E5),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ] else if (canComment) ...[
             const SizedBox(height: 16),
             Container(
@@ -1979,168 +1763,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
-  void _showHostAvatarPopup(EventHost host) {
-    final initial = host.name.isNotEmpty ? host.name[0].toUpperCase() : '?';
-
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Large avatar
-            Container(
-              width: 240,
-              height: 240,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(120),
-                gradient: host.avatarUrl == null
-                    ? const LinearGradient(
-                        colors: [Color(0xFFE0E7FF), Color(0xFFEDE9FE)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : null,
-                image: host.avatarUrl != null
-                    ? DecorationImage(
-                        image: NetworkImage(host.avatarUrl!),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(64),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: host.avatarUrl == null
-                  ? Center(
-                      child: Text(
-                        initial,
-                        style: const TextStyle(
-                          fontSize: 96,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF6366F1),
-                        ),
-                      ),
-                    )
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            // Name
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                host.name,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showAttendeeAvatarPopup(Attendee attendee) {
-    final initial = attendee.name.isNotEmpty ? attendee.name[0].toUpperCase() : '?';
-    final isHost = _hosts.any((h) => h.userId == attendee.userId);
-
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Large avatar
-            Container(
-              width: 240,
-              height: 240,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(120),
-                gradient: attendee.avatarUrl == null
-                    ? const LinearGradient(
-                        colors: [Color(0xFFE0E7FF), Color(0xFFEDE9FE)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : null,
-                image: attendee.avatarUrl != null
-                    ? DecorationImage(
-                        image: NetworkImage(attendee.avatarUrl!),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(64),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: attendee.avatarUrl == null
-                  ? Center(
-                      child: Text(
-                        initial,
-                        style: const TextStyle(
-                          fontSize: 96,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF6366F1),
-                        ),
-                      ),
-                    )
-                  : null,
-            ),
-            const SizedBox(height: 16),
-            // Name and role
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    attendee.name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1E293B),
-                    ),
-                  ),
-                  if (isHost) ...[
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Event Host',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF6366F1),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showCancelConfirmation() {
     showDialog(
