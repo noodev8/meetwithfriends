@@ -62,7 +62,8 @@ class _DiscoverGroupsScreenState extends State<DiscoverGroupsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFC),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF1E293B)),
@@ -77,6 +78,13 @@ class _DiscoverGroupsScreenState extends State<DiscoverGroupsScreen> {
           ),
         ),
         centerTitle: false,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            color: const Color(0xFFE2E8F0),
+            height: 1,
+          ),
+        ),
       ),
       body: SafeArea(
         child: _isLoading

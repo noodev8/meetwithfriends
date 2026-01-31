@@ -123,13 +123,13 @@ export default function GroupMembersPage() {
     };
 
     // =======================================================================
-    // Fetch members when filters change (only for active members)
+    // Fetch members when filters change
     // =======================================================================
     useEffect(() => {
-        if (group && membership?.status === 'active') {
+        if (group) {
             fetchMembers();
         }
-    }, [group, membership?.status, fetchMembers]);
+    }, [group, fetchMembers]);
 
     // =======================================================================
     // Handle search submit
@@ -225,33 +225,6 @@ export default function GroupMembersPage() {
                         className="text-indigo-600 hover:text-indigo-700 font-medium"
                     >
                         Back to groups
-                    </Link>
-                </div>
-            </SidebarLayout>
-        );
-    }
-
-    // =======================================================================
-    // Non-member state - users must be members to view the member list
-    // =======================================================================
-    if (membership?.status !== 'active') {
-        return (
-            <SidebarLayout>
-                <div className="flex-1 flex flex-col items-center justify-center p-8">
-                    <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                        <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                    </div>
-                    <h2 className="text-lg font-semibold text-slate-800 mb-2">Members Only</h2>
-                    <p className="text-slate-600 mb-6 text-center max-w-sm">
-                        Join the group to see who else is a member.
-                    </p>
-                    <Link
-                        href={`/groups/${group.id}`}
-                        className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl hover:from-indigo-600 hover:to-violet-700 transition font-medium"
-                    >
-                        Back to group
                     </Link>
                 </div>
             </SidebarLayout>
