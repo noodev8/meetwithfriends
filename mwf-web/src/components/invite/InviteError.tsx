@@ -23,15 +23,15 @@ const ERROR_CONFIG: Record<string, { title: string; message: string }> = {
     },
     INVITE_EXPIRED: {
         title: 'Invitation Expired',
-        message: 'This invitation link has expired. Please ask the organiser for a new link.',
+        message: 'This invitation link has expired. Please ask the admin for a new link.',
     },
     INVITE_DISABLED: {
         title: 'Invitation Disabled',
-        message: 'This invitation link has been disabled by the organiser.',
+        message: 'This invitation link has been disabled by the admin.',
     },
     INVITE_LIMIT_REACHED: {
         title: 'Invitation Limit Reached',
-        message: 'This invitation link has reached its maximum number of uses. Please ask the organiser for a new link.',
+        message: 'This invitation link has reached its maximum number of uses. Please ask the admin for a new link.',
     },
     EVENT_ENDED: {
         title: 'Event Has Ended',
@@ -49,7 +49,7 @@ const ERROR_CONFIG: Record<string, { title: string; message: string }> = {
 
 const DEFAULT_ERROR = {
     title: 'Something Went Wrong',
-    message: 'We couldn\'t process this invitation. Please try again or ask the organiser for a new link.',
+    message: 'We couldn\'t process this invitation. Please try again or ask the admin for a new link.',
 };
 
 export default function InviteError({ returnCode, groupId }: InviteErrorProps) {

@@ -568,7 +568,7 @@ export default function ProfilePage() {
                                 </label>
                             </div>
                             <p className="text-xs text-slate-400 mt-1 ml-6">
-                                Uncheck to stop receiving broadcast emails from group organisers
+                                Uncheck to stop receiving broadcast emails from group admins
                             </p>
                         </div>
 

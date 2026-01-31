@@ -12,6 +12,7 @@ class EditGroupScreen extends StatefulWidget {
   final String initialJoinPolicy;
   final String initialVisibility;
   final bool initialRequireProfileImage;
+  final bool initialAllMembersHost;
   final VoidCallback? onGroupUpdated;
 
   const EditGroupScreen({
@@ -23,6 +24,7 @@ class EditGroupScreen extends StatefulWidget {
     required this.initialJoinPolicy,
     required this.initialVisibility,
     this.initialRequireProfileImage = false,
+    this.initialAllMembersHost = false,
     this.onGroupUpdated,
   });
 
@@ -41,6 +43,7 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
   late String _joinPolicy;
   late String _visibility;
   late bool _requireProfileImage;
+  late bool _allMembersHost;
 
   bool _isSubmitting = false;
   String? _error;
@@ -63,6 +66,7 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
     _joinPolicy = widget.initialJoinPolicy;
     _visibility = widget.initialVisibility;
     _requireProfileImage = widget.initialRequireProfileImage;
+    _allMembersHost = widget.initialAllMembersHost;
   }
 
   /// Strip HTML tags from description using proper HTML parser
@@ -97,6 +101,7 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
       joinPolicy: _joinPolicy,
       visibility: _visibility,
       requireProfileImage: _requireProfileImage,
+      allMembersHost: _allMembersHost,
     );
 
     if (!mounted) return;
@@ -278,7 +283,7 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
                             groupValue: _joinPolicy,
                             onChanged: (v) => setState(() => _joinPolicy = v!),
                             title: 'Require Approval',
-                            subtitle: 'New members must be approved by an organiser',
+                            subtitle: 'New members must be approved by an admin',
                           ),
                           const SizedBox(height: 8),
                           _buildRadioOption(
@@ -368,6 +373,56 @@ class _EditGroupScreenState extends State<EditGroupScreen> {
                             Switch(
                               value: _requireProfileImage,
                               onChanged: (value) => setState(() => _requireProfileImage = value),
+                              activeTrackColor: const Color(0xFF7C3AED).withValues(alpha: 0.5),
+                              activeThumbColor: const Color(0xFF7C3AED),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // All Members Are Hosts card
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: GestureDetector(
+                        onTap: () => setState(() => _allMembersHost = !_allMembersHost),
+                        behavior: HitTestBehavior.opaque,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'All Members Are Hosts',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF1E293B),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'Every member automatically gets host permissions and can create events',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Switch(
+                              value: _allMembersHost,
+                              onChanged: (value) => setState(() => _allMembersHost = value),
                               activeTrackColor: const Color(0xFF7C3AED).withValues(alpha: 0.5),
                               activeThumbColor: const Color(0xFF7C3AED),
                             ),

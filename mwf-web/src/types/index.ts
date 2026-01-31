@@ -31,6 +31,7 @@ export interface Group {
     theme_color?: 'indigo' | 'emerald' | 'rose' | 'amber' | 'cyan' | 'violet';
     icon?: string;
     require_profile_image?: boolean;
+    all_members_host?: boolean;
     created_at: string;
 }
 

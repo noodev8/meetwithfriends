@@ -107,6 +107,7 @@ class GroupsService {
     String? joinPolicy,
     String? visibility,
     bool? requireProfileImage,
+    bool? allMembersHost,
   }) async {
     final Map<String, dynamic> payload = {};
     if (name != null) payload['name'] = name;
@@ -115,6 +116,7 @@ class GroupsService {
     if (joinPolicy != null) payload['join_policy'] = joinPolicy;
     if (visibility != null) payload['visibility'] = visibility;
     if (requireProfileImage != null) payload['require_profile_image'] = requireProfileImage;
+    if (allMembersHost != null) payload['all_members_host'] = allMembersHost;
 
     final response = await _api.post('/groups/$groupId/update', payload);
 
@@ -537,6 +539,7 @@ class GroupDetail {
   final String? themeColor;
   final String? icon;
   final bool requireProfileImage;
+  final bool allMembersHost;
   final String? inviteCode;
   final int memberCount;
   final DateTime createdAt;
@@ -552,6 +555,7 @@ class GroupDetail {
     this.themeColor,
     this.icon,
     this.requireProfileImage = false,
+    this.allMembersHost = false,
     this.inviteCode,
     required this.memberCount,
     required this.createdAt,
@@ -569,6 +573,7 @@ class GroupDetail {
       themeColor: json['theme_color'] as String?,
       icon: json['icon'] as String?,
       requireProfileImage: json['require_profile_image'] as bool? ?? false,
+      allMembersHost: json['all_members_host'] as bool? ?? false,
       inviteCode: json['invite_code'] as String?,
       memberCount: int.tryParse(json['member_count']?.toString() ?? '0') ?? 0,
       createdAt: DateTime.parse(json['created_at'] as String),

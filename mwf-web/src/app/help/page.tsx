@@ -22,15 +22,15 @@ interface FAQItem {
 const faqs: FAQItem[] = [
     {
         question: 'How do I create a group?',
-        answer: 'Click "Create a Group" from the dashboard or navigation menu. Fill in your group name, description, and choose whether it\'s public or requires approval to join. You\'ll automatically become the organiser.',
+        answer: 'Click "Create a Group" from the dashboard or navigation menu. Fill in your group name, description, and choose whether it\'s public or requires approval to join. You\'ll automatically become the admin.',
     },
     {
-        question: 'What\'s the difference between an Organiser and a Host?',
-        answer: 'The Organiser owns the group and has full control - they can edit group settings, manage members, and delete the group. Hosts can create and manage events but cannot change group settings or remove other hosts.',
+        question: 'What\'s the difference between an Admin and a Host?',
+        answer: 'The Admin owns the group and has full control - they can edit group settings, manage members, and delete the group. Hosts can create and manage events but cannot change group settings or remove other hosts.',
     },
     {
         question: 'How do I create an event?',
-        answer: 'Go to your group page and click "Create Event". You\'ll need to be an Organiser or Host of the group. Set the title, date, location, and optionally add a capacity limit, featured image, or enable pre-orders.',
+        answer: 'Go to your group page and click "Create Event". You\'ll need to be an Admin or Host of the group. Set the title, date, location, and optionally add a capacity limit, featured image, or enable pre-orders.',
     },
     {
         question: 'What happens when an event is full?',
@@ -42,7 +42,7 @@ const faqs: FAQItem[] = [
     },
     {
         question: 'How do I leave a group?',
-        answer: 'Go to the group page and scroll to the bottom of the sidebar. Click "Leave group" and confirm. Note: Organisers cannot leave their own group - they would need to transfer ownership or delete the group.',
+        answer: 'Go to the group page and scroll to the bottom of the sidebar. Click "Leave group" and confirm. Note: Admins cannot leave their own group - they would need to transfer ownership or delete the group.',
     },
     {
         question: 'Can I cancel my RSVP?',

@@ -53,10 +53,8 @@ class _DiscoverGroupsScreenState extends State<DiscoverGroupsScreen> {
     }
   }
 
-  void _onGroupJoined(int groupId) {
-    setState(() {
-      _groups.removeWhere((g) => g.id == groupId);
-    });
+  void _onReturnFromGroup() {
+    _loadGroups();
   }
 
   @override
@@ -101,7 +99,7 @@ class _DiscoverGroupsScreenState extends State<DiscoverGroupsScreen> {
                             final group = _groups[index];
                             return _DiscoverGroupCard(
                               group: group,
-                              onJoined: () => _onGroupJoined(group.id),
+                              onJoined: _onReturnFromGroup,
                             );
                           },
                         ),
@@ -193,68 +191,28 @@ class _DiscoverGroupsScreenState extends State<DiscoverGroupsScreen> {
   }
 }
 
-class _DiscoverGroupCard extends StatefulWidget {
+class _DiscoverGroupCard extends StatelessWidget {
   final Group group;
   final VoidCallback? onJoined;
 
   const _DiscoverGroupCard({required this.group, this.onJoined});
 
-  @override
-  State<_DiscoverGroupCard> createState() => _DiscoverGroupCardState();
-}
-
-class _DiscoverGroupCardState extends State<_DiscoverGroupCard> {
-  final GroupsService _groupsService = GroupsService();
-  bool _isJoining = false;
-
-  Future<void> _joinGroup() async {
-    setState(() => _isJoining = true);
-
-    final result = await _groupsService.joinGroup(widget.group.id);
-
-    if (!mounted) return;
-
-    setState(() => _isJoining = false);
-
-    if (result.success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            result.isPending
-                ? 'Request sent! Waiting for approval.'
-                : 'Welcome to ${widget.group.name}!',
-          ),
-          backgroundColor: result.isPending
-              ? const Color(0xFFF59E0B)
-              : const Color(0xFF10B981),
+  void _viewGroup(BuildContext context) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => GroupDashboardScreen(
+          groupId: group.id,
+          backLabel: 'Discover',
         ),
-      );
-
-      widget.onJoined?.call();
-
-      if (result.isActive) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => GroupDashboardScreen(
-              groupId: widget.group.id,
-              backLabel: 'Discover',
-            ),
-          ),
-        );
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.error ?? 'Failed to join group'),
-          backgroundColor: const Color(0xFFEF4444),
-        ),
-      );
-    }
+      ),
+    );
+    // Refresh discover list when returning (user may have joined from dashboard)
+    onJoined?.call();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = getGroupTheme(widget.group.themeColor);
+    final theme = getGroupTheme(group.themeColor);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -284,7 +242,7 @@ class _DiscoverGroupCardState extends State<_DiscoverGroupCard> {
               ),
               child: Center(
                 child: Text(
-                  getGroupInitials(widget.group.name),
+                  getGroupInitials(group.name),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -302,7 +260,7 @@ class _DiscoverGroupCardState extends State<_DiscoverGroupCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.group.name,
+                    group.name,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -320,13 +278,13 @@ class _DiscoverGroupCardState extends State<_DiscoverGroupCard> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${widget.group.memberCount} members',
+                        '${group.memberCount} members',
                         style: const TextStyle(
                           fontSize: 13,
                           color: Color(0xFF64748B),
                         ),
                       ),
-                      if (widget.group.upcomingEventCount > 0) ...[
+                      if (group.upcomingEventCount > 0) ...[
                         const SizedBox(width: 12),
                         const Icon(
                           Icons.event_rounded,
@@ -335,7 +293,7 @@ class _DiscoverGroupCardState extends State<_DiscoverGroupCard> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${widget.group.upcomingEventCount} upcoming',
+                          '${group.upcomingEventCount} upcoming',
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -351,11 +309,11 @@ class _DiscoverGroupCardState extends State<_DiscoverGroupCard> {
 
             const SizedBox(width: 12),
 
-            // Join button
+            // Enter button
             SizedBox(
               height: 36,
               child: ElevatedButton(
-                onPressed: _isJoining ? null : _joinGroup,
+                onPressed: () => _viewGroup(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF6366F1),
                   foregroundColor: Colors.white,
@@ -365,22 +323,13 @@ class _DiscoverGroupCardState extends State<_DiscoverGroupCard> {
                     borderRadius: BorderRadius.circular(18),
                   ),
                 ),
-                child: _isJoining
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : const Text(
-                        'Enter',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                child: const Text(
+                  'Enter',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ],

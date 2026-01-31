@@ -36,6 +36,7 @@ class _GroupMembersScreenState extends State<GroupMembersScreen> {
 
   // For member management
   GroupMembership? _membership;
+  GroupDetail? _groupDetail;
   int? _currentUserId;
   int? _processingMemberId;
 
@@ -66,7 +67,10 @@ class _GroupMembersScreenState extends State<GroupMembersScreen> {
     // Load group to get membership info
     final groupResult = await _groupsService.getGroup(widget.groupId);
     if (mounted && groupResult.success) {
-      setState(() => _membership = groupResult.membership);
+      setState(() {
+        _membership = groupResult.membership;
+        _groupDetail = groupResult.group;
+      });
     }
 
     // Load members
@@ -785,7 +789,7 @@ class _GroupMembersScreenState extends State<GroupMembersScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Text(
-                          'Organiser',
+                          'Admin',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -793,7 +797,7 @@ class _GroupMembersScreenState extends State<GroupMembersScreen> {
                           ),
                         ),
                       ),
-                    ] else if (member.isHost) ...[
+                    ] else if (member.isHost && !(_groupDetail?.allMembersHost ?? false)) ...[
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(

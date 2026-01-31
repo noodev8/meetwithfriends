@@ -35,6 +35,7 @@ export default function EditGroupPage() {
     const [joinPolicy, setJoinPolicy] = useState<'auto' | 'approval'>('approval');
     const [visibility, setVisibility] = useState<'listed' | 'unlisted'>('listed');
     const [requireProfileImage, setRequireProfileImage] = useState(false);
+    const [allMembersHost, setAllMembersHost] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isOrganiser, setIsOrganiser] = useState(false);
@@ -74,6 +75,7 @@ export default function EditGroupPage() {
                 setJoinPolicy(groupData.join_policy as 'auto' | 'approval');
                 setVisibility(groupData.visibility || 'listed');
                 setRequireProfileImage(groupData.require_profile_image || false);
+                setAllMembersHost(groupData.all_members_host || false);
             } else {
                 setError(result.error || 'Group not found');
             }
@@ -138,6 +140,7 @@ export default function EditGroupPage() {
             join_policy: joinPolicy,
             visibility: visibility,
             require_profile_image: requireProfileImage,
+            all_members_host: allMembersHost,
         });
 
         if (result.success) {
@@ -289,7 +292,7 @@ export default function EditGroupPage() {
                                         />
                                         <div>
                                             <p className="font-medium text-slate-800">Require Approval</p>
-                                            <p className="text-sm text-slate-500">New members must be approved by an organiser</p>
+                                            <p className="text-sm text-slate-500">New members must be approved by an admin</p>
                                         </div>
                                     </label>
                                     <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition">
@@ -356,6 +359,21 @@ export default function EditGroupPage() {
                                     <div>
                                         <p className="font-medium text-slate-800">Require Profile Image</p>
                                         <p className="text-sm text-slate-500">Members must have a profile photo before they can join</p>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div className="mb-6">
+                                <label className="flex items-start gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition">
+                                    <input
+                                        type="checkbox"
+                                        checked={allMembersHost}
+                                        onChange={(e) => setAllMembersHost(e.target.checked)}
+                                        className="mt-0.5 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded"
+                                    />
+                                    <div>
+                                        <p className="font-medium text-slate-800">All Members Are Hosts</p>
+                                        <p className="text-sm text-slate-500">Every member automatically gets host permissions and can create events</p>
                                     </div>
                                 </label>
                             </div>

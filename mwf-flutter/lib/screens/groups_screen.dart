@@ -346,7 +346,7 @@ class _GroupDetailCard extends StatelessWidget {
 
   GroupTheme get _theme => getGroupTheme(group.themeColor);
 
-  bool get _isLeader => group.role.toLowerCase() == 'organiser' || group.role.toLowerCase() == 'host';
+  bool get _isLeader => group.role.toLowerCase() == 'organiser' || (group.role.toLowerCase() == 'host' && !group.allMembersHost);
 
   @override
   Widget build(BuildContext context) {
@@ -410,7 +410,7 @@ class _GroupDetailCard extends StatelessWidget {
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
-                    // Role badge - only for organiser/host
+                    // Role badge - only for admin/host
                     if (_isLeader) ...[
                       const SizedBox(height: 4),
                       Container(
@@ -423,7 +423,7 @@ class _GroupDetailCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          group.role.toUpperCase(),
+                          group.role.toLowerCase() == 'organiser' ? 'ADMIN' : group.role.toUpperCase(),
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,

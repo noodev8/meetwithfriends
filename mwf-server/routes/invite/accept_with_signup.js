@@ -131,7 +131,7 @@ router.post('/:token', async (req, res) => {
             // ===================================================================
             const groupResult = await client.query(
                 `SELECT
-                    g.id, g.name, g.require_profile_image,
+                    g.id, g.name, g.require_profile_image, g.all_members_host,
                     g.magic_link_token, g.magic_link_expires_at, g.magic_link_active,
                     g.magic_link_use_count, g.magic_link_max_uses
                  FROM group_list g
@@ -166,10 +166,11 @@ router.post('/:token', async (req, res) => {
                 const user = await createUser(client, { name, email, password, avatar_url });
 
                 // Join group
+                const groupRole = group.all_members_host ? 'host' : 'member';
                 await client.query(
                     `INSERT INTO group_member (group_id, user_id, role, status)
-                     VALUES ($1, $2, 'member', 'active')`,
-                    [group.id, user.id]
+                     VALUES ($1, $2, $3, 'active')`,
+                    [group.id, user.id, groupRole]
                 );
 
                 // Increment use count
@@ -198,7 +199,7 @@ router.post('/:token', async (req, res) => {
                     e.id, e.title, e.date_time, e.status, e.capacity, e.group_id,
                     e.magic_link_token, e.magic_link_expires_at, e.magic_link_active,
                     e.magic_link_use_count, e.magic_link_max_uses,
-                    g.require_profile_image
+                    g.require_profile_image, g.all_members_host
                  FROM event_list e
                  JOIN group_list g ON e.group_id = g.id
                  WHERE e.magic_link_token = $1
@@ -256,10 +257,11 @@ router.post('/:token', async (req, res) => {
             const user = await createUser(client, { name, email, password, avatar_url });
 
             // Join group
+            const eventGroupRole = event.all_members_host ? 'host' : 'member';
             await client.query(
                 `INSERT INTO group_member (group_id, user_id, role, status)
-                 VALUES ($1, $2, 'member', 'active')`,
-                [event.group_id, user.id]
+                 VALUES ($1, $2, $3, 'active')`,
+                [event.group_id, user.id, eventGroupRole]
             );
 
             // RSVP to event

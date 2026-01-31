@@ -13,7 +13,8 @@ Request Payload:
   "image_position": "top",               // string, optional ("top", "center", "bottom")
   "join_policy": "auto",                 // string, optional ("auto" or "approval")
   "visibility": "listed",                // string, optional ("listed" or "unlisted")
-  "require_profile_image": true          // boolean, optional
+  "require_profile_image": true,         // boolean, optional
+  "all_members_host": true               // boolean, optional - when enabled, all members get host role
 }
 
 Success Response:
@@ -52,7 +53,7 @@ const { verifyToken } = require('../../middleware/auth');
 router.post('/:id/update', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, description, image_url, image_position, join_policy, visibility, theme_color, icon, require_profile_image } = req.body;
+        const { name, description, image_url, image_position, join_policy, visibility, theme_color, icon, require_profile_image, all_members_host } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -69,7 +70,7 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         // Check if group exists
         // =======================================================================
         const groupResult = await query(
-            'SELECT id, name, description, image_url, image_position, join_policy, visibility, theme_color, icon, require_profile_image FROM group_list WHERE id = $1',
+            'SELECT id, name, description, image_url, image_position, join_policy, visibility, theme_color, icon, require_profile_image, all_members_host FROM group_list WHERE id = $1',
             [id]
         );
 
@@ -181,19 +182,39 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         const finalImagePosition = image_position !== undefined ? image_position : currentGroup.image_position;
         const finalIcon = icon !== undefined ? icon : currentGroup.icon;
         const finalRequireProfileImage = require_profile_image !== undefined ? require_profile_image === true : currentGroup.require_profile_image;
+        const finalAllMembersHost = all_members_host !== undefined ? all_members_host === true : currentGroup.all_members_host;
 
         // =======================================================================
         // Update the group
         // =======================================================================
         const updateResult = await query(
             `UPDATE group_list
-             SET name = $1, description = $2, image_url = $3, image_position = $4, join_policy = $5, visibility = $6, theme_color = $7, icon = $8, require_profile_image = $9, updated_at = CURRENT_TIMESTAMP
-             WHERE id = $10
-             RETURNING id, name, description, image_url, image_position, join_policy, visibility, theme_color, icon, require_profile_image, created_at, updated_at`,
-            [finalName.trim(), finalDescription, finalImageUrl, finalImagePosition, finalJoinPolicy, finalVisibility, finalThemeColor || 'indigo', finalIcon, finalRequireProfileImage, id]
+             SET name = $1, description = $2, image_url = $3, image_position = $4, join_policy = $5, visibility = $6, theme_color = $7, icon = $8, require_profile_image = $9, all_members_host = $10, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $11
+             RETURNING id, name, description, image_url, image_position, join_policy, visibility, theme_color, icon, require_profile_image, all_members_host, created_at, updated_at`,
+            [finalName.trim(), finalDescription, finalImageUrl, finalImagePosition, finalJoinPolicy, finalVisibility, finalThemeColor || 'indigo', finalIcon, finalRequireProfileImage, finalAllMembersHost, id]
         );
 
         const updatedGroup = updateResult.rows[0];
+
+        // =======================================================================
+        // Bulk role update when all_members_host setting changes
+        // - ON:  promote all active members to host (organiser is never touched)
+        // - OFF: demote all active hosts back to member (organiser is never touched)
+        // =======================================================================
+        if (finalAllMembersHost !== currentGroup.all_members_host) {
+            if (finalAllMembersHost) {
+                await query(
+                    `UPDATE group_member SET role = 'host' WHERE group_id = $1 AND status = 'active' AND role = 'member'`,
+                    [id]
+                );
+            } else {
+                await query(
+                    `UPDATE group_member SET role = 'member' WHERE group_id = $1 AND status = 'active' AND role = 'host'`,
+                    [id]
+                );
+            }
+        }
 
         // =======================================================================
         // Return success response

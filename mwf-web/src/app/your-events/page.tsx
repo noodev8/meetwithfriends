@@ -238,13 +238,14 @@ function GroupCard({ group }: { group: MyGroup }) {
                         <h3 className="font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors truncate">
                             {group.name}
                         </h3>
-                        {(group.role === 'organiser' || group.role === 'host') && (
-                            <span className={`flex-shrink-0 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded ${
-                                group.role === 'organiser'
-                                    ? 'bg-indigo-100 text-indigo-600'
-                                    : 'bg-amber-100 text-amber-600'
-                            }`}>
-                                {group.role === 'organiser' ? 'Organiser' : 'Host'}
+                        {group.role === 'organiser' && (
+                            <span className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded bg-indigo-100 text-indigo-600">
+                                Admin
+                            </span>
+                        )}
+                        {group.role === 'host' && !group.all_members_host && (
+                            <span className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded bg-amber-100 text-amber-600">
+                                Host
                             </span>
                         )}
                     </div>

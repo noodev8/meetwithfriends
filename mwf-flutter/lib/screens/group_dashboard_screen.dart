@@ -873,7 +873,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                 ),
                 SizedBox(height: 2),
                 Text(
-                  'Waiting for organiser approval',
+                  'Waiting for admin approval',
                   style: TextStyle(
                     fontSize: 12,
                     color: Color(0xFFB45309),
@@ -894,9 +894,9 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
   ) {
     final membership = _membership;
     final roleLabel = membership?.isOrganiser == true
-        ? 'Organiser'
+        ? 'Admin'
         : membership?.role == 'host'
-            ? 'Host'
+            ? (group.allMembersHost ? 'Member' : 'Host')
             : membership?.isActive == true
                 ? 'Member'
                 : null;
@@ -1060,6 +1060,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                             initialJoinPolicy: _group!.joinPolicy,
                             initialVisibility: _group!.visibility,
                             initialRequireProfileImage: _group!.requireProfileImage,
+                            initialAllMembersHost: _group!.allMembersHost,
                             onGroupUpdated: _loadGroup,
                           ),
                         ),
@@ -1109,7 +1110,7 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
     final buttonText = isOpenGroup ? 'Join Group' : 'Request to Join';
     final subtitleText = isOpenGroup
         ? 'Anyone can join this group'
-        : 'Your request will be reviewed by an organiser';
+        : 'Your request will be reviewed by an admin';
 
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),

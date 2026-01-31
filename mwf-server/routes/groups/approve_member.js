@@ -64,7 +64,7 @@ router.post('/:id/members/approve', verifyToken, async (req, res) => {
         // Check if group exists
         // =======================================================================
         const groupResult = await query(
-            'SELECT id, name FROM group_list WHERE id = $1',
+            'SELECT id, name, all_members_host FROM group_list WHERE id = $1',
             [id]
         );
 
@@ -127,11 +127,19 @@ router.post('/:id/members/approve', verifyToken, async (req, res) => {
         // =======================================================================
         // Approve the member by updating status to active
         // =======================================================================
-        await query(
-            `UPDATE group_member SET status = 'active', joined_at = CURRENT_TIMESTAMP
-             WHERE id = $1`,
-            [membership_id]
-        );
+        if (group.all_members_host) {
+            await query(
+                `UPDATE group_member SET status = 'active', role = 'host', joined_at = CURRENT_TIMESTAMP
+                 WHERE id = $1`,
+                [membership_id]
+            );
+        } else {
+            await query(
+                `UPDATE group_member SET status = 'active', joined_at = CURRENT_TIMESTAMP
+                 WHERE id = $1`,
+                [membership_id]
+            );
+        }
 
         const group = groupResult.rows[0];
         const approvedUserId = membershipResult.rows[0].user_id;

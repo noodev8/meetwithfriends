@@ -627,7 +627,7 @@ export default function GroupDetailPage() {
                                             </svg>
                                         </div>
                                         <p className="font-semibold text-slate-800">Request Pending</p>
-                                        <p className="text-sm text-slate-500 mt-1">Waiting for organiser approval</p>
+                                        <p className="text-sm text-slate-500 mt-1">Waiting for admin approval</p>
                                     </div>
                                 ) : (
                                     <div className="text-center">
@@ -637,7 +637,7 @@ export default function GroupDetailPage() {
                                             </svg>
                                         </div>
                                         <p className="font-semibold text-slate-800">
-                                            {membership.role === 'organiser' ? 'Organiser' : membership.role === 'host' ? 'Host' : 'Member'}
+                                            {membership.role === 'organiser' ? 'Admin' : (membership.role === 'host' && group.all_members_host) ? 'Member' : membership.role === 'host' ? 'Host' : 'Member'}
                                         </p>
                                         <p className="text-sm text-slate-500 mt-1">You're part of this group</p>
                                     </div>
@@ -656,7 +656,7 @@ export default function GroupDetailPage() {
                         {/* Organiser Card */}
                         {organiser && (
                             <div className="bg-white rounded-2xl border border-slate-200 p-5">
-                                <h3 className="font-display font-semibold text-slate-800 mb-3">Organiser</h3>
+                                <h3 className="font-display font-semibold text-slate-800 mb-3">Admin</h3>
                                 <div className="flex items-center gap-3">
                                     {organiser.avatar_url ? (
                                         <div className="relative w-12 h-12">
@@ -676,7 +676,7 @@ export default function GroupDetailPage() {
                                     )}
                                     <div className="flex-1">
                                         <p className="font-medium text-slate-800">{organiser.name}</p>
-                                        <p className="text-sm text-slate-500">Group organiser</p>
+                                        <p className="text-sm text-slate-500">Group admin</p>
                                     </div>
                                 </div>
                                 {canContactOrganiser && (
@@ -828,7 +828,7 @@ export default function GroupDetailPage() {
 
                         <form onSubmit={handleContactOrganiser} className="p-6 space-y-5">
                                 <p className="text-sm text-slate-600">
-                                    Send a message to the group organiser. They will receive it via email and can reply directly to you.
+                                    Send a message to the group admin. They will receive it via email and can reply directly to you.
                                 </p>
 
                                 {/* Show sender's email so they know it will be shared */}

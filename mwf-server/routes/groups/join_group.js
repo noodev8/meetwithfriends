@@ -65,7 +65,7 @@ router.post('/', verifyToken, async (req, res) => {
         // Check if group exists and get join_policy, visibility, invite_code
         // =======================================================================
         const groupResult = await query(
-            'SELECT id, name, join_policy, visibility, invite_code, require_profile_image FROM group_list WHERE id = $1',
+            'SELECT id, name, join_policy, visibility, invite_code, require_profile_image, all_members_host FROM group_list WHERE id = $1',
             [group_id]
         );
 
@@ -140,11 +140,12 @@ router.post('/', verifyToken, async (req, res) => {
         // Add user to group based on join_policy
         // =======================================================================
         const newStatus = group.join_policy === 'auto' ? 'active' : 'pending';
+        const newRole = (group.all_members_host && newStatus === 'active') ? 'host' : 'member';
 
         await query(
             `INSERT INTO group_member (group_id, user_id, role, status)
-             VALUES ($1, $2, 'member', $3)`,
-            [group_id, userId, newStatus]
+             VALUES ($1, $2, $3, $4)`,
+            [group_id, userId, newRole, newStatus]
         );
 
         // =======================================================================

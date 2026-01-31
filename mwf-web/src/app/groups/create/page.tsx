@@ -218,7 +218,7 @@ export default function CreateGroupPage() {
                                         />
                                         <div>
                                             <p className="font-medium text-slate-800">Require Approval</p>
-                                            <p className="text-sm text-slate-500">New members must be approved by an organiser</p>
+                                            <p className="text-sm text-slate-500">New members must be approved by an admin</p>
                                         </div>
                                     </label>
                                     <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100 transition">

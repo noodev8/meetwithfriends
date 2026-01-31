@@ -66,7 +66,7 @@ router.post('/:token', verifyToken, async (req, res) => {
             // ===================================================================
             const groupResult = await client.query(
                 `SELECT
-                    g.id, g.name, g.require_profile_image,
+                    g.id, g.name, g.require_profile_image, g.all_members_host,
                     g.magic_link_token, g.magic_link_expires_at, g.magic_link_active,
                     g.magic_link_use_count, g.magic_link_max_uses
                  FROM group_list g
@@ -108,20 +108,22 @@ router.post('/:token', verifyToken, async (req, res) => {
                     [group.id, userId]
                 );
 
+                const groupRole = group.all_members_host ? 'host' : 'member';
+
                 let joinedGroup = false;
                 if (memberResult.rows.length === 0) {
                     // Not a member - join with 'active' status (bypasses approval)
                     await client.query(
                         `INSERT INTO group_member (group_id, user_id, role, status)
-                         VALUES ($1, $2, 'member', 'active')`,
-                        [group.id, userId]
+                         VALUES ($1, $2, $3, 'active')`,
+                        [group.id, userId, groupRole]
                     );
                     joinedGroup = true;
                 } else if (memberResult.rows[0].status === 'pending') {
                     // Was pending - upgrade to active
                     await client.query(
-                        `UPDATE group_member SET status = 'active' WHERE group_id = $1 AND user_id = $2`,
-                        [group.id, userId]
+                        `UPDATE group_member SET status = 'active', role = $3 WHERE group_id = $1 AND user_id = $2`,
+                        [group.id, userId, groupRole]
                     );
                     joinedGroup = true;
                 }
@@ -152,7 +154,7 @@ router.post('/:token', verifyToken, async (req, res) => {
                     e.id, e.title, e.date_time, e.status, e.capacity, e.group_id,
                     e.magic_link_token, e.magic_link_expires_at, e.magic_link_active,
                     e.magic_link_use_count, e.magic_link_max_uses,
-                    g.require_profile_image
+                    g.require_profile_image, g.all_members_host
                  FROM event_list e
                  JOIN group_list g ON e.group_id = g.id
                  WHERE e.magic_link_token = $1
@@ -219,18 +221,20 @@ router.post('/:token', verifyToken, async (req, res) => {
                 [event.group_id, userId]
             );
 
+            const eventGroupRole = event.all_members_host ? 'host' : 'member';
+
             let joinedGroup = false;
             if (memberResult.rows.length === 0) {
                 await client.query(
                     `INSERT INTO group_member (group_id, user_id, role, status)
-                     VALUES ($1, $2, 'member', 'active')`,
-                    [event.group_id, userId]
+                     VALUES ($1, $2, $3, 'active')`,
+                    [event.group_id, userId, eventGroupRole]
                 );
                 joinedGroup = true;
             } else if (memberResult.rows[0].status === 'pending') {
                 await client.query(
-                    `UPDATE group_member SET status = 'active' WHERE group_id = $1 AND user_id = $2`,
-                    [event.group_id, userId]
+                    `UPDATE group_member SET status = 'active', role = $3 WHERE group_id = $1 AND user_id = $2`,
+                    [event.group_id, userId, eventGroupRole]
                 );
                 joinedGroup = true;
             }

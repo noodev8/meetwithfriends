@@ -8,6 +8,7 @@ class Group {
   final String? themeColor;
   final String? icon;
   final bool requireProfileImage;
+  final bool allMembersHost;
   final String role; // 'organiser', 'host', 'member'
   final int memberCount;
   final int upcomingEventCount;
@@ -23,6 +24,7 @@ class Group {
     this.themeColor,
     this.icon,
     this.requireProfileImage = false,
+    this.allMembersHost = false,
     required this.role,
     required this.memberCount,
     required this.upcomingEventCount,
@@ -40,6 +42,7 @@ class Group {
       themeColor: json['theme_color'] as String?,
       icon: json['icon'] as String?,
       requireProfileImage: json['require_profile_image'] as bool? ?? false,
+      allMembersHost: json['all_members_host'] as bool? ?? false,
       role: json['role'] as String? ?? 'member',
       memberCount: json['member_count'] as int? ?? 0,
       upcomingEventCount: json['upcoming_event_count'] as int? ?? 0,

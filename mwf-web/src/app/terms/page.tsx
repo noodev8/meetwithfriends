@@ -113,9 +113,9 @@ export default function TermsPage() {
                             Groups and Events
                         </h2>
                         <ul className="list-disc list-inside text-slate-600 space-y-2">
-                            <li>Group organisers are responsible for managing their groups and members</li>
+                            <li>Group admins are responsible for managing their groups and members</li>
                             <li>Event hosts are responsible for the accuracy of event information</li>
-                            <li>Any fees, payments, or financial arrangements between members, groups, or organisers are solely between those parties</li>
+                            <li>Any fees, payments, or financial arrangements between members, groups, or admins are solely between those parties</li>
                             <li>Meet With Friends is not responsible for any transactions or disputes between users</li>
                         </ul>
                     </section>
@@ -131,8 +131,8 @@ export default function TermsPage() {
                             <li>The conduct of any users, whether online or at events</li>
                             <li>The quality, safety, or legality of events organised through our platform</li>
                             <li>Any injuries, damages, or losses occurring at events</li>
-                            <li>Any pricing, payments, or financial arrangements between users, groups, or organisers</li>
-                            <li>The accuracy of information provided by users or event organisers</li>
+                            <li>Any pricing, payments, or financial arrangements between users, groups, or admins</li>
+                            <li>The accuracy of information provided by users or event admins</li>
                             <li>Food orders, dietary requirements, or any issues arising from pre-orders</li>
                         </ul>
                         <p className="text-slate-600 leading-relaxed mt-4">

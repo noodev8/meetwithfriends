@@ -236,7 +236,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                             groupValue: _joinPolicy,
                             onChanged: (v) => setState(() => _joinPolicy = v!),
                             title: 'Require Approval',
-                            subtitle: 'New members must be approved by an organiser',
+                            subtitle: 'New members must be approved by an admin',
                           ),
                           const SizedBox(height: 8),
                           _buildRadioOption(

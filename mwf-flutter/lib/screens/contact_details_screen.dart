@@ -266,7 +266,7 @@ class _ContactDetailsScreenState extends State<ContactDetailsScreen> {
                           Padding(
                             padding: const EdgeInsets.only(left: 52),
                             child: Text(
-                              'Uncheck to stop receiving broadcast emails from group organisers',
+                              'Uncheck to stop receiving broadcast emails from group admins',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade500,

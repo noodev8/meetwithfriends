@@ -58,6 +58,7 @@ router.get('/my-groups', verifyToken, async (req, res) => {
                 g.invite_code,
                 g.theme_color,
                 g.icon,
+                g.all_members_host,
                 g.created_at,
                 gm.role,
                 COUNT(DISTINCT all_members.id) FILTER (WHERE all_members.status = 'active') AS member_count,

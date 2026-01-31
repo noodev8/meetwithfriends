@@ -374,10 +374,10 @@ export default function GroupMembersPage() {
                                                 </button>
                                                 {member.role === 'organiser' && (
                                                     <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full">
-                                                        Organiser
+                                                        Admin
                                                     </span>
                                                 )}
-                                                {member.role === 'host' && (
+                                                {member.role === 'host' && !group?.all_members_host && (
                                                     <span className="px-2 py-0.5 bg-violet-100 text-violet-700 text-xs font-medium rounded-full">
                                                         Host
                                                     </span>

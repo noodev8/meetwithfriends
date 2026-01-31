@@ -1543,12 +1543,12 @@ class _InviteScreenState extends State<InviteScreen> {
       case 'INVITE_EXPIRED':
         return (
           'Invitation Expired',
-          'This invitation link has expired. Please ask the organiser for a new invite link.',
+          'This invitation link has expired. Please ask the admin for a new invite link.',
         );
       case 'INVITE_DISABLED':
         return (
           'Invitation Disabled',
-          'This invitation link has been disabled by the organiser.',
+          'This invitation link has been disabled by the admin.',
         );
       case 'INVITE_LIMIT_REACHED':
         return (
