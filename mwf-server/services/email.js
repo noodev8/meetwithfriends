@@ -249,17 +249,26 @@ async function processEmailQueue(limit = 50) {
                 );
                 const bookmark = lastSent.rows.length > 0 ? lastSent.rows[0].sent_at : null;
 
-                // Query all comments posted after the bookmark (including recipient's own for context)
-                const since = bookmark || email.created_at;
-                const commentsResult = await query(
-                    `SELECT ec.content, u.name
-                     FROM event_comment ec
-                     JOIN app_user u ON ec.user_id = u.id
-                     WHERE ec.event_id = $1
-                     AND ec.created_at > $2
-                     ORDER BY ec.created_at ASC`,
-                    [email.event_id, since]
-                );
+                // Query comments: if we have a bookmark (previous digest sent), get comments after it.
+                // If no bookmark (first digest ever), get ALL comments for the event so every recipient sees the same conversation.
+                const commentsResult = bookmark
+                    ? await query(
+                        `SELECT ec.content, u.name
+                         FROM event_comment ec
+                         JOIN app_user u ON ec.user_id = u.id
+                         WHERE ec.event_id = $1
+                         AND ec.created_at > $2
+                         ORDER BY ec.created_at ASC`,
+                        [email.event_id, bookmark]
+                    )
+                    : await query(
+                        `SELECT ec.content, u.name
+                         FROM event_comment ec
+                         JOIN app_user u ON ec.user_id = u.id
+                         WHERE ec.event_id = $1
+                         ORDER BY ec.created_at ASC`,
+                        [email.event_id]
+                    );
 
                 if (commentsResult.rows.length === 0) {
                     await query(
