@@ -404,8 +404,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   bool get _showPreOrder =>
       _event != null &&
       _event!.preordersEnabled &&
-      _rsvp != null &&
-      _rsvp!.status != 'not_going' &&
       !_event!.isPast &&
       !_event!.isCancelled;
 
@@ -1178,6 +1176,70 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         DateTime.now().isAfter(event.preorderCutoff!);
     final hasOrder =
         _rsvp?.foodOrder != null && _rsvp!.foodOrder!.isNotEmpty;
+    final isAttending = _rsvp != null && _rsvp!.status != 'not_going';
+
+    // Not attending — neutral banner with View Menu link
+    if (!isAttending) {
+      return Container(
+        margin: EdgeInsets.fromLTRB(margin, 0, margin, margin),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _navigateToOrder,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE0E7FF),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.restaurant_menu_rounded,
+                        size: 20, color: Color(0xFF6366F1)),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Menu available for this event',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF475569),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE0E7FF),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'View Menu',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF4338CA),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     if (isCutoffPassed) {
       // Muted slate card — deadline passed

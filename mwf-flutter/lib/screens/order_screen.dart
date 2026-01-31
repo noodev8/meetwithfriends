@@ -143,9 +143,9 @@ class _OrderScreenState extends State<OrderScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           color: const Color(0xFF1E293B),
         ),
-        title: const Text(
-          'Your Order',
-          style: TextStyle(
+        title: Text(
+          _rsvp != null && _rsvp!.status != 'not_going' ? 'Your Order' : 'Menu',
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
             color: Color(0xFF1E293B),
@@ -238,14 +238,7 @@ class _OrderScreenState extends State<OrderScreen> {
       );
     }
 
-    // Guard: no RSVP or not going
-    if (_rsvp == null || _rsvp!.status == 'not_going') {
-      return _buildGuardState(
-        icon: Icons.how_to_reg_outlined,
-        title: 'RSVP first',
-        message: 'You need to RSVP to this event before placing an order.',
-      );
-    }
+    final canOrder = _rsvp != null && _rsvp!.status != 'not_going';
 
     // Main content
     return SingleChildScrollView(
@@ -260,14 +253,16 @@ class _OrderScreenState extends State<OrderScreen> {
               _buildEventInfo(event),
               const SizedBox(height: 16),
 
-              // Menu card
+              // Menu card (always visible)
               if (_hasMenu) ...[
                 _buildMenuCard(),
                 const SizedBox(height: 16),
               ],
 
-              // Order form or read-only view
-              if (_isCutoffPassed)
+              // Order section — depends on RSVP status
+              if (!canOrder)
+                _buildRsvpPrompt()
+              else if (_isCutoffPassed)
                 _buildReadOnlyOrder()
               else
                 _buildOrderForm(),
@@ -276,6 +271,54 @@ class _OrderScreenState extends State<OrderScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildRsvpPrompt() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 8),
+          const Text(
+            'RSVP to this event to place a pre-order.',
+            style: TextStyle(
+              fontSize: 15,
+              color: Color(0xFF64748B),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6366F1),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
+              ),
+              child: const Text(
+                'Go to event',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
       ),
     );
   }
