@@ -29,9 +29,10 @@ interface InviteLinkSectionProps {
     type: 'event' | 'group';
     id: number;
     token: string;
+    bare?: boolean;
 }
 
-export default function InviteLinkSection({ type, id, token }: InviteLinkSectionProps) {
+export default function InviteLinkSection({ type, id, token, bare }: InviteLinkSectionProps) {
     const [magicLink, setMagicLink] = useState<MagicLink | null>(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
@@ -157,13 +158,17 @@ export default function InviteLinkSection({ type, id, token }: InviteLinkSection
     // Loading state
     // =======================================================================
     if (loading) {
+        const content = (
+            <div className="flex items-center gap-2 text-slate-500">
+                <div className="w-4 h-4 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin"></div>
+                <span className="text-sm">Loading invite link...</span>
+            </div>
+        );
+        if (bare) return content;
         return (
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                 <h2 className="text-lg font-bold text-slate-900 mb-4 font-display">Invite People</h2>
-                <div className="flex items-center gap-2 text-slate-500">
-                    <div className="w-4 h-4 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin"></div>
-                    <span className="text-sm">Loading invite link...</span>
-                </div>
+                {content}
             </div>
         );
     }
@@ -172,18 +177,18 @@ export default function InviteLinkSection({ type, id, token }: InviteLinkSection
     // Error state
     // =======================================================================
     if (error && !magicLink) {
+        const content = <p className="text-sm text-red-600">{error}</p>;
+        if (bare) return content;
         return (
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                 <h2 className="text-lg font-bold text-slate-900 mb-4 font-display">Invite People</h2>
-                <p className="text-sm text-red-600">{error}</p>
+                {content}
             </div>
         );
     }
 
-    return (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-slate-900 mb-4 font-display">Invite People</h2>
-
+    const inner = (
+        <>
             {magicLink && magicLink.is_active && !isExpired ? (
                 // =======================================================================
                 // Active link state
@@ -397,6 +402,15 @@ export default function InviteLinkSection({ type, id, token }: InviteLinkSection
                     </div>
                 </div>
             )}
+        </>
+    );
+
+    if (bare) return inner;
+
+    return (
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-slate-900 mb-4 font-display">Invite People</h2>
+            {inner}
         </div>
     );
 }

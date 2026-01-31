@@ -41,7 +41,7 @@ export default function CreateEventPage() {
     const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
     const [date, setDate] = useState('');
-    const [time, setTime] = useState('');
+    const [time, setTime] = useState('18:00');
     const [capacity, setCapacity] = useState('');
     const [category, setCategory] = useState<EventCategory>('food');
     const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -250,7 +250,7 @@ export default function CreateEventPage() {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
-                        Back to {group.name}
+                        Back to group
                     </Link>
                 </div>
 
@@ -267,21 +267,21 @@ export default function CreateEventPage() {
                     {/* Form Column */}
                     <div className="flex-1 lg:flex-[3]">
                         <form onSubmit={handleSubmit} className="space-y-6">
+                            {/* Error message */}
+                            {error && (
+                                <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+                                    {error}
+                                </div>
+                            )}
+
                             {/* ============================================================
-                                CARD 1: ESSENTIALS
+                                CARD 1: TITLE, DATE & TIME
                             ============================================================ */}
                             <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
-                                {/* Error message */}
-                                {error && (
-                                    <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
-                                        {error}
-                                    </div>
-                                )}
-
                                 {/* Title */}
                                 <div>
                                     <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-2">
-                                        Event Title *
+                                        Event Title
                                     </label>
                                     <input
                                         type="text"
@@ -299,7 +299,7 @@ export default function CreateEventPage() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label htmlFor="date" className="block text-sm font-medium text-slate-700 mb-2">
-                                            Date *
+                                            Date
                                         </label>
                                         <input
                                             type="date"
@@ -313,9 +313,8 @@ export default function CreateEventPage() {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-2">
-                                            Time *
+                                            Time
                                         </label>
-                                        {/* Time dropdown */}
                                         <select
                                             value={time}
                                             onChange={(e) => setTime(e.target.value)}
@@ -336,35 +335,42 @@ export default function CreateEventPage() {
                                         </select>
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* Event Category */}
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                                        Event Type *
-                                    </label>
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                        {CATEGORY_OPTIONS.map((cat) => (
-                                            <button
-                                                key={cat.key}
-                                                type="button"
-                                                onClick={() => setCategory(cat.key)}
-                                                className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${
-                                                    category === cat.key
-                                                        ? 'border-indigo-600 bg-indigo-50'
-                                                        : 'border-slate-200 hover:border-slate-300 bg-white'
-                                                }`}
-                                            >
-                                                <span className="text-2xl">{cat.emoji}</span>
-                                                <span className={`text-xs font-medium ${
-                                                    category === cat.key ? 'text-indigo-700' : 'text-slate-600'
-                                                }`}>
-                                                    {cat.label}
-                                                </span>
-                                            </button>
-                                        ))}
-                                    </div>
+                            {/* ============================================================
+                                CARD 2: EVENT TYPE
+                            ============================================================ */}
+                            <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                    Event Type
+                                </label>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    {CATEGORY_OPTIONS.map((cat) => (
+                                        <button
+                                            key={cat.key}
+                                            type="button"
+                                            onClick={() => setCategory(cat.key)}
+                                            className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${
+                                                category === cat.key
+                                                    ? 'border-indigo-600 bg-indigo-50'
+                                                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                                            }`}
+                                        >
+                                            <span className="text-2xl">{cat.emoji}</span>
+                                            <span className={`text-xs font-medium ${
+                                                category === cat.key ? 'text-indigo-700' : 'text-slate-600'
+                                            }`}>
+                                                {cat.label}
+                                            </span>
+                                        </button>
+                                    ))}
                                 </div>
+                            </div>
 
+                            {/* ============================================================
+                                CARD 3: LOCATION & DESCRIPTION
+                            ============================================================ */}
+                            <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
                                 {/* Location */}
                                 <div>
                                     <label htmlFor="location" className="block text-sm font-medium text-slate-700 mb-2">

@@ -63,6 +63,7 @@ export default function GroupDetailPage() {
     const [broadcastMessageText, setBroadcastMessageText] = useState('');
     const [broadcastLoading, setBroadcastLoading] = useState(false);
     const [showProfileImageModal, setShowProfileImageModal] = useState(false);
+    const [showInviteModal, setShowInviteModal] = useState(false);
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
     // =======================================================================
@@ -546,64 +547,78 @@ export default function GroupDetailPage() {
                             </div>
                         )}
 
-                        {/* Invite People Section - visible to organisers and hosts */}
+                        {/* Invite People - visible to organisers and hosts */}
                         {canManageMembers && token && (
-                            <InviteLinkSection type="group" id={group.id} token={token} />
-                        )}
-
-                        {/* Upcoming Events Section */}
-                        <div>
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="font-display text-xl font-bold text-slate-800">
-                                    Upcoming Events
-                                    {events.length > 0 && (
-                                        <span className="ml-2 text-slate-400 font-normal text-lg">{events.length}</span>
-                                    )}
-                                </h2>
-                                {events.length > 0 && (
-                                    <Link
-                                        href={`/groups/${group.id}/events`}
-                                        className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
-                                    >
-                                        See all
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </Link>
-                                )}
-                            </div>
-
-                            {events.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {events.map(event => (
-                                        <EventCard key={event.id} event={event} from={`group-${params.id}`} />
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
-                                    <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                                        <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            <button
+                                onClick={() => setShowInviteModal(true)}
+                                className="w-full bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:border-indigo-200 transition-all duration-200 text-left"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                         </svg>
                                     </div>
-                                    <p className="text-slate-600 font-medium">No upcoming events</p>
-                                    {canManageMembers && (
-                                        <p className="text-slate-500 text-sm mt-1">
-                                            Create an event to get your group together!
-                                        </p>
-                                    )}
+                                    <div className="flex-1">
+                                        <p className="font-medium text-slate-800">Invite People</p>
+                                        <p className="text-sm text-slate-500">Share a link to invite others</p>
+                                    </div>
+                                    <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
                                 </div>
-                            )}
+                            </button>
+                        )}
 
-                            {/* Past events link */}
-                            <div className="mt-4 pt-4 border-t border-slate-100 text-center">
-                                <Link
-                                    href={`/groups/${group.id}/past-events`}
-                                    className="text-sm text-slate-400 hover:text-slate-600 transition"
-                                >
-                                    View past events
-                                </Link>
+                        {/* Events count card */}
+                        <Link
+                            href={`/groups/${group.id}/events`}
+                            className="block bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:border-indigo-200 transition-all duration-200"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                                    <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-2xl font-bold text-slate-900">{events.length}</p>
+                                    <p className="text-sm text-slate-500">Upcoming Events</p>
+                                </div>
+                                <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
                             </div>
+                        </Link>
+
+                        {/* Next Event */}
+                        {events.length > 0 ? (
+                            <div>
+                                <h2 className="text-lg font-semibold text-slate-800 mb-4">Next Event</h2>
+                                <div className="max-w-md">
+                                    <EventCard event={events[0]} from={`group-${params.id}`} />
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+                                <div className="text-5xl mb-3">📅</div>
+                                <p className="text-slate-600 font-medium">No upcoming events</p>
+                                {canManageMembers && (
+                                    <p className="text-slate-500 text-sm mt-1">
+                                        Create an event to get your group together!
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Past events link */}
+                        <div className="text-center">
+                            <Link
+                                href={`/groups/${group.id}/past-events`}
+                                className="text-sm text-slate-400 hover:text-slate-600 transition"
+                            >
+                                View past events
+                            </Link>
                         </div>
                     </div>
 
@@ -653,96 +668,39 @@ export default function GroupDetailPage() {
                             )}
                         </div>
 
-                        {/* Organiser Card */}
-                        {organiser && (
-                            <div className="bg-white rounded-2xl border border-slate-200 p-5">
-                                <h3 className="font-display font-semibold text-slate-800 mb-3">Admin</h3>
-                                <div className="flex items-center gap-3">
-                                    {organiser.avatar_url ? (
-                                        <div className="relative w-12 h-12">
-                                            <Image
-                                                src={organiser.avatar_url}
-                                                alt={organiser.name}
-                                                fill
-                                                className="rounded-full object-cover ring-2 ring-indigo-100"
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center ring-2 ring-indigo-100">
-                                            <span className="text-lg font-medium text-indigo-600">
-                                                {organiser.name.charAt(0).toUpperCase()}
-                                            </span>
-                                        </div>
-                                    )}
-                                    <div className="flex-1">
-                                        <p className="font-medium text-slate-800">{organiser.name}</p>
-                                        <p className="text-sm text-slate-500">Group admin</p>
-                                    </div>
+                        {/* Members Card */}
+                        <Link
+                            href={`/groups/${group.id}/members`}
+                            className="block bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:border-indigo-200 transition-all duration-200"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
+                                    <svg className="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
                                 </div>
-                                {canContactOrganiser && (
-                                    <button
-                                        onClick={() => setShowContactModal(true)}
-                                        className="w-full mt-4 px-4 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition flex items-center justify-center gap-2"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                        </svg>
-                                        Contact
-                                    </button>
-                                )}
+                                <div className="flex-1">
+                                    <p className="text-2xl font-bold text-slate-900">{group.member_count}</p>
+                                    <p className="text-sm text-slate-500">Members</p>
+                                </div>
+                                <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
                             </div>
-                        )}
+                        </Link>
 
-                        {/* Members Preview Card */}
-                        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-display font-semibold text-slate-800">
-                                    Members
-                                    <span className="ml-2 text-slate-400 font-normal">{group.member_count}</span>
-                                </h3>
-                                <Link
-                                    href={`/groups/${group.id}/members`}
-                                    className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-                                >
-                                    See all
-                                </Link>
-                            </div>
-                            {allMembers.length > 0 ? (
-                                <div className="flex flex-wrap gap-1">
-                                    {allMembers.slice(0, 12).map(member => (
-                                        member.avatar_url ? (
-                                            <div key={member.id} className="relative w-10 h-10" title={member.name}>
-                                                <Image
-                                                    src={member.avatar_url}
-                                                    alt={member.name}
-                                                    fill
-                                                    className="rounded-full object-cover"
-                                                />
-                                            </div>
-                                        ) : (
-                                            <div
-                                                key={member.id}
-                                                title={member.name}
-                                                className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center"
-                                            >
-                                                <span className="text-sm font-medium text-indigo-600">
-                                                    {member.name.charAt(0).toUpperCase()}
-                                                </span>
-                                            </div>
-                                        )
-                                    ))}
-                                    {group.member_count > 12 && (
-                                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                                            <span className="text-xs font-medium text-slate-500">
-                                                +{group.member_count - 12}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <p className="text-sm text-slate-500">No members yet</p>
-                            )}
-                        </div>
+                        {/* Contact Organiser */}
+                        {canContactOrganiser && (
+                            <button
+                                onClick={() => setShowContactModal(true)}
+                                className="w-full px-4 py-2.5 border border-slate-200 bg-white text-slate-700 font-medium rounded-2xl hover:bg-slate-50 transition flex items-center justify-center gap-2"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                Contact Admin
+                            </button>
+                        )}
 
                         {/* Leave group - tucked away at bottom */}
                         {membership?.status === 'active' && membership?.role !== 'organiser' && (
@@ -1017,6 +975,34 @@ export default function GroupDetailPage() {
                                     Go to Profile
                                 </Link>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Invite People Modal */}
+            {showInviteModal && canManageMembers && token && (
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                    onClick={() => setShowInviteModal(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-slate-900 font-display">Invite People</h3>
+                            <button
+                                onClick={() => setShowInviteModal(false)}
+                                className="text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            <InviteLinkSection type="group" id={group.id} token={token} bare />
                         </div>
                     </div>
                 </div>

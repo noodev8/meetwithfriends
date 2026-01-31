@@ -161,7 +161,7 @@ export default function MyEventsPage() {
                                     </div>
                                     <div>
                                         <p className="text-2xl font-bold text-slate-900">{allEvents.length}</p>
-                                        <p className="text-sm text-slate-500">Events</p>
+                                        <p className="text-sm text-slate-500">Upcoming</p>
                                     </div>
                                 </div>
                             </Link>
