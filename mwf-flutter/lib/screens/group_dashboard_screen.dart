@@ -719,17 +719,14 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                           if (canManageMembers && _pendingMembers.isNotEmpty)
                             _buildPendingRequestsSection(),
 
-                          // Events Section
-                          _buildUpcomingEventsSection(),
-
-                          // Members tile
-                          _buildMembersTile(group),
+                          // Navigation tiles (Events, Members)
+                          _buildNavigationTiles(group),
 
                           // About Section
                           if (group.description != null && group.description!.isNotEmpty)
                             _buildAboutSection(group),
 
-                          // Invite People tile (organisers/hosts only)
+                          // Invite People (organisers/hosts only)
                           if (canManageMembers)
                             _buildInviteTile(group),
 
@@ -875,11 +872,9 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
     final membership = _membership;
     final roleLabel = membership?.isOrganiser == true
         ? 'Admin'
-        : membership?.role == 'host'
-            ? (group.allMembersHost ? 'Member' : 'Host')
-            : membership?.isActive == true
-                ? 'Member'
-                : null;
+        : (membership?.role == 'host' && !group.allMembersHost)
+            ? 'Host'
+            : null;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -941,43 +936,14 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.people_rounded,
-                            size: 14,
-                            color: Colors.white.withAlpha(200),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white.withAlpha(200),
-                            ),
-                          ),
-                        ],
-                      ),
-                      // Role badge
-                      if (roleLabel != null) ...[
-                        const SizedBox(height: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            roleLabel,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: _theme.gradient[0],
-                            ),
-                          ),
+                      Text(
+                        '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}${roleLabel != null ? '  ·  $roleLabel' : ''}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withAlpha(200),
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 ),
@@ -1410,79 +1376,6 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
     );
   }
 
-  Widget _buildMembersTile(GroupDetail group) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => GroupMembersScreen(
-                groupId: group.id,
-                groupName: group.name,
-              ),
-            ),
-          );
-        },
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEEF2FF),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.people_rounded,
-                  size: 20,
-                  color: Color(0xFF6366F1),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Members',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1E293B),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF94A3B8),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: Color(0xFF94A3B8),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   String _stripHtmlTags(String htmlString) {
     return htmlString
         .replaceAll(RegExp(r'<[^>]*>'), '')
@@ -1618,81 +1511,52 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
     );
   }
 
-  Widget _buildUpcomingEventsSection() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: Column(
+  Widget _buildNavigationTiles(GroupDetail group) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: Row(
         children: [
-          // Upcoming events link
-          GestureDetector(
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => GroupEventsScreen(
-                    groupId: widget.groupId,
-                    groupName: _group?.name ?? '',
-                  ),
-                ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEEF2FF),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.event_rounded,
-                      size: 20,
-                      color: Color(0xFF6366F1),
+          Expanded(
+            child: _buildStatTile(
+              icon: Icons.event_rounded,
+              title: 'Events',
+              subtitle: _upcomingEventCount == 0
+                  ? 'No upcoming'
+                  : '$_upcomingEventCount upcoming',
+              subtitleColor: _upcomingEventCount > 0
+                  ? const Color(0xFF10B981)
+                  : const Color(0xFF94A3B8),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => GroupEventsScreen(
+                      groupId: widget.groupId,
+                      groupName: _group?.name ?? '',
                     ),
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Events',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF1E293B),
-                          ),
-                        ),
-                        if (_upcomingEventCount > 0) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            '$_upcomingEventCount upcoming',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF10B981),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    color: Color(0xFF94A3B8),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
           ),
-
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildStatTile(
+              icon: Icons.people_rounded,
+              title: 'Members',
+              subtitle: '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GroupMembersScreen(
+                      groupId: group.id,
+                      groupName: group.name,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -1726,13 +1590,13 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEEF2FF),
-                  borderRadius: BorderRadius.circular(10),
+                  color: const Color(0xFFF5F3FF),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
                   Icons.person_add_rounded,
                   size: 20,
-                  color: Color(0xFF6366F1),
+                  color: Color(0xFF7C3AED),
                 ),
               ),
               const SizedBox(width: 14),
@@ -1766,6 +1630,65 @@ class _GroupDashboardScreenState extends State<GroupDashboardScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    Color subtitleColor = const Color(0xFF94A3B8),
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1E293B).withAlpha(10),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F3FF),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, size: 20, color: const Color(0xFF7C3AED)),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: subtitleColor,
+              ),
+            ),
+          ],
         ),
       ),
     );

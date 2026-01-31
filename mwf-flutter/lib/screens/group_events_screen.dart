@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../models/event.dart';
 import '../services/events_service.dart';
@@ -60,6 +61,9 @@ class _GroupEventsScreenState extends State<GroupEventsScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle.dark.copyWith(
+          statusBarColor: Colors.transparent,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF1E293B)),
           onPressed: () => Navigator.of(context).pop(),
