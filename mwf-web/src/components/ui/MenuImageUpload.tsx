@@ -107,7 +107,7 @@ export default function MenuImageUpload({ value = [], onChange, maxImages = 10, 
                 const pageUrls: string[] = [];
                 for (let i = 1; i <= pageCount; i++) {
                     const pageUrl = data.secure_url
-                        .replace('/upload/', `/upload/pg_${i},w_2000,c_limit,q_auto/`)
+                        .replace('/upload/', `/upload/pg_${i},w_2000,c_limit,q_auto,f_auto/`)
                         .replace(/\.pdf$/, '.jpg');
                     pageUrls.push(pageUrl);
                 }
@@ -118,7 +118,7 @@ export default function MenuImageUpload({ value = [], onChange, maxImages = 10, 
             // Keep larger for menus since they need to be readable when zoomed
             const transformedUrl = data.secure_url.replace(
                 '/upload/',
-                '/upload/w_2000,c_limit,q_auto/'
+                '/upload/w_2000,c_limit,q_auto,f_auto/'
             );
             return transformedUrl;
         } catch (err) {

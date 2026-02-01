@@ -31,7 +31,6 @@ import {
 import { getAllEvents, EventWithDetails } from '@/lib/api/events';
 
 import SidebarLayout from '@/components/layout/SidebarLayout';
-import EventCard from '@/components/ui/EventCard';
 import InviteLinkSection from '@/components/ui/InviteLinkSection';
 import { getGroupTheme, getGroupInitials } from '@/lib/groupThemes';
 import AppDownloadBanner from '@/components/ui/AppDownloadBanner';

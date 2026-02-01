@@ -148,7 +148,7 @@ export default function ProfilePage() {
             // Transform URL to apply 200x200 crop for avatar
             const transformedUrl = data.secure_url.replace(
                 '/upload/',
-                '/upload/w_200,h_200,c_fill,g_face,q_auto/'
+                '/upload/w_200,h_200,c_fill,g_face,q_auto,f_auto/'
             );
             setAvatarUrl(transformedUrl);
 

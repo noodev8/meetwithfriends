@@ -77,7 +77,7 @@ export default function ImageUpload({ value, onChange, imagePosition = 'center',
             // Cloudinary URL format: .../upload/[transformations]/v123/folder/file.jpg
             const transformedUrl = data.secure_url.replace(
                 '/upload/',
-                '/upload/w_1200,c_limit,q_auto/'
+                '/upload/w_1200,c_limit,q_auto,f_auto/'
             );
             onChange(transformedUrl);
         } catch (err) {

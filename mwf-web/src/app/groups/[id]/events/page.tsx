@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getGroup, GroupWithCount, GroupMembership } from '@/lib/api/groups';
+import { getGroup, GroupWithCount } from '@/lib/api/groups';
 import { getAllEvents, EventWithDetails } from '@/lib/api/events';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 import EventCard from '@/components/ui/EventCard';
@@ -26,7 +26,6 @@ export default function GroupEventsPage() {
     const router = useRouter();
 
     const [group, setGroup] = useState<GroupWithCount | null>(null);
-    const [membership, setMembership] = useState<GroupMembership | null>(null);
     const [events, setEvents] = useState<EventWithDetails[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<FilterType>('all');
@@ -50,7 +49,6 @@ export default function GroupEventsPage() {
             const result = await getGroup(Number(params.id), token || undefined);
             if (result.success && result.data) {
                 setGroup(result.data.group);
-                setMembership(result.data.membership);
             }
         }
 
@@ -90,10 +88,6 @@ export default function GroupEventsPage() {
         going: events.filter(e => e.rsvp_status === 'attending' || e.rsvp_status === 'waitlist').length,
         not_responded: events.filter(e => !e.rsvp_status).length,
     };
-
-    // Check if user can create events
-    const canCreateEvents = membership?.status === 'active' &&
-        (membership?.role === 'organiser' || membership?.role === 'host');
 
     // =======================================================================
     // Loading state

@@ -7,6 +7,7 @@ Event Order Page
 Dedicated page for placing/editing a food pre-order for an event.
 Guards: must be logged in, preorders must be enabled, cutoff must not have passed (for editing).
 Menu is viewable without RSVP; placing an order requires RSVP.
+Also hosts the "View Orders" summary modal with copy, PDF download, and host per-attendee editing.
 =======================================================================================================================================
 */
 
@@ -17,10 +18,15 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import {
     getEvent,
+    getAttendees,
+    getHosts,
     submitOrder,
+    updateOrder,
     EventWithDetails,
     RsvpStatus,
+    Attendee,
 } from '@/lib/api/events';
+import { EventHost } from '@/types';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 
 export default function EventOrderPage() {
@@ -38,8 +44,27 @@ export default function EventOrderPage() {
     const [dietaryNotes, setDietaryNotes] = useState('');
     const [orderLoading, setOrderLoading] = useState(false);
 
+    // Attendee/host data for order summary
+    const [attending, setAttending] = useState<Attendee[]>([]);
+    const [hosts, setHosts] = useState<EventHost[]>([]);
+
+    // Permission flags
+    const [canManageAttendees, setCanManageAttendees] = useState(false);
+    const [isGroupMember, setIsGroupMember] = useState(false);
+
+    // Order summary modal state
+    const [showOrderSummary, setShowOrderSummary] = useState(false);
+    const [copiedOrders, setCopiedOrders] = useState(false);
+    const [pdfLoading, setPdfLoading] = useState(false);
+
+    // Host order editing state
+    const [editingAttendeeId, setEditingAttendeeId] = useState<number | null>(null);
+    const [editFoodOrder, setEditFoodOrder] = useState('');
+    const [editDietaryNotes, setEditDietaryNotes] = useState('');
+    const [orderSaving, setOrderSaving] = useState(false);
+
     // =======================================================================
-    // Fetch event details
+    // Fetch event details, attendees, and hosts
     // =======================================================================
     useEffect(() => {
         async function fetchData() {
@@ -57,15 +82,30 @@ export default function EventOrderPage() {
             }
 
             const eventId = Number(params.id);
-            const result = await getEvent(eventId, token);
 
-            if (result.success && result.data) {
-                setEvent(result.data.event);
-                setRsvp(result.data.rsvp);
-                setFoodOrder(result.data.rsvp?.food_order || '');
-                setDietaryNotes(result.data.rsvp?.dietary_notes || '');
+            const [eventResult, attendeesResult, hostsResult] = await Promise.all([
+                getEvent(eventId, token),
+                getAttendees(eventId, token),
+                getHosts(eventId),
+            ]);
+
+            if (eventResult.success && eventResult.data) {
+                setEvent(eventResult.data.event);
+                setRsvp(eventResult.data.rsvp);
+                setFoodOrder(eventResult.data.rsvp?.food_order || '');
+                setDietaryNotes(eventResult.data.rsvp?.dietary_notes || '');
+                setCanManageAttendees(eventResult.data.can_edit);
+                setIsGroupMember(eventResult.data.is_group_member);
             } else {
-                setError(result.error || 'Event not found');
+                setError(eventResult.error || 'Event not found');
+            }
+
+            if (attendeesResult.success && attendeesResult.data) {
+                setAttending(attendeesResult.data.attending);
+            }
+
+            if (hostsResult.success && hostsResult.data) {
+                setHosts(hostsResult.data);
             }
 
             setLoading(false);
@@ -117,6 +157,125 @@ export default function EventOrderPage() {
                 minute: '2-digit',
             }),
         };
+    };
+
+    // =======================================================================
+    // Generate formatted order summary text
+    // =======================================================================
+    const generateOrderSummary = () => {
+        const lines: string[] = [];
+
+        if (event?.group_name) {
+            lines.push(event.group_name);
+        }
+        if (hosts.length > 0) {
+            lines.push(`Host: ${hosts[0].name}`);
+        }
+        lines.push(event?.title || 'Event');
+        if (event?.date_time) {
+            const { date, time } = formatDateTime(event.date_time);
+            lines.push(`${date} at ${time}`);
+        }
+        if (event?.location) {
+            lines.push(event.location);
+        }
+        lines.push('');
+        lines.push(`--- Orders (${attending.length} guests) ---`);
+        lines.push('');
+
+        attending.forEach((person) => {
+            lines.push(`\u2014 ${person.name}`);
+            if (person.food_order) {
+                lines.push(person.food_order);
+            } else {
+                lines.push('No order submitted');
+            }
+            if (person.dietary_notes) {
+                lines.push(`Notes: ${person.dietary_notes}`);
+            }
+            lines.push('');
+        });
+
+        lines.push('---');
+        lines.push('Powered by meetwithfriends.net');
+
+        return lines.join('\n').trim();
+    };
+
+    // =======================================================================
+    // Copy orders to clipboard
+    // =======================================================================
+    const handleCopyOrders = async () => {
+        const text = generateOrderSummary();
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopiedOrders(true);
+            setTimeout(() => setCopiedOrders(false), 2000);
+        } catch {
+            alert('Failed to copy to clipboard');
+        }
+    };
+
+    // =======================================================================
+    // Download pre-orders PDF
+    // =======================================================================
+    const handleDownloadPDF = async () => {
+        if (!token || !event) return;
+
+        setPdfLoading(true);
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/events/${event.id}/preorders/pdf`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }
+            );
+
+            const contentType = response.headers.get('content-type');
+            if (contentType?.includes('application/json')) {
+                const data = await response.json();
+                alert(data.message || 'Failed to generate PDF');
+                setPdfLoading(false);
+                return;
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `preorders-${event.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch {
+            alert('Failed to download PDF');
+        }
+        setPdfLoading(false);
+    };
+
+    // =======================================================================
+    // Handle host saving an attendee's order
+    // =======================================================================
+    const handleSaveOrder = async () => {
+        if (!token || !event || editingAttendeeId === null) return;
+
+        setOrderSaving(true);
+        const result = await updateOrder(token, event.id, editingAttendeeId, editFoodOrder, editDietaryNotes);
+        setOrderSaving(false);
+
+        if (result.success) {
+            setAttending(prev => prev.map(a =>
+                a.user_id === editingAttendeeId
+                    ? { ...a, food_order: editFoodOrder || null, dietary_notes: editDietaryNotes || null }
+                    : a
+            ));
+            setEditingAttendeeId(null);
+        } else {
+            alert(result.error || 'Failed to save order');
+        }
     };
 
     // =======================================================================
@@ -268,30 +427,48 @@ export default function EventOrderPage() {
             {/* Header with breadcrumb */}
             <div className="bg-slate-50 border-b border-slate-200">
                 <div className="max-w-3xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
-                    <Link
-                        href={`/events/${event.id}`}
-                        className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-4 transition-colors"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                        Back to event
-                    </Link>
+                    <div className="flex items-start justify-between gap-4">
+                        <div>
+                            <Link
+                                href={`/events/${event.id}`}
+                                className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-4 transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                </svg>
+                                Back to event
+                            </Link>
 
-                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display mb-2">
-                        {canOrder ? 'Your Order' : 'Menu'}
-                    </h1>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-600 text-sm">
-                        <span>{event.title}</span>
-                        <span className="text-slate-300">·</span>
-                        <span>{date} at {time}</span>
-                        {event.preorder_cutoff && (
-                            <>
-                                <span className="text-slate-300">·</span>
-                                <span className="text-slate-500 font-medium">
-                                    Order by {new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} at {new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                            </>
+                            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display mb-2">
+                                {canOrder ? 'Your Order' : 'Menu'}
+                            </h1>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-600 text-sm">
+                                <span>{event.title}</span>
+                                <span className="text-slate-300">&middot;</span>
+                                <span>{date} at {time}</span>
+                                {event.preorder_cutoff && (
+                                    <>
+                                        <span className="text-slate-300">&middot;</span>
+                                        <span className="text-slate-500 font-medium">
+                                            Order by {new Date(event.preorder_cutoff).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} at {new Date(event.preorder_cutoff).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* View Orders button for group members */}
+                        {isGroupMember && event.preorders_enabled && (
+                            <button
+                                onClick={() => setShowOrderSummary(true)}
+                                className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition shadow-sm"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                <span className="hidden sm:inline">View Orders</span>
+                                <span className="sm:hidden">Orders</span>
+                            </button>
                         )}
                     </div>
                 </div>
@@ -457,6 +634,168 @@ export default function EventOrderPage() {
                     )}
                 </div>
             </div>
+
+            {/* Order Summary Modal */}
+            {showOrderSummary && event && (
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                    onClick={() => { setShowOrderSummary(false); setEditingAttendeeId(null); }}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
+                            <h3 className="text-lg font-bold text-slate-900 font-display">Orders</h3>
+                            <button
+                                onClick={() => { setShowOrderSummary(false); setEditingAttendeeId(null); }}
+                                className="p-1 text-slate-400 hover:text-slate-600 transition"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Order list - scrollable */}
+                        <div className="flex-1 overflow-y-auto px-6 py-4">
+                            {attending.length > 0 ? (
+                                <div className="space-y-4">
+                                    {attending.map((person) => (
+                                        <div key={person.user_id} className="pb-4 border-b border-slate-100 last:border-0 last:pb-0">
+                                            {editingAttendeeId === person.user_id ? (
+                                                /* Inline edit form for host */
+                                                <div>
+                                                    <p className="font-semibold text-slate-900 mb-2">{person.name}</p>
+                                                    <div className="space-y-2">
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-slate-600 mb-1">Order</label>
+                                                            <input
+                                                                type="text"
+                                                                value={editFoodOrder}
+                                                                onChange={(e) => setEditFoodOrder(e.target.value)}
+                                                                placeholder="e.g., Chicken Caesar Salad"
+                                                                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-slate-600 mb-1">Notes</label>
+                                                            <input
+                                                                type="text"
+                                                                value={editDietaryNotes}
+                                                                onChange={(e) => setEditDietaryNotes(e.target.value)}
+                                                                placeholder="e.g., No nuts, gluten free"
+                                                                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
+                                                            />
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={handleSaveOrder}
+                                                                disabled={orderSaving}
+                                                                className="px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
+                                                            >
+                                                                {orderSaving ? 'Saving...' : 'Save'}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setEditingAttendeeId(null)}
+                                                                className="px-3 py-1.5 bg-slate-100 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-200 transition"
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                /* Read-only order display */
+                                                <div>
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <p className="font-semibold text-slate-900">{person.name}</p>
+                                                        {canManageAttendees && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setEditingAttendeeId(person.user_id);
+                                                                    setEditFoodOrder(person.food_order || '');
+                                                                    setEditDietaryNotes(person.dietary_notes || '');
+                                                                }}
+                                                                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex-shrink-0"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    {person.food_order ? (
+                                                        <p className="text-slate-700 mt-1">{person.food_order}</p>
+                                                    ) : (
+                                                        <p className="text-slate-400 italic mt-1">No order submitted</p>
+                                                    )}
+                                                    {person.dietary_notes && (
+                                                        <p className="text-sm text-violet-600 mt-1">
+                                                            Notes: {person.dietary_notes}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-center text-slate-500 py-8">No attendees yet</p>
+                            )}
+                        </div>
+
+                        {/* Footer with action buttons */}
+                        <div className="px-6 py-4 border-t border-slate-200 flex-shrink-0">
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                {/* Copy button */}
+                                <button
+                                    onClick={handleCopyOrders}
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-violet-600 text-white font-medium rounded-xl hover:bg-violet-700 transition"
+                                >
+                                    {copiedOrders ? (
+                                        <>
+                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Copied!
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            </svg>
+                                            Copy
+                                        </>
+                                    )}
+                                </button>
+
+                                {/* PDF button - only for hosts/organisers */}
+                                {canManageAttendees && (
+                                    <button
+                                        onClick={handleDownloadPDF}
+                                        disabled={pdfLoading}
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-600 text-white font-medium rounded-xl hover:bg-slate-700 transition disabled:opacity-50"
+                                    >
+                                        {pdfLoading ? (
+                                            <>
+                                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                Loading...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                </svg>
+                                                PDF
+                                            </>
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </SidebarLayout>
     );
 }

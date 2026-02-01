@@ -18,7 +18,6 @@ import {
     getAttendees,
     getHosts,
     manageAttendee,
-    updateOrder,
     EventWithDetails,
     Attendee,
     NotGoingAttendee,
@@ -54,16 +53,7 @@ export default function AttendeesPage() {
     const [sortBy, setSortBy] = useState<SortBy>('rsvp_time');
     const [selectedAttendee, setSelectedAttendee] = useState<Attendee | NotGoingAttendee | null>(null);
 
-    // Order editing state
-    const [editFoodOrder, setEditFoodOrder] = useState('');
-    const [editDietaryNotes, setEditDietaryNotes] = useState('');
-    const [orderSaving, setOrderSaving] = useState(false);
     const [viewingLargePhoto, setViewingLargePhoto] = useState(false);
-
-    // Order summary modal state
-    const [showOrderSummary, setShowOrderSummary] = useState(false);
-    const [copiedOrders, setCopiedOrders] = useState(false);
-    const [pdfLoading, setPdfLoading] = useState(false);
 
     // =======================================================================
     // Fetch event and attendees
@@ -193,137 +183,11 @@ export default function AttendeesPage() {
     };
 
     // =======================================================================
-    // Handle order update
-    // =======================================================================
-    const handleSaveOrder = async () => {
-        if (!token || !event || !selectedAttendee) return;
-
-        setOrderSaving(true);
-        const result = await updateOrder(token, event.id, selectedAttendee.user_id, editFoodOrder, editDietaryNotes);
-        setOrderSaving(false);
-
-        if (result.success) {
-            // Update the local attending list with new order
-            setAttending(prev => prev.map(a =>
-                a.user_id === selectedAttendee.user_id
-                    ? { ...a, food_order: editFoodOrder || null, dietary_notes: editDietaryNotes || null }
-                    : a
-            ));
-            setSelectedAttendee(null);
-        } else {
-            alert(result.error || 'Failed to save order');
-        }
-    };
-
-    // =======================================================================
-    // Handle selecting an attendee (populate edit fields)
+    // Handle selecting an attendee
     // =======================================================================
     const handleSelectAttendee = (person: Attendee | NotGoingAttendee) => {
         setSelectedAttendee(person);
         setViewingLargePhoto(false);
-        const attendee = person as Attendee;
-        setEditFoodOrder(attendee.food_order || '');
-        setEditDietaryNotes(attendee.dietary_notes || '');
-    };
-
-    // =======================================================================
-    // Generate formatted order summary text
-    // =======================================================================
-    const generateOrderSummary = () => {
-        const lines: string[] = [];
-
-        // Header with group name, host, and event details
-        if (event?.group_name) {
-            lines.push(event.group_name);
-        }
-        if (hosts.length > 0) {
-            lines.push(`Host: ${hosts[0].name}`);
-        }
-        lines.push(event?.title || 'Event');
-        if (event?.date_time) {
-            const { date, time } = formatDateTime(event.date_time);
-            lines.push(`${date} at ${time}`);
-        }
-        if (event?.location) {
-            lines.push(event.location);
-        }
-        lines.push('');
-        lines.push(`--- Orders (${attending.length} guests) ---`);
-        lines.push('');
-
-        attending.forEach((person) => {
-            lines.push(`— ${person.name}`);
-            if (person.food_order) {
-                lines.push(person.food_order);
-            } else {
-                lines.push('No order submitted');
-            }
-            if (person.dietary_notes) {
-                lines.push(`Notes: ${person.dietary_notes}`);
-            }
-            lines.push('');
-        });
-
-        lines.push('---');
-        lines.push('Powered by meetwithfriends.net');
-
-        return lines.join('\n').trim();
-    };
-
-    // =======================================================================
-    // Copy orders to clipboard
-    // =======================================================================
-    const handleCopyOrders = async () => {
-        const text = generateOrderSummary();
-        try {
-            await navigator.clipboard.writeText(text);
-            setCopiedOrders(true);
-            setTimeout(() => setCopiedOrders(false), 2000);
-        } catch {
-            alert('Failed to copy to clipboard');
-        }
-    };
-
-    // =======================================================================
-    // Download pre-orders PDF
-    // =======================================================================
-    const handleDownloadPDF = async () => {
-        if (!token || !event) return;
-
-        setPdfLoading(true);
-        try {
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/events/${event.id}/preorders/pdf`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                }
-            );
-
-            // Check if it's a JSON error response
-            const contentType = response.headers.get('content-type');
-            if (contentType?.includes('application/json')) {
-                const data = await response.json();
-                alert(data.message || 'Failed to generate PDF');
-                setPdfLoading(false);
-                return;
-            }
-
-            // It's a PDF - download it
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `preorders-${event.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        } catch {
-            alert('Failed to download PDF');
-        }
-        setPdfLoading(false);
     };
 
     // =======================================================================
@@ -417,30 +281,14 @@ export default function AttendeesPage() {
                         Back to event
                     </Link>
 
-                    <div className="flex items-start justify-between gap-4">
-                        <div>
-                            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 font-display mb-2">
-                                {event.title}
-                            </h1>
-                            <p className="text-slate-600">
-                                {date} at {time}
-                                {event.location && <span className="text-slate-400"> • {event.location}</span>}
-                            </p>
-                        </div>
-
-                        {/* View Orders button for all group members */}
-                        {canViewAttendees && event.preorders_enabled && (
-                            <button
-                                onClick={() => setShowOrderSummary(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-600 transition shadow-sm"
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                </svg>
-                                <span className="hidden sm:inline">View Orders</span>
-                                <span className="sm:hidden">Orders</span>
-                            </button>
-                        )}
+                    <div>
+                        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 font-display mb-2">
+                            {event.title}
+                        </h1>
+                        <p className="text-slate-600">
+                            {date} at {time}
+                            {event.location && <span className="text-slate-400"> &bull; {event.location}</span>}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -531,14 +379,6 @@ export default function AttendeesPage() {
                                                         </span>
                                                     </div>
                                                 )}
-                                                {/* Pre-order badge - top right */}
-                                                {event?.preorders_enabled && activeTab === 'going' && attendee.food_order && (
-                                                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-sm">
-                                                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                    </span>
-                                                )}
                                                 {isHostUser && (
                                                     <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-indigo-600 text-white text-xs font-medium rounded">
                                                         Host
@@ -594,7 +434,6 @@ export default function AttendeesPage() {
                 const isInGoing = attending.some(a => a.user_id === selectedAttendee.user_id);
                 const isInWaitlist = waitlist.some(a => a.user_id === selectedAttendee.user_id);
                 const isLoading = actionLoading === selectedAttendee.user_id;
-                const showOrderForm = canManageAttendees && isInGoing && event?.preorders_enabled;
 
                 // Large photo view
                 if (viewingLargePhoto) {
@@ -699,45 +538,6 @@ export default function AttendeesPage() {
                                 </div>
                             </div>
 
-                            {/* Order form for hosts/organisers */}
-                            {showOrderForm && (
-                                <div className="p-5 border-b border-slate-100">
-                                    <div className="space-y-3">
-                                        <div>
-                                            <label className="block text-xs font-medium text-slate-600 mb-1">
-                                                Order
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={editFoodOrder}
-                                                onChange={(e) => setEditFoodOrder(e.target.value)}
-                                                placeholder="e.g., Chicken Caesar Salad"
-                                                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-medium text-slate-600 mb-1">
-                                                Notes
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={editDietaryNotes}
-                                                onChange={(e) => setEditDietaryNotes(e.target.value)}
-                                                placeholder="e.g., No nuts, gluten free"
-                                                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
-                                            />
-                                        </div>
-                                        <button
-                                            onClick={handleSaveOrder}
-                                            disabled={orderSaving}
-                                            className="w-full px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 transition disabled:opacity-50"
-                                        >
-                                            {orderSaving ? 'Saving...' : 'Save Order'}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
                             {/* Action buttons for hosts/organisers */}
                             {canManageAttendees && (isInGoing || isInWaitlist) && (
                                 <div className="p-4 bg-slate-50 flex flex-wrap justify-center gap-2">
@@ -773,104 +573,6 @@ export default function AttendeesPage() {
                 );
             })()}
 
-            {/* Order Summary Modal */}
-            {showOrderSummary && event && (
-                <div
-                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-                    onClick={() => setShowOrderSummary(false)}
-                >
-                    <div
-                        className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Header */}
-                        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
-                            <h3 className="text-lg font-bold text-slate-900 font-display">Orders</h3>
-                            <button
-                                onClick={() => setShowOrderSummary(false)}
-                                className="p-1 text-slate-400 hover:text-slate-600 transition"
-                            >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        {/* Order list - scrollable */}
-                        <div className="flex-1 overflow-y-auto px-6 py-4">
-                            {attending.length > 0 ? (
-                                <div className="space-y-4">
-                                    {attending.map((person) => (
-                                        <div key={person.user_id} className="pb-4 border-b border-slate-100 last:border-0 last:pb-0">
-                                            <p className="font-semibold text-slate-900">{person.name}</p>
-                                            {person.food_order ? (
-                                                <p className="text-slate-700 mt-1">{person.food_order}</p>
-                                            ) : (
-                                                <p className="text-slate-400 italic mt-1">No order submitted</p>
-                                            )}
-                                            {person.dietary_notes && (
-                                                <p className="text-sm text-violet-600 mt-1">
-                                                    Notes: {person.dietary_notes}
-                                                </p>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-center text-slate-500 py-8">No attendees yet</p>
-                            )}
-                        </div>
-
-                        {/* Footer with action buttons */}
-                        <div className="px-6 py-4 border-t border-slate-200 flex-shrink-0">
-                            <div className="flex flex-col sm:flex-row gap-3">
-                                {/* Copy button */}
-                                <button
-                                    onClick={handleCopyOrders}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-violet-600 text-white font-medium rounded-xl hover:bg-violet-700 transition"
-                                >
-                                    {copiedOrders ? (
-                                        <>
-                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            Copied!
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                            </svg>
-                                            Copy
-                                        </>
-                                    )}
-                                </button>
-
-                                {/* Download PDF button */}
-                                <button
-                                    onClick={handleDownloadPDF}
-                                    disabled={pdfLoading}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-600 text-white font-medium rounded-xl hover:bg-slate-700 transition disabled:opacity-50"
-                                >
-                                    {pdfLoading ? (
-                                        <>
-                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                            Loading...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                            </svg>
-                                            PDF
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
         </SidebarLayout>
     );
 }
