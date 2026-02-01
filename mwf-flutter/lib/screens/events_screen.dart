@@ -340,17 +340,28 @@ class _CompactEventCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      event.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E293B),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
                     Row(
                       children: [
                         Expanded(
                           child: Text(
-                            event.title,
+                            event.groupName.toUpperCase(),
                             style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF1E293B),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF94A3B8),
+                              letterSpacing: 0.8,
                             ),
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         // Status badges
@@ -415,16 +426,6 @@ class _CompactEventCard extends StatelessWidget {
                             ),
                           ),
                       ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      event.groupName.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF94A3B8),
-                        letterSpacing: 0.8,
-                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(

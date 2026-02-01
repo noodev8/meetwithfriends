@@ -140,20 +140,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     }
   }
 
-  void _navigateToAttendees(EventDetail event, DateFormat dateFormat, DateFormat timeFormat) {
+  void _navigateToAttendees(EventDetail event) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => AttendeesScreen(
           eventId: event.id,
           eventTitle: event.title,
-          eventDate: '${dateFormat.format(event.dateTime)} at ${timeFormat.format(event.dateTime)}',
-          eventLocation: event.location,
-          groupName: event.groupName,
-          hostName: _hosts.isNotEmpty ? _hosts[0].name : null,
-          preordersEnabled: event.preordersEnabled,
-          canEditOrders: _canEdit,
-          menuLink: event.menuLink,
-          menuImages: event.menuImages,
           waitlistEnabled: event.waitlistEnabled,
         ),
       ),
@@ -427,7 +419,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   Widget _buildContent() {
     final event = _event!;
     final categoryConfig = getCategoryConfig(event.category);
-    final dateFormat = DateFormat('EEEE, d MMMM yyyy');
     final timeFormat = DateFormat('HH:mm');
     final margin = _cardMargin(context);
 
@@ -811,9 +802,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   Widget _buildAttendeesSection(EventDetail event, double margin) {
-    final dateFormat = DateFormat('EEE d MMM');
-    final timeFormat = DateFormat('HH:mm');
-
     // Build subtitle text
     String subtitle;
     Color subtitleColor = const Color(0xFF94A3B8);
@@ -834,7 +822,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       margin: EdgeInsets.fromLTRB(margin, 0, margin, 16),
       child: GestureDetector(
         onTap: _isGroupMember
-            ? () => _navigateToAttendees(event, dateFormat, timeFormat)
+            ? () => _navigateToAttendees(event)
             : null,
         child: Container(
           padding: const EdgeInsets.all(16),
@@ -980,55 +968,126 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     }
 
     if (isCutoffPassed) {
-      // Muted slate card — deadline passed
+      if (hasOrder) {
+        // Green card — order confirmed, deadline passed
+        return Container(
+          margin: EdgeInsets.fromLTRB(margin, 0, margin, margin),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFECFDF5), Color(0xFFD1FAE5)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFA7F3D0)),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _navigateToOrder,
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.check_rounded,
+                          size: 22, color: Colors.white),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Order confirmed',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF065F46),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _rsvp!.foodOrder!,
+                            style: const TextStyle(
+                                fontSize: 12, color: Color(0xFF047857)),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right_rounded,
+                        color: Color(0xFF059669)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      // Muted slate card — deadline passed, no order
       return Container(
         margin: EdgeInsets.fromLTRB(margin, 0, margin, margin),
-        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFE2E8F0)),
         ),
-        child: InkWell(
-          onTap: _navigateToOrder,
-          borderRadius: BorderRadius.circular(16),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.schedule_rounded,
-                    size: 20, color: Color(0xFF64748B)),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      hasOrder ? 'Order submitted' : 'Order deadline passed',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF475569),
-                      ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _navigateToOrder,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      hasOrder ? 'Deadline passed' : 'No order was submitted',
-                      style: const TextStyle(
-                          fontSize: 12, color: Color(0xFF94A3B8)),
+                    child: const Icon(Icons.schedule_rounded,
+                        size: 20, color: Color(0xFF64748B)),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Order deadline passed',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF475569),
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'No order was submitted',
+                          style: TextStyle(
+                              fontSize: 12, color: Color(0xFF94A3B8)),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded,
+                      color: Color(0xFF94A3B8)),
+                ],
               ),
-              const Icon(Icons.chevron_right_rounded,
-                  color: Color(0xFF94A3B8)),
-            ],
+            ),
           ),
         ),
       );
