@@ -614,7 +614,7 @@ class _InviteScreenState extends State<InviteScreen> {
                       ),
                     )
                   : Text(
-                      isEvent ? 'Accept Invitation' : 'Join Group',
+                      "Let's take a look",
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,

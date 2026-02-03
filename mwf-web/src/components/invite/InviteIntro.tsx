@@ -173,10 +173,8 @@ export default function InviteIntro({ invite, user, isAccepting, onAccept, onLog
                                     className="w-full py-3 bg-gradient-to-r from-rose-500 to-orange-400 text-white rounded-lg font-semibold hover:from-rose-600 hover:to-orange-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isAccepting
-                                        ? 'Joining...'
-                                        : isEvent
-                                            ? 'Join Event'
-                                            : 'Join Group'}
+                                        ? 'One moment...'
+                                        : "Let's take a look"}
                                 </button>
                             )}
                         </>
@@ -187,7 +185,7 @@ export default function InviteIntro({ invite, user, isAccepting, onAccept, onLog
                             disabled={isAccepting}
                             className="w-full py-3 bg-gradient-to-r from-rose-500 to-orange-400 text-white rounded-lg font-semibold hover:from-rose-600 hover:to-orange-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {isEvent ? 'Join Event' : 'Join Group'}
+    Let&apos;s take a look
                         </button>
                     )}
                 </div>
