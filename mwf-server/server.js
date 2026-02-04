@@ -10,6 +10,7 @@ Configures middleware, routes, and starts the server.
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const config = require('./config/config');
 
 const app = express();
@@ -18,8 +19,15 @@ const app = express();
 // Middleware
 // =======================================================================================================================================
 
-// Parse JSON request bodies
-app.use(express.json());
+// Security headers (see docs/SECURITY-HARDENING.md)
+app.use(helmet());
+
+// Parse JSON request bodies (10kb limit protects against large payload attacks)
+app.use(express.json({ limit: '10kb' }));
+
+// Request logging (monitors traffic patterns - see docs/SECURITY-HARDENING.md)
+const { requestLogger } = require('./middleware/requestLogger');
+app.use(requestLogger);
 
 // Enable CORS for frontend
 app.use(cors({
