@@ -75,7 +75,6 @@ function extractPublicId(url) {
 }
 
 router.post('/', verifyToken, async (req, res) => {
-    console.log('[DeleteImage] Request received, body:', req.body);
     try {
         const { image_url } = req.body;
 
@@ -103,10 +102,8 @@ router.post('/', verifyToken, async (req, res) => {
         // Extract public_id from URL
         // =======================================================================
         const publicId = extractPublicId(image_url);
-        console.log('[DeleteImage] Extracted publicId:', publicId);
 
         if (!publicId) {
-            console.log('[DeleteImage] Failed to extract publicId from URL');
             return res.json({
                 return_code: 'INVALID_URL',
                 message: 'Could not extract public_id from URL'
@@ -116,9 +113,7 @@ router.post('/', verifyToken, async (req, res) => {
         // =======================================================================
         // Delete image from Cloudinary
         // =======================================================================
-        console.log('[DeleteImage] Calling Cloudinary destroy with publicId:', publicId);
         const result = await cloudinary.uploader.destroy(publicId);
-        console.log('[DeleteImage] Cloudinary result:', result);
 
         // Cloudinary returns { result: 'ok' } on success
         // Returns { result: 'not found' } if image doesn't exist (still considered success)

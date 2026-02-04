@@ -253,15 +253,11 @@ export default function MenuImageUpload({ value = [], onChange, onRemove, maxIma
 
     const handleRemove = (index: number) => {
         const removedUrl = value[index];
-        console.log('[MenuImageUpload] handleRemove called, index:', index, 'url:', removedUrl);
         const newUrls = value.filter((_, i) => i !== index);
         onChange(newUrls);
         // Call onRemove callback to delete from Cloudinary
         if (onRemove && removedUrl) {
-            console.log('[MenuImageUpload] Calling onRemove callback');
             onRemove(removedUrl);
-        } else {
-            console.log('[MenuImageUpload] No onRemove callback or no URL');
         }
     };
 
