@@ -14,6 +14,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getEvent, updateEvent, cancelEvent, EventWithDetails } from '@/lib/api/events';
+import { deleteImage } from '@/lib/api/users';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 // import ImageUpload from '@/components/ui/ImageUpload'; // Hidden - using category gradients instead
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -161,6 +162,17 @@ export default function EditEventPage() {
         setMenuImagesSaving(true);
         await updateEvent(token, event.id, { menu_images: urls.length > 0 ? urls : null });
         setMenuImagesSaving(false);
+    };
+
+    // =======================================================================
+    // Handle menu image removal - delete from Cloudinary
+    // =======================================================================
+    const handleMenuImageRemove = async (url: string) => {
+        if (!token) return;
+        // Fire and forget - don't block UI for Cloudinary deletion
+        deleteImage(token, url).catch((err) => {
+            console.error('Failed to delete menu image from Cloudinary:', err);
+        });
     };
 
     // =======================================================================
@@ -746,6 +758,7 @@ export default function EditEventPage() {
                                                         <MenuImageUpload
                                                             value={menuImages}
                                                             onChange={handleMenuImagesChange}
+                                                            onRemove={handleMenuImageRemove}
                                                         />
                                                         {menuImagesSaving && (
                                                             <p className="text-xs text-indigo-600 mt-1">Saving...</p>

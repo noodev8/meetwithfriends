@@ -17,11 +17,12 @@ import Image from 'next/image';
 interface MenuImageUploadProps {
     value: string[];
     onChange: (urls: string[]) => void;
+    onRemove?: (url: string) => void;
     maxImages?: number;
     className?: string;
 }
 
-export default function MenuImageUpload({ value = [], onChange, maxImages = 10, className = '' }: MenuImageUploadProps) {
+export default function MenuImageUpload({ value = [], onChange, onRemove, maxImages = 10, className = '' }: MenuImageUploadProps) {
     const [isUploading, setIsUploading] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -251,8 +252,13 @@ export default function MenuImageUpload({ value = [], onChange, maxImages = 10, 
     };
 
     const handleRemove = (index: number) => {
+        const removedUrl = value[index];
         const newUrls = value.filter((_, i) => i !== index);
         onChange(newUrls);
+        // Call onRemove callback to delete from Cloudinary
+        if (onRemove && removedUrl) {
+            onRemove(removedUrl);
+        }
     };
 
     // Show configuration warning if env vars missing

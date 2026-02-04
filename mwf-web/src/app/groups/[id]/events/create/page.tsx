@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getGroup, GroupWithCount, GroupMembership } from '@/lib/api/groups';
 import { createEvent, getEvent } from '@/lib/api/events';
+import { deleteImage } from '@/lib/api/users';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 // import ImageUpload from '@/components/ui/ImageUpload'; // Hidden - using category gradients instead
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -196,6 +197,17 @@ export default function CreateEventPage() {
         } else {
             setError(result.error || 'Failed to create event');
         }
+    };
+
+    // =======================================================================
+    // Handle menu image removal - delete from Cloudinary
+    // =======================================================================
+    const handleMenuImageRemove = async (url: string) => {
+        if (!token) return;
+        // Fire and forget - don't block UI for Cloudinary deletion
+        deleteImage(token, url).catch((err) => {
+            console.error('Failed to delete menu image from Cloudinary:', err);
+        });
     };
 
     // =======================================================================
@@ -622,6 +634,7 @@ export default function CreateEventPage() {
                                                         <MenuImageUpload
                                                             value={menuImages}
                                                             onChange={setMenuImages}
+                                                            onRemove={handleMenuImageRemove}
                                                         />
                                                     </div>
 
