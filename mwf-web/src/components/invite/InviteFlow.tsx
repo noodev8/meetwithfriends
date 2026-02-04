@@ -5,10 +5,15 @@
 InviteFlow Component
 =======================================================================================================================================
 Main orchestrator for the invite acceptance flow. Manages a step-based state machine:
-  loading → intro → signup/photo-upload/processing → accepted → redirecting (with error branch)
+  loading → intro → signup/photo-upload/processing → accepted/redirecting (with error branch)
 
-Handles both logged-in (auto-accept) and new user (signup form) flows.
+Handles both logged-in and new user (signup form) flows.
 Intercepts PROFILE_IMAGE_REQUIRED to show a photo upload screen before retrying.
+
+Flow differences by invite type:
+  - Group invites: Show intro → accept → show "You've joined!" confirmation → redirect to group
+  - Event invites: Show intro → accept (joins group only, no RSVP) → redirect directly to event
+    User reviews event details and RSVPs themselves from the event page.
 =======================================================================================================================================
 */
 
@@ -61,34 +66,16 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
         if (result.success && result.data) {
             setInvite(result.data);
 
-            // Auto-accept event invites for logged-in users
+            // For event invites: if already attending, redirect straight to event page
+            // Otherwise show intro screen (no auto-accept - user should review event first)
             if (user && authToken && result.data.type === 'event' && result.data.invite.event) {
-                // Already attending → redirect straight to event page
                 if (result.data.user_status?.is_event_rsvp) {
                     setStep('redirecting');
                     localStorage.setItem('show_app_download', 'true');
                     router.push(`/events/${result.data.invite.event.id}`);
                     return;
                 }
-
-                // Not yet attending → auto-accept
-                const acceptResult = await acceptInvite(token, authToken);
-                if (acceptResult.success && acceptResult.data) {
-                    localStorage.setItem('show_app_download', 'true');
-                    setAcceptedRsvpStatus(acceptResult.data.actions.rsvp_status);
-                    setAcceptedRedirectTo(acceptResult.data.redirect_to);
-                    setStep('accepted');
-                } else if (acceptResult.return_code === 'PROFILE_IMAGE_REQUIRED') {
-                    setPhotoUploadOrigin('logged-in');
-                    setStep('photo-upload');
-                } else {
-                    setErrorCode(acceptResult.return_code || 'UNKNOWN');
-                    if (acceptResult.return_code === 'EVENT_ENDED' || acceptResult.return_code === 'EVENT_CANCELLED') {
-                        setErrorGroupId(result.data.invite.group.id);
-                    }
-                    setStep('error');
-                }
-                return;
+                // Not yet attending → show intro screen (user clicks "Let's take a look")
             }
 
             setStep('intro');
@@ -114,9 +101,17 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
 
         if (result.success && result.data) {
             localStorage.setItem('show_app_download', 'true');
-            setAcceptedRsvpStatus(result.data.actions.rsvp_status);
-            setAcceptedRedirectTo(result.data.redirect_to);
-            setStep('accepted');
+
+            // For event invites: redirect directly to event page (user reviews and RSVPs there)
+            // For group invites: show "accepted" confirmation screen
+            if (invite?.type === 'event') {
+                setStep('redirecting');
+                router.push(result.data.redirect_to);
+            } else {
+                setAcceptedRsvpStatus(result.data.actions.rsvp_status);
+                setAcceptedRedirectTo(result.data.redirect_to);
+                setStep('accepted');
+            }
         } else if (result.return_code === 'PROFILE_IMAGE_REQUIRED') {
             setPhotoUploadOrigin('logged-in');
             setStep('photo-upload');
@@ -180,9 +175,17 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
             // Log the user in
             login(result.data.token, result.data.user);
             localStorage.setItem('show_app_download', 'true');
-            setAcceptedRsvpStatus(result.data.actions.rsvp_status);
-            setAcceptedRedirectTo(result.data.redirect_to);
-            setStep('accepted');
+
+            // For event invites: redirect directly to event page (user reviews and RSVPs there)
+            // For group invites: show "accepted" confirmation screen
+            if (invite?.type === 'event') {
+                setStep('redirecting');
+                router.push(result.data.redirect_to);
+            } else {
+                setAcceptedRsvpStatus(result.data.actions.rsvp_status);
+                setAcceptedRedirectTo(result.data.redirect_to);
+                setStep('accepted');
+            }
         } else if (result.return_code === 'PROFILE_IMAGE_REQUIRED') {
             setPendingSignupPayload(payload);
             setPhotoUploadOrigin('signup');
@@ -214,9 +217,17 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
                 const retryResult = await acceptInvite(token, authToken);
                 if (retryResult.success && retryResult.data) {
                     localStorage.setItem('show_app_download', 'true');
-                    setAcceptedRsvpStatus(retryResult.data.actions.rsvp_status);
-                    setAcceptedRedirectTo(retryResult.data.redirect_to);
-                    setStep('accepted');
+
+                    // For event invites: redirect directly to event page
+                    // For group invites: show "accepted" confirmation screen
+                    if (invite?.type === 'event') {
+                        setStep('redirecting');
+                        router.push(retryResult.data.redirect_to);
+                    } else {
+                        setAcceptedRsvpStatus(retryResult.data.actions.rsvp_status);
+                        setAcceptedRedirectTo(retryResult.data.redirect_to);
+                        setStep('accepted');
+                    }
                 } else {
                     setPhotoUploadError(retryResult.error || 'Failed to join. Please try again.');
                 }
@@ -237,9 +248,17 @@ export default function InviteFlow({ token, type: _type }: InviteFlowProps) {
                     : { ...retryResult.data.user, avatar_url: avatarUrl };
                 login(retryResult.data.token, userWithAvatar);
                 localStorage.setItem('show_app_download', 'true');
-                setAcceptedRsvpStatus(retryResult.data.actions.rsvp_status);
-                setAcceptedRedirectTo(retryResult.data.redirect_to);
-                setStep('accepted');
+
+                // For event invites: redirect directly to event page
+                // For group invites: show "accepted" confirmation screen
+                if (invite?.type === 'event') {
+                    setStep('redirecting');
+                    router.push(retryResult.data.redirect_to);
+                } else {
+                    setAcceptedRsvpStatus(retryResult.data.actions.rsvp_status);
+                    setAcceptedRedirectTo(retryResult.data.redirect_to);
+                    setStep('accepted');
+                }
             } else {
                 setPhotoUploadError(retryResult.error || 'Failed to create account. Please try again.');
             }
