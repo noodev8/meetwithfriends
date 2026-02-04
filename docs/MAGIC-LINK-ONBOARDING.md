@@ -18,13 +18,13 @@ This document outlines the design for a frictionless onboarding system that allo
 
 1. **Invite to Event (New User)**
    > "Andreas has invited you to The Corbet Arms dinner on Feb 15th"
-   - User clicks link → sees event intro screen → creates account → auto-joins group → auto-RSVPs to event
+   - User clicks link → sees event intro screen → creates account → auto-joins group → redirects to event page (user can then RSVP after reviewing details)
 
 2. **Invite to Event (Existing User, Not in Group)**
-   - User clicks link → recognizes logged-in user → auto-joins group → auto-RSVPs to event → redirects to event page
+   - User clicks link → recognizes logged-in user → auto-joins group → redirects to event page (user can then RSVP after reviewing details)
 
 3. **Invite to Event (Existing User, Already in Group)**
-   - User clicks link → auto-RSVPs to event → redirects to event page
+   - User clicks link → redirects to event page (user can RSVP if not already attending)
 
 4. **Invite to Group Only (New User)**
    > "Join the Friday Night Foodies group"
@@ -32,6 +32,8 @@ This document outlines the design for a frictionless onboarding system that allo
 
 5. **Invite to Group Only (Existing User)**
    - User clicks link → auto-joins group → redirects to group page
+
+**Note:** Event invites do NOT auto-RSVP. Users should see who's attending, review the menu, check for deposits, etc. before committing. The invite grants access to view the event; the user decides whether to attend.
 
 ---
 
@@ -42,7 +44,7 @@ This document outlines the design for a frictionless onboarding system that allo
 https://www.meetwithfriends.net/invite/e/{token}
 ```
 - Auto-joins the event's parent group (if not member)
-- Auto-RSVPs to the event
+- Does NOT auto-RSVP - user reviews event details first, then decides to RSVP
 - Most common use case
 
 ### 2. Group Invite Link
@@ -238,18 +240,17 @@ Is user logged in?
 │    │  Dinner at The Corbet Arms      │  │
 │    │  Saturday, Feb 15 at 7:00 PM    │  │
 │    │  The Corbet Arms, London        │  │
-│    │  4 spots remaining              │  │  ← or "Event is full
-│    │                                 │  │     (waitlist available)"
+│    │  4 spots remaining              │  │
 │    └─────────────────────────────────┘  │
 │                                         │
-│    [Accept Invitation]                  │
+│    [Let's take a look]                  │
 │                                         │
 │    Already have an account? Log in      │
 │                                         │
 └─────────────────────────────────────────┘
 ```
 **Actions:**
-- "Accept Invitation" → Go to E5 (Signup form)
+- "Let's take a look" → Go to E5 (Signup form)
 - "Log in" → Store pending token in localStorage → Login → Return to E4
 
 ### E4: Intro Screen (Logged In)
@@ -265,14 +266,14 @@ Is user logged in?
 │    │  4 spots remaining              │  │
 │    └─────────────────────────────────┘  │
 │                                         │
-│    [Accept Invitation]                  │
+│    [Let's take a look]                  │
 │                                         │
 │    Not you? Log out                     │
 │                                         │
 └─────────────────────────────────────────┘
 ```
 **Actions:**
-- "Accept Invitation" → Go to E6 (Process)
+- "Let's take a look" → Go to E6 (Process)
 
 ### E5: Signup Form
 ```
@@ -290,7 +291,7 @@ Is user logged in?
 │  │    Required for this group      │    │    has require_profile_image=true
 │  └─────────────────────────────────┘    │
 │                                         │
-│  [Create Account & Join Event]          │
+│  [Create Account & View Event]          │
 │                                         │
 └─────────────────────────────────────────┘
 ```
@@ -298,29 +299,26 @@ Is user logged in?
 
 ### E6: Process Event Join
 ```
-1. Already RSVP'd to event?
-   ├── YES → Redirect to event page
-   │         Toast: "You're already attending"
+1. Already a group member?
+   ├── YES → Skip to step 3
    └── NO  → Continue
 
-2. Already a group member?
-   ├── YES → Skip to step 4
-   └── NO  → Continue
-
-3. Group requires profile photo AND user has none?
+2. Group requires profile photo AND user has none?
    ├── YES → Show photo upload screen (E6a) - REQUIRED, no skip
    └── NO  → Join group (status='active', bypasses approval policy)
 
-4. RSVP to event:
-   ├── Has capacity → status='attending'
-   └── Full → status='waitlist', assign position
+3. Record token use, increment use_count
 
-5. Record token use, increment use_count
-
-6. Redirect to event page with toast:
-   ├── Attending: "You're in! See you at The Corbet Arms"
-   └── Waitlist: "You're on the waitlist (position #3). We'll notify you if a spot opens."
+4. Redirect to event page
+   └── Toast: "Welcome! Review the event details and RSVP when you're ready."
 ```
+
+**Note:** Event invites do NOT auto-RSVP. The user lands on the event page where they can:
+- See who's attending
+- Review the menu and any pre-order options
+- Check for deposits or costs
+- Read comments and discussion
+- Make an informed decision to RSVP
 
 ### E6a: Photo Upload Screen (Required)
 Same as G6a - required, no skip option.
@@ -654,11 +652,13 @@ Authorization: Bearer {token}  // Required
     "return_code": "SUCCESS",
     "actions": {
         "joined_group": true,
-        "rsvp_status": "attending"  // or "waitlist" or null (for group invite)
+        "rsvp_status": null  // Always null - event invites do NOT auto-RSVP
     },
     "redirect_to": "/events/123"  // or "/groups/456"
 }
 ```
+
+**Note:** For event invites, the user is added to the group (if not already a member) but is NOT automatically RSVPed. They land on the event page to review details and RSVP themselves.
 
 **Return Codes:** `SUCCESS`, `INVITE_EXPIRED`, `PROFILE_IMAGE_REQUIRED`
 
@@ -692,11 +692,13 @@ POST /invite/accept-with-signup/:token
     },
     "actions": {
         "joined_group": true,
-        "rsvp_status": "attending"
+        "rsvp_status": null  // Always null - event invites do NOT auto-RSVP
     },
     "redirect_to": "/events/123"
 }
 ```
+
+**Note:** For event invites, the new user is added to the group but is NOT automatically RSVPed. They land on the event page to review details and RSVP themselves.
 
 **Return Codes:** `SUCCESS`, `EMAIL_EXISTS`, `INVALID_EMAIL`, `WEAK_PASSWORD`, `INVITE_EXPIRED`, `PROFILE_IMAGE_REQUIRED`
 
@@ -1445,18 +1447,18 @@ Track progress for session continuity. Mark items ✅ when complete.
 2. **No guest count on invite** - Keep flow simple, users can add guests later from event page
 3. **Both group and event invites** - Support both use cases
 4. **Keep existing `invite_code`** - New magic link columns added separately, don't break existing code
-5. **Immediate waitlist notification** - Tell users right away if they're on the waitlist
-6. **No individual use tracking** - Just increment use_count, don't track who used each link
-7. **One link per group/event** - Regenerate replaces old token
-8. **Simple organiser UI** - Copy, Regenerate, Disable only. No link history or advanced options.
-9. **Photo requirement enforced** - If group requires photo, no skip option
-10. **Magic links bypass approval** - Organiser implicitly pre-approves invitees
-11. **Same URL for web and app** - Universal/App Links handle routing automatically
-12. **Invite deep links bypass auth** - `/invite/*` paths work without login, screen handles its own auth
-13. **Old app graceful fallback** - Old apps don't have `/invite/*` in config, so links open in web browser
-14. **Self-contained InviteFlowScreen (Flutter)** - Sits above auth/main split, manages own sub-screens internally
-15. **Long token expiry (365 days)** - Reduces support burden; expiry visible to organiser on group/event page
-16. **Enable resets expiry** - Re-enabling a disabled link resets expiry to 365 days from now
+5. **No individual use tracking** - Just increment use_count, don't track who used each link
+6. **One link per group/event** - Regenerate replaces old token
+7. **Simple organiser UI** - Copy, Regenerate, Disable only. No link history or advanced options.
+8. **Photo requirement enforced** - If group requires photo, no skip option
+9. **Magic links bypass approval** - Organiser implicitly pre-approves invitees (for group membership)
+10. **Same URL for web and app** - Universal/App Links handle routing automatically
+11. **Invite deep links bypass auth** - `/invite/*` paths work without login, screen handles its own auth
+12. **Old app graceful fallback** - Old apps don't have `/invite/*` in config, so links open in web browser
+13. **Self-contained InviteFlowScreen (Flutter)** - Sits above auth/main split, manages own sub-screens internally
+14. **Long token expiry (365 days)** - Reduces support burden; expiry visible to organiser on group/event page
+15. **Enable resets expiry** - Re-enabling a disabled link resets expiry to 365 days from now
+16. **Event invites do NOT auto-RSVP** - Users should review event details (attendees, menu, costs) before committing. The invite grants access to view the event; the user decides whether to attend. This respects user agency and is especially important for food events with deposits, menu pre-orders, or dietary considerations.
 
 ---
 
@@ -1465,7 +1467,7 @@ Track progress for session continuity. Mark items ✅ when complete.
 This magic link system enables frictionless invitations while handling the complexity of:
 - New vs existing users (signup flow vs auto-process)
 - Group membership requirements (profile photo enforcement)
-- Event capacity and waitlists (immediate feedback)
+- Event invites grant access but do NOT auto-RSVP (user reviews details first)
 - Token security and expiration (365 days, 50 uses default)
 - Organiser control (Copy, Regenerate, Disable)
 - Cross-platform support (Web + iOS + Android)

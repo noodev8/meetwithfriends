@@ -6,8 +6,11 @@ Method: POST
 Purpose: Creates a new user account AND accepts a magic invite in one step.
          - Creates the user account
          - Joins the group (bypasses approval policy)
-         - For event invites: also RSVPs to the event
+         - For event invites: joins group but does NOT auto-RSVP
          - Returns JWT token for immediate login
+
+         NOTE: Event invites do NOT auto-RSVP. Users should review event details (attendees, menu, costs)
+         before committing. The invite grants access to view the event; the user decides whether to attend.
 =======================================================================================================================================
 Request: POST /api/invite/accept-with-signup/:token
 
@@ -30,7 +33,7 @@ Success Response:
   },
   "actions": {
     "joined_group": true,
-    "rsvp_status": "attending"            // "attending", "waitlist", or null
+    "rsvp_status": null                   // Always null - event invites do NOT auto-RSVP
   },
   "redirect_to": "/events/123"            // or "/groups/456"
 }
@@ -256,7 +259,7 @@ router.post('/:token', async (req, res) => {
             // Create user
             const user = await createUser(client, { name, email, password, avatar_url });
 
-            // Join group
+            // Join group (but NOT auto-RSVP - user reviews event and RSVPs themselves)
             const eventGroupRole = event.all_members_host ? 'host' : 'member';
             await client.query(
                 `INSERT INTO group_member (group_id, user_id, role, status)
@@ -264,21 +267,19 @@ router.post('/:token', async (req, res) => {
                 [event.group_id, user.id, eventGroupRole]
             );
 
-            // RSVP to event
-            const rsvpStatus = await createRsvp(client, event, user.id);
-
             // Increment use count
             await client.query(
                 'UPDATE event_list SET magic_link_use_count = magic_link_use_count + 1 WHERE id = $1',
                 [event.id]
             );
 
+            // Return success - user will be redirected to event page to review and RSVP
             return {
                 return_code: 'SUCCESS',
                 user,
                 actions: {
                     joined_group: true,
-                    rsvp_status: rsvpStatus
+                    rsvp_status: null  // No auto-RSVP for event invites
                 },
                 redirect_to: `/events/${event.id}`,
                 _groupId: event.group_id
@@ -398,49 +399,6 @@ async function createUser(client, { name, email, password, avatar_url }) {
     );
 
     return result.rows[0];
-}
-
-// =======================================================================
-// Helper: Create RSVP (attending or waitlist based on capacity)
-// =======================================================================
-async function createRsvp(client, event, userId) {
-    const countResult = await client.query(
-        `SELECT
-            COUNT(*) AS attendee_count,
-            COALESCE(SUM(guest_count), 0) AS total_guests
-         FROM event_rsvp
-         WHERE event_id = $1 AND status = 'attending'`,
-        [event.id]
-    );
-    const attendeeCount = parseInt(countResult.rows[0].attendee_count, 10) || 0;
-    const totalGuests = parseInt(countResult.rows[0].total_guests, 10) || 0;
-    const totalSpotsTaken = attendeeCount + totalGuests;
-
-    const hasCapacity = event.capacity === null || (totalSpotsTaken + 1) <= event.capacity;
-
-    if (hasCapacity) {
-        await client.query(
-            `INSERT INTO event_rsvp (event_id, user_id, status, guest_count)
-             VALUES ($1, $2, 'attending', 0)`,
-            [event.id, userId]
-        );
-        return 'attending';
-    } else {
-        const maxPosResult = await client.query(
-            `SELECT COALESCE(MAX(waitlist_position), 0) + 1 AS next_pos
-             FROM event_rsvp
-             WHERE event_id = $1 AND status = 'waitlist'`,
-            [event.id]
-        );
-        const nextPosition = maxPosResult.rows[0].next_pos;
-
-        await client.query(
-            `INSERT INTO event_rsvp (event_id, user_id, status, waitlist_position, guest_count)
-             VALUES ($1, $2, 'waitlist', $3, 0)`,
-            [event.id, userId, nextPosition]
-        );
-        return 'waitlist';
-    }
 }
 
 module.exports = router;
