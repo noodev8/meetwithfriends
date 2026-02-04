@@ -168,10 +168,16 @@ export default function EditEventPage() {
     // Handle menu image removal - delete from Cloudinary
     // =======================================================================
     const handleMenuImageRemove = async (url: string) => {
-        if (!token) return;
+        console.log('[MenuImageRemove] Called with URL:', url);
+        if (!token) {
+            console.log('[MenuImageRemove] No token, skipping delete');
+            return;
+        }
         // Fire and forget - don't block UI for Cloudinary deletion
-        deleteImage(token, url).catch((err) => {
-            console.error('Failed to delete menu image from Cloudinary:', err);
+        deleteImage(token, url).then((result) => {
+            console.log('[MenuImageRemove] Delete result:', result);
+        }).catch((err) => {
+            console.error('[MenuImageRemove] Failed to delete:', err);
         });
     };
 
