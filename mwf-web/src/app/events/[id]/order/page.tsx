@@ -14,7 +14,7 @@ Also hosts the "View Orders" summary modal with copy, PDF download, and host per
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import {
     getEvent,
@@ -22,6 +22,7 @@ import {
     getHosts,
     submitOrder,
     updateOrder,
+    rsvpEvent,
     EventWithDetails,
     RsvpStatus,
     Attendee,
@@ -62,6 +63,11 @@ export default function EventOrderPage() {
     const [editFoodOrder, setEditFoodOrder] = useState('');
     const [editDietaryNotes, setEditDietaryNotes] = useState('');
     const [orderSaving, setOrderSaving] = useState(false);
+
+    // RSVP state
+    const [rsvpLoading, setRsvpLoading] = useState(false);
+    const orderFormRef = useRef<HTMLDivElement>(null);
+    const foodOrderInputRef = useRef<HTMLTextAreaElement>(null);
 
     // =======================================================================
     // Fetch event details, attendees, and hosts
@@ -121,6 +127,45 @@ export default function EventOrderPage() {
         : false;
 
     const isPastEvent = event ? new Date(event.date_time) < new Date() : false;
+
+    // =======================================================================
+    // Capacity and waitlist logic
+    // =======================================================================
+    const totalSpotsUsed = (event?.attendee_count || 0) + (event?.total_guest_count || 0);
+    const spotsRemaining = event?.capacity ? event.capacity - totalSpotsUsed : null;
+    const isEventFull = spotsRemaining !== null && spotsRemaining <= 0;
+    const canJoinWaitlist = isEventFull && event?.waitlist_enabled !== false;
+
+    // =======================================================================
+    // Handle RSVP from order page
+    // =======================================================================
+    const handleRsvp = async () => {
+        if (!token || !event) return;
+        setRsvpLoading(true);
+        const result = await rsvpEvent(token, event.id, 'join', 0);
+        setRsvpLoading(false);
+
+        if (result.success && result.data) {
+            setRsvp(result.data.rsvp);
+            // Refresh event data for updated counts
+            const eventResult = await getEvent(event.id, token);
+            if (eventResult.success && eventResult.data) {
+                setEvent(eventResult.data.event);
+            }
+            // If confirmed (not waitlisted), scroll to order form and focus input
+            if (result.data.rsvp?.status === 'attending') {
+                setTimeout(() => {
+                    orderFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Focus the textarea after scroll animation
+                    setTimeout(() => {
+                        foodOrderInputRef.current?.focus();
+                    }, 400);
+                }, 100);
+            }
+        } else {
+            alert(result.error || 'Failed to RSVP');
+        }
+    };
 
     // =======================================================================
     // Handle submit order
@@ -482,6 +527,44 @@ export default function EventOrderPage() {
                     {(hasMenuImages || hasMenuLink) && (
                         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                             <h2 className="text-lg font-bold text-slate-900 font-display mb-4">Menu</h2>
+
+                            {/* RSVP button at top of menu card */}
+                            {(!rsvp || rsvp.status === 'not_going') && !isPastEvent && (
+                                <div className="mb-6 pb-6 border-b border-slate-200">
+                                    {!isEventFull ? (
+                                        <button
+                                            onClick={handleRsvp}
+                                            disabled={rsvpLoading}
+                                            className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-600 hover:to-violet-700 transition-all shadow-md disabled:opacity-50"
+                                        >
+                                            {rsvpLoading ? 'Joining...' : 'Count me in'}
+                                        </button>
+                                    ) : canJoinWaitlist ? (
+                                        <button
+                                            onClick={handleRsvp}
+                                            disabled={rsvpLoading}
+                                            className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-yellow-600 transition-all shadow-md disabled:opacity-50"
+                                        >
+                                            {rsvpLoading ? 'Joining...' : 'Join the waitlist'}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            disabled
+                                            className="w-full px-6 py-3 bg-slate-300 text-slate-500 font-medium rounded-xl cursor-not-allowed"
+                                        >
+                                            Event Full
+                                        </button>
+                                    )}
+                                    <p className="text-center text-sm text-slate-500 mt-2">
+                                        {!isEventFull
+                                            ? 'RSVP to place your pre-order'
+                                            : canJoinWaitlist
+                                                ? 'Join the waitlist. You can order when confirmed.'
+                                                : 'This event has reached capacity'}
+                                    </p>
+                                </div>
+                            )}
+
                             {hasMenuImages && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {event.menu_images!.map((url, idx) => (
@@ -524,21 +607,95 @@ export default function EventOrderPage() {
                             {hasMenuImages && (
                                 <p className="text-xs text-slate-500 mt-3">Click to view full size</p>
                             )}
+
+                            {/* RSVP button at bottom of menu card */}
+                            {(!rsvp || rsvp.status === 'not_going') && !isPastEvent && (
+                                <div className="mt-6 pt-6 border-t border-slate-200">
+                                    {!isEventFull ? (
+                                        <button
+                                            onClick={handleRsvp}
+                                            disabled={rsvpLoading}
+                                            className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-600 hover:to-violet-700 transition-all shadow-md disabled:opacity-50"
+                                        >
+                                            {rsvpLoading ? 'Joining...' : 'Count me in'}
+                                        </button>
+                                    ) : canJoinWaitlist ? (
+                                        <button
+                                            onClick={handleRsvp}
+                                            disabled={rsvpLoading}
+                                            className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-yellow-600 transition-all shadow-md disabled:opacity-50"
+                                        >
+                                            {rsvpLoading ? 'Joining...' : 'Join the waitlist'}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            disabled
+                                            className="w-full px-6 py-3 bg-slate-300 text-slate-500 font-medium rounded-xl cursor-not-allowed"
+                                        >
+                                            Event Full
+                                        </button>
+                                    )}
+                                    <p className="text-center text-sm text-slate-500 mt-2">
+                                        {!isEventFull
+                                            ? 'RSVP to place your pre-order'
+                                            : canJoinWaitlist
+                                                ? 'Join the waitlist. You can order when confirmed.'
+                                                : 'This event has reached capacity'}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     )}
 
                     {/* Order section — depends on RSVP and cutoff status */}
                     {!canOrder ? (
-                        /* Not attending — prompt to RSVP */
-                        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                        /* Not attending — show RSVP options */
+                        <div ref={orderFormRef} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                            <h2 className="text-lg font-bold text-slate-900 font-display mb-4">Your Order</h2>
                             <div className="text-center py-4">
-                                <p className="text-slate-600 mb-4">RSVP to this event to place a pre-order.</p>
-                                <Link
-                                    href={`/events/${event.id}`}
-                                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-600 hover:to-violet-700 transition-all shadow-md"
-                                >
-                                    Go to event
-                                </Link>
+                                {!isEventFull ? (
+                                    <>
+                                        <p className="text-slate-600 mb-4">RSVP to this event to place your pre-order.</p>
+                                        <button
+                                            onClick={handleRsvp}
+                                            disabled={rsvpLoading}
+                                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium rounded-xl hover:from-indigo-600 hover:to-violet-700 transition-all shadow-md disabled:opacity-50"
+                                        >
+                                            {rsvpLoading ? 'Joining...' : 'Count me in'}
+                                        </button>
+                                    </>
+                                ) : canJoinWaitlist ? (
+                                    <>
+                                        <p className="text-slate-600 mb-4">This event is full, but you can join the waitlist. You can order when confirmed.</p>
+                                        <button
+                                            onClick={handleRsvp}
+                                            disabled={rsvpLoading}
+                                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-yellow-600 transition-all shadow-md disabled:opacity-50"
+                                        >
+                                            {rsvpLoading ? 'Joining...' : 'Join the waitlist'}
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <p className="text-slate-600 mb-4">This event has reached capacity.</p>
+                                        <button
+                                            disabled
+                                            className="inline-flex items-center gap-2 px-6 py-3 bg-slate-300 text-slate-500 font-medium rounded-xl cursor-not-allowed"
+                                        >
+                                            Event Full
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    ) : rsvp?.status === 'waitlist' ? (
+                        /* On waitlist — show disabled form with message */
+                        <div ref={orderFormRef} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                            <h2 className="text-lg font-bold text-slate-900 font-display mb-4">Your Order</h2>
+                            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                                <p className="text-amber-800 text-center">
+                                    You&apos;re on the waitlist. You can place your order when you&apos;re confirmed for the event.
+                                </p>
                             </div>
                         </div>
                     ) : isCutoffPassed ? (
@@ -575,7 +732,7 @@ export default function EventOrderPage() {
                         </div>
                     ) : (
                         /* Before cutoff — order form */
-                        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                        <div ref={orderFormRef} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                             <h2 className="text-lg font-bold text-slate-900 font-display mb-4">Your Order</h2>
 
                             <form onSubmit={handleSubmitOrder} className="space-y-5">
@@ -590,12 +747,14 @@ export default function EventOrderPage() {
                                         </span>
                                     </div>
                                     <textarea
+                                        ref={foodOrderInputRef}
                                         id="foodOrder"
                                         value={foodOrder}
                                         onChange={(e) => setFoodOrder(e.target.value)}
                                         placeholder="e.g., Chicken Caesar Salad, no croutons"
                                         rows={4}
                                         maxLength={500}
+                                        autoCapitalize="sentences"
                                         className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 resize-none transition text-base"
                                     />
                                 </div>
