@@ -1303,12 +1303,12 @@ async function queuePreorderReminderEmail(email, userName, event, group, hostNam
     });
 
     const html = wrapEmail(`
-        <h2 style="color: #333; margin-top: 0;">Place Your Pre-Order</h2>
+        <h2 style="color: #333; margin-top: 0;">Don't Forget Your Pre-Order!</h2>
         <p style="color: #666; font-size: 16px;">
             Hi ${userName},
         </p>
         <p style="color: #666; font-size: 16px;">
-            ${hostName} is reminding you to place your food pre-order for <strong>${event.title}</strong> on ${eventDate} at ${eventTime}${event.location ? ` at ${event.location}` : ''}.
+            ${hostName} is kindly reminding you to please place your food pre-order for <strong>${event.title}</strong> on ${eventDate} at ${eventTime}${event.location ? ` at ${event.location}` : ''}.
         </p>
         ${emailButton(config.frontendUrl + '/events/' + event.id + '/order', 'Place Your Order')}
         <p style="color: #999; font-size: 13px; margin-top: 20px;">
