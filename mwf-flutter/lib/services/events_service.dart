@@ -521,6 +521,25 @@ class EventsService {
     );
   }
 
+  /// Cancel an event. Only hosts and organisers can cancel.
+  /// Notifies all attendees via email.
+  Future<CancelEventResult> cancelEvent(int eventId) async {
+    final response = await _api.post('/events/$eventId/cancel', {});
+
+    if (response['return_code'] == 'SUCCESS') {
+      return CancelEventResult(
+        success: true,
+        message: response['message'] as String?,
+        groupId: response['group_id'] as int?,
+      );
+    }
+
+    return CancelEventResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to cancel event',
+    );
+  }
+
   /// Broadcast event notification emails to all group members
   Future<BroadcastResult> broadcastEvent(int eventId) async {
     final response = await _api.post('/events/$eventId/broadcast', {});
@@ -949,6 +968,20 @@ class BroadcastResult {
     required this.success,
     this.message,
     this.queuedCount = 0,
+    this.error,
+  });
+}
+
+class CancelEventResult {
+  final bool success;
+  final String? message;
+  final int? groupId;
+  final String? error;
+
+  CancelEventResult({
+    required this.success,
+    this.message,
+    this.groupId,
     this.error,
   });
 }

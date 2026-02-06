@@ -53,6 +53,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
   List<String> _menuImages = [];
 
   bool _isSubmitting = false;
+  bool _isCancelling = false;
   String? _error;
 
   @override
@@ -456,6 +457,10 @@ class _EditEventScreenState extends State<EditEventScreen> {
 
           // Submit buttons
           _buildSubmitButtons(),
+
+          // Cancel event link - subtle, below submit
+          const SizedBox(height: 24),
+          _buildCancelEventLink(),
         ],
       ),
     );
@@ -1366,6 +1371,190 @@ class _EditEventScreenState extends State<EditEventScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildCancelEventLink() {
+    if (_event == null || _event!.status == 'cancelled') {
+      return const SizedBox.shrink();
+    }
+
+    return Center(
+      child: TextButton(
+        onPressed: _isCancelling ? null : _showCancelEventDialog,
+        child: Text(
+          'Cancel this event',
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.shade500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showCancelEventDialog() async {
+    final event = _event!;
+    final dateFormatted = DateFormat('EEEE d MMMM yyyy').format(event.dateTime);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: !_isCancelling,
+      builder: (context) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          contentPadding: const EdgeInsets.all(24),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Warning icon
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.red.shade600,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Title
+              const Text(
+                'Cancel Event',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Event info
+              Text(
+                event.groupName,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade400,
+                  letterSpacing: 1,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                event.title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1E293B),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                dateFormatted,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Are you sure you want to cancel this event? This cannot be undone. All attendees will be notified.',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF475569),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _isCancelling
+                          ? null
+                          : () => Navigator.of(dialogContext).pop(false),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: const BorderSide(color: Color(0xFFCBD5E1)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Not yet',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF475569),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _isCancelling
+                          ? null
+                          : () async {
+                              setDialogState(() {});
+                              setState(() => _isCancelling = true);
+                              final result = await _eventsService.cancelEvent(event.id);
+                              if (!mounted) return;
+                              setState(() => _isCancelling = false);
+                              if (!dialogContext.mounted) return;
+                              if (result.success) {
+                                Navigator.of(dialogContext).pop(true);
+                              } else {
+                                Navigator.of(dialogContext).pop(false);
+                                setState(() => _error = result.error ?? 'Failed to cancel event');
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade600,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: _isCancelling
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Cancel Event',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      widget.onEventUpdated?.call();
+      Navigator.of(context).pop(true);
+    }
   }
 
   Widget _buildInfoSidebar() {

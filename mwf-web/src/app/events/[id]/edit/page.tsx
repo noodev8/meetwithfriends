@@ -972,7 +972,7 @@ export default function EditEventPage() {
                                 onClick={() => setShowDeleteModal(true)}
                                 className="text-sm text-slate-500 hover:text-red-600 transition"
                             >
-                                Delete this event
+                                Cancel this event
                             </button>
                         </div>
                     </div>
@@ -1047,11 +1047,18 @@ export default function EditEventPage() {
                                 </svg>
                             </div>
                             <h3 className="text-lg font-bold text-slate-900 text-center mb-2">
-                                Delete Event
+                                Cancel Event
                             </h3>
-                            <p className="text-slate-600 text-center mb-6">
-                                Are you sure you want to delete this event? This cannot be undone. All attendees will be notified.
-                            </p>
+                            <div className="text-center mb-6">
+                                <p className="text-xs text-slate-400 uppercase tracking-wide">{event.group_name}</p>
+                                <p className="font-medium text-slate-800 mt-1">{event.title}</p>
+                                <p className="text-sm text-slate-500 mt-0.5">
+                                    {new Date(event.date_time).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                                </p>
+                                <p className="text-slate-600 mt-3">
+                                    Are you sure you want to cancel this event? This cannot be undone. All attendees will be notified.
+                                </p>
+                            </div>
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setShowDeleteModal(false)}
@@ -1065,7 +1072,7 @@ export default function EditEventPage() {
                                     disabled={cancelLoading}
                                     className="flex-1 px-4 py-2.5 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition disabled:opacity-50"
                                 >
-                                    {cancelLoading ? 'Deleting...' : 'Delete'}
+                                    {cancelLoading ? 'Cancelling...' : 'Cancel Event'}
                                 </button>
                             </div>
                         </div>
