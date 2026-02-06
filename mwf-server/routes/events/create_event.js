@@ -21,7 +21,8 @@ Request Payload:
   "preorders_enabled": true,              // boolean, optional (default: false)
   "menu_link": "https://...",            // string, optional (URL to menu)
   "menu_images": ["https://..."],        // array of strings, optional (Cloudinary URLs for menu photos, max 10)
-  "preorder_cutoff": "2026-01-14T12:00:00Z"  // ISO datetime, optional (deadline for pre-orders, requires preorders_enabled)
+  "preorder_cutoff": "2026-01-14T12:00:00Z",  // ISO datetime, optional (deadline for pre-orders, requires preorders_enabled)
+  "broadcast": true                      // boolean, optional (default: false) - if true, queue notification emails to group members
 }
 
 Success Response:
@@ -76,7 +77,7 @@ const VALID_CATEGORIES = ['food', 'outdoor', 'games', 'coffee', 'arts', 'learnin
 
 router.post('/create', verifyToken, async (req, res) => {
     try {
-        const { group_id, title, description, location, date_time, capacity, category, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, menu_images, preorder_cutoff, waitlist_enabled } = req.body;
+        const { group_id, title, description, location, date_time, capacity, category, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, menu_images, preorder_cutoff, waitlist_enabled, broadcast } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -278,22 +279,34 @@ router.post('/create', verifyToken, async (req, res) => {
             details: result.title
         });
 
-        const membersResult = await query(
-            `SELECT u.email, u.name
-             FROM group_member gm
-             JOIN app_user u ON gm.user_id = u.id
-             WHERE gm.group_id = $1
-             AND gm.status = 'active'
-             AND gm.user_id != $2
-             AND u.receive_broadcasts != false`,
-            [group_id, userId]
-        );
+        // =======================================================================
+        // Only queue broadcast emails if host chose to broadcast now
+        // If not broadcast, the host can broadcast later via the broadcast endpoint
+        // =======================================================================
+        if (broadcast) {
+            const membersResult = await query(
+                `SELECT u.email, u.name
+                 FROM group_member gm
+                 JOIN app_user u ON gm.user_id = u.id
+                 WHERE gm.group_id = $1
+                 AND gm.status = 'active'
+                 AND gm.user_id != $2
+                 AND u.receive_broadcasts != false`,
+                [group_id, userId]
+            );
 
-        // Queue emails for later processing (respects rate limits)
-        for (const member of membersResult.rows) {
-            queueNewEventEmail(member.email, member.name, result, group, hostName).catch(err => {
-                console.error('Failed to queue new event email:', err);
-            });
+            // Queue emails for later processing (respects rate limits)
+            for (const member of membersResult.rows) {
+                queueNewEventEmail(member.email, member.name, result, group, hostName).catch(err => {
+                    console.error('Failed to queue new event email:', err);
+                });
+            }
+
+            // Mark event as broadcast
+            await query(
+                'UPDATE event_list SET broadcast_sent_at = NOW() WHERE id = $1',
+                [result.id]
+            );
         }
 
         // =======================================================================

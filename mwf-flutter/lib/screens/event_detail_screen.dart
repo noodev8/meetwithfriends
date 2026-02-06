@@ -39,6 +39,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
   bool _isGroupMember = false;
   bool _canEdit = false;
+  bool _broadcastLoading = false;
 
   // Comments state
   List<Comment> _comments = [];
@@ -147,6 +148,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           eventId: event.id,
           eventTitle: event.title,
           waitlistEnabled: event.waitlistEnabled,
+          canEdit: _canEdit,
         ),
       ),
     );
@@ -453,6 +455,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         _buildAttendeesSection(event, margin),
                         if (_canEdit && !event.isPast && !event.isCancelled)
                           _buildInviteTile(event, margin),
+                        if (_canEdit && !event.isPast && !event.isCancelled && event.broadcastSentAt == null)
+                          _buildBroadcastTile(event, margin),
 
                         // Discussion Section (for group members)
                         if (_isGroupMember)
@@ -1326,6 +1330,143 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
+  Future<void> _handleBroadcast() async {
+    if (_event == null) return;
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Broadcast event?',
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+        ),
+        content: const Text(
+          'This will email all group members about this event. This can only be done once.',
+          style: TextStyle(fontSize: 14, color: Color(0xFF475569)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(
+              'Not yet',
+              style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(
+              'Broadcast',
+              style: TextStyle(color: Color(0xFF7C3AED), fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _broadcastLoading = true);
+
+    final result = await _eventsService.broadcastEvent(_event!.id);
+
+    if (!mounted) return;
+
+    setState(() => _broadcastLoading = false);
+
+    if (result.success) {
+      // Reload event to get updated broadcast_sent_at
+      _loadEvent();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.message ?? 'Event broadcast sent'),
+          backgroundColor: const Color(0xFF7C3AED),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.error ?? 'Failed to broadcast'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Widget _buildBroadcastTile(EventDetail event, double margin) {
+    return Container(
+      margin: EdgeInsets.fromLTRB(margin, 0, margin, 16),
+      child: GestureDetector(
+        onTap: _broadcastLoading ? null : _handleBroadcast,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F3FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.campaign_rounded,
+                  size: 20,
+                  color: Color(0xFF7C3AED),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Broadcast Event',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Email all group members about this event',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF94A3B8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (_broadcastLoading)
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Color(0xFF7C3AED),
+                  ),
+                )
+              else
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Color(0xFF94A3B8),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildRsvpSection(EventDetail event, double margin) {
     return Padding(
       padding: EdgeInsets.fromLTRB(margin, 0, margin, margin),
@@ -1417,11 +1558,21 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       );
     }
 
-    // Not RSVP'd - show join button or disabled "Event Full"
+    // Not RSVP'd - show join button or disabled states
+    final isRsvpsClosed = event.rsvpsClosed;
     final isFullNoWaitlist = event.isFull && !event.waitlistEnabled;
-    final buttonText = isFullNoWaitlist
-        ? 'Event Full'
-        : (event.isFull ? 'Join Waitlist' : 'Count me in');
+    final isDisabled = isRsvpsClosed || isFullNoWaitlist;
+
+    String buttonText;
+    if (isRsvpsClosed) {
+      buttonText = 'RSVPs Closed';
+    } else if (isFullNoWaitlist) {
+      buttonText = 'Event Full';
+    } else if (event.isFull) {
+      buttonText = 'Join Waitlist';
+    } else {
+      buttonText = 'Count me in';
+    }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1429,12 +1580,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: isFullNoWaitlist || _rsvpLoading ? null : () => _handleRsvp('join'),
+            onPressed: isDisabled || _rsvpLoading ? null : () => _handleRsvp('join'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: isFullNoWaitlist ? Colors.grey.shade400 : const Color(0xFF7C3AED),
+              backgroundColor: isDisabled ? Colors.grey.shade400 : const Color(0xFF7C3AED),
               foregroundColor: Colors.white,
-              disabledBackgroundColor: isFullNoWaitlist ? Colors.grey.shade300 : const Color(0xFF7C3AED).withAlpha(153),
-              disabledForegroundColor: isFullNoWaitlist ? Colors.grey.shade500 : Colors.white.withAlpha(179),
+              disabledBackgroundColor: isDisabled ? Colors.grey.shade300 : const Color(0xFF7C3AED).withAlpha(153),
+              disabledForegroundColor: isDisabled ? Colors.grey.shade500 : Colors.white.withAlpha(179),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),

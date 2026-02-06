@@ -43,6 +43,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
   EventCategory _selectedCategory = EventCategory.food;
   int? _capacity;
   bool _waitlistEnabled = true;
+  bool _rsvpsClosed = false;
   bool _capacityExpanded = false;
   bool _preordersExpanded = false;
   bool _preordersEnabled = false;
@@ -103,6 +104,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
 
       _capacity = event.capacity;
       _waitlistEnabled = event.waitlistEnabled;
+      _rsvpsClosed = event.rsvpsClosed;
       if (_capacity != null && ![6, 10, 12].contains(_capacity)) {
         _customCapacityController.text = _capacity.toString();
       }
@@ -253,6 +255,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
       menuLink: _menuLinkController.text.trim(),
       preorderCutoff: preorderCutoff,
       preorderCutoffCleared: preorderCutoffCleared,
+      rsvpsClosed: _rsvpsClosed,
     );
 
     if (!mounted) return;
@@ -889,6 +892,49 @@ class _EditEventScreenState extends State<EditEventScreen> {
                 style: TextStyle(fontSize: 13, color: Colors.amber.shade800),
               ),
             ],
+          ],
+          // Close RSVPs toggle - always visible
+          const SizedBox(height: 16),
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Close RSVPs',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Stop accepting new RSVPs',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch.adaptive(
+                value: _rsvpsClosed,
+                onChanged: (val) => setState(() => _rsvpsClosed = val),
+                activeTrackColor: Colors.red,
+              ),
+            ],
+          ),
+          if (_rsvpsClosed) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Members will not be able to RSVP or join the waitlist',
+              style: TextStyle(fontSize: 13, color: Colors.amber.shade800),
+            ),
           ],
         ],
       ),

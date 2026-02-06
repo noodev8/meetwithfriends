@@ -47,6 +47,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   DateTime? _customCutoffDate;
   TimeOfDay _customCutoffTime = const TimeOfDay(hour: 17, minute: 0);
   List<String> _menuImages = [];
+  bool _broadcast = false;
 
   bool _isSubmitting = false;
   String? _error;
@@ -170,6 +171,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           ? null
           : _menuLinkController.text.trim(),
       preorderCutoff: preorderCutoff,
+      broadcast: _broadcast,
     );
 
     if (!mounted) return;
@@ -349,6 +351,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           _buildCapacityCard(),
           const SizedBox(height: 12),
           _buildPreordersCard(),
+          const SizedBox(height: 12),
+          _buildBroadcastCard(),
           const SizedBox(height: 32),
 
           // Submit buttons
@@ -1187,6 +1191,61 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBroadcastCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.campaign_rounded, size: 18, color: Color(0xFF64748B)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'Notify group members',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Email all members now, or do it later',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch.adaptive(
+              value: _broadcast,
+              onChanged: (val) => setState(() => _broadcast = val),
+              activeTrackColor: const Color(0xFF7C3AED),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -31,6 +31,7 @@ Success Response:
     "menu_images": ["https://..."],      // array of Cloudinary URLs for menu photos (null if not set)
     "preorder_cutoff": "2026-01-14T12:00:00.000Z",  // deadline for pre-orders (null if not set)
     "status": "published",
+    "broadcast_sent_at": "2026-01-01T00:00:00.000Z",  // timestamp or null (null = not yet broadcast)
     "attendee_count": 12,
     "total_guest_count": 5,
     "waitlist_count": 3,
@@ -110,6 +111,8 @@ router.get('/:id', optionalAuth, async (req, res) => {
                 e.preorder_cutoff,
                 e.status,
                 e.waitlist_enabled,
+                e.rsvps_closed,
+                e.broadcast_sent_at,
                 e.created_at,
                 COUNT(r.id) FILTER (WHERE r.status = 'attending') AS attendee_count,
                 COALESCE(SUM(r.guest_count) FILTER (WHERE r.status = 'attending'), 0) AS total_guest_count,

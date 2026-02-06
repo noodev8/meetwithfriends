@@ -59,6 +59,7 @@ export interface UpdateEventPayload {
     preorder_cutoff?: string | null;
     category?: 'food' | 'outdoor' | 'games' | 'coffee' | 'arts' | 'learning' | 'other';
     waitlist_enabled?: boolean;
+    rsvps_closed?: boolean;
 }
 
 // Attendee type
@@ -91,6 +92,7 @@ export interface CreateEventPayload {
     preorder_cutoff?: string;
     category: 'food' | 'outdoor' | 'games' | 'coffee' | 'arts' | 'learning' | 'other';
     waitlist_enabled?: boolean;
+    broadcast?: boolean;
 }
 
 /*
@@ -833,6 +835,37 @@ export async function enableMagicLink(
     return {
         success: false,
         error: (response.message as string) || 'Failed to enable invite link',
+        return_code: response.return_code,
+    };
+}
+
+/*
+=======================================================================================================================================
+broadcastEvent
+=======================================================================================================================================
+Broadcasts event notification emails to all active group members.
+Only hosts and organisers can broadcast. Can only be called once per event.
+=======================================================================================================================================
+*/
+export async function broadcastEvent(
+    token: string,
+    eventId: number
+): Promise<ApiResult<{ message: string; queued_count: number }>> {
+    const response = await apiCall(`/api/events/${eventId}/broadcast`, {}, token);
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: {
+                message: response.message as string,
+                queued_count: response.queued_count as unknown as number,
+            },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to broadcast event',
         return_code: response.return_code,
     };
 }

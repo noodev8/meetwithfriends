@@ -52,6 +52,7 @@ export default function EditEventPage() {
     const [menuLink, setMenuLink] = useState('');
     const [menuImages, setMenuImages] = useState<string[]>([]);
     const [waitlistEnabled, setWaitlistEnabled] = useState(true);
+    const [rsvpsClosed, setRsvpsClosed] = useState(false);
     const [preorderCutoffDate, setPreorderCutoffDate] = useState('');
     const [preorderCutoffTime, setPreorderCutoffTime] = useState('');
 
@@ -101,6 +102,7 @@ export default function EditEventPage() {
                 setMaxGuestsPerRsvp(evt.max_guests_per_rsvp || 1);
                 setPreordersEnabled(evt.preorders_enabled || false);
                 setWaitlistEnabled(evt.waitlist_enabled !== false);
+                setRsvpsClosed(evt.rsvps_closed || false);
                 setMenuLink(evt.menu_link || '');
                 setMenuImages(evt.menu_images || []);
 
@@ -240,6 +242,7 @@ export default function EditEventPage() {
             menu_images: preordersEnabled && menuImages.length > 0 ? menuImages : null,
             preorder_cutoff: preordersEnabled ? preorderCutoff : null,
             waitlist_enabled: capacity ? waitlistEnabled : undefined,
+            rsvps_closed: rsvpsClosed,
         });
 
         setSubmitting(false);
@@ -624,6 +627,33 @@ export default function EditEventPage() {
                                                             )}
                                                         </div>
                                                     )}
+                                                    {/* Close RSVPs toggle */}
+                                                    <div className="mt-4 pt-4 border-t border-slate-100">
+                                                        <div className="flex items-center justify-between">
+                                                            <div>
+                                                                <p className="font-medium text-slate-800">Close RSVPs</p>
+                                                                <p className="text-sm text-slate-500">Stop accepting new RSVPs</p>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setRsvpsClosed(!rsvpsClosed)}
+                                                                className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+                                                                    rsvpsClosed ? 'bg-red-500' : 'bg-slate-300'
+                                                                }`}
+                                                            >
+                                                                <span
+                                                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
+                                                                        rsvpsClosed ? 'translate-x-5' : 'translate-x-0'
+                                                                    }`}
+                                                                />
+                                                            </button>
+                                                        </div>
+                                                        {rsvpsClosed && (
+                                                            <p className="mt-2 text-sm text-amber-700">
+                                                                Members will not be able to RSVP or join the waitlist
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}

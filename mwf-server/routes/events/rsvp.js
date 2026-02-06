@@ -107,7 +107,7 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
             // ===================================================================
             const eventResult = await client.query(
                 `SELECT e.id, e.group_id, e.capacity, e.status, e.date_time, e.allow_guests, e.max_guests_per_rsvp, e.title, e.location, e.created_by,
-                        e.waitlist_enabled, g.name AS group_name
+                        e.waitlist_enabled, e.rsvps_closed, g.name AS group_name
                  FROM event_list e
                  JOIN group_list g ON g.id = e.group_id
                  WHERE e.id = $1
@@ -184,6 +184,14 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
             // Handle JOIN action
             // ===================================================================
             if (action === 'join') {
+                // Check if RSVPs are closed
+                if (event.rsvps_closed) {
+                    return {
+                        return_code: 'RSVPS_CLOSED',
+                        message: 'RSVPs are closed for this event'
+                    };
+                }
+
                 // Allow rejoining if status is 'not_going', otherwise error
                 if (existingRsvp.rows.length > 0 && existingRsvp.rows[0].status !== 'not_going') {
                     return {

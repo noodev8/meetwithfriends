@@ -55,6 +55,7 @@ export default function CreateEventPage() {
     const [waitlistEnabled, setWaitlistEnabled] = useState(true);
     const [preorderCutoffDate, setPreorderCutoffDate] = useState('');
     const [preorderCutoffTime, setPreorderCutoffTime] = useState('');
+    const [broadcast, setBroadcast] = useState(false);
 
     // UI state - individual option card expansion (all collapsed by default)
     // const [imageExpanded, setImageExpanded] = useState(false); // Hidden - using category gradients
@@ -187,6 +188,7 @@ export default function CreateEventPage() {
             menu_images: preordersEnabled && menuImages.length > 0 ? menuImages : undefined,
             preorder_cutoff: preordersEnabled ? preorderCutoff : undefined,
             waitlist_enabled: capacity ? waitlistEnabled : undefined,
+            broadcast,
         });
 
         setSubmitting(false);
@@ -832,6 +834,31 @@ export default function CreateEventPage() {
                                         )}
                                     </div>
                                     */}
+                                </div>
+                            </div>
+
+                            {/* ============================================================
+                                BROADCAST OPTION
+                            ============================================================ */}
+                            <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="font-medium text-slate-800">Notify group members</p>
+                                        <p className="text-sm text-slate-500 mt-0.5">Email all members about this event now, or do it later from the event page</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setBroadcast(!broadcast)}
+                                        className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ml-4 ${
+                                            broadcast ? 'bg-indigo-600' : 'bg-slate-300'
+                                        }`}
+                                    >
+                                        <span
+                                            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
+                                                broadcast ? 'translate-x-5' : 'translate-x-0'
+                                            }`}
+                                        />
+                                    </button>
                                 </div>
                             </div>
 

@@ -66,6 +66,8 @@ export interface Event {
     preorder_cutoff?: string;
     category?: 'food' | 'outdoor' | 'games' | 'coffee' | 'arts' | 'learning' | 'other';
     waitlist_enabled?: boolean;
+    rsvps_closed?: boolean;
+    broadcast_sent_at?: string;
     status: 'published' | 'cancelled';
     created_at: string;
     attendee_count?: number;

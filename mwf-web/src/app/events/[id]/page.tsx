@@ -18,6 +18,7 @@ import {
     getAttendees,
     rsvpEvent,
     updateRsvp,
+    broadcastEvent,
     EventWithDetails,
     RsvpStatus,
     Attendee,
@@ -75,6 +76,10 @@ export default function EventDetailPage() {
 
     // Manage hosts modal state
     const [showManageHosts, setShowManageHosts] = useState(false);
+
+    // Broadcast state
+    const [broadcastLoading, setBroadcastLoading] = useState(false);
+    const [showBroadcastConfirm, setShowBroadcastConfirm] = useState(false);
 
     // Description expand/collapse state
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
@@ -315,6 +320,25 @@ export default function EventDetailPage() {
             setComments(prev => prev.filter(c => c.id !== commentId));
         } else {
             alert(result.error || 'Failed to delete comment');
+        }
+    };
+
+    // =======================================================================
+    // Handle broadcast event
+    // =======================================================================
+    const handleBroadcast = async () => {
+        if (!token || !event) return;
+
+        setBroadcastLoading(true);
+        const result = await broadcastEvent(token, event.id);
+        setBroadcastLoading(false);
+        setShowBroadcastConfirm(false);
+
+        if (result.success) {
+            // Update event to reflect broadcast status
+            setEvent(prev => prev ? { ...prev, broadcast_sent_at: new Date().toISOString() } : prev);
+        } else {
+            alert(result.error || 'Failed to broadcast event');
         }
     };
 
@@ -572,6 +596,18 @@ export default function EventDetailPage() {
                                         </svg>
                                         Duplicate
                                     </Link>
+                                )}
+                                {canEdit && !isPastEvent && !event.broadcast_sent_at && event.status !== 'cancelled' && (
+                                    <button
+                                        onClick={() => setShowBroadcastConfirm(true)}
+                                        disabled={broadcastLoading}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-full transition-colors disabled:opacity-50"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                                        </svg>
+                                        Broadcast
+                                    </button>
                                 )}
                             </div>
 
@@ -1186,7 +1222,14 @@ export default function EventDetailPage() {
                                         ))}
                                     </select>
                                 )}
-                                {spotsRemaining === 0 && event.waitlist_enabled === false ? (
+                                {event.rsvps_closed ? (
+                                    <button
+                                        disabled
+                                        className="px-8 py-3 bg-slate-400 text-white font-semibold rounded-xl cursor-not-allowed opacity-75"
+                                    >
+                                        RSVPs Closed
+                                    </button>
+                                ) : spotsRemaining === 0 && event.waitlist_enabled === false ? (
                                     <button
                                         disabled
                                         className="px-8 py-3 bg-slate-400 text-white font-semibold rounded-xl cursor-not-allowed opacity-75"
@@ -1225,6 +1268,41 @@ export default function EventDetailPage() {
                     onClose={() => setShowManageHosts(false)}
                     onHostsChanged={(updatedHosts) => setHosts(updatedHosts)}
                 />
+            )}
+
+            {/* Broadcast Confirmation Modal */}
+            {showBroadcastConfirm && (
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                    onClick={() => setShowBroadcastConfirm(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className="text-lg font-bold text-slate-900 font-display mb-2">
+                            Broadcast event?
+                        </h3>
+                        <p className="text-sm text-slate-600 mb-6">
+                            This will email all group members about this event. This can only be done once.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowBroadcastConfirm(false)}
+                                className="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition font-medium"
+                            >
+                                Not yet
+                            </button>
+                            <button
+                                onClick={handleBroadcast}
+                                disabled={broadcastLoading}
+                                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl hover:from-indigo-600 hover:to-violet-700 transition font-medium disabled:opacity-50"
+                            >
+                                {broadcastLoading ? 'Sending...' : 'Broadcast'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Cancel RSVP Confirmation Modal */}

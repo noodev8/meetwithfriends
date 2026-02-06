@@ -10,12 +10,14 @@ class AttendeesScreen extends StatefulWidget {
   final int eventId;
   final String eventTitle;
   final bool waitlistEnabled;
+  final bool canEdit;
 
   const AttendeesScreen({
     super.key,
     required this.eventId,
     required this.eventTitle,
     this.waitlistEnabled = true,
+    this.canEdit = false,
   });
 
   @override
@@ -40,6 +42,9 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
 
   // For event hosts lookup (simplified - in production would come from API)
   final Set<int> _hostIds = {};
+
+  // Track which attendee action is loading
+  int? _actionLoadingUserId;
 
   @override
   void initState() {
@@ -686,89 +691,373 @@ class _AttendeesScreenState extends State<AttendeesScreen> {
     final initial = attendee.name.isNotEmpty
         ? attendee.name[0].toUpperCase()
         : '?';
-    final rsvpFormat = DateFormat('d MMM yyyy, HH:mm');
+
+    // Determine status text and color based on current tab
+    String statusText;
+    Color statusColor;
+    switch (_activeTab) {
+      case AttendeeTab.going:
+        statusText = 'Going';
+        statusColor = const Color(0xFF10B981);
+        break;
+      case AttendeeTab.waitlist:
+        statusText = attendee.waitlistPosition != null
+            ? 'Waitlist #${attendee.waitlistPosition}'
+            : 'Waitlist';
+        statusColor = const Color(0xFFF59E0B);
+        break;
+      case AttendeeTab.notGoing:
+        statusText = 'Not going';
+        statusColor = const Color(0xFF64748B);
+        break;
+    }
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 320),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Card with avatar, name, status, and actions
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(40),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Close button row
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 8, right: 8),
+                        child: IconButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          icon: const Icon(Icons.close_rounded),
+                          color: const Color(0xFF94A3B8),
+                          iconSize: 24,
+                        ),
+                      ),
+                    ),
+
+                    // Large avatar (tappable for full-screen view)
+                    GestureDetector(
+                      onTap: () => _showFullScreenAvatar(attendee),
+                      child: Container(
+                        width: 160,
+                        height: 160,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: attendee.avatarUrl == null
+                              ? const LinearGradient(
+                                  colors: [Color(0xFFE0E7FF), Color(0xFFEDE9FE)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                )
+                              : null,
+                          image: attendee.avatarUrl != null
+                              ? DecorationImage(
+                                  image: NetworkImage(attendee.avatarUrl!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(25),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: attendee.avatarUrl == null
+                            ? Center(
+                                child: Text(
+                                  initial,
+                                  style: const TextStyle(
+                                    fontSize: 64,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF6366F1),
+                                  ),
+                                ),
+                              )
+                            : null,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Name
+                    Text(
+                      attendee.name,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E293B),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    // Status badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: statusColor.withAlpha(25),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        statusText,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: statusColor,
+                        ),
+                      ),
+                    ),
+
+                    // Action buttons (only if canEdit and not "Not going" tab)
+                    if (widget.canEdit && _activeTab != AttendeeTab.notGoing) ...[
+                      const SizedBox(height: 20),
+                      const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            // Move to waitlist (only for Going tab, if waitlist enabled)
+                            if (_activeTab == AttendeeTab.going && widget.waitlistEnabled)
+                              _buildActionButton(
+                                label: 'Move to waitlist',
+                                icon: Icons.schedule_rounded,
+                                color: const Color(0xFFF59E0B),
+                                onTap: () => _handleManageAttendee(attendee, 'demote'),
+                                isLoading: _actionLoadingUserId == attendee.userId,
+                              ),
+
+                            // Move to going (only for Waitlist tab)
+                            if (_activeTab == AttendeeTab.waitlist)
+                              _buildActionButton(
+                                label: 'Move to going',
+                                icon: Icons.check_circle_rounded,
+                                color: const Color(0xFF10B981),
+                                onTap: () => _handleManageAttendee(attendee, 'promote'),
+                                isLoading: _actionLoadingUserId == attendee.userId,
+                              ),
+
+                            if (_activeTab == AttendeeTab.going && widget.waitlistEnabled ||
+                                _activeTab == AttendeeTab.waitlist)
+                              const SizedBox(height: 10),
+
+                            // Remove from event (always shown for Going/Waitlist)
+                            _buildActionButton(
+                              label: 'Remove from event',
+                              icon: Icons.person_remove_rounded,
+                              color: Colors.red,
+                              onTap: () => _handleManageAttendee(attendee, 'remove'),
+                              isLoading: _actionLoadingUserId == attendee.userId,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ] else
+                      const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+    required bool isLoading,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: isLoading ? null : onTap,
+        icon: isLoading
+            ? SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: color,
+                ),
+              )
+            : Icon(icon, size: 18),
+        label: Text(label),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color.withAlpha(25),
+          foregroundColor: color,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showFullScreenAvatar(Attendee attendee) {
+    final initial = attendee.name.isNotEmpty
+        ? attendee.name[0].toUpperCase()
+        : '?';
 
     showDialog(
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Large avatar
-            Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100),
-                gradient: attendee.avatarUrl == null
-                    ? const LinearGradient(
-                        colors: [Color(0xFFE0E7FF), Color(0xFFEDE9FE)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : null,
-                image: attendee.avatarUrl != null
-                    ? DecorationImage(
-                        image: NetworkImage(attendee.avatarUrl!),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(64),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: attendee.avatarUrl == null
-                  ? Center(
-                      child: Text(
-                        initial,
-                        style: const TextStyle(
-                          fontSize: 80,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF6366F1),
-                        ),
-                      ),
+        child: GestureDetector(
+          onTap: () => Navigator.of(context).pop(),
+          child: Container(
+            width: 280,
+            height: 280,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: attendee.avatarUrl == null
+                  ? const LinearGradient(
+                      colors: [Color(0xFFE0E7FF), Color(0xFFEDE9FE)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     )
                   : null,
+              image: attendee.avatarUrl != null
+                  ? DecorationImage(
+                      image: NetworkImage(attendee.avatarUrl!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(64),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            // Name and RSVP time
-            Container(
-              constraints: const BoxConstraints(maxWidth: 300),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    attendee.name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1E293B),
+            child: attendee.avatarUrl == null
+                ? Center(
+                    child: Text(
+                      initial,
+                      style: const TextStyle(
+                        fontSize: 100,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF6366F1),
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    rsvpFormat.format(attendee.rsvpAt),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF64748B),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+                  )
+                : null,
+          ),
         ),
       ),
     );
+  }
+
+  Future<void> _handleManageAttendee(Attendee attendee, String action) async {
+    final actionLabels = {
+      'remove': 'remove from event',
+      'demote': 'move to waitlist',
+      'promote': 'move to going',
+    };
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Confirm action',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1E293B),
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to ${actionLabels[action]} ${attendee.name}?',
+          style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF64748B),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF64748B),
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: action == 'remove' ? Colors.red : const Color(0xFF7C3AED),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 0,
+            ),
+            child: const Text(
+              'Confirm',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _actionLoadingUserId = attendee.userId);
+
+    final result = await _eventsService.manageAttendee(
+      widget.eventId,
+      attendee.userId,
+      action,
+    );
+
+    if (mounted) {
+      setState(() => _actionLoadingUserId = null);
+
+      if (result.success) {
+        Navigator.of(context).pop(); // Close the modal
+        _loadAttendees(); // Refresh the list
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.message ?? 'Attendee updated'),
+            backgroundColor: const Color(0xFF10B981),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.error ?? 'Failed to update attendee'),
+            backgroundColor: Colors.red.shade600,
+          ),
+        );
+      }
+    }
   }
 }

@@ -60,7 +60,7 @@ const VALID_CATEGORIES = ['food', 'outdoor', 'games', 'coffee', 'arts', 'learnin
 router.post('/:id/update', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, location, date_time, capacity, category, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, menu_images, preorder_cutoff, waitlist_enabled } = req.body;
+        const { title, description, location, date_time, capacity, category, image_url, image_position, allow_guests, max_guests_per_rsvp, preorders_enabled, menu_link, menu_images, preorder_cutoff, waitlist_enabled, rsvps_closed } = req.body;
         const userId = req.user.id;
 
         // =======================================================================
@@ -306,6 +306,11 @@ router.post('/:id/update', verifyToken, async (req, res) => {
         if (waitlist_enabled !== undefined) {
             updates.push(`waitlist_enabled = $${paramCount++}`);
             values.push(Boolean(waitlist_enabled));
+        }
+
+        if (rsvps_closed !== undefined) {
+            updates.push(`rsvps_closed = $${paramCount++}`);
+            values.push(Boolean(rsvps_closed));
         }
 
         // Always update updated_at

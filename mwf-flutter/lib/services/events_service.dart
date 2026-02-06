@@ -225,6 +225,31 @@ class EventsService {
     );
   }
 
+  /// Manage an attendee - remove, demote to waitlist, or promote to going
+  /// action: 'remove' | 'demote' | 'promote'
+  Future<ManageAttendeeResult> manageAttendee(
+    int eventId,
+    int userId,
+    String action,
+  ) async {
+    final response = await _api.post('/events/$eventId/manage-attendee', {
+      'user_id': userId,
+      'action': action,
+    });
+
+    if (response['return_code'] == 'SUCCESS') {
+      return ManageAttendeeResult(
+        success: true,
+        message: response['message'] as String?,
+      );
+    }
+
+    return ManageAttendeeResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to manage attendee',
+    );
+  }
+
   /// Create a new event
   Future<CreateEventResult> createEvent({
     required int groupId,
@@ -241,6 +266,7 @@ class EventsService {
     List<String>? menuImages,
     DateTime? preorderCutoff,
     bool? waitlistEnabled,
+    bool broadcast = false,
   }) async {
     final body = <String, dynamic>{
       'group_id': groupId,
@@ -276,6 +302,9 @@ class EventsService {
     }
     if (waitlistEnabled != null && capacity != null) {
       body['waitlist_enabled'] = waitlistEnabled;
+    }
+    if (broadcast) {
+      body['broadcast'] = true;
     }
 
     final response = await _api.post('/events/create', body);
@@ -318,6 +347,7 @@ class EventsService {
     DateTime? preorderCutoff,
     bool? preorderCutoffCleared, // Set to true to clear preorder cutoff
     bool? waitlistEnabled,
+    bool? rsvpsClosed,
   }) async {
     final body = <String, dynamic>{};
 
@@ -359,6 +389,9 @@ class EventsService {
     }
     if (waitlistEnabled != null) {
       body['waitlist_enabled'] = waitlistEnabled;
+    }
+    if (rsvpsClosed != null) {
+      body['rsvps_closed'] = rsvpsClosed;
     }
 
     final response = await _api.post('/events/$eventId/update', body);
@@ -485,6 +518,24 @@ class EventsService {
     return MagicLinkActionResult(
       success: false,
       error: response['message'] as String? ?? 'Failed to enable invite link',
+    );
+  }
+
+  /// Broadcast event notification emails to all group members
+  Future<BroadcastResult> broadcastEvent(int eventId) async {
+    final response = await _api.post('/events/$eventId/broadcast', {});
+
+    if (response['return_code'] == 'SUCCESS') {
+      return BroadcastResult(
+        success: true,
+        message: response['message'] as String?,
+        queuedCount: response['queued_count'] as int? ?? 0,
+      );
+    }
+
+    return BroadcastResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to broadcast event',
     );
   }
 }
@@ -616,6 +667,8 @@ class EventDetail {
   final List<String>? menuImages;
   final DateTime? preorderCutoff;
   final bool waitlistEnabled;
+  final bool rsvpsClosed;
+  final DateTime? broadcastSentAt;
   final String status;
   final int attendeeCount;
   final int totalGuestCount;
@@ -644,6 +697,8 @@ class EventDetail {
     this.menuImages,
     this.preorderCutoff,
     this.waitlistEnabled = true,
+    this.rsvpsClosed = false,
+    this.broadcastSentAt,
     required this.status,
     required this.attendeeCount,
     required this.totalGuestCount,
@@ -677,6 +732,10 @@ class EventDetail {
           ? DateTime.parse(json['preorder_cutoff'] as String)
           : null,
       waitlistEnabled: json['waitlist_enabled'] as bool? ?? true,
+      rsvpsClosed: json['rsvps_closed'] as bool? ?? false,
+      broadcastSentAt: json['broadcast_sent_at'] != null
+          ? DateTime.parse(json['broadcast_sent_at'] as String)
+          : null,
       status: json['status'] as String? ?? 'published',
       attendeeCount: json['attendee_count'] as int? ?? 0,
       totalGuestCount: json['total_guest_count'] as int? ?? 0,
@@ -865,5 +924,31 @@ class RemoveHostResult {
     this.message,
     this.error,
     this.returnCode,
+  });
+}
+
+class ManageAttendeeResult {
+  final bool success;
+  final String? message;
+  final String? error;
+
+  ManageAttendeeResult({
+    required this.success,
+    this.message,
+    this.error,
+  });
+}
+
+class BroadcastResult {
+  final bool success;
+  final String? message;
+  final int queuedCount;
+  final String? error;
+
+  BroadcastResult({
+    required this.success,
+    this.message,
+    this.queuedCount = 0,
+    this.error,
   });
 }
