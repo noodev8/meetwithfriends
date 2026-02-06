@@ -131,7 +131,6 @@ async function sendEmail(to, subject, html, emailType, relatedId = null, replyTo
         }
 
         const { data, error } = await resend.emails.send(emailOptions);
-        console.log(`[Email] ${emailType} to ${to} — Resend response:`, JSON.stringify({ data, error }));
 
         if (error) {
             console.error('Resend error:', error);
@@ -139,15 +138,6 @@ async function sendEmail(to, subject, html, emailType, relatedId = null, replyTo
                 await logEmail(to, emailType, subject, 'failed', relatedId, error.message);
             }
             return { success: false, error };
-        }
-
-        // Validate that Resend returned a real email ID
-        if (!data?.id) {
-            console.error('Resend returned no email ID:', JSON.stringify({ data, error }));
-            if (!isTestEmail) {
-                await logEmail(to, emailType, subject, 'failed', relatedId, 'No email ID returned from Resend');
-            }
-            return { success: false, error: { message: 'No email ID returned from Resend' } };
         }
 
         // Log successful send (only for real emails, test already logged as intercepted)
