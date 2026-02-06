@@ -1553,7 +1553,9 @@ class _EditEventScreenState extends State<EditEventScreen> {
 
     if (confirmed == true && mounted) {
       widget.onEventUpdated?.call();
+      // Pop twice: edit screen + event detail screen, back to group page
       Navigator.of(context).pop(true);
+      if (mounted) Navigator.of(context).pop(true);
     }
   }
 
