@@ -694,23 +694,23 @@ export default function EventDetailPage() {
                                             </div>
                                         </div>
                                     ) : (
-                                        /* No order yet — indigo/violet prompt banner */
-                                        <div className="relative overflow-hidden rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50 via-violet-50 to-purple-50">
+                                        /* No order yet — red prompt banner */
+                                        <div className="relative overflow-hidden rounded-xl border border-red-200 bg-gradient-to-r from-red-50 via-rose-50 to-red-50">
                                             <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '16px 16px' }} />
                                             <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 sm:px-5 py-3.5">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                                                        <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                                                        <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                                                         </svg>
                                                     </div>
-                                                    <p className="text-sm font-semibold text-indigo-800">
-                                                        Menu available — place your pre-order
+                                                    <p className="text-sm font-semibold text-red-800">
+                                                        You haven&#39;t placed your pre-order yet
                                                     </p>
                                                 </div>
                                                 <Link
                                                     href={`/events/${event.id}/order`}
-                                                    className="w-full sm:w-auto flex-shrink-0 px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 rounded-lg shadow-sm transition-all text-center"
+                                                    className="w-full sm:w-auto flex-shrink-0 px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 rounded-lg shadow-sm transition-all text-center"
                                                 >
                                                     Place Order
                                                 </Link>

@@ -1177,19 +1177,19 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       );
     }
 
-    // Bold primary CTA card — no order yet, action needed
+    // Red CTA card — no order yet, action needed
     return Container(
       margin: EdgeInsets.fromLTRB(margin, 0, margin, margin),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF6366F1), Color(0xFF7C3AED)],
+          colors: [Color(0xFFDC2626), Color(0xFFE11D48)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF7C3AED).withAlpha(60),
+            color: const Color(0xFFDC2626).withAlpha(60),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -1220,7 +1220,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Place your pre-order',
+                        "You haven't placed your pre-order yet",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -1230,7 +1230,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       ),
                       SizedBox(height: 2),
                       Text(
-                        'View menu & submit your order',
+                        'Tap to view menu & place your order',
                         style: TextStyle(
                           fontSize: 13,
                           color: Color(0xFFE0E7FF),
