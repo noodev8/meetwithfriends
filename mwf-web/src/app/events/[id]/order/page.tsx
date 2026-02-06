@@ -23,6 +23,7 @@ import {
     submitOrder,
     updateOrder,
     rsvpEvent,
+    sendPreorderReminder,
     EventWithDetails,
     RsvpStatus,
     Attendee,
@@ -57,6 +58,10 @@ export default function EventOrderPage() {
     const [showOrderSummary, setShowOrderSummary] = useState(false);
     const [copiedOrders, setCopiedOrders] = useState(false);
     const [pdfLoading, setPdfLoading] = useState(false);
+
+    // Pre-order reminder state
+    const [reminderSending, setReminderSending] = useState(false);
+    const [reminderSent, setReminderSent] = useState(false);
 
     // Host order editing state
     const [editingAttendeeId, setEditingAttendeeId] = useState<number | null>(null);
@@ -579,6 +584,8 @@ export default function EventOrderPage() {
                                                 src={url}
                                                 alt={`Menu page ${idx + 1}`}
                                                 fill
+                                                sizes="(min-width: 640px) 50vw, 100vw"
+                                                priority={idx === 0}
                                                 className="object-cover"
                                             />
                                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition" />
@@ -946,6 +953,44 @@ export default function EventOrderPage() {
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                                 </svg>
                                                 PDF
+                                            </>
+                                        )}
+                                    </button>
+                                )}
+
+                                {/* Remind button - only for hosts/organisers when attendees haven't ordered */}
+                                {canManageAttendees && !isPastEvent && !isCutoffPassed && attending.some(a => !a.food_order) && (
+                                    <button
+                                        onClick={async () => {
+                                            if (!token || reminderSent) return;
+                                            setReminderSending(true);
+                                            const result = await sendPreorderReminder(token, Number(params.id));
+                                            setReminderSending(false);
+                                            if (result.success) {
+                                                setReminderSent(true);
+                                            }
+                                        }}
+                                        disabled={reminderSending || reminderSent}
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-amber-600 text-white font-medium rounded-xl hover:bg-amber-700 transition disabled:opacity-50"
+                                    >
+                                        {reminderSending ? (
+                                            <>
+                                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                Sending...
+                                            </>
+                                        ) : reminderSent ? (
+                                            <>
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                Sent!
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                </svg>
+                                                Remind
                                             </>
                                         )}
                                     </button>

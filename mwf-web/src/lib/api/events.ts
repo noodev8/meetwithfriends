@@ -869,3 +869,26 @@ export async function broadcastEvent(
         return_code: response.return_code,
     };
 }
+
+export async function sendPreorderReminder(
+    token: string,
+    eventId: number
+): Promise<ApiResult<{ message: string; queued_count: number }>> {
+    const response = await apiCall(`/api/events/${eventId}/remind-preorder`, {}, token);
+
+    if (response.return_code === 'SUCCESS') {
+        return {
+            success: true,
+            data: {
+                message: response.message as string,
+                queued_count: response.queued_count as unknown as number,
+            },
+        };
+    }
+
+    return {
+        success: false,
+        error: (response.message as string) || 'Failed to send pre-order reminder',
+        return_code: response.return_code,
+    };
+}

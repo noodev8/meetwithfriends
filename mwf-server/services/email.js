@@ -1273,6 +1273,58 @@ async function queueEventReminderEmail(email, userName, event, group, isHost = f
 
 /*
 =======================================================================================================================================
+queuePreorderReminderEmail
+=======================================================================================================================================
+Queue pre-order reminder email for attendees who haven't placed their food order yet.
+Triggered by host/organiser from the orders summary screen.
+=======================================================================================================================================
+*/
+async function queuePreorderReminderEmail(email, userName, event, group, hostName) {
+    // Skip if a preorder_reminder is already pending for this recipient + event
+    const pendingCheck = await query(
+        `SELECT 1 FROM email_queue
+         WHERE recipient_email = $1
+         AND event_id = $2
+         AND email_type = 'preorder_reminder'
+         AND status = 'pending'
+         LIMIT 1`,
+        [email, event.id]
+    );
+
+    if (pendingCheck.rows.length > 0) {
+        return { success: true, alreadyPending: true };
+    }
+
+    const eventDate = new Date(event.date_time).toLocaleDateString('en-GB', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+    const eventTime = new Date(event.date_time).toLocaleTimeString('en-GB', {
+        hour: '2-digit', minute: '2-digit'
+    });
+
+    const html = wrapEmail(`
+        <h2 style="color: #333; margin-top: 0;">Place Your Pre-Order</h2>
+        <p style="color: #666; font-size: 16px;">
+            Hi ${userName},
+        </p>
+        <p style="color: #666; font-size: 16px;">
+            ${hostName} is reminding you to place your food pre-order for <strong>${event.title}</strong> on ${eventDate} at ${eventTime}${event.location ? ` at ${event.location}` : ''}.
+        </p>
+        ${emailButton(config.frontendUrl + '/events/' + event.id + '/order', 'Place Your Order')}
+        <p style="color: #999; font-size: 13px; margin-top: 20px;">
+            You received this because you're attending this event but haven't placed a pre-order yet.
+        </p>
+    `);
+
+    return queueEmail(email, userName, `Reminder: Place your pre-order for ${event.title}`, html, 'preorder_reminder', {
+        groupId: group.id,
+        eventId: event.id,
+        groupName: group.name
+    });
+}
+
+/*
+=======================================================================================================================================
 queueNewCommentEmail
 =======================================================================================================================================
 Ensures a digest email is pending for this recipient + event.
@@ -1390,5 +1442,6 @@ module.exports = {
     queueEventCancelledEmail,
     queueBroadcastEmail,
     queueEventReminderEmail,
-    queueNewCommentEmail
+    queueNewCommentEmail,
+    queuePreorderReminderEmail
 };

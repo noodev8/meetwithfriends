@@ -30,6 +30,7 @@ const calendar = require('./calendar');
 const venueAccess = require('./venue_access');
 const magicLink = require('./magic_link');
 const broadcastEvent = require('./broadcast_event');
+const remindPreorder = require('./remind_preorder');
 
 // =======================================================================
 // Route definitions
@@ -53,6 +54,7 @@ router.use('/', calendar);        // GET /api/events/:id/calendar.ics - download
 router.use('/', venueAccess);     // GET/POST/DELETE /api/events/:id/venue-access - manage venue access
 router.use('/', magicLink);       // POST /api/events/:id/magic-link/* - manage magic invite links (organiser/host)
 router.use('/', broadcastEvent);  // POST /api/events/:id/broadcast - broadcast event email to group members
+router.use('/', remindPreorder);  // POST /api/events/:id/remind-preorder - remind attendees to place pre-orders
 router.use('/', getEvent);        // GET /api/events/:id - get single event (must be last)
 
 module.exports = router;

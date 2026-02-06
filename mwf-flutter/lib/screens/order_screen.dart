@@ -35,15 +35,23 @@ class _OrderScreenState extends State<OrderScreen> {
   bool _isLoading = true;
   String? _loadError;
   bool _isSubmitting = false;
+  bool _rsvpLoading = false;
 
   late TextEditingController _orderController;
   late TextEditingController _notesController;
+  late FocusNode _orderFocusNode;
+  late ScrollController _scrollController;
+
+  bool get _isEventFull => _event?.isFull ?? false;
+  bool get _canJoinWaitlist => _isEventFull && (_event?.waitlistEnabled ?? false);
 
   @override
   void initState() {
     super.initState();
     _orderController = TextEditingController();
     _notesController = TextEditingController();
+    _orderFocusNode = FocusNode();
+    _scrollController = ScrollController();
     _loadEvent();
   }
 
@@ -51,6 +59,8 @@ class _OrderScreenState extends State<OrderScreen> {
   void dispose() {
     _orderController.dispose();
     _notesController.dispose();
+    _orderFocusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -88,6 +98,44 @@ class _OrderScreenState extends State<OrderScreen> {
           _isLoading = false;
           _loadError = eventResult.error ?? 'Failed to load event';
         });
+      }
+    }
+  }
+
+  Future<void> _handleRsvp() async {
+    setState(() => _rsvpLoading = true);
+
+    final result = await _eventsService.rsvpEvent(widget.eventId, 'join');
+
+    if (mounted) {
+      setState(() => _rsvpLoading = false);
+
+      if (result.success && result.rsvp != null) {
+        setState(() {
+          _rsvp = result.rsvp;
+        });
+
+        await _loadEvent();
+
+        if (result.rsvp!.isAttending) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_scrollController.hasClients) {
+              _scrollController.animateTo(
+                _scrollController.position.maxScrollExtent,
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOut,
+              );
+            }
+            _orderFocusNode.requestFocus();
+          });
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.error ?? 'Failed to RSVP'),
+            backgroundColor: Colors.red.shade600,
+          ),
+        );
       }
     }
   }
@@ -170,6 +218,8 @@ class _OrderScreenState extends State<OrderScreen> {
         eventLocation: _event!.location,
         attendees: _attending,
         canEditOrders: _canEdit,
+        isPastEvent: _event!.isPast,
+        isCutoffPassed: _isCutoffPassed,
         menuLink: _event!.menuLink,
         menuImages: _event!.menuImages,
         onEditOrder: _showEditOrderSheet,
@@ -382,8 +432,8 @@ class _OrderScreenState extends State<OrderScreen> {
 
     final canOrder = _rsvp != null && _rsvp!.status != 'not_going';
 
-    // Non-editable states: scrollable
-    if (!canOrder || _isCutoffPassed) {
+    // Waitlist state: can see menu but can't order yet
+    if (_rsvp != null && _rsvp!.isWaitlisted) {
       return SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         child: Center(
@@ -396,9 +446,64 @@ class _OrderScreenState extends State<OrderScreen> {
                   _buildMenuCard(),
                   const SizedBox(height: 20),
                 ],
-                if (!canOrder)
-                  _buildRsvpPrompt()
-                else
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF9C3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFEF08A)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.hourglass_top_rounded,
+                        size: 20,
+                        color: Color(0xFF854D0E),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          "You're on the waitlist. You can place your order when you're confirmed for the event.",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF854D0E),
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Non-editable states: scrollable
+    if (!canOrder || _isCutoffPassed) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!canOrder && !event.isPast) ...[
+                  _buildRsvpButton(),
+                  const SizedBox(height: 20),
+                ],
+                if (_hasMenu) ...[
+                  _buildMenuCard(),
+                  const SizedBox(height: 20),
+                ],
+                if (!canOrder) ...[
+                  if (!event.isPast)
+                    _buildRsvpButton(),
+                ] else
                   _buildReadOnlyOrder(),
               ],
             ),
@@ -481,7 +586,34 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
-  Widget _buildRsvpPrompt() {
+  Widget _buildRsvpButton() {
+    final bool isFull = _isEventFull;
+    final bool canWaitlist = _canJoinWaitlist;
+    final bool rsvpsClosed = _event?.rsvpsClosed ?? false;
+    final bool isDisabled = (isFull && !canWaitlist) || rsvpsClosed;
+
+    String buttonText;
+    String subtitle;
+    Color buttonColor;
+
+    if (rsvpsClosed) {
+      buttonText = 'RSVPs Closed';
+      subtitle = 'RSVPs are closed for this event.';
+      buttonColor = Colors.grey.shade400;
+    } else if (isFull && !canWaitlist) {
+      buttonText = 'Event Full';
+      subtitle = 'This event has reached capacity.';
+      buttonColor = Colors.grey.shade400;
+    } else if (canWaitlist) {
+      buttonText = 'Join the waitlist';
+      subtitle = 'Join the waitlist. You can order when confirmed.';
+      buttonColor = const Color(0xFFD97706);
+    } else {
+      buttonText = 'Count me in';
+      subtitle = 'RSVP to place your pre-order';
+      buttonColor = const Color(0xFF7C3AED);
+    }
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -491,12 +623,11 @@ class _OrderScreenState extends State<OrderScreen> {
       ),
       child: Column(
         children: [
-          const SizedBox(height: 8),
-          const Text(
-            'RSVP to this event to place a pre-order.',
+          Text(
+            subtitle,
             style: TextStyle(
               fontSize: 15,
-              color: Color(0xFF64748B),
+              color: canWaitlist ? const Color(0xFF854D0E) : const Color(0xFF64748B),
             ),
             textAlign: TextAlign.center,
           ),
@@ -504,26 +635,35 @@ class _OrderScreenState extends State<OrderScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: isDisabled || _rsvpLoading ? null : _handleRsvp,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6366F1),
+                backgroundColor: buttonColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                elevation: 2,
+                elevation: 0,
+                disabledBackgroundColor: Colors.grey.shade300,
               ),
-              child: const Text(
-                'Go to event',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              child: _rsvpLoading
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(
+                      buttonText,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           ),
-          const SizedBox(height: 8),
         ],
       ),
     );
@@ -644,6 +784,7 @@ class _OrderScreenState extends State<OrderScreen> {
         Expanded(
           child: TextField(
             controller: _orderController,
+            focusNode: _orderFocusNode,
             maxLength: 500,
             expands: true,
             maxLines: null,
@@ -833,6 +974,8 @@ class _OrdersSummarySheet extends StatefulWidget {
   final String? eventLocation;
   final List<Attendee> attendees;
   final bool canEditOrders;
+  final bool isPastEvent;
+  final bool isCutoffPassed;
   final String? menuLink;
   final List<String>? menuImages;
   final void Function(Attendee attendee) onEditOrder;
@@ -847,6 +990,8 @@ class _OrdersSummarySheet extends StatefulWidget {
     this.eventLocation,
     required this.attendees,
     this.canEditOrders = false,
+    this.isPastEvent = false,
+    this.isCutoffPassed = false,
     this.menuLink,
     this.menuImages,
     required this.onEditOrder,
@@ -860,6 +1005,8 @@ class _OrdersSummarySheet extends StatefulWidget {
 class _OrdersSummarySheetState extends State<_OrdersSummarySheet> {
   bool _copied = false;
   bool _downloading = false;
+  bool _sendingReminder = false;
+  bool _reminderSent = false;
 
   Future<void> _downloadPDF() async {
     setState(() => _downloading = true);
@@ -975,6 +1122,32 @@ class _OrdersSummarySheetState extends State<_OrdersSummarySheet> {
         setState(() => _copied = false);
       }
     });
+  }
+
+  Future<void> _sendReminder() async {
+    setState(() => _sendingReminder = true);
+
+    final result = await EventsService().sendPreorderReminder(widget.eventId);
+
+    if (!mounted) return;
+    setState(() => _sendingReminder = false);
+
+    if (result.success) {
+      setState(() => _reminderSent = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.message ?? 'Reminders sent!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.error ?? 'Failed to send reminders'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -1189,6 +1362,38 @@ class _OrdersSummarySheetState extends State<_OrdersSummarySheet> {
                         label: Text(_downloading ? 'Loading...' : 'PDF'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF64748B),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                  ],
+                  // Remind button (hosts only, when attendees haven't ordered)
+                  if (widget.canEditOrders && !widget.isPastEvent && !widget.isCutoffPassed &&
+                      widget.attendees.any((a) => a.foodOrder == null || a.foodOrder!.isEmpty)) ...[
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: (_sendingReminder || _reminderSent) ? null : _sendReminder,
+                        icon: _sendingReminder
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : _reminderSent
+                                ? const Icon(Icons.check_rounded, size: 18)
+                                : const Icon(Icons.mail_outline_rounded, size: 18),
+                        label: Text(_sendingReminder ? 'Sending...' : _reminderSent ? 'Sent!' : 'Remind'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _reminderSent ? const Color(0xFF22C55E) : const Color(0xFFD97706),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(

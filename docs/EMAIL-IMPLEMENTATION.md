@@ -35,6 +35,7 @@ These fire immediately when an action happens in existing endpoints.
 | 7 | Event cancelled | `events/cancel_event.js` | ✅ |
 | 8 | New join request | `groups/join_group.js` | ✅ |
 | 9 | You have joined a group | `groups/approve_member.js` | ✅ |
+| 12 | Pre-order reminder | `events/remind_preorder.js` | ✅ |
 
 ---
 
@@ -85,6 +86,7 @@ node scripts/send_reminders.js
 | New event | user.name, event.title, event.date_time, event.location, group.name |
 | Event reminder | user.name, event.title, event.date_time, event.location, attendee_summary (for host) |
 | New comment | user.name, event.title, commenter.name, comment.content, link to event |
+| Pre-order reminder | user.name, event.title, event.date_time, event.location, host.name |
 
 ---
 
@@ -114,6 +116,7 @@ CREATE INDEX idx_email_log_sent_at ON email_log(sent_at);
 | 2026-01-10 | Initial implementation complete - all 9 email types implemented |
 | 2026-01-10 | Added email #10: New comment notification to attendees + waitlist |
 | 2026-01-23 | Added email #3b: New RSVP notification to event host |
+| 2026-02-06 | Added email #12: Pre-order reminder (host-triggered, queued) |
 
 ---
 

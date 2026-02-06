@@ -557,6 +557,24 @@ class EventsService {
       error: response['message'] as String? ?? 'Failed to broadcast event',
     );
   }
+
+  /// Send pre-order reminder emails to attendees who haven't placed their order
+  Future<BroadcastResult> sendPreorderReminder(int eventId) async {
+    final response = await _api.post('/events/$eventId/remind-preorder', {});
+
+    if (response['return_code'] == 'SUCCESS') {
+      return BroadcastResult(
+        success: true,
+        message: response['message'] as String?,
+        queuedCount: response['queued_count'] as int? ?? 0,
+      );
+    }
+
+    return BroadcastResult(
+      success: false,
+      error: response['message'] as String? ?? 'Failed to send pre-order reminder',
+    );
+  }
 }
 
 class AttendeesResult {
