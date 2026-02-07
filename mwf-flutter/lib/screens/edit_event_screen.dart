@@ -941,6 +941,28 @@ class _EditEventScreenState extends State<EditEventScreen> {
               style: TextStyle(fontSize: 13, color: Colors.amber.shade800),
             ),
           ],
+          if (!_rsvpsClosed && _preordersEnabled && _preorderCutoffDays != 0 && (() {
+            DateTime? cutoff;
+            if (_preorderCutoffDays == -1 && _customCutoffDate != null) {
+              cutoff = DateTime(
+                _customCutoffDate!.year,
+                _customCutoffDate!.month,
+                _customCutoffDate!.day,
+                _customCutoffTime.hour,
+                _customCutoffTime.minute,
+              );
+            } else if (_preorderCutoffDays > 0 && _selectedDate != null) {
+              final d = _selectedDate!.subtract(Duration(days: _preorderCutoffDays));
+              cutoff = DateTime(d.year, d.month, d.day, 17, 0);
+            }
+            return cutoff != null && cutoff.isBefore(DateTime.now());
+          })()) ...[
+            const SizedBox(height: 8),
+            Text(
+              'The pre-order deadline has passed — extend it before reopening RSVPs, or new members won\'t be able to join',
+              style: TextStyle(fontSize: 13, color: Colors.amber.shade800),
+            ),
+          ],
         ],
       ),
     );

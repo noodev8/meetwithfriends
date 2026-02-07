@@ -1560,12 +1560,17 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
     // Not RSVP'd - show join button or disabled states
     final isRsvpsClosed = event.rsvpsClosed;
+    final isPreorderCutoffLocked = event.preordersEnabled &&
+        event.preorderCutoff != null &&
+        DateTime.now().isAfter(event.preorderCutoff!);
     final isFullNoWaitlist = event.isFull && !event.waitlistEnabled;
-    final isDisabled = isRsvpsClosed || isFullNoWaitlist;
+    final isDisabled = isRsvpsClosed || isPreorderCutoffLocked || isFullNoWaitlist;
 
     String buttonText;
     if (isRsvpsClosed) {
       buttonText = 'RSVPs Closed';
+    } else if (isPreorderCutoffLocked) {
+      buttonText = 'RSVPs Closed — Pre-orders Sent';
     } else if (isFullNoWaitlist) {
       buttonText = 'Event Full';
     } else if (event.isFull) {

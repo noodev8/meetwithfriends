@@ -653,6 +653,14 @@ export default function EditEventPage() {
                                                                 Members will not be able to RSVP or join the waitlist
                                                             </p>
                                                         )}
+                                                        {!rsvpsClosed && preordersEnabled && preorderCutoffDate && preorderCutoffTime && (() => {
+                                                            const cutoff = new Date(`${preorderCutoffDate}T${preorderCutoffTime}`);
+                                                            return cutoff < new Date();
+                                                        })() && (
+                                                            <p className="mt-2 text-sm text-amber-700">
+                                                                The pre-order deadline has passed — extend it before reopening RSVPs, or new members won't be able to join
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>

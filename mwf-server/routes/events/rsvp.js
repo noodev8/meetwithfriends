@@ -326,10 +326,11 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                 );
 
                 // If was attending and there's a waitlist, promote people to fill freed spots
-                // Skip promotion if pre-order cutoff has passed (orders already sent to venue)
+                // Skip promotion if pre-order cutoff has passed (orders already sent to venue) or RSVPs are closed
                 const cutoffPassed = event.preorders_enabled && event.preorder_cutoff && new Date(event.preorder_cutoff) < new Date();
+                const skipPromotion = cutoffPassed || event.rsvps_closed;
                 const promotedUserIds = [];
-                if (wasAttending && event.capacity && !cutoffPassed) {
+                if (wasAttending && event.capacity && !skipPromotion) {
                     // Get current spots used (after this person left)
                     const spotsResult = await client.query(
                         `SELECT COALESCE(SUM(1 + guest_count), 0) AS total_spots_used
@@ -383,7 +384,7 @@ router.post('/:id/rsvp', verifyToken, async (req, res) => {
                             [id]
                         );
                     }
-                } else if (wasAttending && !event.capacity && !cutoffPassed) {
+                } else if (wasAttending && !event.capacity && !skipPromotion) {
                     // Unlimited capacity - promote first waitlisted person (shouldn't normally have waitlist with unlimited)
                     const firstWaitlist = await client.query(
                         `SELECT id, user_id
