@@ -1,3 +1,4 @@
  - Must be on VPS for button to go to production
-node scripts/process_email_queue.js
+cd /apps/production/mwf-server/scripts
+node process_email_queue.js
 
