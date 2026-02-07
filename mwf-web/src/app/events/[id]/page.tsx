@@ -284,6 +284,8 @@ export default function EventDetailPage() {
         ? new Date(event.preorder_cutoff) < new Date()
         : false;
 
+    const isPreorderCutoffLocked = event?.preorders_enabled && isCutoffPassed;
+
     // =======================================================================
     // Handle add comment
     // =======================================================================
@@ -1222,7 +1224,14 @@ export default function EventDetailPage() {
                                         ))}
                                     </select>
                                 )}
-                                {event.rsvps_closed ? (
+                                {isPreorderCutoffLocked ? (
+                                    <button
+                                        disabled
+                                        className="px-8 py-3 bg-slate-400 text-white font-semibold rounded-xl cursor-not-allowed opacity-75"
+                                    >
+                                        RSVPs Closed — Pre-orders Sent
+                                    </button>
+                                ) : event.rsvps_closed ? (
                                     <button
                                         disabled
                                         className="px-8 py-3 bg-slate-400 text-white font-semibold rounded-xl cursor-not-allowed opacity-75"
