@@ -90,13 +90,13 @@ router.get('/', optionalAuth, async (req, res) => {
             paramIndex++;
         }
 
-        // Filter by past or upcoming
+        // Filter by past or upcoming (4hr buffer so events stay "upcoming" during the event)
         if (isPast) {
             queryText += `
-             WHERE e.date_time < NOW()`;
+             WHERE e.date_time < NOW() - INTERVAL '4 hours'`;
         } else {
             queryText += `
-             WHERE e.date_time >= NOW()`;
+             WHERE e.date_time >= NOW() - INTERVAL '4 hours'`;
         }
 
         // Add group filter if provided

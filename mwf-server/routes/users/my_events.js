@@ -82,7 +82,7 @@ router.get('/my-events', verifyToken, async (req, res) => {
              LEFT JOIN event_rsvp r ON e.id = r.event_id
              LEFT JOIN event_rsvp user_rsvp ON e.id = user_rsvp.event_id AND user_rsvp.user_id = $1
              WHERE e.status = 'published'
-               AND e.date_time > NOW()`;
+               AND e.date_time > NOW() - INTERVAL '4 hours'`;
 
         // Filter to only unresponded events if requested
         if (showUnrespondedOnly) {

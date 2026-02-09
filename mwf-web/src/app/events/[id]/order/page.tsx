@@ -131,7 +131,7 @@ export default function EventOrderPage() {
         ? new Date(event.preorder_cutoff) < new Date()
         : false;
 
-    const isPastEvent = event ? new Date(event.date_time) < new Date() : false;
+    const isPastEvent = event ? new Date(event.date_time).getTime() + 4 * 60 * 60 * 1000 < Date.now() : false;
 
     // =======================================================================
     // Capacity and waitlist logic

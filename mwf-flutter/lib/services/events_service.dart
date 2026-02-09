@@ -781,7 +781,7 @@ class EventDetail {
     );
   }
 
-  bool get isPast => dateTime.isBefore(DateTime.now());
+  bool get isPast => dateTime.add(const Duration(hours: 4)).isBefore(DateTime.now());
   bool get isCancelled => status == 'cancelled';
   int get spotsRemaining => capacity != null ? capacity! - attendeeCount - totalGuestCount : -1;
   bool get isFull => capacity != null && spotsRemaining <= 0;

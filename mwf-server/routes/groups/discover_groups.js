@@ -56,7 +56,7 @@ router.get('/', verifyToken, async (req, res) => {
                 g.icon,
                 g.created_at,
                 COUNT(DISTINCT gm.id) FILTER (WHERE gm.status = 'active') AS member_count,
-                COUNT(DISTINCT e.id) FILTER (WHERE e.status = 'published' AND e.date_time > NOW()) AS upcoming_event_count
+                COUNT(DISTINCT e.id) FILTER (WHERE e.status = 'published' AND e.date_time > NOW() - INTERVAL '4 hours') AS upcoming_event_count
              FROM group_list g
              LEFT JOIN group_member gm ON g.id = gm.group_id
              LEFT JOIN event_list e ON g.id = e.group_id

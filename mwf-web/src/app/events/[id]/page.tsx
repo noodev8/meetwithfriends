@@ -387,9 +387,9 @@ export default function EventDetailPage() {
     };
 
     // =======================================================================
-    // Check if event is in the past
+    // Check if event is in the past (4hr buffer so event stays active during the event)
     // =======================================================================
-    const isPastEvent = event ? new Date(event.date_time) < new Date() : false;
+    const isPastEvent = event ? new Date(event.date_time).getTime() + 4 * 60 * 60 * 1000 < Date.now() : false;
 
     // =======================================================================
     // Loading state

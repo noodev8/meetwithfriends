@@ -76,7 +76,7 @@ router.get('/my-rsvps', verifyToken, async (req, res) => {
              INNER JOIN event_rsvp user_rsvp ON e.id = user_rsvp.event_id AND user_rsvp.user_id = $1
              LEFT JOIN event_rsvp r ON e.id = r.event_id
              WHERE e.status = 'published'
-               AND e.date_time > NOW()
+               AND e.date_time > NOW() - INTERVAL '4 hours'
                AND user_rsvp.status IN ('attending', 'waitlist')
              GROUP BY e.id, g.name, g.image_url, user_rsvp.status
              ORDER BY e.date_time ASC`,

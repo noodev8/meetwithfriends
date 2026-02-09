@@ -107,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           // Find next upcoming event the user is going to
           final now = DateTime.now();
           final upcoming = goingEvents
-              .where((e) => e.dateTime.isAfter(now) && !e.isCancelled)
+              .where((e) => e.dateTime.add(const Duration(hours: 4)).isAfter(now) && !e.isCancelled)
               .toList()
             ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
           _nextEvent = upcoming.isNotEmpty ? upcoming.first : null;
