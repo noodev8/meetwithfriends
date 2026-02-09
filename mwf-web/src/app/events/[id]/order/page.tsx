@@ -427,9 +427,9 @@ export default function EventOrderPage() {
     const canOrder = rsvp && rsvp.status !== 'not_going';
 
     // =======================================================================
-    // Access guard: event cancelled or past
+    // Access guard: event cancelled
     // =======================================================================
-    if (event.status === 'cancelled' || isPastEvent) {
+    if (event.status === 'cancelled') {
         return (
             <SidebarLayout>
                 <div className="bg-slate-50 border-b border-slate-200">
@@ -447,14 +447,12 @@ export default function EventOrderPage() {
                 </div>
                 <div className="flex-1 flex flex-col items-center justify-center p-8">
                     <div className="text-center">
-                        <div className="text-6xl mb-4">{event.status === 'cancelled' ? '🚫' : '📅'}</div>
+                        <div className="text-6xl mb-4">🚫</div>
                         <h1 className="text-2xl font-bold text-slate-900 mb-2">
-                            {event.status === 'cancelled' ? 'Event cancelled' : 'Event has passed'}
+                            Event cancelled
                         </h1>
                         <p className="text-slate-600 mb-6">
-                            {event.status === 'cancelled'
-                                ? 'This event has been cancelled. Orders can no longer be placed.'
-                                : 'This event has already taken place.'}
+                            This event has been cancelled. Orders can no longer be placed.
                         </p>
                         <Link
                             href={`/events/${event.id}`}

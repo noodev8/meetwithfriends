@@ -412,15 +412,6 @@ class _OrderScreenState extends State<OrderScreen> {
       );
     }
 
-    // Guard: event past
-    if (event.isPast) {
-      return _buildGuardState(
-        icon: Icons.event_busy_outlined,
-        title: 'Event has passed',
-        message: 'This event has already taken place.',
-      );
-    }
-
     // Guard: preorders not enabled
     if (!event.preordersEnabled) {
       return _buildGuardState(

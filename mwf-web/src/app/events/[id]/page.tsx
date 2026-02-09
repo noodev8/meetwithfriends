@@ -614,7 +614,7 @@ export default function EventDetailPage() {
                             </div>
 
                             {/* Pre-order Banner — above the fold CTA */}
-                            {event.preorders_enabled && !isPastEvent && event.status !== 'cancelled' && (
+                            {event.preorders_enabled && event.status !== 'cancelled' && (
                                 <div className="mt-5">
                                     {!rsvp || rsvp.status === 'not_going' ? (
                                         /* Not attending — neutral banner with View Menu link */

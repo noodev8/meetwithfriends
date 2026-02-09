@@ -415,7 +415,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   bool get _showPreOrder =>
       _event != null &&
       _event!.preordersEnabled &&
-      !_event!.isPast &&
       !_event!.isCancelled;
 
   Widget _buildContent() {
