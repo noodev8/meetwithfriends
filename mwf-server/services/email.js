@@ -776,11 +776,12 @@ async function sendEventReminderEmail(email, userName, event, isHost = false, at
     });
 
     let summarySection = '';
-    if (isHost && attendeeSummary) {
+    if (attendeeSummary) {
+        const label = isHost ? 'Host Summary' : 'Who\'s Coming';
         summarySection = `
             <div style="background-color: #e8f5e9; padding: 12px 15px; border-radius: 6px; margin: 15px 0;">
                 <p style="color: #2e7d32; font-size: 14px; margin: 0;">
-                    <strong>Host Summary:</strong> ${attendeeSummary.attending} attending${attendeeSummary.waitlist > 0 ? `, ${attendeeSummary.waitlist} on waitlist` : ''}
+                    <strong>${label}:</strong> ${attendeeSummary.attending} attending${attendeeSummary.waitlist > 0 ? `, ${attendeeSummary.waitlist} on waitlist` : ''}
                 </p>
             </div>
         `;
@@ -1223,11 +1224,12 @@ async function queueEventReminderEmail(email, userName, event, group, isHost = f
     });
 
     let summarySection = '';
-    if (isHost && attendeeSummary) {
+    if (attendeeSummary) {
+        const label = isHost ? 'Host Summary' : 'Who\'s Coming';
         summarySection = `
             <div style="background-color: #e8f5e9; padding: 12px 15px; border-radius: 6px; margin: 15px 0;">
                 <p style="color: #2e7d32; font-size: 14px; margin: 0;">
-                    <strong>Host Summary:</strong> ${attendeeSummary.attending} attending${attendeeSummary.waitlist > 0 ? `, ${attendeeSummary.waitlist} on waitlist` : ''}
+                    <strong>${label}:</strong> ${attendeeSummary.attending} attending${attendeeSummary.waitlist > 0 ? `, ${attendeeSummary.waitlist} on waitlist` : ''}
                 </p>
             </div>
         `;

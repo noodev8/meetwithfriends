@@ -119,7 +119,7 @@ async function sendReminders() {
                         event,
                         group,
                         isHost,
-                        isHost ? attendeeSummary : null,
+                        attendeeSummary,
                         foodOrder
                     );
                     totalEmailsQueued++;
