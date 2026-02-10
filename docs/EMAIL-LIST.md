@@ -14,7 +14,7 @@
 | 9 | You have joined a group | User | Host/organiser manually approves join request (not auto-join) |
 | 10 | New comment on event | Attendees + Waitlist (except commenter) | User posts a comment. Shows latest comment with link to conversation. |
 | 11 | You're now a host in [group] | User | Organiser promotes member to host |
-| 12 | Reminder: Place your pre-order for [event] | Attending members without a food order | Host/organiser triggers from orders summary |
+| 12 | Pre-order for [event] — order anytime, change anytime | Attending members without a food order | Host/organiser triggers from orders summary |
 
 ---
 

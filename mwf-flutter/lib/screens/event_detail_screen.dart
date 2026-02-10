@@ -1219,7 +1219,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "You haven't placed your pre-order yet",
+                        "Place your pre-order — you can change it anytime",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -1229,7 +1229,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       ),
                       SizedBox(height: 2),
                       Text(
-                        'Tap to view menu & place your order',
+                        'Tap to view the menu and order',
                         style: TextStyle(
                           fontSize: 13,
                           color: Color(0xFFE0E7FF),

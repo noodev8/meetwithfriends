@@ -707,7 +707,7 @@ export default function EventDetailPage() {
                                                         </svg>
                                                     </div>
                                                     <p className="text-sm font-semibold text-red-800">
-                                                        You haven&#39;t placed your pre-order yet
+                                                        Place your pre-order — you can change it anytime
                                                     </p>
                                                 </div>
                                                 <Link

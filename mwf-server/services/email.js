@@ -1304,21 +1304,32 @@ async function queuePreorderReminderEmail(email, userName, event, group, hostNam
         hour: '2-digit', minute: '2-digit'
     });
 
+    let cutoffNote = '';
+    if (event.preorder_cutoff) {
+        const cutoffDate = new Date(event.preorder_cutoff).toLocaleDateString('en-GB', {
+            weekday: 'long', day: 'numeric', month: 'long'
+        });
+        cutoffNote = ` before the cutoff on <strong>${cutoffDate}</strong>`;
+    }
+
     const html = wrapEmail(`
-        <h2 style="color: #333; margin-top: 0;">Don't Forget Your Pre-Order!</h2>
+        <h2 style="color: #333; margin-top: 0;">Pre-Order for ${event.title}</h2>
         <p style="color: #666; font-size: 16px;">
             Hi ${userName},
         </p>
         <p style="color: #666; font-size: 16px;">
-            ${hostName} is kindly reminding you to please place your food pre-order for <strong>${event.title}</strong> on ${eventDate} at ${eventTime}${event.location ? ` at ${event.location}` : ''}.
+            ${hostName} is getting food orders ready for <strong>${event.title}</strong> on ${eventDate} at ${eventTime}${event.location ? ` at ${event.location}` : ''}.
+        </p>
+        <p style="color: #666; font-size: 16px;">
+            You can place or update your pre-order anytime${cutoffNote} — no need to wait until the last minute!
         </p>
         ${emailButton(config.frontendUrl + '/events/' + event.id + '/order', 'Place Your Order')}
         <p style="color: #999; font-size: 13px; margin-top: 20px;">
-            You received this because you're attending this event but haven't placed a pre-order yet.
+            You received this because you're attending this event and haven't placed a pre-order yet.
         </p>
     `);
 
-    return queueEmail(email, userName, `Reminder: Place your pre-order for ${event.title}`, html, 'preorder_reminder', {
+    return queueEmail(email, userName, `Pre-order for ${event.title} — order anytime, change anytime`, html, 'preorder_reminder', {
         groupId: group.id,
         eventId: event.id,
         groupName: group.name
