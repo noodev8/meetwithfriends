@@ -1,4 +1,12 @@
  - Must be on VPS for button to go to production
-cd /apps/production/mwf-server/scripts
-node process_email_queue.js
+cd /apps/production/mwf-server
+
+-- Add reminder emails
+node scripts/send_reminders.js
+
+-- Check
+SELECT * FROM email_queue
+
+-- Send Emails
+node scripts/process_email_queue.js
 
