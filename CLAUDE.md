@@ -6,6 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Meet With Friends (MWF) is a group event management platform for food-focused social events. It handles deposits, menu pre-orders, and centralized payments. The project is a Meetup replacement with a three-phase vision: basic event management → payments/deposits → restaurant marketplace.
 
+## Active Strategic Direction — read before strategy/product work
+
+**Source of truth:** [`docs/STRATEGY-DISCUSSION.md`](docs/STRATEGY-DISCUSSION.md) — read its top **"Session Handoff Summary"** first. This is the durable, repo-synced record of an in-progress repositioning (kept here, not in machine-local Claude memory, so it persists across the founder's laptop and PC via git).
+
+In short: MWF is being repositioned from its current **group-first, register-to-RSVP** model (reads as "a smaller Meetup", hard to sell) to a **light, event-first interest-gauging tool** — float an idea to friends across the chats they already use ("is this something you'd want to do?"), track who's keen, and turn responses into a structured invite. No group required, guest responses without registration, rides on top of WhatsApp. There's a sequenced build plan in that doc, awaiting go-ahead, to be tested on a real meal ("Greek at the Gates"). Don't restart the settled positioning debate — read the doc and continue from its current state.
+
 ## Commands
 
 ### mwf-server (Backend - Port 3019)
